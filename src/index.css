@@ -1,0 +1,953 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   MotoRate V3 Design System — "Instrument Cluster"
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg: #0c1218;
+  --s1: #141c28;
+  --s2: #1a2434;
+  --s3: #202c3c;
+  --s4: #283444;
+
+  /* Borders */
+  --border: rgba(255,255,255,0.035);
+  --border2: rgba(255,255,255,0.06);
+  --border-2: rgba(255,255,255,0.06);
+  --border-3: rgba(255,255,255,0.10);
+
+  /* Text */
+  --t1: #f2f4f7;
+  --t2: #c0c8d4;
+  --t3: #8090a4;
+  --t4: #586878;
+
+  /* Accent */
+  --orange: #F97316;
+  --orange-dim: rgba(249,115,22,0.10);
+  --orange-glow: rgba(249,115,22,0.06);
+  --orange-muted: rgba(249,115,22,0.20);
+
+  /* Utility */
+  --steel: #5A7A9A;
+  --steel-dim: rgba(90,122,154,0.10);
+  --green: #5aaa7a;
+  --red: #cc5555;
+  --positive: #5aaa7a;
+  --negative: #cc5555;
+
+  /* Aliases for backwards compatibility */
+  --blue: #F97316;
+  --blue2: #fb923c;
+  --gold: #c8a45a;
+  --gold2: #a8883e;
+  --purple: #8a88a8;
+  --pink: #ec4899;
+  --cyan: #F97316;
+
+  /* Surfaces */
+  --surface: #141c28;
+  --surface-2: #1a2434;
+  --surface-3: #202c3c;
+
+  /* Text aliases */
+  --text-primary: #f2f4f7;
+  --text-secondary: #c0c8d4;
+  --text-tertiary: #8090a4;
+  --text-quaternary: #586878;
+  --text-white: #f8f9fb;
+
+  /* Accents */
+  --accent: #F97316;
+  --accent-2: #fb923c;
+  --accent-warm: #F97316;
+  --accent-green: #5aaa7a;
+  --accent-red: #cc5555;
+
+  /* Metal tiers */
+  --gold-h: #c8a45a;
+  --gold-m: #a8883e;
+  --gold-l: #806828;
+  --silver-h: #909aaa;
+  --silver-m: #6a7688;
+  --silver-l: #4a5668;
+  --bronze-h: #9a7a58;
+  --bronze-m: #7a6040;
+  --bronze-l: #5a4228;
+  --plat-h: #8a88a8;
+  --plat-m: #706e90;
+  --plat-l: #585678;
+
+  /* Status */
+  --driver: #F97316;
+  --cool: #F97316;
+  --rep: #F97316;
+
+  /* Modal */
+  --modal-overlay: rgba(6, 10, 14, 0.92);
+  --modal-blur: 20px;
+
+  /* Status badges */
+  --status-pending: rgba(249, 115, 22, 0.15);
+  --status-pending-border: rgba(249, 115, 22, 0.3);
+  --status-pending-text: #F97316;
+  --status-approved: rgba(90, 170, 122, 0.15);
+  --status-approved-border: rgba(90, 170, 122, 0.3);
+  --status-approved-text: #5aaa7a;
+  --status-rejected: rgba(204, 85, 85, 0.15);
+  --status-rejected-border: rgba(204, 85, 85, 0.3);
+  --status-rejected-text: #cc5555;
+
+  --gradient-primary: linear-gradient(135deg, #F97316 0%, #fb923c 100%);
+
+  /* Easing */
+  --ease-m: cubic-bezier(.25,.46,.45,.94);
+  --ease-n: cubic-bezier(.34,1.56,.64,1);
+  --ease-s: cubic-bezier(.22,.68,0,1.2);
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--t1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ─── Mono Type ─────────────────────────────────────────────── */
+.mono, .font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Premium Card System ───────────────────────────────────── */
+.card-v3 {
+  border-radius: 14px;
+  position: relative;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.008) 3px),
+    linear-gradient(180deg, var(--s1), #111a24);
+  border: 1px solid rgba(255,255,255,0.035);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 12px rgba(0,0,0,0.35);
+  overflow: hidden;
+  transition: transform 0.25s var(--ease-m);
+}
+
+.card-v3:active {
+  transform: scale(0.98);
+}
+
+/* ─── Section Labels (uppercase tracking) ───────────────────── */
+.slbl {
+  padding: 20px 20px 10px;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--t3);
+}
+
+.label-micro {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: var(--t3);
+}
+
+/* ─── Stagger Animation ─────────────────────────────────────── */
+.stg { opacity: 0; animation: powerUp 0.45s var(--ease-m) forwards; }
+.stg:nth-child(1) { animation-delay: 0ms; }
+.stg:nth-child(2) { animation-delay: 70ms; }
+.stg:nth-child(3) { animation-delay: 70ms; }
+.stg:nth-child(4) { animation-delay: 140ms; }
+.stg:nth-child(5) { animation-delay: 210ms; }
+.stg:nth-child(6) { animation-delay: 280ms; }
+.stg:nth-child(7) { animation-delay: 350ms; }
+.stg:nth-child(8) { animation-delay: 420ms; }
+
+@keyframes powerUp {
+  0% { opacity: 0; transform: translateY(16px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Badge Coins ───────────────────────────────────────────── */
+.coin-gold {
+  background: linear-gradient(135deg, var(--gold-l), var(--gold-h) 40%, var(--gold-l) 60%, var(--gold-h));
+  box-shadow: 0 0 12px rgba(200,164,90,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.coin-silver {
+  background: linear-gradient(135deg, var(--silver-l), var(--silver-h) 40%, var(--silver-l) 60%, var(--silver-h));
+  box-shadow: 0 0 12px rgba(144,154,170,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.coin-bronze {
+  background: linear-gradient(135deg, var(--bronze-l), var(--bronze-h) 40%, var(--bronze-l) 60%, var(--bronze-h));
+  box-shadow: 0 0 12px rgba(154,122,88,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.coin-plat {
+  background: linear-gradient(135deg, var(--plat-l), var(--plat-h) 40%, var(--plat-l) 60%, var(--plat-h));
+  box-shadow: 0 0 12px rgba(138,136,168,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.coin-locked {
+  background: var(--s3);
+  opacity: 0.5;
+}
+
+/* ─── Arc Gauge System ──────────────────────────────────────── */
+.gauge-svg { width: 100%; height: auto; }
+.gauge-track {
+  fill: none;
+  stroke: var(--s3);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.gauge-fill {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 82;
+  stroke-dashoffset: var(--offset, 82);
+  transition: stroke-dashoffset 1.2s cubic-bezier(.22,.68,0,1.2);
+}
+.gauge-fill.animate {
+  stroke-dashoffset: var(--offset, 0);
+}
+
+/* ─── Bottom Nav ────────────────────────────────────────────── */
+.bot-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: rgba(12,18,24,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding: 8px 0 max(24px, env(safe-area-inset-bottom));
+  z-index: 50;
+}
+
+.bot-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px 0;
+  position: relative;
+  border: none;
+  background: none;
+}
+
+.bot-nav-item svg {
+  width: 22px;
+  height: 22px;
+  color: var(--t2);
+  stroke-width: 1.5;
+  transition: color 0.2s;
+}
+
+.bot-nav-item span {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  color: var(--t2);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  transition: color 0.2s;
+}
+
+.bot-nav-item.active svg { color: var(--orange); }
+.bot-nav-item.active span { color: var(--orange); }
+.bot-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 6px rgba(249,115,22,0.4);
+}
+
+/* ─── Top Bar ───────────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 48px 20px 14px;
+  flex-shrink: 0;
+  background: rgba(12,18,24,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.topbar-logo {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--t2);
+}
+
+/* ─── Tag Chip ──────────────────────────────────────────────── */
+.tag-chip {
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--steel-dim);
+  color: var(--steel);
+  border: 1px solid rgba(90,122,154,0.15);
+}
+
+/* ─── Plate Tag ─────────────────────────────────────────────── */
+.plate-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--t1);
+  background: var(--s3);
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ─── Reputation Points ─────────────────────────────────────── */
+.rep-pts {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--orange);
+  text-shadow: 0 0 8px rgba(249,115,22,0.15);
+}
+
+/* ─── Floating Points Animation ─────────────────────────────── */
+@keyframes floatPts {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+.fpt {
+  position: fixed;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--orange);
+  text-shadow: 0 0 12px rgba(249,115,22,0.4);
+  pointer-events: none;
+  z-index: 9999;
+  animation: floatPts 1.2s ease-out forwards;
+}
+
+/* ─── Sticker Strip ─────────────────────────────────────────── */
+.sticker-strip {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sticker-strip::-webkit-scrollbar { display: none; }
+
+.sticker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--s2);
+  border: 1px solid rgba(255,255,255,0.035);
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-s), background 0.2s;
+  flex-shrink: 0;
+  min-width: 64px;
+}
+
+.sticker-item:active {
+  transform: scale(0.92);
+}
+
+@keyframes stickerFlying {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.25) rotate(-8deg); }
+  60% { transform: scale(0.95) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.sticker-flying {
+  animation: stickerFlying 0.5s var(--ease-n);
+}
+
+/* ─── Build Timeline ────────────────────────────────────────── */
+.build-timeline {
+  padding: 0 16px 16px;
+  position: relative;
+}
+
+.build-timeline::before {
+  content: '';
+  position: absolute;
+  left: 26px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--orange) 0%, rgba(255,255,255,0.04) 100%);
+}
+
+.bt-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  position: relative;
+}
+
+.bt-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 8px rgba(249,115,22,0.3);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.bt-title {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--t1);
+}
+
+.bt-date {
+  font-size: 10px;
+  color: var(--t4);
+  margin-top: 2px;
+}
+
+/* ─── Tachometer Progress Bar ───────────────────────────────── */
+.tach-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--s3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.tach-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--orange), #fb923c);
+  border-radius: 2px;
+  transition: width 1s cubic-bezier(.22,.68,0,1.2);
+  box-shadow: 0 0 8px rgba(249,115,22,0.3);
+}
+
+/* ─── Competitive Rank Bar ──────────────────────────────────── */
+.comp-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+.comp-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--orange);
+  text-shadow: 0 0 16px rgba(249,115,22,0.2);
+  min-width: 40px;
+  text-align: center;
+  line-height: 1;
+}
+
+@keyframes rankFlip {
+  0% { transform: scaleY(1); opacity: 1; }
+  40% { transform: scaleY(0) translateY(-4px); opacity: 0; }
+  60% { transform: scaleY(0) translateY(4px); opacity: 0; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
+.rank-flipping {
+  animation: rankFlip 0.5s var(--ease-m);
+}
+
+/* ─── Reputation Gauge (Profile) ────────────────────────────── */
+.rep-gauge-track {
+  fill: none;
+  stroke: var(--s3);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.rep-gauge-fill {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 236;
+  stroke-dashoffset: 236;
+  transition: stroke-dashoffset 1.5s cubic-bezier(.22,.68,0,1.2);
+  filter: drop-shadow(0 0 6px rgba(249,115,22,0.3));
+}
+
+.rep-gauge-fill.animate {
+  stroke-dashoffset: var(--offset, 118);
+}
+
+/* ─── Badge Celebration Overlay ─────────────────────────────── */
+.celeb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,10,14,0.96);
+  backdrop-filter: blur(24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.celeb-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Claim Overlay ─────────────────────────────────────────── */
+.claim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,10,14,0.96);
+  backdrop-filter: blur(24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.claim-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Review Stars ──────────────────────────────────────────── */
+.rstar {
+  width: 36px;
+  height: 36px;
+  color: var(--s4);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-n), color 0.2s;
+}
+
+.rstar.filled {
+  color: var(--orange);
+  filter: drop-shadow(0 0 6px rgba(249,115,22,0.3));
+}
+
+.rstar.filling {
+  animation: starPop 0.3s var(--ease-n);
+}
+
+@keyframes starPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Weekly Recap Overlay ──────────────────────────────────── */
+.recap-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(6,10,14,0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.recap-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Plate Reveal ──────────────────────────────────────────── */
+@keyframes plateType {
+  from { width: 0; border-right-color: var(--orange); }
+  to { width: 100%; border-right-color: transparent; }
+}
+
+@keyframes lineExpand {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* ─── Scrollbar & SafeArea ──────────────────────────────────── */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.safe-bottom {
+  padding-bottom: max(90px, calc(90px + env(safe-area-inset-bottom)));
+}
+
+/* ─── Page Enter Animation ──────────────────────────────────── */
+@keyframes animate-page-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}  
+
+.animate-page-enter {
+  animation: animate-page-enter 0.35s var(--ease-m) forwards;
+}
+
+/* ─── Notification Dot ──────────────────────────────────────── */
+.notif-dot {
+  position: relative;
+}
+
+.notif-dot::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background: var(--orange);
+  border-radius: 50%;
+  position: absolute;
+  top: -1px;
+  right: -2px;
+  box-shadow: 0 0 6px rgba(249,115,22,0.4);
+}
+
+/* ─── Post Action Bar ───────────────────────────────────────── */
+.post-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px 6px 0;
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-s);
+  border: none;
+  background: none;
+  color: var(--t3);
+}
+
+.post-action-btn:active {
+  transform: scale(0.92);
+}
+
+.post-action-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.2;
+  transition: color 0.2s, transform 0.3s var(--ease-n);
+}
+
+.post-action-btn span {
+  font-size: 10px;
+  font-weight: 400;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color 0.2s;
+}
+
+.post-action-btn.liked svg {
+  color: var(--orange);
+  fill: var(--orange);
+  transform: scale(1.15);
+}
+
+.post-action-btn.liked span {
+  color: var(--orange);
+}
+
+/* ─── Pulsing Like Animation ────────────────────────────────── */
+@keyframes likeHeart {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.25); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1.15); }
+}
+
+.pulsing svg {
+  animation: likeHeart 0.5s var(--ease-n);
+}
+
+/* ─── Particle Explosion (Badge Celebration) ────────────────── */
+@keyframes particleBurst {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particleBurst 1s var(--ease-m) forwards;
+  pointer-events: none;
+}
+.animate-like-heart { animation: likeHeart 0.5s var(--ease-n); }
+.animate-particle-burst { animation: particleBurst 1s var(--ease-m) forwards; }
+
+/* ─── Vibrate Utility ───────────────────────────────────────── */
+.haptic-light { /* JS: navigator.vibrate?.(25) */ }
+.haptic-medium { /* JS: navigator.vibrate?.([15,50,25]) */ }
+.haptic-heavy { /* JS: navigator.vibrate?.([15,50,25,100,50,50,25]) */ }
+
+/* ─── Vehicle Badge (Claimed) ───────────────────────────────── */
+.vh-badge {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.vh-badge.claimed {
+  background: rgba(90,170,122,0.15);
+  color: #5aaa7a;
+  border: 1px solid rgba(90,170,122,0.25);
+}
+
+.vh-badge.unclaimed {
+  background: var(--orange-dim);
+  color: var(--orange);
+  border: 1px solid var(--orange-muted);
+}
+
+/* ─── Rare Find Chip ────────────────────────────────────────── */
+.rare-chip {
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(249,115,22,0.15);
+  color: var(--orange);
+  border: 1px solid rgba(249,115,22,0.25);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ─── Spot Button ───────────────────────────────────────────── */
+.spot-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.spot-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 20px rgba(249,115,22,0.3);
+}
+
+/* ─── Camera Button ─────────────────────────────────────────── */
+.cam-btn {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: var(--s2);
+  border: 2px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.3s;
+  position: relative;
+  overflow: hidden;
+  color: var(--t2);
+}
+
+.cam-btn:active {
+  transform: scale(0.95);
+  border-color: var(--orange);
+}
+
+.cam-btn svg {
+  width: 32px;
+  height: 32px;
+  stroke-width: 1.2;
+}
+
+.cam-btn span {
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--t3);
+}
+
+/* ─── Claimed Badge ─────────────────────────────────────────── */
+.claimed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(90,170,122,0.15);
+  color: #5aaa7a;
+  border: 1px solid rgba(90,170,122,0.25);
+}
+
+/* ─── Back Button ───────────────────────────────────────────── */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--t3);
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  border: none;
+  background: none;
+}
+
+/* ─── Tutorial Overlay ──────────────────────────────────────── */
+.tut-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(6,10,14,0.85);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.tut-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Smooth Scroll ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* ─── Focus States ──────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+/* ─── Selection ─────────────────────────────────────────────── */
+::selection {
+  background: rgba(249,115,22,0.3);
+  color: var(--t1);
+}
+
+/* ─── Global Animation Classes (moved from ProfilePage) ─── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes countPop {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes scoreReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-press { transition: transform 0.1s ease; }
+.btn-press:active { transform: scale(0.96); }
+
+.card-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+.section-1 { animation: fadeSlideUp 0.4s ease 0s both; }
+.section-2 { animation: fadeSlideUp 0.4s ease 0.05s both; }
+.section-3 { animation: fadeSlideUp 0.4s ease 0.1s both; }
+.section-4 { animation: fadeSlideUp 0.4s ease 0.15s both; }
+.section-5 { animation: fadeSlideUp 0.4s ease 0.2s both; }
+.section-6 { animation: fadeSlideUp 0.4s ease 0.25s both; }
+.section-7 { animation: fadeSlideUp 0.4s ease 0.3s both; }
+.section-8 { animation: fadeSlideUp 0.4s ease 0.35s both; }
+
+.stat-pop-1 { animation: countPop 0.4s ease 0.1s both; }
+.stat-pop-2 { animation: countPop 0.4s ease 0.15s both; }
+.stat-pop-3 { animation: countPop 0.4s ease 0.2s both; }
+.stat-pop-4 { animation: countPop 0.4s ease 0.25s both; }
+.stat-pop-5 { animation: countPop 0.4s ease 0.3s both; }
+
+.rep-score { animation: scoreReveal 0.5s ease 0.3s both; }
+
+/* ─── VIN Claim Animations ─────────────────────────────────── */
+@keyframes stamp-slam {
+  0%   { opacity: 0; transform: scale(3) rotate(-20deg); }
+  60%  { opacity: 1; transform: scale(0.9) rotate(2deg); }
+  80%  { transform: scale(1.05) rotate(-1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); box-shadow: 0 0 60px rgba(90,170,122,.25), inset 0 0 30px rgba(90,170,122,.08); }
+}
+
+@keyframes c-ring {
+  0%   { width: 0; height: 0; opacity: 0.8; border-width: 3px; }
+  100% { width: 280px; height: 280px; opacity: 0; border-width: 1px; }
+}

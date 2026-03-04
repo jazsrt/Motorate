@@ -1,0 +1,49 @@
+{
+  "name": "MotoRate - Car Community Platform",
+  "short_name": "MotoRate",
+  "description": "Social platform for car enthusiasts to spot, rate, and share vehicles",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/motorated-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/motorated-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "lifestyle", "automotive"],
+  "shortcuts": [
+    {
+      "name": "Spot a Ride",
+      "short_name": "Spot",
+      "description": "Scan a license plate",
+      "url": "/#scan",
+      "icons": [{ "src": "/motorated-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Garage",
+      "short_name": "Garage",
+      "description": "View your vehicles",
+      "url": "/#my-garage",
+      "icons": [{ "src": "/motorated-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Feed",
+      "short_name": "Feed",
+      "description": "Browse community posts",
+      "url": "/#feed",
+      "icons": [{ "src": "/motorated-icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
