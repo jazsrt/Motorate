@@ -85,6 +85,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
+  const [isFirstSpot, setIsFirstSpot] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ratingsComplete = driverRating > 0 && drivingRating > 0 && vehicleRating > 0;
@@ -277,9 +278,20 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         console.error('Notification error:', notifError);
       }
 
+      // Check if this is the first spot for this vehicle
+      let isFirstSpot = false;
+      try {
+        const { count } = await supabase
+          .from('spot_history')
+          .select('id', { count: 'exact', head: true })
+          .eq('vehicle_id', vehicleId);
+        isFirstSpot = (count ?? 0) <= 1;
+      } catch {}
+
       // Store data for upgrade prompt
       setReviewId(reviewData.id);
       setVehicleId(vehicleId);
+      setIsFirstSpot(isFirstSpot);
 
       // Show upgrade prompt instead of navigating away
       setShowUpgradePrompt(true);
@@ -428,11 +440,16 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           ) : (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-surface border border-dashed border-surfacehighlight hover:border-[rgba(249,115,22,0.5)] rounded-xl text-secondary hover:text-accent-2 text-sm font-medium transition-colors"
+              className="w-full flex flex-col items-center gap-1.5 py-4 bg-surface border border-dashed border-surfacehighlight hover:border-[rgba(249,115,22,0.5)] rounded-xl text-secondary hover:text-accent-2 transition-colors"
             >
-              <Camera className="w-4 h-4" />
-              Add a Photo <span className="text-neutral-600">(optional)</span>
-              <Image className="w-4 h-4 ml-1" />
+              <div className="flex items-center gap-2">
+                <Camera className="w-4 h-4" />
+                <span className="text-sm font-medium">Add a Photo</span>
+                <Image className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>
+                +5 Bonus RP
+              </span>
             </button>
           )}
         </div>
@@ -475,21 +492,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
       {showUpgradePrompt && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => {
-            setShowUpgradePrompt(false);
-            onNavigate('completed-review', {
-              vehicleId,
-              reviewId,
-              spotType: 'quick',
-              wizardData: { ...wizardData, vehicleId },
-              driverRating,
-              drivingRating,
-              vehicleRating,
-              sentiment,
-              comment,
-              reputationEarned: 15,
-            });
-          }}
+          onClick={() => setShowUpgradePrompt(false)}
         >
           <div
             className="bg-surface border border-surfacehighlight rounded-2xl p-6 max-w-md w-full"
@@ -516,6 +519,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                     sentiment,
                     comment,
                     reputationEarned: 15,
+                    isFirstSpot,
                   });
                 }}
                 className="py-3 bg-surface border border-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-secondary hover:text-primary hover:border-primary transition-all"

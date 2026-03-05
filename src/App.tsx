@@ -577,6 +577,13 @@ function AppContent() {
           comment={completedReviewData.comment}
           selectedTags={completedReviewData.selectedTags}
           reputationEarned={completedReviewData.reputationEarned}
+          isFirstSpot={completedReviewData.isFirstSpot}
+          newRank={completedReviewData.newRank}
+          rankChange={completedReviewData.rankChange}
+          nextBadgeName={completedReviewData.nextBadgeName}
+          nextBadgeRemaining={completedReviewData.nextBadgeRemaining}
+          userId={user?.id}
+          userHandle={profile?.handle || ''}
           onDone={() => {
             setCompletedReviewData(null);
             setCurrentPage('scan');

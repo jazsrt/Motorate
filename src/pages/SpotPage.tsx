@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { type OnNavigate } from '../types/navigation';
 import { ArrowLeft, Camera, Upload, Keyboard, Car, Zap } from 'lucide-react';
+import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { supabase } from '../lib/supabase';
 import { hashPlate } from '../lib/hash';
@@ -73,7 +74,7 @@ const US_STATES = [
   { code: 'DC', name: 'District of Columbia' },
 ];
 
-type ViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading';
+type ViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading' | 'revealing';
 
 export function SpotPage({ onNavigate }: SpotPageProps) {
   const { user } = useAuth();
@@ -91,12 +92,33 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   const [recentSpots, setRecentSpots] = useState<any[]>([]);
   const [weeklySpots, setWeeklySpots] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
   const [weekTotal, setWeekTotal] = useState(0);
+  const [revealPhase, setRevealPhase] = useState(0);
+  const [revealResult, setRevealResult] = useState<{ vehicle: VehicleResult | null; found: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadRecentSpots();
     loadWeeklySpots();
   }, []);
+
+  // Reveal animation phases with proper cleanup
+  useEffect(() => {
+    if (viewState !== 'revealing') return;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    timeouts.push(setTimeout(() => setRevealPhase(2), 400));
+    timeouts.push(setTimeout(() => setRevealPhase(3), 900));
+    timeouts.push(setTimeout(() => {
+      setRevealPhase(4);
+      timeouts.push(setTimeout(() => {
+        if (revealResult?.found && revealResult.vehicle) {
+          setViewState(revealResult.vehicle.is_claimed ? 'claimed' : 'unclaimed');
+        } else {
+          setViewState('not-found');
+        }
+      }, 400));
+    }, 1400));
+    return () => timeouts.forEach(t => clearTimeout(t));
+  }, [viewState, revealResult]);
 
   async function loadWeeklySpots() {
     if (!user) return;
@@ -190,12 +212,14 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         return;
       }
 
-      if (vehicleData) {
-        setVehicle(vehicleData as VehicleResult);
-        setViewState(vehicleData.is_claimed ? 'claimed' : 'unclaimed');
-      } else {
-        setViewState('not-found');
-      }
+      // Trigger plate reveal animation
+      setRevealResult({
+        vehicle: vehicleData as VehicleResult | null,
+        found: !!vehicleData,
+      });
+      if (vehicleData) setVehicle(vehicleData as VehicleResult);
+      setViewState('revealing');
+      setRevealPhase(1);
     } catch (err: any) {
       showToast('Failed to search. Please try again.', 'error');
       setViewState('search');
@@ -210,6 +234,9 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
     setLoading(true);
     try {
+      // Fetch stock image in parallel with vehicle creation
+      const stockImagePromise = getVehicleImageUrl(vehicleData.make, vehicleData.model, vehicleData.year ?? undefined);
+
       const { data: newVehicle, error: createError } = await supabase
         .from('vehicles')
         .insert({
@@ -233,6 +260,13 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         return;
       }
 
+      const stockImageUrl = await stockImagePromise;
+
+      // Update vehicle with stock image if found
+      if (stockImageUrl) {
+        await supabase.from('vehicles').update({ stock_image_url: stockImageUrl }).eq('id', newVehicle.id);
+      }
+
       const wizardData: SpotWizardData = {
         plateState: stateCode,
         plateNumber: plateNumber.trim().toUpperCase(),
@@ -242,6 +276,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         model: vehicleData.model,
         color: vehicleData.color || '',
         year: vehicleData.year ? String(vehicleData.year) : undefined,
+        stockImageUrl: stockImageUrl || undefined,
       };
 
       onNavigate('quick-spot-review', { wizardData });
@@ -278,6 +313,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       color: vehicle.color || '',
       year: vehicle.year ? String(vehicle.year) : undefined,
       trim: vehicle.trim || undefined,
+      stockImageUrl: vehicle.stock_image_url || undefined,
     };
 
     onNavigate('quick-spot-review', { wizardData });
@@ -487,6 +523,56 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             Searching {state} — <span style={{ fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '2px' }}>{plateNumber}</span>
           </p>
+        </div>
+      )}
+
+      {viewState === 'revealing' && (
+        <div className="px-4 pt-10 flex flex-col items-center gap-6">
+          {/* Phase 1: Plate slides in */}
+          <div
+            style={{
+              opacity: revealPhase >= 1 ? 1 : 0,
+              transform: revealPhase >= 1 ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.9)',
+              transition: 'all 0.5s cubic-bezier(.25,.46,.45,.94)',
+            }}
+          >
+            <div className="relative bg-white rounded-lg px-8 py-4 shadow-xl border-4 border-gray-800">
+              <div className="absolute top-1.5 left-3 text-[10px] text-gray-600 font-bold">{stateCode}</div>
+              <div className="text-3xl font-mono font-extrabold text-black tracking-widest text-center">
+                {plateNumber.toUpperCase()}
+              </div>
+            </div>
+          </div>
+
+          {/* Phase 2: Scanning line */}
+          {revealPhase >= 2 && revealPhase < 4 && (
+            <div
+              className="w-48 h-0.5 rounded-full"
+              style={{
+                background: 'linear-gradient(90deg, transparent, #F97316, transparent)',
+                animation: 'plate-scan 0.8s ease-in-out infinite',
+              }}
+            />
+          )}
+
+          {/* Phase 3: Result text */}
+          <div
+            style={{
+              opacity: revealPhase >= 3 ? 1 : 0,
+              transform: revealPhase >= 3 ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'all 0.4s cubic-bezier(.25,.46,.45,.94)',
+              textAlign: 'center',
+            }}
+          >
+            <p className="text-sm font-heading font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>
+              {revealResult?.found ? 'Vehicle Found' : 'New Plate Detected'}
+            </p>
+            {revealResult?.found && revealResult.vehicle && (
+              <p className="text-xs text-secondary mt-1">
+                {revealResult.vehicle.year} {revealResult.vehicle.make} {revealResult.vehicle.model}
+              </p>
+            )}
+          </div>
         </div>
       )}
 

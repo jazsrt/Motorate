@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, Car, Palette, Star, ArrowRight, ArrowLeft, Check, Key, Eye, Volume2, Flag } from 'lucide-react';
 import { StarRatingInput } from './StarRatingInput';
+import { AutocompleteInput } from './AutocompleteInput';
 import { VEHICLE_MAKES, VEHICLE_MODELS, VEHICLE_COLORS } from '../data/vehicleData';
+import { getVehicleImageUrl } from '../lib/carImageryApi';
 
 interface PlateNotFoundProps {
   state: string;
@@ -59,6 +61,7 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
   const [comments, setComments] = useState('');
 
   const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [stockImageUrl, setStockImageUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   // Get state code from state name
@@ -75,6 +78,20 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
       setAvailableModels([]);
     }
   }, [make]);
+
+  // Fetch stock image when make + model are set
+  useEffect(() => {
+    if (make && model) {
+      let cancelled = false;
+      setStockImageUrl(null);
+      getVehicleImageUrl(make, model, year ?? undefined).then(url => {
+        if (!cancelled) setStockImageUrl(url);
+      }).catch(() => {});
+      return () => { cancelled = true; };
+    } else {
+      setStockImageUrl(null);
+    }
+  }, [make, model, year]);
 
   const canProceedStep1 = make && model && color;
 
@@ -188,83 +205,55 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
 
             {/* Compact Vehicle Selection Grid */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Make */}
-              <div>
-                <label className="block text-xs font-heading font-bold uppercase tracking-tight text-secondary mb-1.5">
-                  Make *
-                </label>
-                <select
-                  value={make}
-                  onChange={(e) => setMake(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-surfacehighlight border border-surfacehighlight rounded-xl focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 transition-all text-sm"
-                  required
-                >
-                  <option value="">Select...</option>
-                  {VEHICLE_MAKES.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Model */}
-              <div>
-                <label className="block text-xs font-heading font-bold uppercase tracking-tight text-secondary mb-1.5">
-                  Model *
-                </label>
-                {make ? (
-                  <select
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-surfacehighlight border border-surfacehighlight rounded-xl focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 transition-all text-sm"
-                    required
-                  >
-                    <option value="">Select...</option>
-                    {availableModels.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="w-full px-3 py-2.5 bg-surfacehighlight/50 border border-surfacehighlight rounded-xl text-secondary/50 italic text-sm">
-                    Select make first
-                  </div>
-                )}
-              </div>
-
-              {/* Year */}
-              <div>
-                <label className="block text-xs font-heading font-bold uppercase tracking-tight text-secondary mb-1.5">
-                  Year
-                </label>
-                <select
-                  value={year || ''}
-                  onChange={(e) => setYear(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-3 py-2.5 bg-surfacehighlight border border-surfacehighlight rounded-xl focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 transition-all text-sm"
-                >
-                  <option value="">Select...</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Color */}
-              <div>
-                <label className="block text-xs font-heading font-bold uppercase tracking-tight text-secondary mb-1.5">
-                  Color *
-                </label>
-                <select
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-surfacehighlight border border-surfacehighlight rounded-xl focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 transition-all text-sm"
-                  required
-                >
-                  <option value="">Select...</option>
-                  {VEHICLE_COLORS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                label="Make"
+                placeholder="Type make..."
+                value={make}
+                onChange={setMake}
+                options={VEHICLE_MAKES}
+                required
+              />
+              <AutocompleteInput
+                label="Model"
+                placeholder="Type model..."
+                value={model}
+                onChange={setModel}
+                options={availableModels}
+                required
+                disabled={!make}
+              />
+              <AutocompleteInput
+                label="Year"
+                placeholder="Type year..."
+                value={year ? String(year) : ''}
+                onChange={v => setYear(v ? Number(v) : null)}
+                options={years.map(String)}
+                inputMode="numeric"
+              />
+              <AutocompleteInput
+                label="Color"
+                placeholder="Type color..."
+                value={color}
+                onChange={setColor}
+                options={VEHICLE_COLORS}
+                required
+              />
             </div>
+
+            {/* Stock Image Preview */}
+            {stockImageUrl && (
+              <div className="rounded-xl overflow-hidden border border-surfacehighlight" style={{ animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) forwards' }}>
+                <img
+                  src={stockImageUrl}
+                  alt={`${make} ${model}`}
+                  className="w-full h-40 object-cover"
+                  style={{ background: '#0c1218' }}
+                />
+                <div className="px-3 py-2 bg-surfacehighlight/40 text-center">
+                  <span className="text-xs text-secondary">Stock reference image</span>
+                </div>
+              </div>
+            )}
 
             {/* Trim - Optional */}
             <div>
@@ -301,6 +290,13 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
                   </div>
                 </div>
               </div>
+
+              {/* Stock Image in Confirm */}
+              {stockImageUrl && (
+                <div className="rounded-lg overflow-hidden mb-3">
+                  <img src={stockImageUrl} alt={`${make} ${model}`} className="w-full h-32 object-cover" style={{ background: '#0c1218' }} />
+                </div>
+              )}
 
               {/* Vehicle Details */}
               <div className="text-center mb-3">

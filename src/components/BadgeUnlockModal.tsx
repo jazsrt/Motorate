@@ -60,6 +60,12 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
     }
   }, []);
 
+  // Prevent background scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   const handleShare = async (privacySetting: 'public' | 'friends' | 'private') => {
     if (!user || sharing) return;
     setSharing(true);

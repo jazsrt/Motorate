@@ -241,7 +241,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         .order('created_at', { ascending: false });
       imagesData = result.data;
     } catch (error) {
-      console.log('Vehicle images table not available');
+      // vehicle_images table may not exist yet
     }
 
     if (vehicleData) {

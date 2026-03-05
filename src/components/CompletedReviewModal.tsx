@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { Star, Heart, ThumbsDown, X, Car, Zap } from 'lucide-react';
+import { Star, Heart, ThumbsDown, X, Car, Zap, TrendingUp, Award, Share2 } from 'lucide-react';
 import type { SpotWizardData } from '../types/spot';
 import { floatPoints } from '../utils/floatPoints';
+import { shareToSocial } from './ShareCardGenerator';
 
 interface CompletedReviewModalProps {
   vehicleId: string;
@@ -17,9 +18,16 @@ interface CompletedReviewModalProps {
   comment?: string;
   selectedTags?: string[];
   reputationEarned: number;
+  isFirstSpot?: boolean;
+  newRank?: number;
+  rankChange?: number;
+  nextBadgeName?: string;
+  nextBadgeRemaining?: number;
   onDone: () => void;
   onViewVehicle: (vehicleId: string) => void;
   onUpgradeToFull?: () => void;
+  userId?: string;
+  userHandle?: string;
 }
 
 function StarDisplay({ label, value }: { label: string; value: number }) {
@@ -53,16 +61,29 @@ export function CompletedReviewModal({
   comment,
   selectedTags = [],
   reputationEarned,
+  isFirstSpot,
+  newRank,
+  rankChange,
+  nextBadgeName,
+  nextBadgeRemaining,
   onDone,
   onViewVehicle,
   onUpgradeToFull,
+  userId,
+  userHandle,
 }: CompletedReviewModalProps) {
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
   const pointsRef = useRef<HTMLDivElement>(null);
+  const stockImageUrl = wizardData.stockImageUrl;
 
   useEffect(() => {
-    const t = setTimeout(() => floatPoints(pointsRef.current, '+15'), 400);
+    const t = setTimeout(() => floatPoints(pointsRef.current, `+${reputationEarned}`), 400);
     return () => clearTimeout(t);
+  }, [reputationEarned]);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
   }, []);
 
   return (
@@ -71,14 +92,21 @@ export function CompletedReviewModal({
         <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-b border-surfacehighlight p-6 text-center relative">
           <button
             onClick={onDone}
-            className="absolute top-4 right-4 p-2 rounded-xl bg-surface/50 hover:bg-surface/80 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-xl bg-surface/50 hover:bg-surface/80 transition-colors z-10"
           >
             <X className="w-4 h-4 text-secondary" />
           </button>
 
-          <div className="w-16 h-16 bg-orange/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Car className="w-8 h-8 text-accent-primary" />
-          </div>
+          {/* Stock image or fallback icon */}
+          {stockImageUrl ? (
+            <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 border border-surfacehighlight" style={{ animation: 'coin-in 0.7s cubic-bezier(.25,.46,.45,.94) forwards' }}>
+              <img src={stockImageUrl} alt={vehicleName} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 bg-orange/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Car className="w-8 h-8 text-accent-primary" />
+            </div>
+          )}
 
           <h2 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
             {spotType === 'full' ? 'Full Spot' : 'Quick Spot'} Submitted!
@@ -93,6 +121,49 @@ export function CompletedReviewModal({
         </div>
 
         <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* First Spot Celebration */}
+          {isFirstSpot && (
+            <div
+              className="rounded-xl p-4 border text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(245,158,11,0.08))',
+                borderColor: 'rgba(249,115,22,0.3)',
+                animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) 0.3s both',
+              }}
+            >
+              <div className="text-lg font-heading font-black uppercase tracking-tight text-accent-primary mb-1">
+                First Spot!
+              </div>
+              <p className="text-xs text-secondary">
+                You're the first to spot this {wizardData.make} {wizardData.model}
+              </p>
+            </div>
+          )}
+
+          {/* Competitive Context */}
+          {(newRank || nextBadgeName) && (
+            <div className="flex gap-3" style={{ animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) 0.5s both' }}>
+              {newRank && (
+                <div className="flex-1 bg-surfacehighlight rounded-xl p-3 text-center">
+                  <TrendingUp className="w-4 h-4 text-accent-primary mx-auto mb-1" />
+                  <div className="text-lg font-black text-primary">#{newRank}</div>
+                  <div className="text-[10px] text-secondary uppercase tracking-wider">
+                    {rankChange && rankChange > 0 ? `Up ${rankChange}` : 'Your Rank'}
+                  </div>
+                </div>
+              )}
+              {nextBadgeName && nextBadgeRemaining != null && (
+                <div className="flex-1 bg-surfacehighlight rounded-xl p-3 text-center">
+                  <Award className="w-4 h-4 text-accent-primary mx-auto mb-1" />
+                  <div className="text-lg font-black text-primary">{nextBadgeRemaining}</div>
+                  <div className="text-[10px] text-secondary uppercase tracking-wider">
+                    to {nextBadgeName}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="bg-surfacehighlight rounded-xl p-4 space-y-2">
             <StarDisplay label="Driver" value={driverRating} />
             <StarDisplay label="Driving" value={drivingRating} />
@@ -165,6 +236,32 @@ export function CompletedReviewModal({
               </button>
             </div>
           )}
+
+          {/* Share Prompt */}
+          <div
+            className="rounded-xl p-4 border border-surfacehighlight text-center"
+            style={{ animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) 0.7s both' }}
+          >
+            <p className="text-xs text-secondary mb-3">Share your spot with friends</p>
+            <button
+              onClick={() => {
+                shareToSocial({
+                  type: 'spot',
+                  title: `Spotted: ${vehicleName}`,
+                  subtitle: `${sentiment === 'love' ? 'Loved' : 'Reviewed'} this ride on MotoRate`,
+                  imageUrl: stockImageUrl || undefined,
+                  userHandle: userHandle || '',
+                  userRep: reputationEarned,
+                  deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicleId}`,
+                }, userId);
+              }}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-white transition-all active:scale-95"
+              style={{ background: '#F97316' }}
+            >
+              <Share2 className="w-4 h-4" />
+              Share Spot
+            </button>
+          </div>
         </div>
 
         <div className="p-4 border-t border-surfacehighlight grid grid-cols-2 gap-3">

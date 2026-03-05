@@ -93,7 +93,28 @@
   /* Modal */
   --modal-overlay: rgba(6, 10, 14, 0.92);
   --modal-blur: 20px;
+}
 
+/* ── Modal classes ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(var(--modal-blur));
+  -webkit-backdrop-filter: blur(var(--modal-blur));
+}
+.modal-content {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,.035);
+  border-radius: 16px;
+}
+
+/* ── Root variables (continued) ── */
+:root {
   /* Status badges */
   --status-pending: rgba(249, 115, 22, 0.15);
   --status-pending-border: rgba(249, 115, 22, 0.3);
@@ -643,16 +664,6 @@
   padding-bottom: max(90px, calc(90px + env(safe-area-inset-bottom)));
 }
 
-/* ─── Page Enter Animation ──────────────────────────────────── */
-@keyframes animate-page-enter {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}  
-
-.animate-page-enter {
-  animation: animate-page-enter 0.35s var(--ease-m) forwards;
-}
-
 /* ─── Notification Dot ──────────────────────────────────────── */
 .notif-dot {
   position: relative;
@@ -1003,6 +1014,13 @@
   0%   { opacity: 1; transform: translateY(0) scale(1); }
   60%  { opacity: 1; }
   100% { opacity: 0; transform: translateY(-50px) scale(0.8); }
+}
+
+/* Plate reveal scan line */
+@keyframes plate-scan {
+  0%   { transform: scaleX(0.3); opacity: 0.3; }
+  50%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(0.3); opacity: 0.3; }
 }
 
 /* Rare card pulsing glow */
