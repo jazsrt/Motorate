@@ -4,7 +4,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { BadgeProvider, useBadges } from './contexts/BadgeContext';
 import { NavigationProvider } from './contexts/NavigationContext';
-import { BadgeUnlockModal } from './components/BadgeUnlockModal';
+import { BadgeCelebration } from './components/badges/BadgeCelebration';
+import { BadgeIcon } from './components/BadgeIcon';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { NewFeedPage } from './pages/NewFeedPage';
@@ -536,13 +537,17 @@ function AppContent() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <div key={currentPage} className="animate-page-enter">
+      <div key={currentPage} className="page-enter">
         {pageContent}
       </div>
       {unlockedBadge && (
-        <BadgeUnlockModal
-          badge={unlockedBadge}
+        <BadgeCelebration
+          badgeName={unlockedBadge.name}
+          badgeDescription={unlockedBadge.description}
+          tier={unlockedBadge.level_name?.toLowerCase() === 'platinum' ? 'platinum' : unlockedBadge.level_name?.toLowerCase() === 'gold' ? 'gold' : unlockedBadge.level_name?.toLowerCase() === 'silver' ? 'silver' : 'bronze'}
+          icon={<BadgeIcon iconPath={unlockedBadge.icon_path} size={40} alt={unlockedBadge.name} />}
           onClose={dismissBadge}
+          onViewBadges={() => { dismissBadge(); handleNavigate('badges'); }}
         />
       )}
       {currentPage === 'completed-review' && completedReviewData && (

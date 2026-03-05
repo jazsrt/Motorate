@@ -185,10 +185,10 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
 
   return (
     <Layout currentPage="feed" onNavigate={onNavigate}>
-      <div className="max-w-2xl mx-auto -mt-5 pb-20 animate-page-enter">
+      <div className="max-w-2xl mx-auto -mt-5 pb-20 page-enter">
 
         {/* V3 Competitive Rank Bar */}
-        <CompetitiveRankBar />
+        <div className="v3-stagger v3-stagger-1"><CompetitiveRankBar /></div>
 
         {/* Legacy Competitive Rank Bar */}
         {!weeklyMetrics.loading && weeklyMetrics.globalRank > 0 && (

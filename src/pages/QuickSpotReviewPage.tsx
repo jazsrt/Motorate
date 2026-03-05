@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { ArrowLeft, Star, Heart, ThumbsDown, Zap, ChevronRight, Camera, X, Image } from 'lucide-react';
+import { haptic } from '../utils/floatPoints';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -28,6 +29,14 @@ function StarRow({
   onChange: (v: number) => void;
 }) {
   const [hovered, setHovered] = useState(0);
+  const [animating, setAnimating] = useState(false);
+
+  const handleClick = useCallback((star: number) => {
+    onChange(star);
+    haptic(15);
+    setAnimating(true);
+    setTimeout(() => setAnimating(false), star * 80 + 200);
+  }, [onChange]);
 
   return (
     <div className="flex items-center justify-between py-4 border-b border-surfacehighlight last:border-0">
@@ -36,7 +45,7 @@ function StarRow({
         {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
-            onClick={() => onChange(star)}
+            onClick={() => handleClick(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
             className="p-1 transition-transform active:scale-90"
@@ -44,9 +53,10 @@ function StarRow({
             <Star
               className={`w-8 h-8 transition-colors ${
                 star <= (hovered || value)
-                  ? 'fill-yellow-400 text-yellow-400'
+                  ? 'fill-[#F97316] text-[#F97316]'
                   : 'fill-surfacehighlight text-surfacehighlight'
               }`}
+              style={animating && star <= value ? { animation: `star-fill 0.3s ease ${star * 80}ms both` } : undefined}
             />
           </button>
         ))}

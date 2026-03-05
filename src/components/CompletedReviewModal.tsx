@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { Star, Heart, ThumbsDown, X, Car, Zap } from 'lucide-react';
 import type { SpotWizardData } from '../types/spot';
+import { floatPoints } from '../utils/floatPoints';
 
 interface CompletedReviewModalProps {
   vehicleId: string;
@@ -28,7 +30,7 @@ function StarDisplay({ label, value }: { label: string; value: number }) {
         {[1, 2, 3, 4, 5].map(star => (
           <Star
             key={star}
-            className={`w-3.5 h-3.5 ${star <= value ? 'fill-yellow-400 text-yellow-400' : 'fill-neutral-700 text-neutral-700'}`}
+            className={`w-3.5 h-3.5 ${star <= value ? 'fill-[#F97316] text-[#F97316]' : 'fill-neutral-700 text-neutral-700'}`}
           />
         ))}
       </div>
@@ -56,10 +58,16 @@ export function CompletedReviewModal({
   onUpgradeToFull,
 }: CompletedReviewModalProps) {
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
+  const pointsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => floatPoints(pointsRef.current, '+15'), 400);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div className="modal-overlay p-4">
-      <div className="modal-content rounded-2xl w-full max-w-md overflow-hidden">
+      <div ref={pointsRef} className="modal-content rounded-2xl w-full max-w-md overflow-hidden">
         <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-b border-surfacehighlight p-6 text-center relative">
           <button
             onClick={onDone}

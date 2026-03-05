@@ -1030,6 +1030,12 @@
   100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
 }
 
+/* Fade-up reveal (badge celebration text) */
+@keyframes fup {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Scan line on camera button */
 @keyframes scanl {
   0%   { left: -100%; }

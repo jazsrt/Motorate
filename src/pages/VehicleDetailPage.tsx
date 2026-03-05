@@ -596,7 +596,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           )}
         </Helmet>
       )}
-      <div className="pb-24 animate-page-enter">
+      <div className="pb-24 page-enter">
         <div className="px-4 pt-4 mb-4 stg">
           <button
             onClick={goBack}
@@ -616,7 +616,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         )}
 
         {/* Hero Image */}
-        <div className="relative w-full stg" style={{ minHeight: 200 }}>
+        <div className="relative w-full stg v3-stagger v3-stagger-1" style={{ minHeight: 200 }}>
           {(() => {
             const heroUrl = vehicleImages[0]?.image_url || vehicle.stock_image_url || vehicle.profile_image_url || carImageryUrl;
             return heroUrl && !heroImgError ? (
@@ -700,7 +700,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         {/* Rating Breakdown + Sentiment */}
         {ratingCategories.length > 0 && (
           <div className="px-4 mb-4 stg">
-            <div className="card-v3 p-4 space-y-3">
+            <div className="card-v3 card-v3-lift p-4 space-y-3">
               {/* Sentiment Counts */}
               {(loveCount > 0 || hateCount > 0) && (
                 <div className="flex items-center justify-center gap-6 pb-3 border-b border-white/[0.06]">
@@ -736,7 +736,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
         <div className="px-4 stg">
           {/* Identity Card */}
-          <div className="card-v3 p-5 mb-4">
+          <div className="card-v3 card-v3-lift p-5 mb-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h1 className="font-heading text-[22px] font-semibold text-white mb-1">
@@ -770,7 +770,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
           {/* Owner Card — claimed vehicles only */}
           {vehicle.is_claimed && vehicle.owner && (
-            <div className="card-v3 p-4 mb-4" style={{ boxShadow: '0 0 12px rgba(249,115,22,0.08)' }}>
+            <div className="card-v3 card-v3-lift p-4 mb-4" style={{ boxShadow: '0 0 12px rgba(249,115,22,0.08)' }}>
               <p className="text-[10px] text-tertiary uppercase tracking-[1.2px] font-bold mb-3">Vehicle Owner</p>
               <div className="flex items-center gap-3">
                 <UserAvatar
@@ -807,7 +807,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             if (specs.length === 0) return null;
 
             return (
-              <div style={{
+              <div className="v3-stagger v3-stagger-3" style={{
                 margin: '0 16px 16px', borderRadius: 14, overflow: 'hidden', position: 'relative',
                 background: 'repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0px, transparent 1px, transparent 2px, rgba(255,255,255,.008) 3px), linear-gradient(180deg, #141c28, #111a24)',
                 border: '1px solid rgba(249,115,22,.1)',
@@ -1234,7 +1234,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         )}
 
         {/* Stickers Section */}
-        <div className="mb-6 px-4">
+        <div className="mb-6 px-4 v3-stagger v3-stagger-4">
           <div className="slbl">Bumper Stickers</div>
           <div className="sticker-strip">
             <StickerSlab vehicleId={vehicleId} />
@@ -1299,7 +1299,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </>
         )}
 
-        <div id="reviews" className="card-v3 p-6 mx-4 mb-6">
+        <div id="reviews" className="card-v3 card-v3-lift p-6 mx-4 mb-6 v3-stagger v3-stagger-5">
           <h3 className="text-xl font-bold mb-4 uppercase tracking-wider text-primary">Community Spots</h3>
           {reviews.length > 0 && (
             <p className="text-[8px] text-center mb-2" style={{ color: '#909aaa' }}>

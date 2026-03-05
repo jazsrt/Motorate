@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import { addReaction, getReactionCounts, getUserReaction, ReactionType, REACTION_EMOJIS, ReactionCounts } from '../lib/reactions';
 import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
+import { floatPoints, haptic } from '../utils/floatPoints';
 
 const REACTION_ICONS: Record<ReactionType, React.ElementType> = {
   fire: Flame,
@@ -117,7 +118,10 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
       } else {
         setUserReaction(reactionType);
         sounds.points();
-        haptics.light();
+        haptic(25);
+        floatPoints(buttonRef.current, '+2');
+        buttonRef.current?.classList.add('like-pop');
+        setTimeout(() => buttonRef.current?.classList.remove('like-pop'), 350);
       }
       await loadReactions();
       setShowPicker(false);
@@ -196,7 +200,7 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
         className={`min-h-[44px] flex items-center gap-1.5 transition-all duration-300 ${
           animating ? 'scale-125' : 'scale-100'
         } active:scale-90`}
-        style={{ color: userReaction ? '#ec4899' : 'var(--text-tertiary)' }}
+        style={{ color: userReaction ? '#F97316' : 'var(--text-tertiary)' }}
         onMouseEnter={e => !userReaction && ((e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)')}
         onMouseLeave={e => !userReaction && ((e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)')}
         disabled={loading}
@@ -281,7 +285,7 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
               key={type}
               onClick={() => handleReaction(type)}
               className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all hover:bg-[var(--s2)] ${
-                userReaction === type ? 'bg-[var(--s2)] ring-2 ring-[#ec4899]' : ''
+                userReaction === type ? 'bg-[var(--s2)] ring-2 ring-[#F97316]' : ''
               }`}
               disabled={loading}
             >

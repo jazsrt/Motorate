@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { giveSticker } from '../lib/stickerService';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext';
 import { AlertCircle, ThumbsUp, ThumbsDown, Sparkles } from 'lucide-react';
 import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
+import { floatPoints, haptic } from '../utils/floatPoints';
 
 interface VehicleStickerSelectorProps {
   vehicleId: string;
@@ -18,6 +19,7 @@ const MAX_NEGATIVE_STICKERS = 3;
 export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleStickerSelectorProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const stickerContainerRef = useRef<HTMLDivElement>(null);
   const [stickers, setStickers] = useState<any[]>([]);
   const [giving, setGiving] = useState<string | null>(null);
   const [positiveCount, setPositiveCount] = useState(0);
@@ -86,7 +88,11 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
 
     if (result.success) {
       sounds.pop();
-      haptics.light();
+      haptic(25);
+      floatPoints(stickerContainerRef.current, '+5');
+      // Add fly-in animation to the sticker container
+      stickerContainerRef.current?.classList.add('sticker-flying');
+      setTimeout(() => stickerContainerRef.current?.classList.remove('sticker-flying'), 500);
       showToast(`${sticker.icon_name} ${sticker.name} sticker given! ${isPositive ? '+2 rep' : '-3 rep'} to owner`, 'success');
       if (isPositive) setPositiveCount(prev => prev + 1);
       else setNegativeCount(prev => prev + 1);
@@ -115,7 +121,7 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
   }
 
   return (
-    <div className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
+    <div ref={stickerContainerRef} className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-accent-primary" />

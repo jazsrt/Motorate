@@ -281,7 +281,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="max-w-3xl mx-auto animate-page-enter">
+      <div className="max-w-3xl mx-auto page-enter">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 stg">

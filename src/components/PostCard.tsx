@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Heart, MessageCircle, MoreVertical, Trash2, Edit, Eye, CheckCircle,
-  MapPin, Star, ImageOff, ThumbsDown, Car, Zap, Award, Bookmark
+  MapPin, Star, ImageOff, ThumbsDown, Car, Zap, Award
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -607,12 +607,6 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               <ShareButton post={post} />
             </div>
           </div>
-          <button
-            className="min-h-[44px] flex items-center justify-center transition-colors text-tertiary hover:text-secondary"
-            onClick={() => {}}
-          >
-            <Bookmark className="w-5 h-5" strokeWidth={1.5} />
-          </button>
         </div>
 
         {/* ── COMMENT PREVIEW ──────────────────────────────── */}

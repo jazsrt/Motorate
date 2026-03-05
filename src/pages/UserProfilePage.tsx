@@ -300,7 +300,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="space-y-6 animate-page-enter">
+      <div className="space-y-6 page-enter">
         <div className="flex items-center gap-3 stg">
           <button
             onClick={onBack}

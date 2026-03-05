@@ -104,7 +104,7 @@ export function LoginPage({ onSuccess, onSwitchToRegister }: LoginPageProps) {
         />
       </div>
 
-      <div className="w-full max-w-sm relative z-10 animate-page-enter">
+      <div className="w-full max-w-sm relative z-10 page-enter">
         {/* Logo */}
         <div className="text-center mb-8">
           <Logo size="large" showTagline />

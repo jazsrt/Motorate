@@ -112,7 +112,7 @@ function VehicleCard({
 
   return (
     <div
-      className="card-v3 mx-4 mb-4 overflow-hidden cursor-pointer"
+      className="card-v3 card-v3-lift mx-4 mb-4 overflow-hidden cursor-pointer"
       onClick={() => onNavigate('vehicle-detail', { vehicleId: vehicle.id })}
     >
       {/* Photo Area */}
@@ -489,13 +489,13 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
   return (
     <Layout currentPage="my-garage" onNavigate={handleNavigate}>
-      <div className="pb-24 animate-page-enter">
+      <div className="pb-24 page-enter">
 
         {/* FLEET OVERVIEW */}
         {vehicles.length > 0 && (
           <>
             <div className="slbl stg">Fleet Overview</div>
-            <div className="card-v3 mx-4 mb-4 p-4 stg">
+            <div className="card-v3 card-v3-lift mx-4 mb-4 p-4 stg v3-stagger v3-stagger-1">
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { label: 'Vehicles', value: fleetStats.vehicleCount },
@@ -534,7 +534,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
             {/* Claim Next Plate CTA */}
             <div
-              className="card-v3 mx-4 mb-4 flex items-center gap-3 px-4 py-4 cursor-pointer active:opacity-80"
+              className="card-v3 card-v3-lift mx-4 mb-4 flex items-center gap-3 px-4 py-4 cursor-pointer active:opacity-80"
               onClick={() => setShowClaimSearch(true)}
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-accent-dim">
