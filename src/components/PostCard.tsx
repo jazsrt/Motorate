@@ -17,7 +17,8 @@ import { BadgeList } from './badges/BadgeList';
 import { StarRating } from './StarRating';
 import { getUserBadges, getUserDriverRating, type Badge } from '../lib/badges';
 import { VehicleQuickModal } from './VehicleQuickModal';
-import { UserQuickModal } from './UserQuickModal';
+import { PublicProfileModal } from './PublicProfileModal';
+import { floatPoints, haptic } from '../utils/floatPoints';
 import type { OnNavigate } from '../types/navigation';
 
 interface Comment {
@@ -133,9 +134,13 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const commentSectionRef = useRef<HTMLDivElement>(null);
 
+  const likeButtonRef = useRef<HTMLDivElement>(null);
+  const shareButtonRef = useRef<HTMLDivElement>(null);
+
   const isOwner = user?.id === post.author_id;
   const spotOrReview = isSpotOrReview(post);
   const typeLabel = getTypeLabel(post);
+  const isRareFind = (post as any).rare_find || (post as any).spot_count != null && (post as any).spot_count < 5;
 
   const handleImageError = (index: number) => {
     setImageErrors(prev => new Set(prev).add(index));
@@ -247,11 +252,11 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
     <>
       <div
         ref={cardRef}
-        className="card-v3 transition-all duration-300 relative"
+        className={`card-v3 card-v3-lift transition-all duration-300 relative ${isRareFind ? 'rare-card-v3' : ''}`}
       >
         <div className="absolute top-0 left-[30%] right-[30%] h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--orange), transparent)' }} />
         {/* ── POST HEADER ─────────────────────────────────── */}
-        <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative flex-shrink-0">
               <UserAvatar avatarUrl={post.author.avatar_url} handle={post.author.handle} size="md" />
@@ -278,6 +283,14 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                     style={{ background: 'var(--orange-dim)', color: 'var(--orange)', border: '1px solid var(--orange-muted)' }}>
                     #{(post as any).author_rank}
                   </span>
+                )}
+                {isRareFind && (
+                  <span style={{
+                    fontSize: 7, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase',
+                    padding: '3px 8px', borderRadius: 10,
+                    background: 'rgba(249,115,22,.12)', color: '#F97316',
+                    border: '1px solid rgba(249,115,22,.2)', marginLeft: 6,
+                  }}>Rare Find</span>
                 )}
                 {isVerifiedOwner && (
                   <span
@@ -357,7 +370,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                   src={spottedImageUrl}
                   alt={vehicleDisplay || 'Spotted vehicle'}
                   className="w-full object-cover"
-                  style={{ maxHeight: 420, minHeight: 240 }}
+                  style={{ maxHeight: 280, minHeight: 160 }}
                   onError={() => handleImageError(0)}
                 />
 
@@ -370,18 +383,19 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                   src={vehicleImage}
                   alt={vehicleDisplay || 'Vehicle'}
                   className="w-full object-cover"
-                  style={{ maxHeight: 300, minHeight: 160 }}
+                  style={{ maxHeight: 220, minHeight: 120 }}
                   onError={() => setVehicleImgError(true)}
                 />
               ) : (
                 <div
-                  className="w-full flex flex-col items-center justify-center gap-3"
-                  style={{ minHeight: 180, background: 'linear-gradient(135deg, var(--bg) 0%, var(--s2) 100%)' }}
+                  className="w-full flex items-center justify-center gap-2"
+                  style={{
+                    height: 80,
+                    background: 'linear-gradient(135deg, var(--bg) 0%, var(--s2) 100%)',
+                    borderBottom: '1px solid rgba(255,255,255,.03)',
+                  }}
                 >
-                  <Car className="w-16 h-16" style={{ color: '#6a7486' }} strokeWidth={1} />
-                  <span className="text-[12px] font-medium uppercase tracking-wider" style={{ color: '#6a7486' }}>
-                    No photo available
-                  </span>
+                  <Car className="w-8 h-8" style={{ color: '#4a5668' }} strokeWidth={0.8} />
                 </div>
               )}
 
@@ -426,85 +440,74 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               )}
             </div>
 
-            {/* Vehicle identity bar */}
-            {(vehicleDisplay || vehicleData?.color || post.location) && (
+            {/* Vehicle identity bar — compact inline */}
+            {(vehicleDisplay || vehicleData?.plate_number) && (
               <div
-                className={`px-4 py-3 flex items-center justify-between gap-3 border-b ${vehicleData?.id ? 'cursor-pointer active:opacity-80' : ''}`}
-                style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+                className={`px-3 py-2 flex items-center gap-2 border-b ${vehicleData?.id ? 'cursor-pointer active:opacity-80' : ''}`}
+                style={{ background: 'rgba(20,28,40,.8)', borderColor: 'rgba(255,255,255,.03)' }}
                 onClick={vehicleData?.id ? () => setShowVehicleModal(true) : undefined}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Car className="w-4 h-4 flex-shrink-0 text-tertiary" strokeWidth={1.5} />
-                  <div className="min-w-0">
-                    {vehicleDisplay && (
-                      <p className="text-[14px] font-bold leading-tight truncate text-primary">
-                        {vehicleDisplay}
-                      </p>
-                    )}
-                    {vehicleData?.color && (
-                      <p className="text-[11px] capitalize mt-0.5 text-tertiary">
-                        {vehicleData.color}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {post.location && (
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <MapPin className="w-3 h-3 text-tertiary" strokeWidth={1.5} />
-                    <span className="text-[11px] text-tertiary">{post.location}</span>
-                  </div>
+                {vehicleData?.plate_number && (
+                  <span className="font-mono text-[11px] font-bold tracking-widest px-2 py-1 rounded"
+                    style={{ background: 'var(--s3)', color: 'var(--t1)', border: '1px solid rgba(255,255,255,.06)' }}>
+                    {vehicleData.plate_number}
+                  </span>
+                )}
+                <span className="text-[11px] text-secondary font-light flex-1 truncate">{vehicleDisplay}</span>
+                {pointsEarned && (
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: '#F97316', textShadow: '0 0 8px rgba(249,115,22,.15)' }}>
+                    {pointsEarned}
+                  </span>
                 )}
               </div>
             )}
 
-            {/* Ratings row — only when ratings exist */}
+            {/* Compact ratings — single row */}
             {hasRatings && (
               <div
-                className="px-4 py-3 flex items-center justify-around gap-2 border-b"
+                className="px-3 py-2 flex items-center gap-3 border-b"
                 style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
               >
-                {(post as any).rating_driver && (
-                  <RatingStars value={(post as any).rating_driver} label="Driver" />
-                )}
-                {(post as any).rating_driving && (
-                  <RatingStars value={(post as any).rating_driving} label="Driving" />
-                )}
-                {(post as any).rating_vehicle && (
-                  <RatingStars value={(post as any).rating_vehicle} label="Vehicle" />
-                )}
-              </div>
-            )}
-
-            {/* Detail ratings row (full review only) */}
-            {hasDetailRatings && (
-              <div
-                className="px-4 py-2.5 flex items-center justify-around gap-2 border-b"
-                style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
-              >
-                {(post as any).looks_rating && (
-                  <div className="text-center">
-                    <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5 text-tertiary">Looks</p>
-                    <p className="text-[13px] font-bold font-mono" style={{ color: 'var(--gold-h)' }}>{(post as any).looks_rating}/5</p>
-                  </div>
-                )}
-                {(post as any).sound_rating && (
-                  <div className="text-center">
-                    <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5 text-tertiary">Sound</p>
-                    <p className="text-[13px] font-bold font-mono" style={{ color: 'var(--gold-h)' }}>{(post as any).sound_rating}/5</p>
-                  </div>
-                )}
-                {(post as any).condition_rating && (
-                  <div className="text-center">
-                    <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5 text-tertiary">Condition</p>
-                    <p className="text-[13px] font-bold font-mono" style={{ color: 'var(--gold-h)' }}>{(post as any).condition_rating}/5</p>
-                  </div>
-                )}
+                {/* Overall score */}
+                <div className="flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
+                  <span className="font-mono text-[14px] font-bold" style={{ color: 'var(--t1)' }}>
+                    {(() => {
+                      const sum = ((post as any).rating_driver || 0) + ((post as any).rating_driving || 0) + ((post as any).rating_vehicle || 0);
+                      const count = ((post as any).rating_driver ? 1 : 0) + ((post as any).rating_driving ? 1 : 0) + ((post as any).rating_vehicle ? 1 : 0);
+                      return (sum / (count || 1)).toFixed(1);
+                    })()}
+                  </span>
+                </div>
+                {/* Mini category chips */}
+                <div className="flex items-center gap-1.5 flex-1 overflow-hidden">
+                  {[
+                    { key: 'rating_driver', label: 'DRV' },
+                    { key: 'rating_driving', label: 'DRG' },
+                    { key: 'rating_vehicle', label: 'VHC' },
+                  ].filter(r => (post as any)[r.key]).map(r => (
+                    <span key={r.key} className="font-mono text-[9px] px-1.5 py-0.5 rounded"
+                      style={{ background: 'var(--s2)', color: 'var(--t3)', border: '1px solid rgba(255,255,255,.04)' }}>
+                      {r.label} {(post as any)[r.key]}
+                    </span>
+                  ))}
+                  {hasDetailRatings && [
+                    { key: 'looks_rating', label: 'LKS' },
+                    { key: 'sound_rating', label: 'SND' },
+                    { key: 'condition_rating', label: 'CND' },
+                  ].filter(r => (post as any)[r.key]).map(r => (
+                    <span key={r.key} className="font-mono text-[9px] px-1.5 py-0.5 rounded"
+                      style={{ background: 'var(--s2)', color: 'var(--t3)', border: '1px solid rgba(255,255,255,.04)' }}>
+                      {r.label} {(post as any)[r.key]}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Caption / comment */}
             {post.caption && (
-              <div className="px-4 pt-3 pb-1">
+              <div className="px-3 pt-2 pb-1">
                 <p className="text-[13px] leading-[1.65] text-primary">
                   <span className="font-semibold" style={{ color: 'var(--accent)' }}>@{post.author.handle}</span>
                   {isVerifiedOwner && <CheckCircle className="inline w-3 h-3 ml-0.5 mb-0.5" style={{ color: 'var(--accent)' }} />}
@@ -527,8 +530,8 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                           alt={`Post image ${index + 1}`}
                           className="w-full h-full object-cover"
                           style={{
-                            maxHeight: post.image_urls!.length === 1 ? '720px' : '360px',
-                            minHeight: post.image_urls!.length === 1 ? '360px' : '240px',
+                            maxHeight: post.image_urls!.length === 1 ? '400px' : '240px',
+                            minHeight: post.image_urls!.length === 1 ? '200px' : '140px',
                           }}
                           loading={index === 0 ? 'eager' : 'lazy'}
                           onError={() => handleImageError(index)}
@@ -537,8 +540,8 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                         <div
                           className="w-full flex flex-col items-center justify-center"
                           style={{
-                            maxHeight: post.image_urls!.length === 1 ? '720px' : '360px',
-                            minHeight: post.image_urls!.length === 1 ? '360px' : '240px',
+                            maxHeight: post.image_urls!.length === 1 ? '400px' : '240px',
+                            minHeight: post.image_urls!.length === 1 ? '200px' : '140px',
                             color: 'var(--text-tertiary)',
                           }}
                         >
@@ -586,9 +589,11 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         )}
 
         {/* ── ACTIONS ──────────────────────────────────────── */}
-        <div className="px-4 py-3 flex items-center justify-between border-t" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-3 py-2 flex items-center justify-between border-t" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-5">
-            <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+            <div ref={likeButtonRef}>
+              <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+            </div>
 
             <button
               onClick={handleCommentClick}
@@ -598,7 +603,9 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               {totalComments > 0 && <span className="text-[13px] font-mono">{totalComments}</span>}
             </button>
 
-            <ShareButton post={post} />
+            <div ref={shareButtonRef}>
+              <ShareButton post={post} />
+            </div>
           </div>
           <button
             className="min-h-[44px] flex items-center justify-center transition-colors text-tertiary hover:text-secondary"
@@ -682,7 +689,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
       )}
 
       {showUserModal && (
-        <UserQuickModal
+        <PublicProfileModal
           userId={post.author_id}
           onClose={() => setShowUserModal(false)}
           onNavigate={onNavigate}

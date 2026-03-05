@@ -951,3 +951,169 @@
   0%   { width: 0; height: 0; opacity: 0.8; border-width: 3px; }
   100% { width: 280px; height: 280px; opacity: 0; border-width: 1px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   V3 EXPERIENCE ANIMATIONS — from motorate-v3-full-experience-mockup.html
+   ═══════════════════════════════════════════════════════════ */
+
+/* Page transitions */
+@keyframes pg-in {
+  0%   { opacity: 0; transform: translateX(24px); filter: blur(3px); }
+  50%  { filter: blur(0); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* Staggered card entry */
+@keyframes pwr-v3 {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Rank number flip */
+@keyframes rank-up {
+  0%   { transform: rotateX(0); color: var(--orange, #F97316); }
+  49%  { transform: rotateX(90deg); }
+  51%  { transform: rotateX(-90deg); }
+  100% { transform: rotateX(0); color: #5aaa7a; }
+}
+@keyframes rank-down {
+  0%   { transform: rotateX(0); color: var(--orange, #F97316); }
+  49%  { transform: rotateX(90deg); }
+  51%  { transform: rotateX(-90deg); }
+  100% { transform: rotateX(0); color: #cc5555; }
+}
+
+/* Like heart fill */
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.3); }
+  50%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Star rating fill */
+@keyframes star-fill {
+  0%   { transform: scale(0.5); opacity: 0.3; }
+  50%  { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Floating points "+15" that drift up and fade */
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-50px) scale(0.8); }
+}
+
+/* Rare card pulsing glow */
+@keyframes rare-glow {
+  0%, 100% { box-shadow: inset 0 0 20px rgba(249,115,22,.03), 0 0 20px rgba(249,115,22,.04); }
+  50%      { box-shadow: inset 0 0 30px rgba(249,115,22,.06), 0 0 30px rgba(249,115,22,.08); }
+}
+
+/* Badge coin entrance */
+@keyframes coin-in {
+  0%   { opacity: 0; transform: translateY(100px) scale(0.5) rotate(-20deg); }
+  65%  { opacity: 1; transform: translateY(-6px) scale(1.06) rotate(3deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+/* Metallic flash sweep across badge */
+@keyframes metal-flash {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Particle burst from badge celebration */
+@keyframes pburst {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+/* Scan line on camera button */
+@keyframes scanl {
+  0%   { left: -100%; }
+  50%  { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* Plate reveal typewriter */
+@keyframes typeout {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@keyframes blinkcur {
+  50% { border-color: transparent; }
+}
+
+/* Sticker fly-in */
+@keyframes sticker-fly {
+  0%   { transform: translateX(-60px) scale(0.5) rotate(-20deg); opacity: 0; }
+  60%  { transform: translateX(4px) scale(1.1) rotate(3deg); opacity: 1; }
+  100% { transform: translateX(0) scale(1) rotate(0); opacity: 1; }
+}
+
+/* Card hover lift */
+.card-v3-lift {
+  transition: transform 0.25s cubic-bezier(.25,.46,.45,.94), box-shadow 0.25s cubic-bezier(.25,.46,.45,.94);
+}
+.card-v3-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 24px rgba(0,0,0,.45), 0 0 20px rgba(249,115,22,.03);
+}
+
+/* Rare card treatment */
+.rare-card-v3 {
+  border-color: rgba(249,115,22,.15) !important;
+  animation: rare-glow 3s ease-in-out infinite;
+  position: relative;
+}
+.rare-card-v3::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(249,115,22,.08), transparent 40%, transparent 60%, rgba(249,115,22,.06));
+  pointer-events: none;
+  z-index: 0;
+}
+.rare-card-v3::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #F97316, transparent);
+  opacity: 0.5;
+}
+
+/* Floating points overlay */
+.float-pts {
+  position: fixed;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #F97316;
+  text-shadow: 0 0 10px rgba(249,115,22,.3);
+  pointer-events: none;
+  z-index: 9999;
+  animation: float-up 1.2s cubic-bezier(.25,.46,.45,.94) forwards;
+}
+
+/* Staggered entry utility classes */
+.v3-stagger { opacity: 0; animation: pwr-v3 0.45s cubic-bezier(.25,.46,.45,.94) forwards; }
+.v3-stagger-1 { animation-delay: 0ms; }
+.v3-stagger-2 { animation-delay: 70ms; }
+.v3-stagger-3 { animation-delay: 140ms; }
+.v3-stagger-4 { animation-delay: 210ms; }
+.v3-stagger-5 { animation-delay: 280ms; }
+.v3-stagger-6 { animation-delay: 350ms; }
+.v3-stagger-7 { animation-delay: 420ms; }
+
+/* Like animation */
+.like-pop { animation: heart-pop 0.35s cubic-bezier(.22,.68,0,1.2); }
+.like-active svg { color: #F97316 !important; fill: #F97316 !important; transform: scale(1.12); }
+
+/* Page entering */
+.page-enter { animation: pg-in 0.35s cubic-bezier(.25,.46,.45,.94) forwards; }

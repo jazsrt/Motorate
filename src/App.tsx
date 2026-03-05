@@ -229,6 +229,12 @@ function AppContent() {
     } else if (page === 'completed-review' && data && typeof data === 'object') {
       setCompletedReviewData(data);
       setCurrentPage('completed-review');
+    } else if (page === 'scan') {
+      if (data && typeof data === 'object') {
+        setSpotPlateState(data.plateState || '');
+        setSpotPlateNumber(data.plateNumber || '');
+      }
+      setCurrentPage('scan');
     } else if (page === 'search' && typeof data === 'string') {
       setSearchQuery(data);
       setCurrentPage('search');
@@ -352,7 +358,7 @@ function AppContent() {
             .from('profiles')
             .update({ onboarding_completed: true })
             .eq('id', user.id);
-          window.location.hash = '#scan';
+          window.location.hash = 'scan';
         }}
       />
     );

@@ -9,7 +9,8 @@ import { Plus, RefreshCw, Rss, TrendingUp, Camera, Crosshair, Zap, Trophy, Car, 
 import PostCard from '../components/PostCard';
 import { SuggestedUsers } from '../components/SuggestedUsers';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
-import { CompetitiveRankBar } from '../components/CompetitiveRankBar';
+import { CompetitiveRankBar as LegacyRankBar } from '../components/CompetitiveRankBar';
+import { CompetitiveRankBar } from '../components/feed/CompetitiveRankBar';
 import { WeeklyRecapModal } from '../components/WeeklyRecapModal';
 import { NearMissBadgeNudge } from '../components/NearMissBadgeNudge';
 
@@ -186,9 +187,12 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
     <Layout currentPage="feed" onNavigate={onNavigate}>
       <div className="max-w-2xl mx-auto -mt-5 pb-20 animate-page-enter">
 
-        {/* Competitive Rank Bar */}
+        {/* V3 Competitive Rank Bar */}
+        <CompetitiveRankBar />
+
+        {/* Legacy Competitive Rank Bar */}
         {!weeklyMetrics.loading && weeklyMetrics.globalRank > 0 && (
-          <CompetitiveRankBar
+          <LegacyRankBar
             rank={weeklyMetrics.globalRank}
             city="Chicago"
             totalUsers={weeklyMetrics.totalUsers}
@@ -297,7 +301,7 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
           {filteredPosts.length > 0 && (
             <div className="space-y-4">
               {filteredPosts.map((post, idx) => (
-                <div key={post.id} className="space-y-4">
+                <div key={post.id} className={`space-y-4 v3-stagger v3-stagger-${Math.min(idx + 2, 7)}`}>
                   <PostCard post={post as any} onNavigate={onNavigate} />
                   {idx === 1 && <SuggestedUsers onNavigate={onNavigate} />}
                   {idx === 4 && <BadgeEarnCard />}

@@ -73,7 +73,7 @@ export function VerifyEmailPage() {
 
   const handleContinueAsGuest = () => {
     localStorage.setItem('guestMode', 'true');
-    window.location.hash = '#/search';
+    window.location.hash = 'search';
   };
 
   return (
