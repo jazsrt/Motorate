@@ -3,7 +3,8 @@ import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { LogOut, Car, Upload, Award, Shield, MessageCircle, CheckCircle, Plus, MapPin, Zap, Layers, Target, Eye, Users, Star as StarIcon, Crosshair, Sticker } from 'lucide-react';
+import { LogOut, Car, Upload, Award, Shield, MessageCircle, CheckCircle, Plus, MapPin, Zap, Layers, Target, Eye, Users, Star as StarIcon, Crosshair, Sticker, Share2 } from 'lucide-react';
+import { shareToSocial } from '../components/ShareCardGenerator';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { uploadImage } from '../lib/storage';
@@ -703,6 +704,23 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     <Shield className="w-5 h-5" style={{ color: 'var(--orange)' }} strokeWidth={1.5} />
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    if (!user) return;
+                    shareToSocial({
+                      type: 'profile',
+                      title: `@${profile?.handle || 'user'}`,
+                      userHandle: profile?.handle || 'user',
+                      userRep: repScore,
+                      deepLinkUrl: `${window.location.origin}/#/user-profile/${user.id}`,
+                    }, user.id);
+                  }}
+                  className="w-8 h-8 rounded-[8px] flex items-center justify-center btn-press"
+                  style={{ background: 'var(--s2)', border: '1px solid var(--border-2)' }}
+                  title="Share Profile"
+                >
+                  <Share2 className="w-3.5 h-3.5" style={{ color: 'var(--t3)' }} strokeWidth={1.5} />
+                </button>
                 <button
                   onClick={() => setShowEditModal(true)}
                   className="w-8 h-8 rounded-[8px] flex items-center justify-center btn-press"

@@ -15,6 +15,7 @@ import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Edit, Trash2, AlertCircle, Upload, X, Star, Shield, Key, Info, Share2, ChevronLeft, User, Wrench, Disc3, Palette, Armchair, Droplet, FileText, Download, Car, MapPin, MoreHorizontal, Camera, BookOpen, ChevronRight, ChevronDown, Heart } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
+import { shareToSocial } from '../components/ShareCardGenerator';
 import { GuestBottomNav } from '../components/GuestBottomNav';
 import { RateDriverModal } from '../components/RateDriverModal';
 import { VehicleStats } from '../components/VehicleStats';
@@ -659,6 +660,25 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   : 'UNCLAIMED'}
             </span>
           </div>
+
+          {/* Share button */}
+          <button
+            onClick={() => {
+              const vName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ') || 'Vehicle';
+              shareToSocial({
+                type: 'vehicle',
+                title: vName,
+                userHandle: vehicle.owner?.handle || 'unknown',
+                userRep: 0,
+                deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicle.id}`,
+              }, user?.id);
+            }}
+            className="absolute top-3 right-3 w-9 h-9 rounded-lg flex items-center justify-center backdrop-blur-sm transition-all active:scale-90"
+            style={{ background: 'rgba(0,0,0,.55)', border: '1px solid rgba(255,255,255,.1)' }}
+            title="Share this vehicle"
+          >
+            <Share2 className="w-4 h-4 text-white" strokeWidth={1.5} />
+          </button>
 
           {vehicle.plate_number && (
             <div className="absolute bottom-3 left-3 bg-black/75 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/10">

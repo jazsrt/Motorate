@@ -94,6 +94,12 @@ function parseUrl(): { page: Page | null; params: Record<string, string> } {
   if (pathParts[0] === 'shadow' && pathParts[1]) {
     return { page: 'shadow-profile', params: { plateNumber: pathParts[1] } };
   }
+  if (pathParts[0] === 'user-profile' && pathParts[1]) {
+    return { page: 'user-profile', params: { userId: pathParts[1] } };
+  }
+  if (pathParts[0] === 'profile' && pathParts[1]) {
+    return { page: 'user-profile', params: { userId: pathParts[1] } };
+  }
 
   return { page: null, params: {} };
 }
@@ -144,6 +150,10 @@ function AppContent() {
       } else if (page === 'shadow-profile' && params.plateNumber) {
         setShadowPlateNumber(params.plateNumber);
         setCurrentPage('shadow-profile');
+        setGuestMode(!user);
+      } else if (page === 'user-profile' && params.userId) {
+        setSelectedUserId(params.userId);
+        setCurrentPage('user-profile');
         setGuestMode(!user);
       } else if (hash && !page) {
         // Handle simple page routes (feed, scan, rankings, etc.)
@@ -546,6 +556,8 @@ function AppContent() {
           badgeDescription={unlockedBadge.description}
           tier={unlockedBadge.level_name?.toLowerCase() === 'platinum' ? 'platinum' : unlockedBadge.level_name?.toLowerCase() === 'gold' ? 'gold' : unlockedBadge.level_name?.toLowerCase() === 'silver' ? 'silver' : 'bronze'}
           icon={<BadgeIcon iconPath={unlockedBadge.icon_path} size={40} alt={unlockedBadge.name} />}
+          userHandle={profile?.handle || ''}
+          userId={user?.id}
           onClose={dismissBadge}
           onViewBadges={() => { dismissBadge(); handleNavigate('badges'); }}
         />

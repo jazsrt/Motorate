@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { shareToSocial } from '../ShareCardGenerator';
 
 interface BadgeCelebrationProps {
   badgeName: string;
@@ -6,6 +7,8 @@ interface BadgeCelebrationProps {
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   icon: React.ReactNode;
   othersCount?: number;
+  userHandle?: string;
+  userId?: string;
   onClose: () => void;
   onViewBadges?: () => void;
 }
@@ -25,7 +28,7 @@ const tierTextColors = {
 };
 
 export function BadgeCelebration({
-  badgeName, badgeDescription, tier, icon, othersCount = 0, onClose, onViewBadges
+  badgeName, badgeDescription, tier, icon, othersCount = 0, userHandle = '', userId, onClose, onViewBadges
 }: BadgeCelebrationProps) {
   const [particles, setParticles] = useState<Array<{x: number; y: number; size: number; color: string; delay: number}>>([]);
 
@@ -142,7 +145,17 @@ export function BadgeCelebration({
         animationDelay: '1.6s',
       }}>
         <button
-          onClick={e => { e.stopPropagation(); onClose(); }}
+          onClick={e => {
+            e.stopPropagation();
+            shareToSocial({
+              type: 'badge',
+              title: badgeName,
+              subtitle: badgeDescription,
+              userHandle,
+              userRep: 0,
+              deepLinkUrl: `${window.location.origin}/#/badges`,
+            }, userId);
+          }}
           style={{
             padding: '10px 28px', borderRadius: 10, fontSize: 10, fontWeight: 500,
             letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
