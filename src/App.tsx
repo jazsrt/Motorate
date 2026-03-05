@@ -547,7 +547,7 @@ function AppContent() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <div key={currentPage} className="page-enter">
+      <div key={currentPage}>
         {pageContent}
       </div>
       {unlockedBadge && (

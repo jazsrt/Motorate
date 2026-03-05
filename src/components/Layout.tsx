@@ -147,7 +147,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       {user && <LiveStatsBar />}
 
       {/* ── Main ── */}
-      <main className="max-w-7xl mx-auto px-4 pt-24 pb-24 hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="max-w-7xl mx-auto px-4 pt-24 pb-28 hide-scrollbar page-enter" style={{ WebkitOverflowScrolling: 'touch' }}>
         {children}
       </main>
 
