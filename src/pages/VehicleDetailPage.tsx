@@ -744,7 +744,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   <div key={cat.label} className="flex items-center justify-between">
                     <span className="text-[10px] text-secondary uppercase tracking-wider">{cat.label}</span>
                     <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <Star className="w-3 h-3 fill-[#F97316] text-[#F97316]" />
                       <span className="text-xs font-bold text-primary">{cat.avg.toFixed(1)}</span>
                     </div>
                   </div>

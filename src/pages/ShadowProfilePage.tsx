@@ -297,7 +297,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
                     <div className="text-xs font-bold text-secondary uppercase">Reviews</div>
                   </div>
                   <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-yellow-500">{averageRatings.vehicle.toFixed(1)}</div>
+                    <div className="text-2xl font-bold text-[#F97316]">{averageRatings.vehicle.toFixed(1)}</div>
                     <div className="text-xs font-bold text-secondary uppercase">Vehicle</div>
                   </div>
                   <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
@@ -339,16 +339,16 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
         {posts.length > 0 && (
           <div className="mb-8 bg-gradient-to-br from-surface via-surfacehighlight to-surface border border-surfacehighlight rounded-2xl p-6 shadow-2xl">
             <div className="flex items-center gap-2 mb-6">
-              <Star className="w-6 h-6 text-yellow-500" />
+              <Star className="w-6 h-6 text-[#F97316]" />
               <h2 className="text-2xl font-heading font-bold uppercase tracking-tight">Community Ratings</h2>
               <span className="text-sm text-secondary">({posts.length} review{posts.length !== 1 ? 's' : ''})</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-yellow-500/20">
+              <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-[#F97316]/20">
                 <div className="text-xs font-bold text-secondary uppercase mb-2">The Vehicle</div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-yellow-500">{averageRatings.vehicle.toFixed(1)}</div>
+                  <div className="text-3xl font-black text-[#F97316]">{averageRatings.vehicle.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>
                 </div>
                 <StarRating value={averageRatings.vehicle} onChange={() => {}} readOnly size="large" />
@@ -494,8 +494,8 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
                     {/* Ratings */}
                     <div className="flex flex-col gap-2">
                       {post.rating_vehicle && (
-                        <div className="flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-lg">
-                          <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                        <div className="flex items-center gap-1 bg-[#F97316]/10 px-2 py-1 rounded-lg">
+                          <Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" />
                           <span className="text-sm font-bold">{post.rating_vehicle}</span>
                           <span className="text-xs text-secondary">Vehicle</span>
                         </div>

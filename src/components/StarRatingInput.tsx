@@ -33,8 +33,8 @@ export function StarRatingInput({ value, onChange, label, icon, disabled = false
             <Star
               className={`w-7 h-7 transition-colors ${
                 star <= value
-                  ? 'fill-yellow-500 text-yellow-500'
-                  : 'fill-none text-gray-600 hover:text-yellow-500/50'
+                  ? 'fill-[#F97316] text-[#F97316]'
+                  : 'fill-none text-gray-600 hover:text-[#F97316]/50'
               }`}
               strokeWidth={1.5}
             />

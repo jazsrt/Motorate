@@ -155,7 +155,7 @@ export function RateDriverModal({
               <Star
                 className={`w-10 h-10 transition-colors ${
                   star <= display
-                    ? 'fill-yellow-400 text-yellow-400'
+                    ? 'fill-[#F97316] text-[#F97316]'
                     : 'text-neutral-600'
                 }`}
               />

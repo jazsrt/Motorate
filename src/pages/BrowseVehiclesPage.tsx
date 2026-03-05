@@ -251,7 +251,7 @@ function VehicleCard({ vehicle, onNavigate, currentUserId }: VehicleCardProps) {
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
           <div className="flex items-center gap-3 text-white text-sm">
             <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" />
               <span>{vehicle.avg_rating ? vehicle.avg_rating.toFixed(1) : 'N/A'}</span>
             </div>
             <div className="flex items-center gap-1">

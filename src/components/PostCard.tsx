@@ -100,13 +100,13 @@ function RatingStars({ value, max = 5, label }: { value: number; max?: number; l
             key={i}
             className="w-2.5 h-2.5"
             style={{
-              color: i < value ? 'var(--gold-h)' : 'var(--border-2)',
-              fill: i < value ? 'var(--gold-h)' : 'transparent',
+              color: i < value ? '#F97316' : 'var(--border-2)',
+              fill: i < value ? '#F97316' : 'transparent',
             }}
           />
         ))}
       </div>
-      <span className="text-[10px] font-bold font-mono" style={{ color: 'var(--gold-h)' }}>{value}/5</span>
+      <span className="text-[10px] font-bold font-mono" style={{ color: '#F97316' }}>{value}/5</span>
     </div>
   );
 }
@@ -370,7 +370,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                   src={spottedImageUrl}
                   alt={vehicleDisplay || 'Spotted vehicle'}
                   className="w-full object-cover"
-                  style={{ maxHeight: 280, minHeight: 160 }}
+                  style={{ maxHeight: 240, minHeight: 140 }}
                   onError={() => handleImageError(0)}
                 />
 
@@ -383,33 +383,20 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                   src={vehicleImage}
                   alt={vehicleDisplay || 'Vehicle'}
                   className="w-full object-cover"
-                  style={{ maxHeight: 220, minHeight: 120 }}
+                  style={{ maxHeight: 180, minHeight: 100 }}
                   onError={() => setVehicleImgError(true)}
                 />
               ) : (
                 <div
-                  className="w-full flex items-center justify-center gap-2"
-                  style={{
-                    height: 80,
-                    background: 'linear-gradient(135deg, var(--bg) 0%, var(--s2) 100%)',
-                    borderBottom: '1px solid rgba(255,255,255,.03)',
-                  }}
+                  className="w-full flex items-center justify-center"
+                  style={{ height: 60, background: 'linear-gradient(135deg, var(--bg) 0%, var(--s2) 100%)' }}
                 >
-                  <Car className="w-8 h-8" style={{ color: '#4a5668' }} strokeWidth={0.8} />
+                  <Car className="w-6 h-6" style={{ color: '#4a5668' }} strokeWidth={0.8} />
                 </div>
               )}
 
               {/* Overlay badges on hero */}
               <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                <span
-                  className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md backdrop-blur-sm"
-                  style={{
-                    background: typeLabel === 'SPOT' ? 'rgba(249,115,22,0.85)' : 'rgba(251,146,60,0.85)',
-                    color: '#fff',
-                  }}
-                >
-                  {typeLabel === 'SPOT' ? 'Quick Spot' : 'Full Spot'}
-                </span>
                 {(post as any).sentiment && (
                   <span
                     className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md backdrop-blur-sm flex items-center gap-1"
@@ -470,7 +457,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               >
                 {/* Overall score */}
                 <div className="flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
+                  <Star className="w-3.5 h-3.5 fill-[#F97316] text-[#F97316]" />
                   <span className="font-mono text-[14px] font-bold" style={{ color: 'var(--t1)' }}>
                     {(() => {
                       const sum = ((post as any).rating_driver || 0) + ((post as any).rating_driving || 0) + ((post as any).rating_vehicle || 0);
@@ -530,8 +517,8 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                           alt={`Post image ${index + 1}`}
                           className="w-full h-full object-cover"
                           style={{
-                            maxHeight: post.image_urls!.length === 1 ? '400px' : '240px',
-                            minHeight: post.image_urls!.length === 1 ? '200px' : '140px',
+                            maxHeight: post.image_urls!.length === 1 ? '280px' : '240px',
+                            minHeight: post.image_urls!.length === 1 ? '140px' : '140px',
                           }}
                           loading={index === 0 ? 'eager' : 'lazy'}
                           onError={() => handleImageError(index)}
@@ -540,8 +527,8 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
                         <div
                           className="w-full flex flex-col items-center justify-center"
                           style={{
-                            maxHeight: post.image_urls!.length === 1 ? '400px' : '240px',
-                            minHeight: post.image_urls!.length === 1 ? '200px' : '140px',
+                            maxHeight: post.image_urls!.length === 1 ? '280px' : '240px',
+                            minHeight: post.image_urls!.length === 1 ? '140px' : '140px',
                             color: 'var(--text-tertiary)',
                           }}
                         >
@@ -561,7 +548,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               </div>
             )}
 
-            <div className="px-4 pb-4 pt-2 space-y-2">
+            <div className="px-3 pb-3 pt-2 space-y-2">
               {post.caption && (
                 <p className="text-[13px] leading-[1.65] text-primary">
                   <span className="font-semibold" style={{ color: 'var(--accent)' }}>@{post.author.handle}</span>
@@ -607,6 +594,14 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               <ShareButton post={post} />
             </div>
           </div>
+          {spotOrReview && pointsEarned && (
+            <span className="mono" style={{
+              fontSize: 11, fontWeight: 600, color: '#F97316',
+              textShadow: '0 0 8px rgba(249,115,22,.15)',
+            }}>
+              {pointsEarned}
+            </span>
+          )}
         </div>
 
         {/* ── COMMENT PREVIEW ──────────────────────────────── */}
@@ -642,19 +637,6 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
           </div>
         )}
 
-        {/* ── ADD COMMENT ──────────────────────────────────── */}
-        <div className="px-4 pb-3.5">
-          <button
-            onClick={handleCommentClick}
-            className="w-full text-left px-3.5 py-2.5 rounded-lg text-[13px] transition-colors border text-tertiary hover:border-[var(--border-2)]"
-            style={{
-              background: 'var(--surface-2)',
-              borderColor: 'var(--border)',
-            }}
-          >
-            {totalComments === 0 ? 'Be the first to comment...' : 'Add a comment...'}
-          </button>
-        </div>
       </div>
 
       {showComments && (

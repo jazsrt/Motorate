@@ -458,9 +458,9 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               {comment.driverRating && comment.driverRating.avg_driver_rating > 0 && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
-                                  <Star className="w-2.5 h-2.5 fill-yellow-500 text-yellow-500" />
-                                  <span className="text-[10px] font-bold text-yellow-600">
+                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F97316]/10 border border-[#F97316]/30 rounded-full">
+                                  <Star className="w-2.5 h-2.5 fill-[#F97316] text-[#F97316]" />
+                                  <span className="text-[10px] font-bold text-[#F97316]">
                                     {comment.driverRating.avg_driver_rating.toFixed(1)}
                                   </span>
                                 </div>

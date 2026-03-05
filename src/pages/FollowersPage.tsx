@@ -362,7 +362,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
               <div className="flex items-center gap-2">
                 <h3 className="font-bold">@{userData.handle || 'anonymous'}</h3>
                 {isFavorite && (
-                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <Star className="w-4 h-4 text-[#F97316] fill-[#F97316]" />
                 )}
                 {isMuted && <VolumeX className="w-4 h-4 text-gray-500" />}
                 {isBlocked && <Ban className="w-4 h-4 text-red-500" />}

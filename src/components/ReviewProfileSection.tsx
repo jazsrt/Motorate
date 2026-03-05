@@ -148,7 +148,7 @@ export function ReviewProfileSection({
 
         {/* Rating Distribution */}
         <div className="mb-6">
-          <h4 className="font-semibold mb-3 flex items-center gap-2"><Star className="w-4 h-4 text-yellow-500" /> Rating Distribution</h4>
+          <h4 className="font-semibold mb-3 flex items-center gap-2"><Star className="w-4 h-4 text-[#F97316]" /> Rating Distribution</h4>
           <div className="space-y-2">
             {bars.map((bar) => (
               <div key={bar.label} className="flex items-center gap-3">
@@ -304,7 +304,7 @@ export function ReviewProfileSection({
                           key={star}
                           className={`w-3 h-3 ${
                             star <= (review.rating_driver || 0)
-                              ? 'text-yellow-400 fill-yellow-400'
+                              ? 'text-[#F97316] fill-[#F97316]'
                               : 'text-gray-300'
                           }`}
                         />
@@ -317,7 +317,7 @@ export function ReviewProfileSection({
                           key={star}
                           className={`w-3 h-3 ${
                             star <= (review.rating_vehicle || 0)
-                              ? 'text-yellow-400 fill-yellow-400'
+                              ? 'text-[#F97316] fill-[#F97316]'
                               : 'text-gray-300'
                           }`}
                         />

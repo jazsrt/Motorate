@@ -78,7 +78,7 @@ function MiniStars({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map(s => (
-        <Star key={s} className={`w-3 h-3 ${s <= value ? 'fill-yellow-400 text-yellow-400' : 'fill-neutral-700 text-neutral-700'}`} />
+        <Star key={s} className={`w-3 h-3 ${s <= value ? 'fill-[#F97316] text-[#F97316]' : 'fill-neutral-700 text-neutral-700'}`} />
       ))}
     </div>
   );
@@ -263,7 +263,7 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-heading font-bold uppercase tracking-tight text-sm">Rating Summary</h3>
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" />
                     <span className="text-lg font-black text-primary">{ratings.overall_avg.toFixed(1)}</span>
                     <span className="text-secondary text-xs">/ 5</span>
                   </div>

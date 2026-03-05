@@ -177,7 +177,7 @@ export function PlateFoundClaimed({
               <div className="bg-surface border border-surfacehighlight rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <Star className="w-5 h-5 fill-[#F97316] text-[#F97316]" />
                     <span className="text-2xl font-black">{ratings.overall_avg.toFixed(1)}</span>
                     <span className="text-secondary text-sm">/ 5</span>
                   </div>
