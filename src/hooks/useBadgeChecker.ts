@@ -18,6 +18,7 @@ import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useBadges } from '../contexts/BadgeContext';
 
 interface AwardedBadge {
   badge_id: string;
@@ -28,6 +29,7 @@ interface AwardedBadge {
 export function useBadgeChecker() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateBadge } = useBadges();
 
   const checkBadges = useCallback(async (action: string): Promise<AwardedBadge[]> => {
     if (!user?.id) return [];
@@ -40,23 +42,47 @@ export function useBadgeChecker() {
         });
 
       if (error) {
-        console.error('Badge check error:', error);
+        console.error('[BadgeChecker] Badge check error:', error);
         return [];
       }
 
       const awarded = (data as AwardedBadge[]) || [];
 
-      // Show toast notification for each newly awarded badge
+      // For each awarded badge, fetch full badge data and trigger celebration modal
       for (const badge of awarded) {
-        showToast(`Badge Unlocked: ${badge.badge_name}!`, 'success');
+        try {
+          const { data: badgeData, error: fetchError } = await supabase
+            .from('badges')
+            .select('*')
+            .eq('id', badge.badge_id)
+            .maybeSingle();
+
+          if (fetchError) {
+            console.error('[BadgeChecker] Failed to fetch badge details:', fetchError.message);
+            // Fall back to toast if we can't get full badge data
+            showToast(`Badge Unlocked: ${badge.badge_name}!`, 'success');
+            continue;
+          }
+
+          if (badgeData) {
+            // Trigger the full celebration modal
+            celebrateBadge(badgeData);
+          } else {
+            // Badge not found in DB — show toast as fallback
+            showToast(`Badge Unlocked: ${badge.badge_name}!`, 'success');
+          }
+        } catch (err) {
+          console.error('[BadgeChecker] Error fetching badge for celebration:', err);
+          showToast(`Badge Unlocked: ${badge.badge_name}!`, 'success');
+        }
       }
 
       return awarded;
     } catch (err) {
-      console.error('Badge check failed:', err);
+      console.error('[BadgeChecker] Badge check failed:', err);
       return [];
     }
-  }, [user?.id, showToast]);
+  }, [user?.id, showToast, celebrateBadge]);
 
   // Keep the old function for backwards compatibility
   const checkActivityBadges = useCallback(async (): Promise<AwardedBadge[]> => {

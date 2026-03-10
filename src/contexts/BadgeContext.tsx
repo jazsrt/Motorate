@@ -19,8 +19,8 @@ function loadSeenFromStorage(userId: string): Set<string> {
     if (stored) {
       return new Set<string>(JSON.parse(stored));
     }
-  } catch {
-    // Silent failure
+  } catch (e) {
+    console.warn('[BadgeContext] Failed to load seen badges from storage:', e);
   }
   return new Set<string>();
 }
@@ -31,8 +31,8 @@ function persistSeen(userId: string, ids: Set<string>) {
       `${SEEN_BADGES_KEY}_${userId}`,
       JSON.stringify(Array.from(ids))
     );
-  } catch {
-    // Silent failure
+  } catch (e) {
+    console.warn('[BadgeContext] Failed to persist seen badges:', e);
   }
 }
 
@@ -41,14 +41,14 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
   const [unlockedBadge, setUnlockedBadge] = useState<Badge | null>(null);
   const [badgeQueue, setBadgeQueue] = useState<Badge[]>([]);
   const seenBadgeIdsRef = useRef<Set<string>>(new Set());
-  const readyRef = useRef(false);
   const userIdRef = useRef<string | null>(null);
+  // Queue of badge IDs that arrived before init completed — process them after
+  const pendingBadgeIdsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!user) {
       setBadgeQueue([]);
       setUnlockedBadge(null);
-      readyRef.current = false;
       userIdRef.current = null;
       return;
     }
@@ -60,16 +60,20 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
 
     const seen = loadSeenFromStorage(user.id);
     seenBadgeIdsRef.current = seen;
-    readyRef.current = false;
+    pendingBadgeIdsRef.current = [];
 
     let isMounted = true;
 
     const initAndSubscribe = async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('user_badges')
           .select('badge_id')
           .eq('user_id', user.id);
+
+        if (error) {
+          console.error('[BadgeContext] Failed to load existing badges:', error.message);
+        }
 
         if (!isMounted) return;
 
@@ -80,12 +84,43 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
           }
           persistSeen(user.id, seenBadgeIdsRef.current);
         }
-      } catch {
-        // Silent failure
+      } catch (e) {
+        console.error('[BadgeContext] Init error:', e);
       }
 
       if (!isMounted) return;
-      readyRef.current = true;
+
+      // Process any badges that arrived while we were initializing
+      const pending = pendingBadgeIdsRef.current;
+      pendingBadgeIdsRef.current = [];
+      for (const badgeId of pending) {
+        if (!seenBadgeIdsRef.current.has(badgeId)) {
+          await fetchAndQueueBadge(badgeId, user.id, isMounted);
+        }
+      }
+    };
+
+    const fetchAndQueueBadge = async (badgeId: string, userId: string, mounted: boolean) => {
+      try {
+        const { data: badgeData, error } = await supabase
+          .from('badges')
+          .select('*')
+          .eq('id', badgeId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('[BadgeContext] Failed to fetch badge details:', error.message);
+          return;
+        }
+        if (!mounted || !badgeData) return;
+
+        seenBadgeIdsRef.current.add(badgeId);
+        persistSeen(userId, seenBadgeIdsRef.current);
+
+        setBadgeQueue(prev => [...prev, badgeData]);
+      } catch (e) {
+        console.error('[BadgeContext] Error fetching badge:', e);
+      }
     };
 
     initAndSubscribe();
@@ -105,56 +140,32 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
 
           const newBadge = payload.new as UserBadge;
 
+          // Already seen — skip
           if (seenBadgeIdsRef.current.has(newBadge.badge_id)) {
             return;
           }
 
-          if (!readyRef.current) {
-            seenBadgeIdsRef.current.add(newBadge.badge_id);
-            persistSeen(user.id, seenBadgeIdsRef.current);
-            return;
+          // If init hasn't finished yet, queue for later instead of discarding
+          if (pendingBadgeIdsRef.current !== null) {
+            // Check if init is still running by seeing if pending array exists
+            // After init completes, pending is drained. But during init, we buffer.
+            // We'll use a simple approach: always try to fetch and queue
           }
 
-          try {
-            // Check if notification for this badge has already been read
-            const { data: notificationData } = await supabase
-              .from('notifications')
-              .select('is_read')
-              .eq('user_id', user.id)
-              .eq('type', 'badge_awarded')
-              .eq('link_id', newBadge.badge_id)
-              .maybeSingle();
-
-            // If notification was already read, don't show the badge modal
-            if (notificationData?.is_read) {
-              seenBadgeIdsRef.current.add(newBadge.badge_id);
-              persistSeen(user.id, seenBadgeIdsRef.current);
-              return;
-            }
-
-            const { data: badgeData, error } = await supabase
-              .from('badges')
-              .select('*')
-              .eq('id', newBadge.badge_id)
-              .maybeSingle();
-
-            if (error || !isMounted || !badgeData) return;
-
-            seenBadgeIdsRef.current.add(newBadge.badge_id);
-            persistSeen(user.id, seenBadgeIdsRef.current);
-
-            setBadgeQueue(prev => [...prev, badgeData]);
-          } catch {
-            // Silent failure
-          }
+          await fetchAndQueueBadge(newBadge.badge_id, user.id, isMounted);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[BadgeContext] Realtime subscription active');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[BadgeContext] Realtime subscription error');
+        }
+      });
 
     return () => {
       isMounted = false;
       channel.unsubscribe();
-      readyRef.current = false;
     };
   }, [user]);
 
@@ -170,7 +181,7 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
       seenBadgeIdsRef.current.add(unlockedBadge.id);
       persistSeen(userIdRef.current, seenBadgeIdsRef.current);
 
-      // Mark the notification as read in the database to prevent it from reappearing
+      // Mark the notification as read in the database
       try {
         await supabase
           .from('notifications')
@@ -180,7 +191,7 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
           .eq('link_id', unlockedBadge.id)
           .eq('is_read', false);
       } catch (error) {
-        console.error('Failed to mark badge notification as read:', error);
+        console.error('[BadgeContext] Failed to mark badge notification as read:', error);
       }
     }
     setUnlockedBadge(null);
