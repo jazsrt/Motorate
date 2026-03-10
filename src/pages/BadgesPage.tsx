@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Award, Lock, CheckCircle2, Crosshair, Star, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, Car, Tag, Zap, Trophy } from 'lucide-react';
+import { Award, Lock, CheckCircle2, ChevronRight, Crosshair, Star, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, Car, Tag, Zap, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
 import { type OnNavigate } from '../types/navigation';
 import { BadgeCoin } from '../components/BadgeCoin';
-import { BadgeCelebration } from '../components/badges/BadgeCelebration';
 import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
 
@@ -85,19 +84,14 @@ function getCountForBadge(badge: Badge, activityCounts: ActivityCounts): number 
   }
 }
 
-function getProgressHint(badge: Badge): string | null {
-  if (!badge.tracks || !badge.tier_threshold) return null;
-  const t = badge.tier_threshold;
-  switch (badge.tracks) {
-    case 'spots': return `${t} spots`;
-    case 'reviews': return `${t} reviews`;
-    case 'posts': return `${t} posts`;
-    case 'comments': return `${t} comments`;
-    case 'likes_given': return `${t} likes`;
-    case 'likes_received': return `${t} likes rcvd`;
-    case 'followers': return `${t} followers`;
-    case 'photos': return `${t} photos`;
-    default: return null;
+function rarityStyle(rarity: string) {
+  switch (rarity?.toLowerCase()) {
+    case 'common':    return { pill: 'bg-[rgba(100,116,139,0.2)] text-[#94a3b8]', border: 'rgba(100,116,139,0.3)', iconBg: 'linear-gradient(135deg, rgba(100,116,139,0.2), rgba(100,116,139,0.1))' };
+    case 'uncommon':  return { pill: 'bg-[rgba(16,185,129,0.15)] text-positive', border: 'rgba(16,185,129,0.35)', iconBg: 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(249,115,22,0.15))' };
+    case 'rare':      return { pill: 'bg-[rgba(249,115,22,0.15)] text-accent-2', border: 'rgba(249,115,22,0.35)', iconBg: 'linear-gradient(135deg, rgba(249,115,22,0.2), rgba(251,146,60,0.15))' };
+    case 'epic':      return { pill: 'bg-[rgba(251,146,60,0.15)] text-accent-2', border: 'rgba(251,146,60,0.35)', iconBg: 'linear-gradient(135deg, rgba(251,146,60,0.2), rgba(249,115,22,0.15))' };
+    case 'legendary': return { pill: 'bg-[rgba(245,158,11,0.15)] text-orange', border: 'rgba(245,158,11,0.4)', iconBg: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,146,60,0.15))' };
+    default:          return { pill: 'bg-[rgba(100,116,139,0.2)] text-[#94a3b8]', border: 'rgba(100,116,139,0.3)', iconBg: 'linear-gradient(135deg, rgba(100,116,139,0.2), rgba(100,116,139,0.1))' };
   }
 }
 
@@ -246,8 +240,8 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
 
   if (loading) {
     return (
-      <Layout currentPage="rankings" onNavigate={onNavigate}>
-        <div className="px-4 py-6">
+      <Layout currentPage="badges" onNavigate={onNavigate}>
+        <div className="px-3.5 py-4">
           <div className="animate-pulse space-y-3">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="card-v3 h-20" />
@@ -259,260 +253,226 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
   }
 
   return (
-    <Layout currentPage="rankings" onNavigate={onNavigate}>
-      <div className="pb-20 page-enter">
-
-        {/* ─── PAGE HEADER ─── */}
-        <div className="px-5 pt-5 pb-4 v3-stagger v3-stagger-1">
+    <Layout currentPage="badges" onNavigate={onNavigate}>
+      <div className="pb-20 animate-page-enter">
+        {/* PAGE HEADER */}
+        <div className="px-4 py-4 bg-surface border-b stg" style={{ borderColor: 'var(--border-2)' }}>
           <div className="flex items-center justify-between">
             <div>
-              <div style={{ fontSize: 8, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '3px', color: 'var(--t4)' }}>
-                Collection
-              </div>
-              <h1 style={{ fontSize: 22, fontWeight: 300, color: 'var(--t1)', marginTop: 4, fontFamily: "'Space Grotesk', sans-serif" }}>
-                Badges
-              </h1>
+              <h1 className="font-heading text-xl font-bold text-primary">Badges</h1>
+              <p className="text-xs text-tertiary mt-0.5">{earned.length} of {allBadges.length} earned</p>
             </div>
             <div className="text-right">
-              <span className="mono" style={{ fontSize: 28, fontWeight: 700, color: 'var(--orange)', textShadow: '0 0 20px rgba(249,115,22,.2)' }}>
-                {earned.length}
-              </span>
-              <span style={{ fontSize: 14, fontWeight: 300, color: 'var(--t3)' }}> / {allBadges.length}</span>
-              <div style={{ fontSize: 8, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--t4)', marginTop: 2 }}>
-                {Math.round((earned.length / Math.max(allBadges.length, 1)) * 100)}% complete
+              <div className="font-heading text-3xl font-bold" style={{ background: 'linear-gradient(135deg, var(--orange), var(--gold-h))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                {Math.round((earned.length / Math.max(allBadges.length, 1)) * 100)}%
               </div>
+              <div className="text-[10px] font-mono text-tertiary">{earned.length} / {allBadges.length}</div>
             </div>
           </div>
-          <div className="tach-bar" style={{ marginTop: 12 }}>
+          <div className="mt-2.5 tach-bar">
             <div className="tach-fill" style={{ width: `${(earned.length / Math.max(allBadges.length, 1)) * 100}%` }} />
           </div>
         </div>
 
-        {/* ─── TROPHY CASE ─── */}
+        {/* TROPHY CASE */}
         <div
-          className="card-v3 card-v3-lift mx-4 p-5 relative overflow-hidden v3-stagger v3-stagger-2"
+          className="card-v3 mx-3.5 mt-3 p-5 relative overflow-hidden stg"
           style={{ background: 'linear-gradient(180deg, #1c1814 0%, rgba(28,24,20,0.5) 100%)' }}
         >
           <div className="absolute top-0 left-[20%] right-[20%] h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--orange-muted), transparent)' }} />
           <div className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 w-[200px] h-[60px] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(249,115,22,0.06), transparent 70%)' }} />
 
-          <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-3 h-3" strokeWidth={1.2} style={{ color: 'var(--orange)' }} />
-            <span style={{ fontSize: 8, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '2.5px', color: 'var(--t4)' }}>
-              Trophy Case
-            </span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-3 h-3" strokeWidth={1.2} style={{ color: 'var(--orange)' }} />
+              <span className="slbl !p-0 !text-tertiary">Trophy Case</span>
+            </div>
+            <span className="text-[8px] uppercase tracking-wider cursor-pointer text-quaternary">Edit</span>
           </div>
 
-          <div className="flex gap-3 justify-center relative z-10">
-            {earned.slice(0, 5).map((badge) => {
-              const IconComp = getBadgeIcon(badge.icon);
-              const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
-              return (
-                <BadgeCoin
-                  key={badge.id}
-                  tier={tier}
-                  name={badge.name}
-                  size="sm"
-                  icon={<IconComp size={14} strokeWidth={1.2} />}
-                  onClick={() => { setCelebBadge(badge); sounds.badge(); haptics.medium(); }}
-                />
-              );
-            })}
-            {Array.from({ length: Math.max(0, 5 - earned.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="flex flex-col items-center gap-1.5">
-                <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{ border: '1px dashed var(--border-2)', opacity: 0.4 }}
-                >
-                  <span style={{ fontSize: 14, color: 'var(--t4)' }}>+</span>
+          <div className="flex gap-3 relative z-10">
+            {earned.slice(0, 3).map((badge, i) => (
+              <div key={badge.id} className="w-[54px] h-[54px] rounded-full flex items-center justify-center border"
+                style={{ background: '#26221c', borderColor: 'var(--border-2)', boxShadow: '0 0 12px rgba(249,115,22,0.06)' }}>
+                <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center coin-gold">
+                  {React.createElement(getBadgeIcon(badge.icon), { className: 'w-[18px] h-[18px]', strokeWidth: 1.2, style: { color: '#1a1400' } })}
                 </div>
-                <span style={{ fontSize: 10, color: 'var(--t4)', opacity: 0.4 }}>???</span>
+              </div>
+            ))}
+            {Array.from({ length: Math.max(0, 5 - earned.length) }).map((_, i) => (
+              <div key={`empty-${i}`} className="w-[54px] h-[54px] rounded-full flex items-center justify-center"
+                style={{ border: '1px dashed var(--border-2)' }}>
+                <span className="text-[14px] text-quaternary">+</span>
               </div>
             ))}
           </div>
 
-          <p style={{ fontSize: 9, marginTop: 14, lineHeight: 1.6, color: 'var(--t4)', position: 'relative', zIndex: 1 }}>
+          <p className="text-[9px] mt-3.5 leading-relaxed relative z-10 text-tertiary">
             Your trophy case is shown on your profile and visible in search results.
           </p>
         </div>
 
-        {/* ─── NEXT BADGE HERO ─── */}
+        {/* NEXT BADGE HERO */}
         {nextBadge && (
-          <div className="card-v3 mx-4 mt-3 p-4 v3-stagger v3-stagger-3">
+          <div className="card-v3 mx-3.5 mt-3 p-4 stg">
             <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--orange-dim)', border: '1px solid var(--orange-muted)' }}
-                >
-                  {React.createElement(getBadgeIcon(nextBadge.badge.icon), { size: 14, strokeWidth: 1.2, style: { color: 'var(--orange)' } })}
-                </div>
-                <div>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--t1)' }}>{nextBadge.badge.name}</span>
-                  {nextBadge.badge.tier && (
-                    <span className="mono" style={{ fontSize: 9, marginLeft: 6, color: 'var(--gold-h)' }}>
-                      {tierLabel(nextBadge.badge.tier)}
-                    </span>
-                  )}
-                </div>
+              <div>
+                <span className="text-xs font-medium text-primary">{nextBadge.badge.name}</span>
+                <span className="font-mono text-[10px] ml-2" style={{ color: 'var(--gold-h)' }}>
+                  {tierLabel(nextBadge.badge.tier)}
+                </span>
               </div>
-              <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--orange)' }}>
-                {Math.round(nextBadge.progressPercent)}%
-              </span>
+              <span className="font-mono text-sm text-primary">{Math.round(nextBadge.progressPercent)}%</span>
             </div>
             <div className="tach-bar">
               <div className="tach-fill" style={{ width: `${nextBadge.progressPercent}%` }} />
             </div>
-            <div style={{ fontSize: 10, marginTop: 6, color: 'var(--t4)' }}>
-              <span className="mono" style={{ color: 'var(--t2)' }}>{nextBadge.currentCount}</span>
-              <span> / {nextBadge.badge.tier_threshold}</span>
-              <span style={{ color: 'var(--orange)', marginLeft: 8 }}>{nextBadge.remaining} to go</span>
+            <div className="text-[10px] mt-2 text-quaternary">
+              {nextBadge.currentCount} / {nextBadge.badge.tier_threshold} — <span style={{ color: 'var(--orange)' }}>{nextBadge.remaining} to go</span>
             </div>
           </div>
         )}
 
-        {/* ─── V3 SECTION TABS ─── */}
-        <div className="flex gap-2 px-4 mt-4 v3-stagger v3-stagger-4">
+        {/* SECTION TABS */}
+        <div className="flex mx-3.5 mt-3 bg-surface rounded-xl border p-1 stg" style={{ borderColor: 'var(--border-2)' }}>
           {[
-            { key: 'earned' as const, label: 'Earned', count: earned.length },
-            { key: 'progress' as const, label: 'Progress', count: inProgress.length },
-            { key: 'locked' as const, label: 'Locked', count: locked.length },
+            { key: 'earned' as const, label: 'Earned', count: earned.length, color: 'var(--positive)' },
+            { key: 'progress' as const, label: 'In Progress', count: inProgress.length, color: 'var(--orange)' },
+            { key: 'locked' as const, label: 'Locked', count: locked.length, color: 'var(--t3)' },
           ].map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveSection(tab.key)}
-              style={{
-                flex: 1,
-                padding: '10px 0',
-                borderRadius: 10,
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-                fontFamily: "'Space Grotesk', sans-serif",
-                cursor: 'pointer',
-                border: activeSection === tab.key ? '1px solid var(--orange-muted)' : '1px solid var(--border)',
-                background: activeSection === tab.key ? 'var(--orange-dim)' : 'transparent',
-                color: activeSection === tab.key ? 'var(--orange)' : 'var(--t3)',
-                transition: 'all 0.2s',
-              }}
+              className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all ${
+                activeSection === tab.key
+                  ? 'bg-surface-2'
+                  : 'hover:text-secondary'
+              }`}
+              style={{ color: activeSection === tab.key ? '#f2f4f7' : 'rgba(242,244,247,0.5)' }}
             >
-              {tab.label} <span className="mono">{tab.count}</span>
+              {tab.label}
+              {tab.count > 0 && (
+                <span className="ml-1 text-[10px] font-mono" style={{ color: activeSection === tab.key ? tab.color : 'var(--t3)' }}>
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        {/* ─── EARNED GRID ─── */}
+        {/* EARNED GRID */}
         {activeSection === 'earned' && (
-          <div className="px-4 mt-4 v3-stagger v3-stagger-5">
+          <div className="px-4 mt-3 stg">
+            <div className="slbl">Earned · {earned.length}</div>
             {earned.length > 0 ? (
               <div className="grid grid-cols-3 gap-4 pb-4">
-                {earned.map((badge, i) => {
+                {earned.map(badge => {
                   const IconComp = getBadgeIcon(badge.icon);
                   const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
                   return (
-                    <div key={badge.id} className="stg" style={{ animationDelay: `${i * 50}ms` }}>
-                      <BadgeCoin
-                        tier={tier}
-                        name={badge.name}
-                        icon={<IconComp size={16} strokeWidth={1.2} />}
-                        onClick={() => { setCelebBadge(badge); sounds.badge(); haptics.medium(); }}
-                      />
-                    </div>
+                    <BadgeCoin
+                      key={badge.id}
+                      tier={tier}
+                      name={badge.name}
+                      icon={<IconComp size={16} strokeWidth={1.2} />}
+                      onClick={() => {
+                        setCelebBadge(badge);
+                        sounds.badge();
+                        haptics.medium();
+                      }}
+                    />
                   );
                 })}
               </div>
             ) : (
               <div className="card-v3 p-10 text-center">
-                <Award className="w-10 h-10 mx-auto mb-3" strokeWidth={1} style={{ color: 'var(--t4)' }} />
-                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--t3)' }}>No badges earned yet</p>
-                <p style={{ fontSize: 11, fontWeight: 300, color: 'var(--t4)', marginTop: 4 }}>
-                  Spot vehicles, leave reviews, and engage to earn your first badge
-                </p>
+                <Award className="w-10 h-10 text-quaternary mx-auto mb-3" />
+                <p className="text-sm font-bold text-tertiary">No badges earned yet</p>
+                <p className="text-[11px] text-quaternary mt-1">Spot vehicles, leave reviews, and engage to earn your first badge</p>
               </div>
             )}
           </div>
         )}
 
-        {/* ─── IN PROGRESS GRID ─── */}
+        {/* IN PROGRESS GRID */}
         {activeSection === 'progress' && (
-          <div className="px-4 mt-4 v3-stagger v3-stagger-5">
+          <div className="px-4 mt-3 stg">
+            <div className="slbl">In Progress · {inProgress.length}</div>
             {inProgress.length > 0 ? (
               <div className="grid grid-cols-3 gap-4 pb-4">
-                {inProgress.map((badge, i) => {
+                {inProgress.map(badge => {
                   const IconComp = getBadgeIcon(badge.icon);
                   const cur = getCountForBadge(badge, activityCounts);
                   const tgt = badge.tier_threshold || 1;
                   const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
                   return (
-                    <div key={badge.id} className="flex flex-col items-center gap-1 stg" style={{ animationDelay: `${i * 50}ms` }}>
+                    <div key={badge.id} className="flex flex-col items-center gap-1.5">
                       <BadgeCoin
                         tier={tier}
                         name={badge.name}
                         icon={<IconComp size={16} strokeWidth={1.2} />}
                       />
-                      <div className="w-10 h-1 rounded-full overflow-hidden" style={{ background: 'var(--s3)', marginTop: -2 }}>
-                        <div className="h-full rounded-full" style={{ width: `${Math.min((cur / tgt) * 100, 100)}%`, background: 'var(--orange)' }} />
-                      </div>
-                      <span className="mono" style={{ fontSize: 9, fontWeight: 600, color: 'var(--orange)' }}>{cur}/{tgt}</span>
+                      <div className="text-[9px] font-mono font-bold" style={{ color: 'var(--orange)' }}>{cur}/{tgt}</div>
                     </div>
                   );
                 })}
               </div>
             ) : (
               <div className="card-v3 p-10 text-center">
-                <TrendingUp className="w-10 h-10 mx-auto mb-3" strokeWidth={1} style={{ color: 'var(--t4)' }} />
-                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--t3)' }}>No badges in progress</p>
-                <p style={{ fontSize: 11, fontWeight: 300, color: 'var(--t4)', marginTop: 4 }}>
-                  Start spotting and posting to begin earning
-                </p>
+                <TrendingUp className="w-10 h-10 text-quaternary mx-auto mb-3" />
+                <p className="text-sm font-bold text-tertiary">No badges in progress</p>
+                <p className="text-[11px] text-quaternary mt-1">Start spotting and posting to begin earning</p>
               </div>
             )}
           </div>
         )}
 
-        {/* ─── LOCKED GRID ─── */}
+        {/* LOCKED GRID */}
         {activeSection === 'locked' && (
-          <div className="px-4 mt-4 v3-stagger v3-stagger-5">
+          <div className="px-4 mt-3 stg">
+            <div className="slbl">Locked · {locked.length}</div>
             <div className="grid grid-cols-3 gap-4 pb-4">
-              {locked.map((badge, i) => {
-                const hint = getProgressHint(badge);
-                return (
-                  <div key={badge.id} className="flex flex-col items-center gap-1 stg" style={{ animationDelay: `${i * 40}ms` }}>
-                    <BadgeCoin
-                      tier="bronze"
-                      name="???"
-                      icon={<Lock size={16} strokeWidth={1.2} />}
-                      locked={true}
-                    />
-                    {hint && (
-                      <span style={{ fontSize: 8, fontWeight: 400, color: 'var(--t4)', textAlign: 'center', lineHeight: '1.3' }}>
-                        {hint}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              {locked.map(badge => (
+                <BadgeCoin
+                  key={badge.id}
+                  tier="bronze"
+                  name="???"
+                  icon={<Lock size={16} />}
+                  locked={true}
+                />
+              ))}
+              <div className="flex flex-col items-center gap-1.5 opacity-[0.15]">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center border border-dashed" style={{ borderColor: 'var(--border-2)', background: 'var(--s2)' }}>
+                  <span className="text-lg font-bold text-quaternary">?</span>
+                </div>
+                <span className="text-[10px] font-medium text-quaternary">Mystery</span>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* ─── Badge Celebration ─── */}
-      {celebBadge && (() => {
-        const IconComp = getBadgeIcon(celebBadge.icon);
-        const t = celebBadge.tier?.toLowerCase() || 'bronze';
-        const celebTier = (['platinum', 'gold', 'silver'].includes(t) ? t : 'bronze') as 'bronze' | 'silver' | 'gold' | 'platinum';
-        return (
-          <BadgeCelebration
-            badgeName={celebBadge.name}
-            badgeDescription={celebBadge.description || 'Badge earned'}
-            tier={celebTier}
-            icon={<IconComp size={40} strokeWidth={1.2} style={{ color: 'rgba(255,255,255,0.9)' }} />}
-            onClose={() => setCelebBadge(null)}
-          />
-        );
-      })()}
+      {celebBadge && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center"
+             style={{ background: 'rgba(0,0,0,0.85)' }}
+             onClick={() => setCelebBadge(null)}>
+          <div className="text-center p-8" onClick={e => e.stopPropagation()}>
+            <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
+                 style={{ background: 'linear-gradient(145deg, #806828, #c8a45a 55%, #806828)', border: '3px solid rgba(200,164,90,0.4)' }}>
+              {React.createElement(getBadgeIcon(celebBadge.icon), { size: 28, strokeWidth: 1.2, style: { color: 'rgba(255,255,255,0.9)' } })}
+            </div>
+            <h3 className="text-lg font-bold text-primary mt-4">{celebBadge.name}</h3>
+            <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--gold-h)' }}>
+              {celebBadge.tier ? tierLabel(celebBadge.tier) : 'Bronze'}
+            </p>
+            <p className="text-xs mt-2" style={{ color: 'var(--t3)' }}>{celebBadge.description || 'Badge earned'}</p>
+            <p className="text-[10px] font-mono mt-3" style={{ color: 'var(--t4)' }}>
+              {celebBadge.tier || 'Bronze'} tier · {celebBadge.category || 'Achievement'} badge
+            </p>
+            <button className="spot-btn px-8 mt-6" onClick={() => setCelebBadge(null)}>Done</button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
@@ -9,9 +9,9 @@ import { Plus, RefreshCw, Rss, TrendingUp, Camera, Crosshair, Zap, Trophy, Car, 
 import PostCard from '../components/PostCard';
 import { SuggestedUsers } from '../components/SuggestedUsers';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
-import { CompetitiveRankBar } from '../components/feed/CompetitiveRankBar';
+import { CompetitiveRankBar } from '../components/CompetitiveRankBar';
 import { WeeklyRecapModal } from '../components/WeeklyRecapModal';
-
+import { NearMissBadgeNudge } from '../components/NearMissBadgeNudge';
 
 interface NewFeedPageProps {
   onNavigate: OnNavigate;
@@ -46,7 +46,25 @@ function BadgeEarnCard() {
 
 export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
   const { user, loading: authLoading } = useAuth();
-  const { posts, loading, error, refreshFeed } = useFeed(user?.id);
+  const { posts, loading, error, refreshFeed, hasMore, loadMore } = useFeed(user?.id);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll: observe sentinel element at end of feed
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0, rootMargin: '400px' }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadMore]);
   const weeklyMetrics = useWeeklyMetrics(user?.id);
   const [activeFilter, setActiveFilter] = useState<'all' | 'posts' | 'spots' | 'reviews' | 'following'>(() => {
     try {
@@ -103,6 +121,9 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
     return Array.from(vehicleMap.values()).sort((a, b) => b.spotCount - a.spotCount).slice(0, 6);
   }, [posts]);
 
+  const placeholderHotCards = [
+    { name: 'Spot vehicles to see trends', location: 'Your area', spotCount: 0, vehicleId: '' },
+  ];
 
   if (authLoading) {
     return (
@@ -181,9 +202,9 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
 
   return (
     <Layout currentPage="feed" onNavigate={onNavigate}>
-      <div className="max-w-2xl mx-auto -mt-5 pb-20 page-enter">
+      <div className="max-w-2xl mx-auto -mt-5 pb-20 animate-page-enter">
 
-        {/* Competitive Rank Bar (with badge nudge built in) */}
+        {/* Competitive Rank Bar */}
         {!weeklyMetrics.loading && weeklyMetrics.globalRank > 0 && (
           <CompetitiveRankBar
             rank={weeklyMetrics.globalRank}
@@ -191,40 +212,41 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
             totalUsers={weeklyMetrics.totalUsers}
             topPercent={weeklyMetrics.topPercent}
             spotsThisWeek={weeklyMetrics.spotsThisWeek}
-            userId={user?.id}
           />
         )}
 
+        {/* Near-Miss Badge Nudge — data-driven */}
+        <NearMissBadgeNudge userId={user?.id} />
+
         {/* Hot Rail */}
-        {recentHotVehicles.length > 0 && (
-          <div className="mb-4 -mx-4 stg">
-            <div className="px-4 mb-2.5 flex items-center gap-1.5">
-              <Zap className="w-2.5 h-2.5" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-              <span className="text-[8px] font-semibold uppercase tracking-wider text-tertiary">Hot in Your Area</span>
-            </div>
-            <div className="flex gap-2.5 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: 'none' }}>
-              {recentHotVehicles.map((card, i) => (
-                <div
-                  key={i}
-                  className="card-v3 flex-shrink-0 w-[120px] overflow-hidden cursor-pointer active:scale-95 transition-transform"
-                  onClick={() => card.vehicleId && onNavigate('vehicle-detail', { vehicleId: card.vehicleId })}
-                >
-                  <div className="h-[68px] flex items-center justify-center" style={{ background: 'var(--s2)' }}>
-                    <Car className="w-6 h-6 opacity-40 text-quaternary" strokeWidth={0.8} />
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-[8px] font-medium leading-tight text-primary">{card.name}</p>
-                    <p className="text-[7px] mt-0.5 text-quaternary">{card.location}</p>
-                    <p className="text-[7px] font-medium mt-1 font-mono" style={{ color: 'var(--orange)' }}>{card.spotCount} spots today</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="mb-4 -mx-4 stg">
+          <div className="px-4 mb-2.5 flex items-center gap-1.5">
+            <Zap className="w-2.5 h-2.5" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
+            <span className="text-[8px] font-semibold uppercase tracking-wider text-tertiary">Hot in Your Area</span>
           </div>
-        )}
+          <div className="flex gap-2.5 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: 'none' }}>
+            {(recentHotVehicles.length > 0 ? recentHotVehicles : placeholderHotCards).map((card, i) => (
+              <div
+                key={i}
+                className="card-v3 flex-shrink-0 w-[120px] overflow-hidden cursor-pointer active:scale-95 transition-transform"
+                onClick={() => card.vehicleId && onNavigate('vehicle-detail', { vehicleId: card.vehicleId })}
+              >
+                <div className="h-[68px] flex items-center justify-center" style={{ background: 'var(--s2)' }}>
+                  <Car className="w-6 h-6 opacity-40 text-quaternary" strokeWidth={0.8} />
+                </div>
+                <div className="p-2.5">
+                  <p className="text-[8px] font-medium leading-tight text-primary">{card.name}</p>
+                  <p className="text-[7px] mt-0.5 text-quaternary">{card.location}</p>
+                  <p className="text-[7px] font-medium mt-1 font-mono" style={{ color: 'var(--orange)' }}>{card.spotCount} spots today</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
 
         {/* Filter Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3 px-4 stg" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 stg" style={{ scrollbarWidth: 'none' }}>
           {([
             { key: 'all',       label: 'All' },
             { key: 'spots',     label: 'Spots' },
@@ -235,7 +257,7 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
             <button
               key={key}
               onClick={() => setActiveFilter(key)}
-              className={`text-[11px] font-semibold px-3 py-1 rounded-full transition-all whitespace-nowrap tracking-wide ${
+              className={`text-[11px] font-semibold px-4 py-1.5 rounded-full transition-all whitespace-nowrap tracking-wide ${
                 activeFilter === key
                   ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
                   : 'text-quaternary border border-white/5 active:scale-95'
@@ -293,12 +315,22 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
           {filteredPosts.length > 0 && (
             <div className="space-y-4">
               {filteredPosts.map((post, idx) => (
-                <div key={post.id} className={`space-y-4 v3-stagger v3-stagger-${Math.min(idx + 2, 7)}`}>
+                <div key={post.id} className="space-y-4">
                   <PostCard post={post as any} onNavigate={onNavigate} />
                   {idx === 1 && <SuggestedUsers onNavigate={onNavigate} />}
                   {idx === 4 && <BadgeEarnCard />}
                 </div>
               ))}
+
+              {/* Infinite scroll sentinel */}
+              <div ref={loadMoreRef} className="py-4 flex justify-center">
+                {hasMore && (
+                  <div className="flex items-center gap-2 text-tertiary">
+                    <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+                    <span className="text-[11px]">Loading more...</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

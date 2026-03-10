@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Star, Heart, ThumbsDown } from 'lucide-react';
-import { haptic } from '../utils/floatPoints';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -34,14 +33,6 @@ function StarRow({
   onChange: (v: number) => void;
 }) {
   const [hovered, setHovered] = useState(0);
-  const [animating, setAnimating] = useState(false);
-
-  const handleClick = useCallback((star: number) => {
-    onChange(star);
-    haptic(15);
-    setAnimating(true);
-    setTimeout(() => setAnimating(false), star * 80 + 200);
-  }, [onChange]);
 
   return (
     <div className="flex items-center justify-between py-3 border-b border-surfacehighlight last:border-0">
@@ -50,7 +41,7 @@ function StarRow({
         {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
-            onClick={() => handleClick(star)}
+            onClick={() => onChange(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
             className="p-0.5 transition-transform active:scale-90"
@@ -58,10 +49,9 @@ function StarRow({
             <Star
               className={`w-7 h-7 transition-colors ${
                 star <= (hovered || value)
-                  ? 'fill-[#F97316] text-[#F97316]'
+                  ? 'fill-yellow-400 text-yellow-400'
                   : 'fill-surfacehighlight text-surfacehighlight'
               }`}
-              style={animating && star <= value ? { animation: `star-fill 0.3s ease ${star * 80}ms both` } : undefined}
             />
           </button>
         ))}
@@ -81,7 +71,7 @@ function ReadOnlyStarRow({ label, value }: { label: string; value: number }) {
         {[1, 2, 3, 4, 5].map(star => (
           <Star
             key={star}
-            className={`w-4 h-4 ${star <= value ? 'fill-[#F97316] text-[#F97316]' : 'fill-neutral-700 text-neutral-700'}`}
+            className={`w-4 h-4 ${star <= value ? 'fill-yellow-400 text-yellow-400' : 'fill-neutral-700 text-neutral-700'}`}
           />
         ))}
       </div>
@@ -138,6 +128,7 @@ export function DetailedSpotAndReviewPage({
         year: wizardData.year ? parseInt(wizardData.year) : null,
         trim: wizardData.trim || null,
         is_claimed: false,
+        verification_tier: 'shadow',
         created_by_user_id: user?.id,
       })
       .select('id')

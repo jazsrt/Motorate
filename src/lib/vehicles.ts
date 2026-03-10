@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { calculateAndAwardReputation } from './reputation';
 
-export type VerificationTier = 'shadow' | 'conditional' | 'standard' | 'verified';
+export type VerificationTier = 'shadow' | 'conditional' | 'standard' | 'verified' | 'vin_verified';
 
 export interface Vehicle {
   id: string;

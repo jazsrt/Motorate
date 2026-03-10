@@ -188,14 +188,6 @@ export function NotificationBell({ onNavigate }: NotificationBellProps = {}) {
       } else if (notification.link_type === 'vehicle' && notification.link_id) {
         // Navigate to vehicle detail
         onNavigate('vehicle-detail', notification.link_id);
-      } else if (notification.link_url) {
-        // Handle generic link URLs
-        const url = notification.link_url;
-        if (url.startsWith('#')) {
-          window.location.hash = url.substring(1);
-        } else if (url.startsWith('http')) {
-          window.open(url, '_blank');
-        }
       }
     }
   };

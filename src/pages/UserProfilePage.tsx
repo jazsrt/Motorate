@@ -3,7 +3,7 @@ import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Car, Award, Star, Instagram, Music, Eye, MessageCircle, Calendar, Lock, Flag, Image, MapPin } from 'lucide-react';
+import { ArrowLeft, Car, Award, Star, Instagram, Music, Eye, MessageCircle, Calendar, Lock, Flag, Image, ImageIcon, MapPin } from 'lucide-react';
 import { EmptyState } from '../components/ui/EmptyState';
 import { TierBadge } from '../components/TierBadge';
 import { VerifiedBadge } from '../components/VerifiedBadge';
@@ -300,7 +300,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-6 animate-page-enter">
         <div className="flex items-center gap-3 stg">
           <button
             onClick={onBack}
@@ -504,7 +504,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               <div className="text-[22px] font-heading font-bold text-positive">
                 {reviewsCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Spots</div>
+              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Reviews</div>
             </div>
             <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
               <div className="text-[22px] font-heading font-bold text-accent-2">
