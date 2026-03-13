@@ -125,7 +125,62 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
       .select('*')
       .eq('vehicle_id', vehicleId)
       .maybeSingle();
-    if (data) setRatings(data);
+
+    if (data && data.spot_count > 0 && data.overall_avg > 0
+        && (data.driver_avg > 0 || data.driving_avg > 0 || data.vehicle_avg > 0)) {
+      setRatings(data);
+      return;
+    }
+
+    // Fallback: calculate from posts table directly
+    const { data: posts } = await supabase
+      .from('posts')
+      .select('rating_driver, rating_driving, rating_vehicle, looks_rating, sound_rating, condition_rating, sentiment, spot_type')
+      .eq('vehicle_id', vehicleId)
+      .in('post_type', ['spot', 'review']);
+
+    if (posts && posts.length > 0) {
+      const validPosts = posts.filter((p: any) => p.rating_driver > 0 || p.rating_driving > 0 || p.rating_vehicle > 0);
+      const count = validPosts.length || posts.length;
+      const quickCount = posts.filter((p: any) => p.spot_type === 'quick').length;
+      const fullCount = posts.filter((p: any) => p.spot_type === 'full').length;
+
+      if (validPosts.length > 0) {
+        const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const driverAvg = avg(validPosts.map((p: any) => p.rating_driver || 0));
+        const drivingAvg = avg(validPosts.map((p: any) => p.rating_driving || 0));
+        const vehicleAvg = avg(validPosts.map((p: any) => p.rating_vehicle || 0));
+        const fullPosts = validPosts.filter((p: any) => p.spot_type === 'full');
+        const looksVals = fullPosts.map((p: any) => p.looks_rating).filter(Boolean);
+        const soundVals = fullPosts.map((p: any) => p.sound_rating).filter(Boolean);
+        const condVals = fullPosts.map((p: any) => p.condition_rating).filter(Boolean);
+
+        setRatings({
+          driver_avg: driverAvg,
+          driving_avg: drivingAvg,
+          vehicle_avg: vehicleAvg,
+          looks_avg: looksVals.length > 0 ? avg(looksVals) : null,
+          sound_avg: soundVals.length > 0 ? avg(soundVals) : null,
+          condition_avg: condVals.length > 0 ? avg(condVals) : null,
+          overall_avg: (driverAvg + drivingAvg + vehicleAvg) / 3,
+          spot_count: count,
+          quick_spot_count: quickCount,
+          full_review_count: fullCount,
+          love_count: validPosts.filter((p: any) => p.sentiment === 'love').length,
+          hate_count: validPosts.filter((p: any) => p.sentiment === 'hate').length,
+        });
+      } else {
+        setRatings({
+          driver_avg: 0, driving_avg: 0, vehicle_avg: 0,
+          looks_avg: null, sound_avg: null, condition_avg: null,
+          overall_avg: 0,
+          spot_count: posts.length,
+          quick_spot_count: quickCount,
+          full_review_count: fullCount,
+          love_count: 0, hate_count: 0,
+        });
+      }
+    }
   };
 
   const loadStickers = async () => {

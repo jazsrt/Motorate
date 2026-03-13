@@ -99,7 +99,8 @@ export function PlateFoundClaimed({
         .eq('vehicle_id', vehicle.id)
         .maybeSingle();
 
-      if (rData && rData.spot_count > 0 && rData.overall_avg > 0) {
+      if (rData && rData.spot_count > 0 && rData.overall_avg > 0
+          && (rData.driver_avg > 0 || rData.driving_avg > 0 || rData.vehicle_avg > 0)) {
         setRatings(rData);
       } else {
         // Fallback: calculate from posts table directly
