@@ -23,6 +23,7 @@ interface FullRatings {
 
 interface TopSticker {
   tag_name: string;
+  icon_name: string | null;
   tag_sentiment: string;
   count: number;
 }
@@ -145,7 +146,7 @@ export function PlateFoundClaimed({
       loadRatings(),
       supabase
         .from('vehicle_sticker_counts')
-        .select('tag_name, tag_sentiment, count')
+        .select('tag_name, icon_name, tag_sentiment, count')
         .eq('vehicle_id', vehicle.id)
         .order('count', { ascending: false })
         .limit(3)
@@ -288,14 +289,19 @@ export function PlateFoundClaimed({
                       {topStickers.map(s => (
                         <span
                           key={s.tag_name}
-                          className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium ${
+                          className={`relative flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-medium ${
                             s.tag_sentiment === 'positive'
-                              ? 'bg-rose-500/15 text-rose-300'
-                              : 'bg-neutral-700/60 text-neutral-400'
+                              ? 'bg-green-500/15 text-green-300 border border-green-500/25'
+                              : 'bg-red-500/15 text-red-300 border border-red-500/25'
                           }`}
                         >
+                          {s.icon_name && <span className="text-base leading-none">{s.icon_name}</span>}
                           {s.tag_name}
-                          <span className="opacity-70">×{s.count}</span>
+                          {s.count > 1 && (
+                            <span className="ml-0.5 bg-white/10 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                              ×{s.count}
+                            </span>
+                          )}
                         </span>
                       ))}
                     </div>

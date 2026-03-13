@@ -36,7 +36,7 @@ export async function giveSticker(
   }
 
   const { data: sticker } = await supabase
-    .from('bumper_stickers')
+    .from('sticker_definitions')
     .select('*')
     .eq('id', stickerId)
     .single();
@@ -50,7 +50,7 @@ export async function giveSticker(
     .from('vehicle_stickers')
     .select(`
       sticker_id,
-      bumper_stickers (
+      sticker_definitions!vehicle_stickers_sticker_id_fkey (
         category
       )
     `)
@@ -62,7 +62,7 @@ export async function giveSticker(
     let negativeCount = 0;
 
     userStickers.forEach((item: any) => {
-      const category = item.bumper_stickers?.category;
+      const category = item.sticker_definitions?.category;
       if (category === 'Positive') {
         positiveCount++;
       } else if (category === 'Negative') {
@@ -157,7 +157,7 @@ async function checkStickerBadge(
   ];
 
   const { data: stickerDef } = await supabase
-    .from('bumper_stickers')
+    .from('sticker_definitions')
     .select('name')
     .eq('id', stickerId)
     .single();
@@ -181,7 +181,7 @@ export async function getVehicleStickers(vehicleId: string) {
       id,
       sticker_id,
       given_by,
-      bumper_stickers (
+      sticker_definitions!vehicle_stickers_sticker_id_fkey (
         id,
         name,
         icon_name,
@@ -196,7 +196,7 @@ export async function getVehicleStickers(vehicleId: string) {
 
   data.forEach((item: any) => {
     const stickerId = item.sticker_id;
-    const def = item.bumper_stickers;
+    const def = item.sticker_definitions;
 
     if (!stickerMap.has(stickerId)) {
       stickerMap.set(stickerId, {
