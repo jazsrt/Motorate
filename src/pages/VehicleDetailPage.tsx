@@ -836,7 +836,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                       </svg>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 400, color: '#f2f4f7' }}>Factory Specifications</div>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 400, color: '#f2f4f7' }}>Factory Specifications</div>
                       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 500, color: '#F97316', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>VIN Decoded</div>
                     </div>
                     <div style={{

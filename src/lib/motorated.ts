@@ -406,7 +406,7 @@ export function getMotoRateLevel(score: number): {
   progress: number;
 } {
   const levels = [
-    { level: 'Rookie', min: 0, max: 99 },
+    { level: 'Permit', min: 0, max: 99 },
     { level: 'Regular', min: 100, max: 249 },
     { level: 'Enthusiast', min: 250, max: 499 },
     { level: 'Expert', min: 500, max: 999 },

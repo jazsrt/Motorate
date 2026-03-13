@@ -245,7 +245,7 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
     <div className="fixed inset-0 z-50 flex flex-col bg-neutral-950">
       <div className="flex items-center justify-between px-4 py-4 border-b border-surfacehighlight bg-surface flex-shrink-0">
         <div>
-          <h2 className="text-lg font-heading font-black uppercase tracking-tight text-primary">All Spots</h2>
+          <h2 className="text-lg font-heading font-bold uppercase tracking-tight text-primary">All Spots</h2>
           <p className="text-xs text-secondary">{vehicleName}</p>
         </div>
         <button onClick={onClose} className="p-2 rounded-xl hover:bg-surfacehighlight transition-colors">
@@ -266,7 +266,7 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
                   <h3 className="font-heading font-bold uppercase tracking-tight text-sm">Rating Summary</h3>
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-lg font-black text-primary">{ratings.overall_avg.toFixed(1)}</span>
+                    <span className="text-lg font-bold text-primary">{ratings.overall_avg.toFixed(1)}</span>
                     <span className="text-secondary text-xs">/ 5</span>
                   </div>
                 </div>
@@ -328,15 +328,15 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
 
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-surfacehighlight">
                   <div className="text-center">
-                    <p className="text-xl font-black text-primary">{ratings.spot_count}</p>
+                    <p className="text-xl font-bold text-primary">{ratings.spot_count}</p>
                     <p className="text-xs text-secondary">Total Spots</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-black text-primary">{ratings.quick_spot_count}</p>
+                    <p className="text-xl font-bold text-primary">{ratings.quick_spot_count}</p>
                     <p className="text-xs text-secondary">Quick Spots</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl font-black text-primary">{ratings.full_review_count}</p>
+                    <p className="text-xl font-bold text-primary">{ratings.full_review_count}</p>
                     <p className="text-xs text-secondary">Full Spots</p>
                   </div>
                 </div>

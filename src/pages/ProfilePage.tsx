@@ -44,15 +44,15 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
 function getTierName(score: number): string {
   if (score >= 10000) return 'Legend';
   if (score >= 7500) return 'Road General';
-  if (score >= 5000) return 'Highway King';
+  if (score >= 5000) return 'Iconic';
   if (score >= 3000) return 'Road Captain';
   if (score >= 1500) return 'Street Racer';
   if (score >= 500) return 'Cruiser';
-  return 'Rookie';
+  return 'Permit';
 }
 
 const PROFILE_TIERS = [
-  { name: 'Rookie', min: 0 },
+  { name: 'Permit', min: 0 },
   { name: 'Prospect', min: 100 },
   { name: 'Contender', min: 300 },
   { name: 'Competitor', min: 600 },

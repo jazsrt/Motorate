@@ -52,10 +52,10 @@ export function DashLight({ current, next, level, color = 'rep', label }: DashLi
     <div className="space-y-3">
       {label && (
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-secondary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <span className="text-sm font-medium text-secondary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             {label}
           </span>
-          <span className="text-xs text-secondary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <span className="text-xs text-secondary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             Level {level}
           </span>
         </div>
@@ -81,10 +81,10 @@ export function DashLight({ current, next, level, color = 'rep', label }: DashLi
       </div>
 
       <div className="flex items-center justify-between text-xs">
-        <span className="text-secondary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        <span className="text-secondary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           {current.toLocaleString()} pts
         </span>
-        <span className="text-secondary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        <span className="text-secondary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           {next.toLocaleString()} pts
         </span>
       </div>

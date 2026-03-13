@@ -55,7 +55,7 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
             <span className="text-xs text-secondary">Step 2 of 3 — 66%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
             Is this your vehicle?
           </h1>
           <p className="text-secondary text-sm">Confirm the vehicle before rating</p>
@@ -110,7 +110,7 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
           </div>
 
           <div className="p-6">
-            <h2 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-4">
+            <h2 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-4">
               {vehicleName || 'Unknown Vehicle'}
             </h2>
 

@@ -153,7 +153,7 @@ export function SpeedometerGauge({
           textAnchor="middle"
           fill="#fff"
           fontSize={sizes.fontSize}
-          fontFamily="Space Grotesk, sans-serif"
+          fontFamily="'JetBrains Mono', monospace"
           fontWeight="700"
         >
           {value}
@@ -164,7 +164,7 @@ export function SpeedometerGauge({
         {Icon && <Icon className="w-4 h-4 text-secondary" />}
         <span
           className="text-secondary font-medium"
-          style={{ fontSize: sizes.labelSize, fontFamily: 'Space Grotesk, sans-serif' }}
+          style={{ fontSize: sizes.labelSize, fontFamily: "'JetBrains Mono', monospace" }}
         >
           {label}
         </span>

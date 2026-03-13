@@ -117,7 +117,7 @@ export function VehicleStats({ vehicleId }: VehicleStatsProps) {
             <span className="text-xs font-bold uppercase tracking-wider text-secondary">{stat.label}</span>
             <stat.icon className={`w-4 h-4 text-${stat.color}-500`} />
           </div>
-          <p className="text-2xl font-black text-white">{stat.value}</p>
+          <p className="text-2xl font-bold text-white">{stat.value}</p>
         </motion.div>
       ))}
     </div>

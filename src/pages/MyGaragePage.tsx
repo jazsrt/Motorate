@@ -256,6 +256,8 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [claimSearchResult, setClaimSearchResult] = useState<any | null>(null);
   const [claimSearchError, setClaimSearchError] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [badgeCount, setBadgeCount] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -335,6 +337,13 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     try {
       setLoading(true);
       await Promise.all([loadVehicles(), loadRetiredVehicles()]);
+      // Load follower + badge counts
+      const [{ count: fc }, { count: bc }] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user!.id),
+        supabase.from('user_badges').select('*', { count: 'exact', head: true }).eq('user_id', user!.id),
+      ]);
+      setFollowerCount(fc || 0);
+      setBadgeCount(bc || 0);
     } catch {
       showToast('Failed to load garage', 'error');
     } finally {
@@ -610,12 +619,14 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   background: 'rgba(249,115,22,0.12)',
                   border: '1px solid rgba(249,115,22,0.2)',
                   borderRadius: 3,
-                  padding: '2px 8px',
+                  padding: '2px 10px',
                   fontFamily: "'Barlow Condensed', sans-serif",
                   fontSize: 9,
                   fontWeight: 700,
                   textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
                   color: 'var(--accent, #F97316)',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {getTierFromScore(profile?.reputation_score ?? 0)} TIER
@@ -661,8 +672,8 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           {[
             { label: 'VEHICLES', value: vehicles.length },
             { label: 'SPOTS', value: fleetStats.totalSpots },
-            { label: 'FOLLOWERS', value: null },
-            { label: 'BADGES', value: null },
+            { label: 'FOLLOWERS', value: followerCount },
+            { label: 'BADGES', value: badgeCount },
           ].map((stat, i, arr) => (
             <div
               key={stat.label}

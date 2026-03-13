@@ -82,7 +82,7 @@ export function DigitalDisplay({
             {Icon && <Icon className="text-secondary" size={sizes.iconSize} />}
             <span
               className={`${sizes.label} font-medium text-secondary uppercase tracking-wider`}
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               {label}
             </span>
@@ -90,7 +90,7 @@ export function DigitalDisplay({
           {trend && trendValue && (
             <div className="flex items-center gap-1" style={{ color: trendColor }}>
               <TrendIcon size={14} />
-              <span className="text-xs font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              <span className="text-xs font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                 {trendValue}
               </span>
             </div>
@@ -101,7 +101,7 @@ export function DigitalDisplay({
           className={`${sizes.value} font-bold tracking-tight`}
           style={{
             color: colors.text,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: "'JetBrains Mono', monospace",
             textShadow: `0 0 20px ${colors.glow}, 0 0 10px ${colors.glow}`,
           }}
         >

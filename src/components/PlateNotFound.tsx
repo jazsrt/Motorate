@@ -178,7 +178,7 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
               <div className="flex justify-center">
                 <div className={`relative ${plateColors.bg} rounded-lg px-8 py-4 shadow-xl border-4 border-gray-800`}>
                   <div className="absolute top-1.5 left-3 text-[10px] text-gray-600 font-bold">{stateCode}</div>
-                  <div className={`text-3xl font-mono font-extrabold ${plateColors.text} tracking-widest text-center`}>
+                  <div className={`text-3xl font-mono font-bold ${plateColors.text} tracking-widest text-center`}>
                     {plateNumber.toUpperCase()}
                   </div>
                 </div>
@@ -296,7 +296,7 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
               <div className="flex justify-center mb-4">
                 <div className={`relative ${plateColors.bg} rounded-lg px-6 py-3 shadow-lg border-4 border-gray-800`}>
                   <div className="absolute top-1 left-2 text-[8px] text-gray-600 font-bold">{stateCode}</div>
-                  <div className={`text-2xl font-mono font-extrabold ${plateColors.text} tracking-widest text-center`}>
+                  <div className={`text-2xl font-mono font-bold ${plateColors.text} tracking-widest text-center`}>
                     {plateNumber.toUpperCase()}
                   </div>
                 </div>

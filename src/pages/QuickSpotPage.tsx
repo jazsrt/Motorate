@@ -120,7 +120,7 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
             <span className="text-xs text-secondary">Step 1 of 3 — 33%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
             YOU'RE THE FIRST TO SPOT!
           </h1>
           <p className="text-secondary text-sm mb-2">

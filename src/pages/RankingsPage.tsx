@@ -403,7 +403,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 textAlign: 'center' as const,
                 marginTop: '4px',
               }}>
-                @{top3[1].handle}
+                {top3[1].handle}
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
@@ -417,7 +417,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               <div style={{
                 width: '92px',
                 height: '36px',
-                background: 'linear-gradient(135deg, #587888, #9abccc, #587888)',
+                background: 'linear-gradient(135deg, #2c3a50, #445566)',
                 borderRadius: '4px 4px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -428,8 +428,8 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   fontFamily: "'Rajdhani', sans-serif",
                   fontSize: '16px',
                   fontWeight: 700,
-                  color: '#030508',
-                }}>2</span>
+                  color: '#fff',
+                }}>2ND</span>
               </div>
             </div>
 
@@ -447,7 +447,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                     height: '80px',
                     borderRadius: '6px',
                     objectFit: 'cover' as const,
-                    border: '1px solid rgba(240,160,48,0.45)',
+                    border: '1px solid rgba(249,115,22,0.45)',
                     display: 'block',
                   }}
                 />
@@ -456,7 +456,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   width: '118px',
                   height: '80px',
                   borderRadius: '6px',
-                  border: '1px solid rgba(240,160,48,0.45)',
+                  border: '1px solid rgba(249,115,22,0.45)',
                   background: '#121a2c',
                   display: 'flex',
                   alignItems: 'center',
@@ -473,7 +473,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 textAlign: 'center' as const,
                 marginTop: '4px',
               }}>
-                @{top3[0].handle}
+                {top3[0].handle}
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
@@ -487,7 +487,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               <div style={{
                 width: '118px',
                 height: '52px',
-                background: 'linear-gradient(135deg, #a86820, #f0a030, #a86820)',
+                background: 'linear-gradient(135deg, #F97316, #ff6000)',
                 borderRadius: '4px 4px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -498,8 +498,8 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   fontFamily: "'Rajdhani', sans-serif",
                   fontSize: '22px',
                   fontWeight: 700,
-                  color: '#030508',
-                }}>1</span>
+                  color: '#fff',
+                }}>1ST</span>
               </div>
             </div>
 
@@ -543,7 +543,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 textAlign: 'center' as const,
                 marginTop: '4px',
               }}>
-                @{top3[2].handle}
+                {top3[2].handle}
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
@@ -557,7 +557,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               <div style={{
                 width: '92px',
                 height: '26px',
-                background: 'linear-gradient(135deg, #7a4820, #b07840, #7a4820)',
+                background: 'linear-gradient(135deg, #182036, #2c3a50)',
                 borderRadius: '4px 4px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -568,8 +568,8 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   fontFamily: "'Rajdhani', sans-serif",
                   fontSize: '14px',
                   fontWeight: 700,
-                  color: '#030508',
-                }}>3</span>
+                  color: '#fff',
+                }}>3RD</span>
               </div>
             </div>
           </div>
@@ -705,7 +705,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap' as const,
                 }}>
-                  @{leader.handle}
+                  {leader.handle}
                 </div>
                 <div style={{
                   fontFamily: "'Barlow Condensed', sans-serif",
@@ -714,7 +714,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   color: 'var(--dim)',
                   marginTop: '1px',
                 }}>
-                  {leader.follower_count} followers &middot; {leader.badge_count} badges
+                  {formatRP(leader.reputation_score)} RP &middot; #{rank}
                 </div>
               </div>
 

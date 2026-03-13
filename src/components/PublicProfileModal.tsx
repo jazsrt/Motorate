@@ -21,7 +21,7 @@ interface ProfileData {
 }
 
 const TIERS = [
-  { name: 'Rookie', min: 0 },
+  { name: 'Permit', min: 0 },
   { name: 'Prospect', min: 100 },
   { name: 'Contender', min: 300 },
   { name: 'Competitor', min: 600 },
@@ -306,7 +306,7 @@ export function PublicProfileModal({ userId, onClose, onNavigate }: PublicProfil
                     flex: 1, padding: '10px 0', borderRadius: 10,
                     fontSize: 10, fontWeight: 500, letterSpacing: 2,
                     textTransform: 'uppercase', cursor: 'pointer',
-                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontFamily: "'Barlow Condensed', sans-serif",
                     background: isFollowing ? 'transparent' : 'var(--orange)',
                     color: isFollowing ? 'var(--t2)' : '#fff',
                     border: isFollowing ? '1px solid var(--border-2)' : 'none',
@@ -322,7 +322,7 @@ export function PublicProfileModal({ userId, onClose, onNavigate }: PublicProfil
                   flex: 1, padding: '10px 0', borderRadius: 10,
                   fontSize: 10, fontWeight: 500, letterSpacing: 2,
                   textTransform: 'uppercase', cursor: 'pointer',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: "'Barlow Condensed', sans-serif",
                   background: 'transparent',
                   color: 'var(--t2)',
                   border: '1px solid var(--border-2)',

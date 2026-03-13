@@ -64,7 +64,7 @@ export function ReputationScore({ userId, size = 'md', showLabel = true }: Reput
 
   return (
     <div className="flex items-center gap-2">
-      <div className={`font-black font-mono text-accent-primary ${scoreSizes[size]}`}>
+      <div className={`font-bold font-mono text-accent-primary ${scoreSizes[size]}`}>
         {safeScore.toLocaleString()}
       </div>
       {showLabel && (

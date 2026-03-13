@@ -55,7 +55,7 @@ function StickerPill({
       </span>
       {sticker.count > 1 && (
         <span
-          className="text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0"
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
           style={{
             background: tier ? `${tier.hex}22` : 'rgba(255,255,255,0.08)',
             color: tier ? tier.hex : 'rgba(255,255,255,0.5)',
@@ -67,7 +67,7 @@ function StickerPill({
       )}
       {tier && (
         <span
-          className="absolute -top-1.5 -right-1.5 text-[7px] font-black px-1.5 py-[3px] rounded-full tracking-widest leading-none shadow-sm"
+          className="absolute -top-1.5 -right-1.5 text-[7px] font-bold px-1.5 py-[3px] rounded-full tracking-widest leading-none shadow-sm"
           style={{
             background: tier.hex,
             color: tier.darkText ? '#000' : '#fff',
@@ -129,7 +129,7 @@ function AllStickersModal({
               <div key={cat}>
                 <div className="flex items-center gap-2 mb-3">
                   <span
-                    className="text-[9px] font-black uppercase tracking-[1.5px] px-2.5 py-1 rounded-full"
+                    className="text-[9px] font-bold uppercase tracking-[1.5px] px-2.5 py-1 rounded-full"
                     style={{ background: meta.bg, color: meta.text, border: `1px solid ${meta.border}` }}
                   >
                     {meta.label}

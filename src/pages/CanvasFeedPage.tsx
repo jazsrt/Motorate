@@ -459,15 +459,15 @@ export function CanvasFeedPage({ onNavigate }: CanvasFeedPageProps) {
               style={{
                 position: 'absolute',
                 top: '-28px',
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
+                width: '52px',
+                height: '52px',
+                borderRadius: '14px',
                 background: 'var(--accent)',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 20px rgba(249,115,22,0.4), 0 0 0 4px var(--black)',
+                boxShadow: '0 0 28px rgba(249,115,22,0.5), 0 4px 14px rgba(0,0,0,0.6)',
                 cursor: 'pointer',
               }}
             >

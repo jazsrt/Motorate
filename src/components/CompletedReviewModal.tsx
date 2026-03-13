@@ -72,14 +72,14 @@ export function CompletedReviewModal({
             <Car className="w-8 h-8 text-accent-primary" />
           </div>
 
-          <h2 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h2 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
             {spotType === 'full' ? 'Full Spot' : 'Quick Spot'} Submitted!
           </h2>
           <p className="text-secondary text-sm">{vehicleName}</p>
 
           <div className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-orange/20 rounded-xl border border-orange/40">
             <Zap className="w-5 h-5 text-accent-primary" />
-            <span className="text-2xl font-black text-accent-primary">+{reputationEarned}</span>
+            <span className="text-2xl font-bold text-accent-primary">+{reputationEarned}</span>
             <span className="text-sm font-bold text-accent-primary">Points Earned</span>
           </div>
         </div>

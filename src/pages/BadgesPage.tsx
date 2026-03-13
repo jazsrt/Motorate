@@ -477,7 +477,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
                   textAlign: 'center',
                   lineHeight: 1.2,
                 }}>
-                  {isLocked ? '???' : badge.name}
+                  {badge.name}
                 </span>
 
                 {/* Rarity label */}

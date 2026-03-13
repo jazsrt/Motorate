@@ -17,7 +17,7 @@ export function LicensePlateDisplay({ stateCode, plateNumber, className = '' }: 
       <span className="text-[8px] font-bold uppercase tracking-[2px] text-blue-800 leading-none mb-0.5">
         {stateCode}
       </span>
-      <span className="font-mono font-black text-lg tracking-[3px] text-neutral-900 leading-tight">
+      <span className="font-mono font-bold text-lg tracking-[3px] text-neutral-900 leading-tight">
         {plateNumber}
       </span>
     </div>

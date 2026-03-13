@@ -208,7 +208,7 @@ export function PlateFoundClaimed({
                 </div>
               )}
               <div className="p-5">
-                <h3 className="text-2xl font-heading font-black uppercase tracking-tight mb-1">{vehicleName}</h3>
+                <h3 className="text-2xl font-heading font-bold uppercase tracking-tight mb-1">{vehicleName}</h3>
                 {vehicle.color && <p className="text-secondary text-sm capitalize mb-4">{vehicle.color}</p>}
 
                 {vehicle.owner && (
@@ -234,7 +234,7 @@ export function PlateFoundClaimed({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                    <span className="text-2xl font-black">{ratings.overall_avg.toFixed(1)}</span>
+                    <span className="text-2xl font-bold">{ratings.overall_avg.toFixed(1)}</span>
                     <span className="text-secondary text-sm">/ 5</span>
                   </div>
                   <button
@@ -249,7 +249,7 @@ export function PlateFoundClaimed({
                   {ratingRows.map(r => (
                     <div key={r.label} className="bg-surfacehighlight rounded-xl p-2.5 text-center">
                       <p className="text-xs text-secondary mb-1">{r.label}</p>
-                      <p className="font-black text-primary">{r.value.toFixed(1)}</p>
+                      <p className="font-bold text-primary">{r.value.toFixed(1)}</p>
                       <p className="text-xs text-neutral-600">({r.count})</p>
                     </div>
                   ))}

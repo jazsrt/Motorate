@@ -123,7 +123,7 @@ export function BadgeCelebration({
       <div style={{
         fontSize: 22, fontWeight: 300, color: '#f2f4f7', marginTop: 24,
         opacity: 0, animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) forwards',
-        animationDelay: '0.9s', fontFamily: "'Space Grotesk', sans-serif",
+        animationDelay: '0.9s', fontFamily: "'Barlow Condensed', sans-serif",
       }}>{badgeName}</div>
 
       <div className="mono" style={{
@@ -136,7 +136,7 @@ export function BadgeCelebration({
       <div style={{
         fontSize: 12, color: '#8090a4', fontWeight: 300, marginTop: 8,
         opacity: 0, animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) forwards',
-        animationDelay: '1.1s', fontFamily: "'Space Grotesk', sans-serif",
+        animationDelay: '1.1s', fontFamily: "'Barlow', sans-serif",
         maxWidth: 280, textAlign: 'center',
       }}>{badgeDescription}</div>
 
@@ -144,7 +144,7 @@ export function BadgeCelebration({
         <div style={{
           fontSize: 10, color: '#586878', marginTop: 20,
           opacity: 0, animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) forwards',
-          animationDelay: '1.4s', fontFamily: "'Space Grotesk', sans-serif",
+          animationDelay: '1.4s', fontFamily: "'Barlow Condensed', sans-serif",
         }}>
           <span style={{ color: '#c0c8d4', fontWeight: 500 }}>{othersCount}</span> others have earned this
         </div>
@@ -171,7 +171,7 @@ export function BadgeCelebration({
           style={{
             padding: '10px 28px', borderRadius: 10, fontSize: 10, fontWeight: 500,
             letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
-            fontFamily: "'Space Grotesk', sans-serif", border: 'none',
+            fontFamily: "'Barlow Condensed', sans-serif", border: 'none',
             background: '#F97316', color: '#fff',
           }}
         >Share</button>
@@ -180,7 +180,7 @@ export function BadgeCelebration({
           style={{
             padding: '10px 28px', borderRadius: 10, fontSize: 10, fontWeight: 500,
             letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'Barlow Condensed', sans-serif",
             background: 'transparent', border: '1px solid rgba(255,255,255,.1)', color: '#c0c8d4',
           }}
         >View Badges</button>

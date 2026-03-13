@@ -5,7 +5,7 @@ interface RepHeroCardProps {
 }
 
 const TIERS = [
-  { name: 'Rookie',     min: 0 },
+  { name: 'Permit',     min: 0 },
   { name: 'Prospect',   min: 100 },
   { name: 'Contender',  min: 300 },
   { name: 'Competitor', min: 600 },

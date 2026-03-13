@@ -569,11 +569,11 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                   const s = profile?.reputation_score || 0;
                   if (s >= 10000) return 'Legend';
                   if (s >= 7500) return 'Road General';
-                  if (s >= 5000) return 'Highway King';
+                  if (s >= 5000) return 'Iconic';
                   if (s >= 3000) return 'Road Captain';
                   if (s >= 1500) return 'Street Racer';
                   if (s >= 500) return 'Cruiser';
-                  return 'Rookie';
+                  return 'Permit';
                 })()}
               </span>
               <span className="text-[10px] text-quaternary">10,000</span>

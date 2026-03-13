@@ -268,7 +268,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               <div className="flex-1 space-y-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-4xl lg:text-5xl font-heading font-black uppercase tracking-tight bg-gradient-to-r from-white via-accent-primary to-[#fb923c] bg-clip-text text-transparent">
+                    <h1 className="text-4xl lg:text-5xl font-heading font-bold uppercase tracking-tight bg-gradient-to-r from-white via-accent-primary to-[#fb923c] bg-clip-text text-transparent">
                       {vehicleDisplay}
                     </h1>
                     {!isActive && (
@@ -348,7 +348,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-yellow-500/20">
                 <div className="text-xs font-bold text-secondary uppercase mb-2">The Vehicle</div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-yellow-500">{averageRatings.vehicle.toFixed(1)}</div>
+                  <div className="text-3xl font-bold text-yellow-500">{averageRatings.vehicle.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>
                 </div>
                 <StarRating value={averageRatings.vehicle} onChange={() => {}} readOnly size="large" />
@@ -357,7 +357,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-orange/20">
                 <div className="text-xs font-bold text-secondary uppercase mb-2">The Driver</div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-accent-primary">{averageRatings.driver.toFixed(1)}</div>
+                  <div className="text-3xl font-bold text-accent-primary">{averageRatings.driver.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>
                 </div>
                 <StarRating value={averageRatings.driver} onChange={() => {}} readOnly size="large" />
@@ -366,7 +366,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-orange-500/20">
                 <div className="text-xs font-bold text-secondary uppercase mb-2">The Driving</div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-accent-2">{averageRatings.driving.toFixed(1)}</div>
+                  <div className="text-3xl font-bold text-accent-2">{averageRatings.driving.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>
                 </div>
                 <StarRating value={averageRatings.driving} onChange={() => {}} readOnly size="large" />

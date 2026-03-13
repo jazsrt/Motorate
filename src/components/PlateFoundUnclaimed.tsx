@@ -212,7 +212,7 @@ export function PlateFoundUnclaimed({
               )}
 
               <div className="p-5">
-                <h3 className="text-2xl font-heading font-black uppercase tracking-tight mb-4">{vehicleName}</h3>
+                <h3 className="text-2xl font-heading font-bold uppercase tracking-tight mb-4">{vehicleName}</h3>
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   {vehicle.year && (
@@ -240,7 +240,7 @@ export function PlateFoundUnclaimed({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xl font-black">{ratings.overall_avg.toFixed(1)}</span>
+                        <span className="text-xl font-bold">{ratings.overall_avg.toFixed(1)}</span>
                         <span className="text-sm text-secondary">/ 5</span>
                       </div>
                       <button
@@ -259,7 +259,7 @@ export function PlateFoundUnclaimed({
                       ].map(r => (
                         <div key={r.label} className="bg-surface rounded-xl p-2.5 text-center border border-surfacehighlight">
                           <p className="text-xs text-secondary mb-1">{r.label}</p>
-                          <p className="font-black text-primary">{r.value.toFixed(1)}</p>
+                          <p className="font-bold text-primary">{r.value.toFixed(1)}</p>
                         </div>
                       ))}
                     </div>

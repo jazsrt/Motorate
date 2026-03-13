@@ -528,7 +528,7 @@ function AppContent() {
     default:
       pageContent = (
         <>
-          <CanvasFeedPage onNavigate={handleNavigate} />
+          <NewFeedPage onNavigate={handleNavigate} />
           <PushNotificationPrompt />
           <InstallPrompt />
         </>

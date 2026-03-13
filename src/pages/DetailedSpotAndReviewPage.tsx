@@ -290,7 +290,7 @@ export function DetailedSpotAndReviewPage({
             <span className="text-sm font-medium">Back</span>
           </button>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
             {upgradeFromQuickSpot ? 'FULL SPOT UPGRADE' : 'Full Spot'}
           </h1>
           <p className="text-secondary text-sm">

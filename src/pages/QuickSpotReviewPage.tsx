@@ -309,7 +309,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             <span className="text-xs text-secondary">Step 3 of 3 — 100%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
             Quick Spot
           </h1>
           <p className="text-secondary text-sm">{vehicleName || 'Rate the vehicle'}</p>
@@ -471,7 +471,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             className="bg-surface border border-surfacehighlight rounded-2xl p-6 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-heading font-black uppercase tracking-tight text-primary mb-3">
+            <h2 className="text-xl font-heading font-bold uppercase tracking-tight text-primary mb-3">
               Want to leave a Full Spot for +20 bonus RP?
             </h2>
             <p className="text-sm text-secondary mb-6">
