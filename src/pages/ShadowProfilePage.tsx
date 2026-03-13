@@ -10,7 +10,7 @@ import {
   Sparkles, Shield, Car
 } from 'lucide-react';
 import { StarRating } from '../components/StarRating';
-import { ClaimVehicleModalVerification } from '../components/ClaimVehicleModalVerification';
+import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestBottomNav } from '../components/GuestBottomNav';
 import { UserAvatar } from '../components/UserAvatar';
 
@@ -553,16 +553,15 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
       </div>
 
       {showClaimModal && vehicleId && vehicleDetails && user && (
-        <ClaimVehicleModalVerification
+        <VinClaimModal
           vehicleId={vehicleId}
-          userId={user.id}
           vehicleInfo={{
-            make: vehicleDetails.make || 'Unknown',
-            model: vehicleDetails.model || 'Unknown',
-            year: vehicleDetails.year || 0,
-            color: vehicleDetails.color || 'Unknown',
-            plateState: vehicleDetails.state || '',
-            plateNumber: plateNumber,
+            make: vehicleDetails.make,
+            model: vehicleDetails.model,
+            year: vehicleDetails.year,
+            color: vehicleDetails.color,
+            plateState: plateState,
+            plateNumber: plateNum,
           }}
           onClose={() => setShowClaimModal(false)}
           onSuccess={() => {

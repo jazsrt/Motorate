@@ -12,7 +12,7 @@ import { PlateSearch } from '../components/PlateSearch';
 import { PlateNotFound, type CreateVehicleData } from '../components/PlateNotFound';
 import { PlateFoundUnclaimed } from '../components/PlateFoundUnclaimed';
 import { PlateFoundClaimed } from '../components/PlateFoundClaimed';
-import { ClaimVehicleModalVerification } from '../components/ClaimVehicleModalVerification';
+import { VinClaimModal } from '../components/VinClaimModal';
 import { CameraModal } from '../components/spot/CameraModal';
 import type { SpotWizardData } from '../types/spot';
 import { type VerificationTier } from '../components/TierBadge';
@@ -476,14 +476,13 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
         )}
 
         {showClaimModal && plateVehicle && user && (
-          <ClaimVehicleModalVerification
+          <VinClaimModal
             vehicleId={plateVehicle.id}
-            userId={user.id}
             vehicleInfo={{
-              make: plateVehicle.make || 'Unknown',
-              model: plateVehicle.model || 'Unknown',
-              year: plateVehicle.year || 0,
-              color: plateVehicle.color || 'Unknown',
+              make: plateVehicle.make,
+              model: plateVehicle.model,
+              year: plateVehicle.year,
+              color: plateVehicle.color,
               plateState: plateStateCode,
               plateNumber: plateNumber,
             }}
@@ -493,7 +492,6 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
             }}
             onSuccess={() => {
               setShowClaimModal(false);
-              showToast('Claim submitted successfully!', 'success');
               handlePlateSearch(plateState, plateNumber);
             }}
           />
