@@ -121,7 +121,7 @@ export function DetailedSpotAndReviewPage({
       .insert({
         plate_hash: plateHash,
         plate_state: wizardData.plateState,
-        plate_number: wizardData.plateNumber,
+        plate_number: (wizardData.plateNumber || '').trim().toUpperCase(),
         make: wizardData.make,
         model: wizardData.model,
         color: wizardData.color,
@@ -160,7 +160,7 @@ export function DetailedSpotAndReviewPage({
             condition_rating: conditionRating,
             caption: comment.trim() || null,
           })
-          .eq('review_id', existingReviewId);
+          .eq('id', existingReviewId);
 
         if (updateError) throw updateError;
         reviewId = existingReviewId;
@@ -229,13 +229,21 @@ export function DetailedSpotAndReviewPage({
       // Award reputation and check badges
       if (upgradeFromQuickSpot) {
         // Update spot_history to reflect upgrade
-        await supabase
-          .from('spot_history')
-          .update({
-            spot_type: 'full',
-            reputation_earned: 35,
-          })
-          .eq('review_id', reviewId);
+        const { data: origPost } = await supabase
+          .from('posts')
+          .select('spot_history_id')
+          .eq('id', reviewId)
+          .maybeSingle();
+
+        if (origPost?.spot_history_id) {
+          await supabase
+            .from('spot_history')
+            .update({
+              spot_type: 'full',
+              reputation_earned: 35,
+            })
+            .eq('id', origPost.spot_history_id);
+        }
 
         await calculateAndAwardReputation({
           userId: user.id,

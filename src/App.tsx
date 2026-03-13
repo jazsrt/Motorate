@@ -412,6 +412,8 @@ function AppContent() {
           vehicleRating={wizardReviewData.vehicleRating || 0}
           sentiment={wizardReviewData.sentiment || 'love'}
           comment={wizardReviewData.comment}
+          upgradeFromQuickSpot={wizardReviewData.upgradeFromQuickSpot || false}
+          existingReviewId={wizardReviewData.existingReviewId}
         />
       ) : (
         <SpotPage onNavigate={handleNavigate} />

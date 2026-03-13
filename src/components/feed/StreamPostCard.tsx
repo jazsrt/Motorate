@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Heart, MessageCircle, Share2 } from 'lucide-react';
 import { useVehicleTracking } from '../../hooks/useVehicleTracking';
 import {
@@ -10,6 +11,7 @@ import {
   formatSpotTime,
 } from '../../lib/vehicleUtils';
 import { getTierFromScore } from '../../lib/tierConfig';
+import { CommentsModal } from '../CommentsModal';
 
 interface StreamPostCardProps {
   post: {
@@ -48,9 +50,10 @@ interface StreamPostCardProps {
 export function StreamPostCard({ post, currentUserId, onNavigate }: StreamPostCardProps) {
   const vehicleId = post.vehicle_id || post.vehicles?.id || null;
   const { isTracking, trackerCount, toggle } = useVehicleTracking(vehicleId);
+  const [showComments, setShowComments] = useState(false);
 
   const vehicle = post.vehicles;
-  const handle = post.profiles?.handle ?? post.author_handle ?? 'unknown';
+  const handle = post.profiles?.handle ?? post.author_handle ?? 'Spotter';
   const avatarUrl = post.profiles?.avatar_url ?? post.author_avatar_url ?? null;
   const repScore = post.profiles?.reputation_score ?? null;
 
@@ -245,7 +248,7 @@ export function StreamPostCard({ post, currentUserId, onNavigate }: StreamPostCa
               justifyContent: 'center',
             }}
           >
-            <span style={{ fontSize: 48, opacity: 0.15 }}>🚗</span>
+            <div style={{ width: '100%', height: '100%', background: 'var(--carbon-2, #0e1320)' }} />
           </div>
         )}
 
@@ -334,7 +337,7 @@ export function StreamPostCard({ post, currentUserId, onNavigate }: StreamPostCa
         {[
           { value: formatRP(repScore), label: 'RP', accent: true },
           { value: '—', label: 'Spots' },
-          { value: '—', label: 'Trackers' },
+          { value: '—', label: 'Fans' },
           { value: '—', label: 'Enc.' },
         ].map((cell, i) => (
           <div
@@ -414,17 +417,22 @@ export function StreamPostCard({ post, currentUserId, onNavigate }: StreamPostCa
                 color: isTracking ? 'var(--accent, #F97316)' : 'var(--dim, #6a7486)',
               }}
             >
-              {isTracking ? `${formatCount(trackerCount)} Tracking` : 'Track'}
+              {isTracking ? `${formatCount(trackerCount)} Fanned` : 'Fan'}
             </span>
           </button>
 
           {/* Comment count */}
-          <div
+          <button
+            onClick={() => setShowComments(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 4,
               color: 'var(--dim, #6a7486)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
             }}
           >
             <MessageCircle size={14} />
@@ -437,7 +445,7 @@ export function StreamPostCard({ post, currentUserId, onNavigate }: StreamPostCa
             >
               {formatCount(post.comment_count ?? 0)}
             </span>
-          </div>
+          </button>
 
           {/* Share */}
           <button
@@ -495,6 +503,15 @@ export function StreamPostCard({ post, currentUserId, onNavigate }: StreamPostCa
           )}
         </span>
       </div>
+
+      {showComments && (
+        <CommentsModal
+          postId={post.id}
+          postAuthor={handle}
+          onClose={() => setShowComments(false)}
+          onNavigate={onNavigate}
+        />
+      )}
     </div>
   );
 }

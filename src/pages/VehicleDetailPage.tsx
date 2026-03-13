@@ -691,7 +691,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <div className="px-4 mt-4 mb-2 stg">
           <div className="flex justify-around px-4 py-4">
             {[
-              { label: 'Trackers', value: formatCount(trackerCount) },
+              { label: 'Fans', value: formatCount(trackerCount) },
               { label: 'Spots', value: formatCount(spotCount) },
               { label: 'Enc.', value: formatCount(reviews.length) },
               { label: 'City Rank', value: '—' },
@@ -903,7 +903,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 }}
               >
                 <Heart className="w-4 h-4" style={isTracking ? { fill: 'currentColor' } : {}} />
-                {isTracking ? 'Tracking' : 'Track Vehicle'}
+                {isTracking ? 'Fanned' : 'Fan'}
               </button>
             </div>
           )}

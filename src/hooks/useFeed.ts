@@ -61,7 +61,7 @@ export function useFeed(userId?: string): UseFeedReturn {
           vehicles: post.vehicles || null,
           author: {
             id: post.author_id,
-            handle: post.author_handle || 'unknown',
+            handle: post.author_handle || 'Spotter',
             avatar_url: post.author_avatar_url
           },
           profiles: {

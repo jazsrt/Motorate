@@ -113,7 +113,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
       .insert({
         plate_hash: plateHash,
         plate_state: wizardData.plateState,
-        plate_number: wizardData.plateNumber,
+        plate_number: (wizardData.plateNumber || '').trim().toUpperCase(),
         make: wizardData.make,
         model: wizardData.model,
         color: wizardData.color,
@@ -271,15 +271,30 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
       showToast('Please complete all ratings and select Love It or Hate It first', 'error');
       return;
     }
-    onNavigate('detailed-review', {
-      wizardData,
-      driverRating,
-      drivingRating,
-      vehicleRating,
-      sentiment,
-      comment,
-      photoFile: photoFile || undefined,
-    });
+    // If a quick spot was already submitted, pass upgrade flags
+    if (reviewId) {
+      onNavigate('detailed-review', {
+        wizardData: { ...wizardData, vehicleId: vehicleId || wizardData.vehicleId },
+        driverRating,
+        drivingRating,
+        vehicleRating,
+        sentiment,
+        comment,
+        photoFile: photoFile || undefined,
+        upgradeFromQuickSpot: true,
+        existingReviewId: reviewId,
+      });
+    } else {
+      onNavigate('detailed-review', {
+        wizardData,
+        driverRating,
+        drivingRating,
+        vehicleRating,
+        sentiment,
+        comment,
+        photoFile: photoFile || undefined,
+      });
+    }
   };
 
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');

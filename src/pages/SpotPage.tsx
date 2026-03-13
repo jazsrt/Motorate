@@ -441,10 +441,9 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           {/* V11 Plate Frame */}
           <div
             style={{
-              background: 'linear-gradient(180deg, #ece4d4 0%, #f4ecdc 45%, #ece4d4 100%)',
+              background: 'var(--carbon-1, #0a0d14)',
               borderRadius: '9px',
-              border: '2px solid rgba(0,0,0,0.14)',
-              boxShadow: '0 6px 22px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.55)',
+              border: '1px solid rgba(255,255,255,0.05)',
               margin: '0 20px 16px',
             }}
           >

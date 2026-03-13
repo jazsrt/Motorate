@@ -275,7 +275,7 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
                       {sv.imageUrl ? (
                         <img src={sv.imageUrl} alt={sv.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span style={{ fontSize: 20, opacity: 0.3 }}>🚗</span>
+                        <div style={{ width: '100%', height: '100%', background: 'var(--carbon-2, #0e1320)' }} />
                       )}
                     </div>
                   </div>
@@ -356,13 +356,13 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
                     author_id: (post as any).author_id,
                     vehicle_id: (post as any).vehicle_id,
                     vehicles: post.vehicles as any,
-                    author_handle: (post as any).author_handle,
-                    author_avatar_url: (post as any).author_avatar_url,
-                    profiles: (post as any).profiles ?? {
+                    author_handle: (post as any).author?.handle ?? (post as any).author_handle,
+                    author_avatar_url: (post as any).author?.avatar_url ?? (post as any).author_avatar_url,
+                    profiles: {
                       id: (post as any).author_id,
-                      handle: (post as any).author_handle,
-                      avatar_url: (post as any).author_avatar_url,
-                      reputation_score: null,
+                      handle: (post as any).author?.handle ?? (post as any).author_handle,
+                      avatar_url: (post as any).author?.avatar_url ?? (post as any).author_avatar_url,
+                      reputation_score: (post as any).profiles?.reputation_score ?? null,
                     },
                     like_count: (post as any).like_count,
                     comment_count: (post as any).comment_count,
