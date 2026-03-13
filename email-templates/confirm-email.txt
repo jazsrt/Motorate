@@ -1,0 +1,35 @@
+====================================
+        M O T O R A T E D
+      Community Driven
+====================================
+
+CONFIRM YOUR EMAIL
+------------------
+
+Welcome to MotoRated! You're one step away from joining the ultimate automotive community.
+
+Click the link below to verify your email address and activate your account:
+
+{{ .ConfirmationURL }}
+
+WHAT'S NEXT?
+------------
+• Claim your vehicle profiles
+• Join the community feed
+• Share your builds and spots
+• Earn badges and reputation
+
+SECURITY NOTICE
+---------------
+If you didn't create a MotoRated account, please ignore this email or contact our support team immediately.
+
+This verification link expires in 24 hours.
+
+====================================
+
+Need help? Visit our support page.
+
+© 2026 MotoRated. All rights reserved.
+This is an automated message. Please do not reply to this email.
+
+====================================

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your MotoRate Magic Link</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #0B1220; color: #FFFFFF;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0B1220;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+
+        <!-- Main Container -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #111827; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+
+          <!-- Header with Logo -->
+          <tr>
+            <td align="center" style="padding: 40px 40px 30px 40px; background: linear-gradient(135deg, #1E293B 0%, #111827 100%);">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <!-- MotoRate Logo -->
+                    <h1 style="margin: 0; font-family: Montserrat, -apple-system, sans-serif; font-size: 48px; font-weight: 900; font-style: italic; letter-spacing: -2px; background: linear-gradient(90deg, #60A5FA 0%, #3B82F6 50%, #8B5CF6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 30px rgba(96, 165, 250, 0.3);">
+                      MotoRate
+                    </h1>
+                    <!-- Underline accent -->
+                    <div style="width: 100%; height: 2px; background: linear-gradient(90deg, transparent 0%, #60A5FA 50%, transparent 100%); margin-top: 8px; box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);"></div>
+                    <!-- Tagline -->
+                    <p style="margin: 12px 0 0 0; font-family: Montserrat, sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF;">
+                      Community Driven
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 40px 40px 30px 40px;">
+              <h2 style="margin: 0 0 20px 0; font-family: Montserrat, sans-serif; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #FFFFFF;">
+                Sign In to MotoRate
+              </h2>
+              <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #FFFFFF;">
+                Click the button below to securely sign in to your MotoRate account.
+              </p>
+              <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #9CA3AF;">
+                No password needed - just one click and you're in!
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 0 40px 40px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="border-radius: 12px; background: linear-gradient(90deg, #60A5FA 0%, #3B82F6 100%); box-shadow: 0 4px 20px rgba(96, 165, 250, 0.4);">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display: inline-block; padding: 16px 48px; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #FFFFFF; text-decoration: none; border-radius: 12px;">
+                      Sign In Now
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Alternative Link -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px; border-top: 1px solid #1E293B;">
+              <p style="margin: 30px 0 10px 0; font-size: 13px; line-height: 1.5; color: #9CA3AF;">
+                If the button doesn't work, copy and paste this link into your browser:
+              </p>
+              <p style="margin: 0; font-size: 13px; word-break: break-all; color: #60A5FA;">
+                <a href="{{ .ConfirmationURL }}" target="_blank" style="color: #60A5FA; text-decoration: underline;">{{ .ConfirmationURL }}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Info Box -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #1E293B; border-left: 4px solid #22C55E; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: #FFFFFF;">
+                      Quick & Secure
+                    </p>
+                    <p style="margin: 0; font-size: 13px; line-height: 1.8; color: #9CA3AF;">
+                      This magic link provides secure, passwordless access to your account. The link expires in 15 minutes and can only be used once.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Security Notice -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">
+                <tr>
+                  <td style="padding: 16px;">
+                    <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #FCA5A5;">
+                      <strong>Security Notice:</strong> If you didn't request this magic link, please ignore this email. Never share this link with anyone.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; background-color: #0B1220; border-top: 1px solid #1E293B;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #9CA3AF;">
+                      © 2026 MotoRate. All rights reserved.
+                    </p>
+                    <p style="margin: 0; font-size: 11px; color: #6B7280;">
+                      This is an automated message. Please do not reply to this email.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+        <!-- End Main Container -->
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

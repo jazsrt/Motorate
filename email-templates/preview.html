@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MotoRate Email Templates - Preview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0B1220 0%, #1E293B 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #FFFFFF;
+      font-size: 48px;
+      font-weight: 900;
+      font-style: italic;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #60A5FA 0%, #3B82F6 50%, #8B5CF6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #9CA3AF;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 50px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .template-card {
+      background: #111827;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .template-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #1E293B;
+    }
+
+    .template-title {
+      color: #FFFFFF;
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      padding: 8px 20px;
+      background: linear-gradient(90deg, #60A5FA 0%, #3B82F6 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 20px rgba(96, 165, 250, 0.4);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.95);
+    }
+
+    .iframe-container {
+      background: #0B1220;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 800px;
+      border: 1px solid #1E293B;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .instructions {
+      background: #111827;
+      border-radius: 16px;
+      padding: 30px;
+      margin-top: 40px;
+      border-left: 4px solid #60A5FA;
+    }
+
+    .instructions h2 {
+      color: #FFFFFF;
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: 800;
+    }
+
+    .instructions ol {
+      color: #9CA3AF;
+      line-height: 2;
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin-bottom: 10px;
+    }
+
+    .instructions strong {
+      color: #60A5FA;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(96, 165, 250, 0.2);
+      color: #60A5FA;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-left: 10px;
+    }
+
+    .success-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #22C55E;
+      color: #FFFFFF;
+      padding: 15px 25px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+      transform: translateY(-100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .success-message.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="successMessage" class="success-message">
+    ✓ HTML copied to clipboard!
+  </div>
+
+  <div class="container">
+    <h1>MotoRate</h1>
+    <p class="subtitle">Email Templates Preview</p>
+
+    <div class="grid">
+      <!-- Confirm Email -->
+      <div class="template-card">
+        <div class="template-header">
+          <div>
+            <span class="template-title">Email Confirmation</span>
+            <span class="badge">New Signup</span>
+          </div>
+          <button class="copy-btn" onclick="copyTemplate('confirm-email.html')">
+            Copy HTML
+          </button>
+        </div>
+        <div class="iframe-container">
+          <iframe src="confirm-email.html" title="Email Confirmation Preview"></iframe>
+        </div>
+      </div>
+
+      <!-- Reset Password -->
+      <div class="template-card">
+        <div class="template-header">
+          <div>
+            <span class="template-title">Password Reset</span>
+            <span class="badge">Security</span>
+          </div>
+          <button class="copy-btn" onclick="copyTemplate('reset-password.html')">
+            Copy HTML
+          </button>
+        </div>
+        <div class="iframe-container">
+          <iframe src="reset-password.html" title="Password Reset Preview"></iframe>
+        </div>
+      </div>
+
+      <!-- Magic Link -->
+      <div class="template-card">
+        <div class="template-header">
+          <div>
+            <span class="template-title">Magic Link</span>
+            <span class="badge">Passwordless</span>
+          </div>
+          <button class="copy-btn" onclick="copyTemplate('magic-link.html')">
+            Copy HTML
+          </button>
+        </div>
+        <div class="iframe-container">
+          <iframe src="magic-link.html" title="Magic Link Preview"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <h2>How to Apply These Templates</h2>
+      <ol>
+        <li>Click <strong>"Copy HTML"</strong> button above any template</li>
+        <li>Open your <strong>Supabase Dashboard</strong></li>
+        <li>Navigate to <strong>Authentication → Email Templates</strong></li>
+        <li>Select the template type (Confirm signup, Reset password, or Magic Link)</li>
+        <li>Click <strong>"Edit template"</strong></li>
+        <li>Paste the HTML you copied</li>
+        <li>Click <strong>"Save"</strong></li>
+        <li>Send a test email to verify it looks correct</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    async function copyTemplate(filename) {
+      try {
+        const response = await fetch(filename);
+        const html = await response.text();
+        await navigator.clipboard.writeText(html);
+
+        // Show success message
+        const message = document.getElementById('successMessage');
+        message.classList.add('show');
+
+        setTimeout(() => {
+          message.classList.remove('show');
+        }, 2000);
+      } catch (error) {
+        alert('Failed to copy. Please open ' + filename + ' and copy manually.');
+      }
+    }
+  </script>
+</body>
+</html>

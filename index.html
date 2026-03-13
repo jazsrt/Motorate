@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="MotoRate">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MotoRate">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0c1218">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="/motorated-icon-192.png">
+    <link rel="apple-touch-icon" href="/motorated-icon-192.png">
+    <link rel="manifest" href="/manifest.json" />
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://bolt.new https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://data.opendatasoft.com https://vpic.nhtsa.dot.gov https://source.unsplash.com https://www.carimagery.com https://platetovin.net https://challenges.cloudflare.com; media-src 'self' blob: https://qxnnvnllwbykjzxqvqfi.supabase.co; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://bolt.new https://*.bolt.new;">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <title>MotoRate - The Ultimate Car Enthusiast Community</title>
+    <meta name="description" content="Join MotoRate, the premier social platform for car enthusiasts. Share your build, earn reputation, discover local meets, and connect with fellow gearheads." />
+    <meta name="keywords" content="car community, automotive social network, car enthusiasts, car builds, car meets, auto community" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="MotoRate — Spot. Rate. Flex." />
+    <meta property="og:description" content="The automotive social platform. Spot vehicles by plate, rate builds, earn badges, build your garage." />
+    <meta property="og:image" content="/motorated-icon-192.png" />
+    <meta property="og:url" content="https://motorate.app" />
+    <meta property="og:site_name" content="MotoRate" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MotoRate — Spot. Rate. Flex." />
+    <meta name="twitter:description" content="The automotive social platform. Spot vehicles by plate, rate builds, earn badges, build your garage." />
+    <meta name="twitter:image" content="/motorated-icon-192.png" />
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
