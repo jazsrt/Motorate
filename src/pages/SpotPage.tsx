@@ -612,7 +612,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           onCreate={handleCreateVehicle}
           onClaimVehicle={() => {
             if (!user) {
-              showToast('Please log in to claim a vehicle', 'error');
+              showToast('Please log in to claim a plate', 'error');
               return;
             }
             showToast('Please create the plate profile first', 'info');

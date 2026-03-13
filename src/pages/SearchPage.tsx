@@ -417,7 +417,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 }}
                 className="bg-surface border border-surfacehighlight hover:border-accent-primary/50 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
               >
-                Reviews
+                Spots
               </button>
               <button
                 onClick={() => {

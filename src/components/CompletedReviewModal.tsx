@@ -170,7 +170,7 @@ export function CompletedReviewModal({
             onClick={() => onViewVehicle(vehicleId)}
             className="py-3 rounded-xl font-bold text-center bg-surface-2 border border-white/[0.06] text-primary transition-all hover:border-orange text-sm uppercase tracking-tight active:scale-95"
           >
-            View Vehicle
+            View Plate
           </button>
         </div>
 

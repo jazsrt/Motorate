@@ -443,7 +443,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
             onCreate={handleCreateVehicle}
             onClaimVehicle={() => {
               if (!user) {
-                showToast('Please log in to claim a vehicle', 'error');
+                showToast('Please log in to claim a plate', 'error');
                 return;
               }
               showToast('Please create the plate profile first', 'info');

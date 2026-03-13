@@ -208,7 +208,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
         <div className="max-w-2xl mx-auto p-6">
           <div className="bg-surface border border-surfacehighlight rounded-2xl p-12 text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-            <h2 className="text-2xl font-bold mb-2">Vehicle Not Found</h2>
+            <h2 className="text-2xl font-bold mb-2">Plate Not Found</h2>
             <p className="text-secondary mb-6">
               No data found for this license plate.
             </p>

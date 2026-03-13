@@ -670,7 +670,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           }}
         >
           {[
-            { label: 'VEHICLES', value: vehicles.length },
+            { label: 'PLATES', value: vehicles.length },
             { label: 'SPOTS', value: fleetStats.totalSpots },
             { label: 'FOLLOWERS', value: followerCount },
             { label: 'BADGES', value: badgeCount },
