@@ -70,13 +70,7 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
     } catch { return 'all'; }
   });
 
-  const [showRecap, setShowRecap] = useState(() => {
-    try {
-      const lastSeen = localStorage.getItem('motorate_recap_seen');
-      if (!lastSeen) return true;
-      return (Date.now() - parseInt(lastSeen)) / 86400000 >= 7;
-    } catch { return false; }
-  });
+  const [showRecap, setShowRecap] = useState(false);
 
   useEffect(() => {
     sessionStorage.setItem(FEED_FILTER_KEY, activeFilter);
