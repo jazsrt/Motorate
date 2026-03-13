@@ -357,32 +357,92 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6" style={{ background: 'var(--black,#030508)' }}>
         <div>
-          <h1 className="text-3xl font-bold mb-2">Search</h1>
-          <p className="text-secondary">Find members, vehicles, and more</p>
+          <h1
+            style={{
+              fontFamily: "'Rajdhani',sans-serif",
+              fontWeight: 700,
+              fontSize: '28px',
+              color: 'var(--white,#eef4f8)',
+              marginBottom: '8px',
+            }}
+          >
+            Search
+          </h1>
+          <p
+            style={{
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: 'var(--dim,#6a7486)',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Find members, vehicles, and more
+          </p>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-4">
+        <div
+          className="p-4"
+          style={{
+            background: 'var(--carbon-1,#0a0d14)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '14px',
+          }}
+        >
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => setSearchMode('general')}
-              className={`flex-1 py-2 px-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all ${
+              className="flex-1 py-2 px-4 rounded-lg text-sm transition-all"
+              style={
                 searchMode === 'general'
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surfacehighlight text-secondary hover:bg-surfacehighlight/70'
-              }`}
+                  ? {
+                      background: 'var(--accent,#F97316)',
+                      color: '#030508',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }
+                  : {
+                      background: 'rgba(255,255,255,0.04)',
+                      color: 'var(--dim,#6a7486)',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }
+              }
             >
               <Search className="w-4 h-4 inline mr-2" />
               General
             </button>
             <button
               onClick={() => setSearchMode('plate')}
-              className={`flex-1 py-2 px-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all ${
+              className="flex-1 py-2 px-4 rounded-lg text-sm transition-all"
+              style={
                 searchMode === 'plate'
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surfacehighlight text-secondary hover:bg-surfacehighlight/70'
-              }`}
+                  ? {
+                      background: 'var(--accent,#F97316)',
+                      color: '#030508',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }
+                  : {
+                      background: 'rgba(255,255,255,0.04)',
+                      color: 'var(--dim,#6a7486)',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }
+              }
             >
               <Target className="w-4 h-4 inline mr-2" />
               License Plate
@@ -391,13 +451,23 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
 
           {searchMode === 'general' ? (
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary w-5 h-5" />
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                style={{ color: 'var(--dim,#6a7486)' }}
+              />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search @username, make, model..."
-                className="w-full bg-surfacehighlight border border-surfacehighlight rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent-primary placeholder-secondary"
+                className="w-full pl-12 pr-4 py-4 focus:outline-none"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: 'var(--white,#eef4f8)',
+                  fontFamily: "'Barlow',sans-serif",
+                }}
                 autoFocus
               />
             </div>
@@ -429,8 +499,18 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
               className="w-10 h-10 rounded-full border-2 animate-spin mx-auto mb-4"
               style={{ borderColor: 'rgba(249,115,22,0.2)', borderTopColor: '#f97316' }}
             />
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-              Searching {plateState} — <span style={{ fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '2px' }}>{plateNumber}</span>
+            <p style={{ fontSize: '14px', color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>
+              Searching {plateState} —{' '}
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  fontWeight: 600,
+                  color: 'var(--white,#eef4f8)',
+                  letterSpacing: '2px',
+                }}
+              >
+                {plateNumber}
+              </span>
             </p>
           </div>
         )}
@@ -499,12 +579,26 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
 
         {searchMode === 'general' && loading && (
           <div className="text-center py-12">
-            <div className="animate-pulse text-secondary">Searching...</div>
+            <div
+              style={{
+                color: 'var(--dim,#6a7486)',
+                fontFamily: "'Barlow',sans-serif",
+              }}
+              className="animate-pulse"
+            >
+              Searching...
+            </div>
           </div>
         )}
 
         {searchMode === 'general' && !loading && hasSearched && totalResults === 0 && (
-          <div className="bg-surface border border-surfacehighlight rounded-xl">
+          <div
+            style={{
+              background: 'var(--carbon-1,#0a0d14)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: '14px',
+            }}
+          >
             <EmptyState
               icon={Search}
               title="No results found"
@@ -513,8 +607,20 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
               onAction={() => setSearchMode('plate')}
             />
             {currentUserHandle && (
-              <p className="text-center text-secondary text-xs pb-4">
-                Your handle: <span className="font-bold text-accent-primary">@{currentUserHandle}</span>
+              <p
+                className="text-center text-xs pb-4"
+                style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}
+              >
+                Your handle:{' '}
+                <span
+                  style={{
+                    fontFamily: "'Barlow Condensed',sans-serif",
+                    fontWeight: 700,
+                    color: 'var(--accent,#F97316)',
+                  }}
+                >
+                  @{currentUserHandle}
+                </span>
               </p>
             )}
           </div>
@@ -525,8 +631,17 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
             {users.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <User className="w-5 h-5 text-secondary" />
-                  <h2 className="font-bold uppercase tracking-wider text-sm text-secondary">
+                  <User className="w-5 h-5" style={{ color: 'var(--dim,#6a7486)' }} />
+                  <h2
+                    style={{
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      fontSize: '12px',
+                      color: 'var(--dim,#6a7486)',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
                     Members ({users.length})
                   </h2>
                 </div>
@@ -535,26 +650,48 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
                     <button
                       key={user.id}
                       onClick={() => onNavigate('user-profile', user.id)}
-                      className="w-full bg-surface border border-surfacehighlight rounded-xl p-4 flex items-center gap-4 hover:border-accent-primary/50 hover:bg-surfacehighlight/50 transition-all text-left group"
+                      className="w-full p-4 flex items-center gap-4 hover:scale-[1.01] transition-all text-left group"
+                      style={{
+                        background: 'var(--carbon-1,#0a0d14)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '14px',
+                      }}
                     >
                       <div className="relative">
                         {user.avatar_url ? (
                           <img
                             src={user.avatar_url}
                             alt={user.handle || 'User'}
-                            className="w-14 h-14 rounded-full object-cover ring-2 ring-surfacehighlight group-hover:ring-accent-primary/30 transition-all"
+                            className="w-14 h-14 rounded-full object-cover"
+                            style={{ border: '2px solid rgba(255,255,255,0.08)' }}
                           />
                         ) : (
-                          <div className="w-14 h-14 rounded-full bg-surfacehighlight flex items-center justify-center ring-2 ring-surfacehighlight group-hover:ring-accent-primary/30 transition-all">
-                            <User className="w-7 h-7 text-secondary" />
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center"
+                            style={{
+                              background: 'rgba(255,255,255,0.05)',
+                              border: '2px solid rgba(255,255,255,0.08)',
+                            }}
+                          >
+                            <User className="w-7 h-7" style={{ color: 'var(--dim,#6a7486)' }} />
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-accent-primary rounded-full flex items-center justify-center">
-                          <User className="w-3 h-3 text-white" />
+                        <div
+                          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ background: 'var(--accent,#F97316)' }}
+                        >
+                          <User className="w-3 h-3" style={{ color: '#030508' }} />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-primary truncate">
+                        <div
+                          className="truncate"
+                          style={{
+                            fontFamily: "'Barlow Condensed',sans-serif",
+                            fontWeight: 700,
+                            color: 'var(--white,#eef4f8)',
+                          }}
+                        >
                           @{user.handle || 'anonymous'}
                         </div>
                       </div>
@@ -570,8 +707,17 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
             {vehicles.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Car className="w-5 h-5 text-secondary" />
-                  <h2 className="font-bold uppercase tracking-wider text-sm text-secondary">
+                  <Car className="w-5 h-5" style={{ color: 'var(--dim,#6a7486)' }} />
+                  <h2
+                    style={{
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      fontSize: '12px',
+                      color: 'var(--dim,#6a7486)',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
                     Vehicles ({vehicles.length})
                   </h2>
                 </div>
@@ -580,29 +726,56 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
                     <button
                       key={vehicle.id}
                       onClick={() => handleVehicleClick(vehicle)}
-                      className="w-full bg-surface border border-surfacehighlight rounded-xl p-4 flex items-center gap-4 hover:border-accent-primary/50 hover:bg-surfacehighlight/50 transition-all text-left group"
+                      className="w-full p-4 flex items-center gap-4 hover:scale-[1.01] transition-all text-left group"
+                      style={{
+                        background: 'var(--carbon-1,#0a0d14)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '14px',
+                      }}
                     >
                       <div className="relative">
-                        <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-accent-primary/20 to-accent-hover/20 flex items-center justify-center ring-2 ring-surfacehighlight group-hover:ring-accent-primary/30 transition-all">
-                          <Car className="w-7 h-7 text-accent-primary" />
+                        <div
+                          className="w-14 h-14 rounded-lg flex items-center justify-center"
+                          style={{
+                            background: 'rgba(249,115,22,0.1)',
+                            border: '2px solid rgba(249,115,22,0.15)',
+                          }}
+                        >
+                          <Car className="w-7 h-7" style={{ color: 'var(--accent,#F97316)' }} />
                         </div>
                         {vehicle.is_claimed && (
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <div
+                            className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                            style={{ background: '#16a34a' }}
+                          >
+                            <svg className="w-3 h-3" fill="white" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-primary truncate">
+                        <div
+                          className="truncate"
+                          style={{
+                            fontFamily: "'Barlow Condensed',sans-serif",
+                            fontWeight: 700,
+                            color: 'var(--white,#eef4f8)',
+                          }}
+                        >
                           {vehicle.year} {vehicle.make} {vehicle.model}
                         </div>
-                        <div className="text-sm text-secondary">
+                        <div
+                          style={{
+                            fontSize: '13px',
+                            color: 'var(--dim,#6a7486)',
+                            fontFamily: "'Barlow',sans-serif",
+                          }}
+                        >
                           {vehicle.color} • {vehicle.is_claimed ? 'Claimed' : 'Unclaimed'}
                         </div>
                       </div>
-                      <div className="text-accent-primary group-hover:translate-x-1 transition-transform">
+                      <div style={{ color: 'var(--accent,#F97316)' }} className="group-hover:translate-x-1 transition-transform">
                         →
                       </div>
                     </button>
@@ -615,44 +788,101 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
 
         {searchMode === 'general' && !query.trim() && !loading && (
           <div className="space-y-4">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
+            <div
+              className="p-6"
+              style={{
+                background: 'var(--carbon-1,#0a0d14)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: '14px',
+              }}
+            >
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-accent-primary/10 rounded-lg flex-shrink-0">
-                  <Search className="w-6 h-6 text-accent-primary" />
+                <div
+                  className="p-3 rounded-lg flex-shrink-0"
+                  style={{ background: 'rgba(249,115,22,0.08)' }}
+                >
+                  <Search className="w-6 h-6" style={{ color: 'var(--accent,#F97316)' }} />
                 </div>
                 <div>
-                  <h3 className="font-bold mb-2">Quick Search Tips</h3>
-                  <ul className="text-sm text-secondary space-y-1.5">
-                    <li className="flex items-start gap-2">
-                      <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Find members by their @handle</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Car className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Search vehicles by make or model</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Target className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>View profiles and rate vehicles</span>
-                    </li>
+                  <h3
+                    style={{
+                      fontFamily: "'Rajdhani',sans-serif",
+                      fontWeight: 700,
+                      color: 'var(--white,#eef4f8)',
+                      marginBottom: '8px',
+                      fontSize: '18px',
+                    }}
+                  >
+                    Quick Search Tips
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {[
+                      { icon: User, text: 'Find members by their @handle' },
+                      { icon: Car, text: 'Search vehicles by make or model' },
+                      { icon: Target, text: 'View profiles and rate vehicles' },
+                    ].map(({ icon: Icon, text }, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-sm"
+                        style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}
+                      >
+                        <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--dim,#6a7486)' }} />
+                        <span>{text}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-accent-primary/10 to-accent-hover/10 border border-accent-primary/30 rounded-xl p-6">
+            <div
+              className="p-6"
+              style={{
+                background: 'rgba(249,115,22,0.05)',
+                border: '1px solid rgba(249,115,22,0.15)',
+                borderRadius: '14px',
+              }}
+            >
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-accent-primary rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-white" />
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: 'var(--accent,#F97316)' }}
+                >
+                  <Target className="w-5 h-5" style={{ color: '#030508' }} />
                 </div>
-                <h3 className="font-bold">Looking for a license plate?</h3>
+                <h3
+                  style={{
+                    fontFamily: "'Rajdhani',sans-serif",
+                    fontWeight: 700,
+                    color: 'var(--white,#eef4f8)',
+                    fontSize: '18px',
+                  }}
+                >
+                  Looking for a license plate?
+                </h3>
               </div>
-              <p className="text-sm text-secondary mb-4">
+              <p
+                className="mb-4"
+                style={{
+                  fontSize: '14px',
+                  color: 'var(--light,#a8bcc8)',
+                  fontFamily: "'Barlow',sans-serif",
+                }}
+              >
                 Spot and rate vehicles by their license plate
               </p>
               <button
                 onClick={() => onNavigate('scan')}
-                className="px-4 py-2 bg-accent-primary hover:bg-accent-hover rounded-lg font-bold uppercase tracking-wider text-sm transition-all active:scale-95"
+                className="px-4 py-2 rounded-lg transition-all active:scale-95"
+                style={{
+                  background: 'var(--accent,#F97316)',
+                  color: '#030508',
+                  fontFamily: "'Barlow Condensed',sans-serif",
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
               >
                 Search by Plate
               </button>

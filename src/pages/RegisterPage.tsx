@@ -244,7 +244,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden">
+      <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden" style={{ background: 'var(--black,#030508)' }}>
         <div className="absolute inset-0 z-0 flex flex-col">
           <div className="flex flex-col animate-scroll-down">
             {[...carImages, ...carImages].map((image, index) => (
@@ -262,25 +262,30 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         </div>
         <div className="w-full max-w-md text-center relative z-10">
-          <Logo size="large" />
-          <div className="mt-8 card-crisp bg-surface border-accent-primary">
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '28px', color: 'var(--white,#eef4f8)', letterSpacing: '0.05em' }}>
+              MOTO<span style={{ color: 'var(--accent,#F97316)' }}>R</span>ATE
+            </span>
+          </div>
+          <div className="mt-8" style={{ background: 'var(--carbon-1,#0a0d14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', padding: '32px' }}>
             <div className="mb-4 flex justify-center">
-              <Mail className="w-10 h-10 text-accent-primary" strokeWidth={1.5} />
+              <Mail className="w-10 h-10" style={{ color: 'var(--accent,#F97316)' }} strokeWidth={1.5} />
             </div>
-            <h2 className="font-heading font-bold text-2xl mb-4">Check Your Email</h2>
-            <p className="text-secondary mb-6">
-              We've sent a confirmation link to <span className="text-accent-primary font-heading font-bold">{email}</span>
+            <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '22px', color: 'var(--white,#eef4f8)', marginBottom: '16px' }}>Check Your Email</h2>
+            <p style={{ color: 'var(--light,#a8bcc8)', marginBottom: '24px' }}>
+              We've sent a confirmation link to <span style={{ color: 'var(--accent,#F97316)', fontFamily: "'Rajdhani',sans-serif", fontWeight: 700 }}>{email}</span>
             </p>
-            <p className="text-sm text-secondary mb-6">
+            <p style={{ fontSize: '14px', color: 'var(--light,#a8bcc8)', marginBottom: '24px' }}>
               Click the link in the email to verify your account and complete your profile setup.
             </p>
-            <div className="bg-surfacehighlight rounded-xl p-4 text-sm text-secondary">
-              <p className="mb-2 flex items-start gap-1.5"><Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={1.5} /> Tip: Check your spam folder if you don't see the email</p>
+            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '16px', fontSize: '14px', color: 'var(--light,#a8bcc8)' }}>
+              <p className="flex items-start gap-1.5"><Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={1.5} /> Tip: Check your spam folder if you don't see the email</p>
             </div>
           </div>
           <button
             onClick={onSwitchToLogin}
-            className="mt-6 text-accent-primary hover:text-accent-hover text-sm font-heading font-semibold transition-colors active:scale-95"
+            className="mt-6 text-sm transition-colors active:scale-95"
+            style={{ color: 'var(--accent,#F97316)', fontFamily: "'Barlow',sans-serif" }}
           >
             Back to Sign In
           </button>
@@ -290,7 +295,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden" style={{ background: 'var(--black,#030508)' }}>
       <div className="absolute inset-0 z-0 flex flex-col">
         <div className="flex flex-col animate-scroll-down">
           {[...carImages, ...carImages].map((image, index) => (
@@ -310,11 +315,17 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <Logo size="large" />
-          <p className="text-secondary mt-4 text-sm">Create your account</p>
+          <div>
+            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '28px', color: 'var(--white,#eef4f8)', letterSpacing: '0.05em' }}>
+              MOTO<span style={{ color: 'var(--accent,#F97316)' }}>R</span>ATE
+            </span>
+          </div>
+          <p className="mt-4" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.2em', color: 'var(--dim,#6a7486)' }}>
+            Create your account
+          </p>
         </div>
 
-        <form onSubmit={handleAccountCreation} className="space-y-6 bg-surface/95 backdrop-blur-md rounded-xl p-8 border border-surfacehighlight shadow-2xl">
+        <form onSubmit={handleAccountCreation} className="space-y-6 backdrop-blur-md" style={{ background: 'var(--carbon-1,#0a0d14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', padding: '32px' }}>
           {error && (
             <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
@@ -323,7 +334,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
+            <label htmlFor="email" className="block text-sm mb-2" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--light,#a8bcc8)' }}>
               Email
             </label>
             <input
@@ -336,14 +347,15 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
               spellCheck="false"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-enhanced w-full placeholder:text-neutral-500"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none placeholder:text-neutral-500"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--white,#eef4f8)' }}
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="handle" className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
+            <label htmlFor="handle" className="block text-sm mb-2" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--light,#a8bcc8)' }}>
               Username
             </label>
             <input
@@ -355,17 +367,18 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
               spellCheck="false"
               value={handle}
               onChange={(e) => setHandle(e.target.value.toLowerCase())}
-              className="input-enhanced w-full placeholder:text-neutral-500"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none placeholder:text-neutral-500"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--white,#eef4f8)' }}
               placeholder="yourhandle"
               required
               minLength={3}
               pattern="[a-zA-Z0-9_]+"
             />
-            <p className="text-xs text-secondary mt-1">Letters, numbers, and underscores only</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--light,#a8bcc8)' }}>Letters, numbers, and underscores only</p>
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
+            <label htmlFor="password" className="block text-sm mb-2" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--light,#a8bcc8)' }}>
               Password
             </label>
             <input
@@ -377,7 +390,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
               spellCheck="false"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-enhanced w-full placeholder:text-neutral-500"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none placeholder:text-neutral-500"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--white,#eef4f8)' }}
               placeholder="••••••••"
               required
               minLength={6}
@@ -386,13 +400,13 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
 
           {/* Phone Verification */}
           <div>
-            <label className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
+            <label className="block text-sm mb-2" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--light,#a8bcc8)' }}>
               Phone Number
             </label>
             {!phoneVerified ? (
               <div className="space-y-3">
                 <div className="flex gap-2">
-                  <div className="flex items-center gap-1 px-3 bg-surfacehighlight border border-surfacehighlight rounded-l-xl text-sm text-secondary font-mono">
+                  <div className="flex items-center gap-1 px-3 rounded-l-xl text-sm" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--light,#a8bcc8)', fontFamily: "'JetBrains Mono',monospace" }}>
                     +1
                   </div>
                   <input
@@ -400,7 +414,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
                     inputMode="numeric"
                     value={formatPhoneForDisplay(phone)}
                     onChange={handlePhoneChange}
-                    className="input-enhanced w-full rounded-l-none placeholder:text-neutral-500"
+                    className="w-full px-4 py-3 rounded-r-xl focus:outline-none placeholder:text-neutral-500"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderLeft: 'none', color: 'var(--white,#eef4f8)' }}
                     placeholder="(555) 123-4567"
                     disabled={codeSent}
                   />
@@ -409,8 +424,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
                       type="button"
                       onClick={handleSendCode}
                       disabled={phone.length !== 10 || verifyingPhone}
-                      className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40 whitespace-nowrap"
-                      style={{ background: 'var(--orange)' }}
+                      className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-40 whitespace-nowrap"
+                      style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px' }}
                     >
                       {verifyingPhone ? 'Sending...' : 'Send Code'}
                     </button>
@@ -425,7 +440,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
                       maxLength={6}
                       value={phoneCode}
                       onChange={(e) => setPhoneCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className="input-enhanced w-full placeholder:text-neutral-500 tracking-[0.3em] text-center font-mono text-lg"
+                      className="w-full px-4 py-3 rounded-xl focus:outline-none placeholder:text-neutral-500 tracking-[0.3em] text-center text-lg"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--white,#eef4f8)', fontFamily: "'JetBrains Mono',monospace" }}
                       placeholder="000000"
                       autoFocus
                     />
@@ -433,8 +449,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
                       type="button"
                       onClick={handleVerifyCode}
                       disabled={phoneCode.length !== 6 || verifyingPhone}
-                      className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40 whitespace-nowrap"
-                      style={{ background: 'var(--orange)' }}
+                      className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-40 whitespace-nowrap"
+                      style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px' }}
                     >
                       {verifyingPhone ? 'Checking...' : 'Verify'}
                     </button>
@@ -445,7 +461,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
                   <button
                     type="button"
                     onClick={() => { setCodeSent(false); setPhoneCode(''); }}
-                    className="text-xs text-secondary hover:text-primary transition-colors"
+                    className="text-xs transition-colors"
+                    style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}
                   >
                     Change number or resend code
                   </button>
@@ -458,7 +475,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
                 <button
                   type="button"
                   onClick={() => { setPhoneVerified(false); setCodeSent(false); setPhone(''); setPhoneCode(''); }}
-                  className="text-xs text-secondary hover:text-primary ml-auto"
+                  className="text-xs ml-auto"
+                  style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}
                 >
                   Change
                 </button>
@@ -486,18 +504,18 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
           <button
             type="submit"
             disabled={loading || !phoneVerified || (!captchaToken && !!import.meta.env.VITE_TURNSTILE_SITE_KEY)}
-            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: 'var(--orange)', boxShadow: '0 4px 16px rgba(249,115,22,0.25)', border: '1px solid rgba(249,115,22,0.4)' }}
+            className="w-full py-3 rounded-xl text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px', boxShadow: '0 4px 16px rgba(249,115,22,0.25)', border: '1px solid rgba(249,115,22,0.4)' }}
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-surfacehighlight"></div>
+              <div className="w-full" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase tracking-wider">
-              <span className="bg-surface px-3 text-secondary font-heading font-bold">Or sign up with</span>
+              <span className="px-3" style={{ background: 'var(--carbon-1,#0a0d14)', color: 'var(--dim,#6a7486)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Or sign up with</span>
             </div>
           </div>
 
@@ -506,7 +524,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
               type="button"
               onClick={() => handleOAuthSignIn('google')}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-100 text-black font-heading font-semibold rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--white,#eef4f8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px' }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -520,9 +539,10 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
               type="button"
               onClick={() => handleOAuthSignIn('facebook')}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-heading font-semibold rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--white,#eef4f8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px' }}
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
               Facebook
@@ -533,7 +553,8 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
         <div className="mt-6 text-center">
           <button
             onClick={onSwitchToLogin}
-            className="text-accent-primary hover:text-accent-hover text-sm font-heading font-semibold transition-colors active:scale-95"
+            className="text-sm transition-colors active:scale-95"
+            style={{ color: 'var(--accent,#F97316)', fontFamily: "'Barlow',sans-serif" }}
           >
             Already have an account? Sign in
           </button>

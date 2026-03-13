@@ -18,6 +18,7 @@ import { PrivacyGate } from '../components/PrivacyGate';
 import { ProfileInsights } from '../components/ProfileInsights';
 import { trackProfileView, checkIfFollowing } from '../lib/profileViews';
 import { ReputationScore } from '../components/ReputationScore';
+import { getTierFromScore } from '../lib/tierConfig';
 import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
@@ -292,7 +293,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
         <div className="flex items-center justify-center py-12">
-          <div className="text-secondary">Loading profile...</div>
+          <div className="text-[#909aaa]">Loading profile...</div>
         </div>
       </Layout>
     );
@@ -302,8 +303,8 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
         <div className="text-center py-12">
-          <p className="text-secondary">Profile not found</p>
-          <button onClick={onBack} className="mt-4 text-accent-primary hover:text-accent-hover">
+          <p className="text-[#909aaa]">Profile not found</p>
+          <button onClick={onBack} className="mt-4 text-[#F97316] hover:text-[#fb923c]">
             Go Back
           </button>
         </div>
@@ -317,14 +318,14 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
         <div className="flex items-center gap-3 stg">
           <button
             onClick={onBack}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-white/[0.06] hover:bg-surface-2 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-[#111111] border border-white/[0.06] hover:bg-[#141414] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-heading font-bold">Profile</h1>
+          <h1 className="font-heading text-[20px] font-bold tracking-wide">Profile</h1>
         </div>
 
-        <div className="bg-surface border border-white/[0.06] rounded-xl p-6 stg">
+        <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-6 stg">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-start gap-4">
               <div className="relative">
@@ -355,25 +356,25 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl font-heading font-bold">@{profile?.handle || 'Anonymous'}</h2>
+                  <h2 className="font-heading text-[20px] font-bold tracking-wide">@{profile?.handle || 'Anonymous'}</h2>
                   {profile?.role === 'owner' && <VerifiedBadge size="md" />}
                   {isPrivate && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-surfacehighlight rounded-lg">
-                      <Lock className="w-4 h-4 text-secondary" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-secondary">Private</span>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-[#111111] border border-white/[0.06] rounded-lg">
+                      <Lock className="w-4 h-4 text-[#909aaa]" />
+                      <span className="font-label text-[11px] uppercase tracking-[2px] text-[#909aaa]">Private</span>
                     </div>
                   )}
                 </div>
 
                 {profile?.location && (
-                  <div className="flex items-center gap-1.5 text-sm text-secondary mt-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{profile.location}</span>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <MapPin className="w-4 h-4 text-[#909aaa]" />
+                    <span className="font-label text-[11px] uppercase tracking-[2px] text-[#909aaa]">{profile.location}</span>
                   </div>
                 )}
 
                 {profile?.bio && (
-                  <p className="text-sm text-secondary mt-2 max-w-md">{profile.bio}</p>
+                  <p className="text-sm text-[#909aaa] mt-2 max-w-md">{profile.bio}</p>
                 )}
 
                 {/* Reputation Score */}
@@ -386,16 +387,16 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                 </div>
 
                 <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center gap-1.5 text-xs text-secondary">
-                    <Eye className="w-4 h-4" />
-                    <span className="font-bold">{profileViewCount.toLocaleString()}</span>
-                    <span>views</span>
+                  <div className="flex items-center gap-1.5">
+                    <Eye className="w-4 h-4 text-[#586878]" />
+                    <span className="font-mono text-[11px] font-bold text-[#909aaa]">{profileViewCount.toLocaleString()}</span>
+                    <span className="font-label text-[11px] text-[#909aaa]">views</span>
                   </div>
                 </div>
 
                 {canViewContent && badges.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2">Trophy Case</p>
+                    <p className="font-label text-[11px] uppercase tracking-[2.5px] text-[#909aaa] mb-2">Trophy Case</p>
                     <div className="flex items-center gap-1.5">
                       {badges
                         .sort((a, b) => new Date(a.earned_at).getTime() - new Date(b.earned_at).getTime())
@@ -411,7 +412,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                               category={item.badge.category}
                               size="sm"
                             />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface border border-surfacehighlight rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#111111] border border-white/[0.06] rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
                               {item.badge.name}
                             </div>
                           </div>
@@ -419,7 +420,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                       {badges.length > 5 && (
                         <button
                           onClick={() => setActiveTab('badges')}
-                          className="text-xs text-accent-primary hover:text-accent-hover font-bold ml-2"
+                          className="text-xs text-[#F97316] hover:text-[#fb923c] font-bold ml-2"
                         >
                           +{badges.length - 5}
                         </button>
@@ -430,7 +431,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
                 {!canViewContent && badges.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs text-secondary">
+                    <p className="font-label text-[11px] text-[#909aaa]">
                       <span className="font-bold">{badges.length}</span> badge{badges.length !== 1 ? 's' : ''} earned
                     </p>
                   </div>
@@ -443,7 +444,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                         href={`https://instagram.com/${profile.instagram_handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-accent-primary hover:text-accent-hover transition-colors"
+                        className="flex items-center gap-1 text-xs text-[#F97316] hover:text-[#fb923c] transition-colors"
                       >
                         <Instagram className="w-4 h-4" />
                         @{profile.instagram_handle}
@@ -454,7 +455,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                         href={`https://tiktok.com/@${profile.tiktok_handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-accent-primary hover:text-accent-hover transition-colors"
+                        className="flex items-center gap-1 text-xs text-[#F97316] hover:text-[#fb923c] transition-colors"
                       >
                         <Music className="w-4 h-4" />
                         @{profile.tiktok_handle}
@@ -481,7 +482,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                   />
                   <button
                     disabled
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold uppercase tracking-wider text-sm bg-surfacehighlight/50 text-secondary/50 cursor-not-allowed"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-label text-[11px] uppercase tracking-[2px] bg-white/[0.06] text-[#909aaa]/50 cursor-not-allowed"
                     title="Coming soon"
                   >
                     <MessageCircle className="w-4 h-4" />
@@ -507,29 +508,29 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
           </div>
 
           <div className="grid grid-cols-4 gap-3 mt-6 stg">
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-accent-primary">
+            <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-4 text-center">
+              <div className="font-mono text-[22px] font-bold text-[#F97316]">
                 {spotsCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Spots</div>
+              <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa] mt-1">Spots</div>
             </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-positive">
+            <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-4 text-center">
+              <div className="font-mono text-[22px] font-bold text-positive">
                 {reviewsCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Received</div>
+              <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa] mt-1">Received</div>
             </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-accent-2">
+            <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-4 text-center">
+              <div className="font-mono text-[22px] font-bold text-accent-2">
                 {followerCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Followers</div>
+              <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa] mt-1">Followers</div>
             </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-orange">
+            <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-4 text-center">
+              <div className="font-mono text-[22px] font-bold text-orange">
                 {followingCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Following</div>
+              <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa] mt-1">Following</div>
             </div>
           </div>
         </div>
@@ -546,14 +547,14 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
         {isOwnProfile && <ProfileInsights profileId={userId} />}
 
         {canViewContent && (
-          <div className="card-v3 p-4 mb-4 stg">
+          <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-4 mb-4 stg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: 'var(--t4)' }}>Reputation</span>
-              <span className="font-mono text-[24px] font-bold" style={{ color: '#F97316' }}>
+              <span className="font-label text-[11px] uppercase tracking-[2.5px] text-[#909aaa]">Reputation</span>
+              <span className="font-mono text-[24px] font-bold text-[#F97316]">
                 {profile?.reputation_score?.toLocaleString() || '0'}
               </span>
             </div>
-            <div className="w-full bg-surfacehighlight rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-white/[0.06] rounded-full h-2.5 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -563,20 +564,11 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               />
             </div>
             <div className="flex items-center justify-between mt-1.5">
-              <span className="text-[10px] text-quaternary">0</span>
-              <span className="text-[14px] font-semibold" style={{ color: '#F97316' }}>
-                {(() => {
-                  const s = profile?.reputation_score || 0;
-                  if (s >= 10000) return 'Legend';
-                  if (s >= 7500) return 'Road General';
-                  if (s >= 5000) return 'Iconic';
-                  if (s >= 3000) return 'Road Captain';
-                  if (s >= 1500) return 'Street Racer';
-                  if (s >= 500) return 'Cruiser';
-                  return 'Permit';
-                })()}
+              <span className="font-mono text-[10px] text-[#586878]">0</span>
+              <span className="font-label text-[13px] font-bold text-[#F97316]">
+                {getTierFromScore(profile?.reputation_score)}
               </span>
-              <span className="text-[10px] text-quaternary">10,000</span>
+              <span className="font-mono text-[10px] text-[#586878]">10,000</span>
             </div>
           </div>
         )}
@@ -586,40 +578,40 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
             <div className="flex items-center gap-4 mb-4">
               <button
                 onClick={() => setActiveTab('garage')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
+                className={`font-label text-[11px] uppercase tracking-[2px] pb-2 border-b-2 transition-colors ${
                   activeTab === 'garage'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
+                    ? 'border-[#F97316] text-white'
+                    : 'border-transparent text-[#909aaa] hover:text-white'
                 }`}
               >
                 Garage
               </button>
               <button
                 onClick={() => setActiveTab('posts')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
+                className={`font-label text-[11px] uppercase tracking-[2px] pb-2 border-b-2 transition-colors ${
                   activeTab === 'posts'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
+                    ? 'border-[#F97316] text-white'
+                    : 'border-transparent text-[#909aaa] hover:text-white'
                 }`}
               >
                 Activity
               </button>
               <button
                 onClick={() => setActiveTab('badges')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
+                className={`font-label text-[11px] uppercase tracking-[2px] pb-2 border-b-2 transition-colors ${
                   activeTab === 'badges'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
+                    ? 'border-[#F97316] text-white'
+                    : 'border-transparent text-[#909aaa] hover:text-white'
                 }`}
               >
                 Badges
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
+                className={`font-label text-[11px] uppercase tracking-[2px] pb-2 border-b-2 transition-colors ${
                   activeTab === 'reviews'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
+                    ? 'border-[#F97316] text-white'
+                    : 'border-transparent text-[#909aaa] hover:text-white'
                 }`}
               >
                 Spots
@@ -630,23 +622,23 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               <div className="space-y-4">
                 {loadingVehicles ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="text-secondary">Loading vehicles...</div>
+                    <div className="text-[#909aaa]">Loading vehicles...</div>
                   </div>
                 ) : vehicles.length === 0 ? (
-                  <div className="bg-surface border border-white/[0.06] rounded-[14px] p-8 text-center">
-                    <Car className="w-12 h-12 text-secondary/50 mx-auto mb-3" />
-                    <p className="text-secondary">No claimed vehicles yet</p>
+                  <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-8 text-center">
+                    <Car className="w-12 h-12 text-[#909aaa]/50 mx-auto mb-3" />
+                    <p className="text-[#909aaa]">No claimed vehicles yet</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     {vehicles.map((vehicle) => (
                       <div
                         key={vehicle.id}
-                        className="bg-surface border border-white/[0.06] rounded-[14px] overflow-hidden cursor-pointer hover:border-orange-500 transition-colors"
+                        className="bg-[#111111] border border-white/[0.06] rounded-xl overflow-hidden cursor-pointer hover:border-[#F97316] transition-colors"
                         onClick={() => onViewVehicle(vehicle.id)}
                       >
                         {vehicle.photos && vehicle.photos.length > 0 ? (
-                          <div className="aspect-video bg-surfacehighlight">
+                          <div className="aspect-video bg-[#0a0a0a]">
                             <img
                               src={vehicle.photos[0]}
                               alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
@@ -654,19 +646,19 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                             />
                           </div>
                         ) : (
-                          <div className="aspect-video bg-surfacehighlight flex items-center justify-center">
-                            <Car className="w-12 h-12 text-secondary/50" />
+                          <div className="aspect-video bg-[#0a0a0a] flex items-center justify-center">
+                            <Car className="w-12 h-12 text-[#909aaa]/50" />
                           </div>
                         )}
                         <div className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
-                              <h4 className="text-base font-heading font-bold">
+                              <h4 className="font-heading text-[15px] font-bold">
                                 {vehicle.year} {vehicle.make}
                               </h4>
-                              <p className="text-sm text-secondary">{vehicle.model}</p>
+                              <p className="font-label text-[11px] text-[#909aaa]">{vehicle.model}</p>
                               {vehicle.color && (
-                                <p className="text-xs uppercase tracking-wider font-bold text-secondary mt-1">
+                                <p className="font-label text-[11px] text-[#909aaa] mt-1">
                                   {vehicle.color}
                                 </p>
                               )}
@@ -698,10 +690,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                       { label: 'Rep +', value: weeklyMetrics.repEarnedThisWeek },
                       { label: 'Likes', value: weeklyMetrics.likesReceivedThisWeek },
                     ].map(m => (
-                      <div key={m.label} className="flex-1 rounded-xl px-3 py-2.5 text-center"
-                        style={{ background: 'var(--s1)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <div className="font-heading text-[18px] font-bold leading-none" style={{ color: '#f2f4f7' }}>{m.value}</div>
-                        <div className="text-[7px] font-semibold uppercase mt-1" style={{ color: '#909aaa', letterSpacing: '1.5px' }}>{m.label}</div>
+                      <div key={m.label} className="flex-1 bg-[#111111] border border-white/[0.06] rounded-xl px-3 py-2.5 text-center">
+                        <div className="font-mono text-[18px] font-bold leading-none text-white">{m.value}</div>
+                        <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa] mt-1">{m.label}</div>
                         {'delta' in m && m.delta !== undefined && m.delta !== 0 && (
                           <div className="text-[7px] font-medium mt-0.5" style={{ color: m.delta > 0 ? '#5aaa7a' : '#aa5a5a' }}>
                             {m.delta > 0 ? '+' : ''}{m.delta} wow
@@ -713,10 +704,10 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                 )}
                 {loadingPosts ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="text-secondary">Loading posts...</div>
+                    <div className="text-[#909aaa]">Loading posts...</div>
                   </div>
                 ) : userPosts.length === 0 ? (
-                  <div className="bg-surface border border-white/[0.06] rounded-xl">
+                  <div className="bg-[#111111] border border-white/[0.06] rounded-xl">
                     <EmptyState
                       icon={Image}
                       title="No posts yet"
@@ -728,10 +719,10 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                     {userPosts.map((post) => (
                       <div
                         key={post.id}
-                        className="bg-surface border border-white/[0.06] rounded-[14px] overflow-hidden"
+                        className="bg-[#111111] border border-white/[0.06] rounded-xl overflow-hidden"
                       >
                         {post.image_url && (
-                          <div className="relative aspect-square bg-surfacehighlight max-h-64">
+                          <div className="relative aspect-square bg-[#0a0a0a] max-h-64">
                             <img
                               src={post.image_url}
                               alt={post.caption || 'Post'}
@@ -746,18 +737,18 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                               <ReactionButton postId={post.id} />
-                              <div className="flex items-center gap-1.5 text-sm text-secondary">
+                              <div className="flex items-center gap-1.5 text-sm text-[#909aaa]">
                                 <MessageCircle className="w-4 h-4" />
                                 <span className="font-bold">{post.comment_count}</span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs text-secondary">
-                              <Calendar className="w-3.5 h-3.5" />
-                              <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-[#586878]" />
+                              <span className="font-mono text-[11px] text-[#586878]">{new Date(post.created_at).toLocaleDateString()}</span>
                             </div>
                           </div>
                           {post.location_label && (
-                            <div className="text-xs text-secondary">
+                            <div className="font-label text-[11px] text-[#909aaa]">
                               {post.location_label}
                             </div>
                           )}
@@ -770,16 +761,16 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
             ) : activeTab === 'badges' ? (
               <div className="space-y-4">
                 {badges.length === 0 ? (
-                  <div className="bg-surface border border-white/[0.06] rounded-[14px] p-8 text-center">
-                    <Award className="w-12 h-12 text-secondary/50 mx-auto mb-3" />
-                    <p className="text-secondary">No badges yet</p>
+                  <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-8 text-center">
+                    <Award className="w-12 h-12 text-[#909aaa]/50 mx-auto mb-3" />
+                    <p className="text-[#909aaa]">No badges yet</p>
                   </div>
                 ) : (
-                  <div className="bg-surface border border-white/[0.06] rounded-xl p-6">
+                  <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <Award className="w-5 h-5 text-accent-primary" />
-                      <h3 className="text-xl font-bold uppercase tracking-wider">Badges</h3>
-                      <span className="text-xs text-secondary">({badges.length})</span>
+                      <Award className="w-5 h-5 text-[#F97316]" />
+                      <h3 className="font-label text-[11px] uppercase tracking-[2.5px] text-[#909aaa]">Badges</h3>
+                      <span className="font-label text-[11px] text-[#909aaa]">({badges.length})</span>
                     </div>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                       {badges.map((item) => (
@@ -789,7 +780,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                             category={item.badge.category}
                             size="lg"
                           />
-                          <div className="text-[10px] text-center text-tertiary line-clamp-2">
+                          <div className="text-[10px] text-center text-[#909aaa] line-clamp-2">
                             {item.badge.name}
                           </div>
                         </div>
@@ -800,11 +791,11 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
                 {/* Photos Section */}
                 {canViewContent && allPhotos.length > 0 && (
-                  <div className="bg-surface border border-white/[0.06] rounded-xl p-6 mt-4">
+                  <div className="bg-[#111111] border border-white/[0.06] rounded-xl p-6 mt-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <ImageIcon className="w-5 h-5 text-accent-primary" />
-                      <h3 className="text-xl font-bold uppercase tracking-wider">Photos</h3>
-                      <span className="text-xs text-secondary">({allPhotos.length})</span>
+                      <ImageIcon className="w-5 h-5 text-[#F97316]" />
+                      <h3 className="font-label text-[11px] uppercase tracking-[2.5px] text-[#909aaa]">Photos</h3>
+                      <span className="font-label text-[11px] text-[#909aaa]">({allPhotos.length})</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {allPhotos.map((photo, index) => (
@@ -814,7 +805,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                             setLightboxIndex(index);
                             setLightboxOpen(true);
                           }}
-                          className="aspect-square rounded-lg overflow-hidden border border-border hover:border-accent-primary transition-colors"
+                          className="aspect-square rounded-lg overflow-hidden border border-white/[0.06] hover:border-[#F97316] transition-colors"
                         >
                           <img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
                         </button>
@@ -835,7 +826,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               <div className="mt-8">
                 {loadingRatings ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="text-secondary">Loading spots...</div>
+                    <div className="text-[#909aaa]">Loading spots...</div>
                   </div>
                 ) : (
                   <ReviewProfileSection

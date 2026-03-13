@@ -66,7 +66,7 @@ export default function OnboardingPage() {
       if (error) throw error;
 
       await refreshProfile();
-      showToast('Welcome to Reputation!', 'success');
+      showToast('Welcome to MotoRate!', 'success');
     } catch (error) {
       console.error('Error completing onboarding:', error);
       showToast('Failed to complete onboarding', 'error');
@@ -245,9 +245,9 @@ export default function OnboardingPage() {
       await refreshProfile();
 
       if (verificationTier === 'ownership_verified') {
-        showToast('Ownership verified! Welcome to Reputation!', 'success');
+        showToast('Ownership verified! Welcome to MotoRate!', 'success');
       } else {
-        showToast('Vehicle added! Welcome to Reputation!', 'success');
+        showToast('Vehicle added! Welcome to MotoRate!', 'success');
       }
     } catch (error) {
       console.error('Onboarding error:', error);
@@ -257,13 +257,38 @@ export default function OnboardingPage() {
     }
   };
 
+  /* V11 shared input style */
+  const inputStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '8px',
+    color: 'var(--white,#eef4f8)',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    ...inputStyle,
+    appearance: 'none' as const,
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: "'Barlow Condensed',sans-serif",
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    fontSize: '11px',
+    letterSpacing: '0.12em',
+    color: 'var(--light,#a8bcc8)',
+    display: 'block',
+    marginBottom: '8px',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--black,#030508)' }}>
       <div className="max-w-2xl w-full">
         <div className="flex justify-end mb-4">
           <button
             onClick={signOut}
-            className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+            style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
@@ -272,18 +297,34 @@ export default function OnboardingPage() {
 
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Car className="w-12 h-12 text-orange-500" />
-            <h1 className="text-4xl font-bold text-white">Welcome to Reputation</h1>
+            <Car className="w-12 h-12" style={{ color: 'var(--accent,#F97316)' }} />
+            <h1 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '32px', color: 'var(--white,#eef4f8)' }}>
+              Welcome to <span style={{ color: 'var(--accent,#F97316)' }}>MotoRate</span>
+            </h1>
           </div>
-          <p className="text-slate-400">Let's get you set up</p>
+          <p style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>Let's get you set up</p>
         </div>
 
-        <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-700">
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {(['handle_setup', 'vehicle_info'] as Step[]).map((s, i) => (
+            <div
+              key={s}
+              className="h-2 rounded-full transition-all"
+              style={{
+                width: step === s ? '32px' : '8px',
+                background: step === s ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+              }}
+            />
+          ))}
+        </div>
+
+        <div style={{ background: 'var(--carbon-1,#0a0d14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', padding: '32px' }}>
           {step === 'handle_setup' && (
             <div className="space-y-6">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Choose Your Handle</h2>
-                <p className="text-slate-400">Pick a unique handle for your Reputation profile</p>
+                <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '22px', color: 'var(--white,#eef4f8)', marginBottom: '8px' }}>Choose Your Handle</h2>
+                <p style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>Pick a unique handle for your MotoRate profile</p>
               </div>
 
               {error && (
@@ -297,7 +338,7 @@ export default function OnboardingPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label style={labelStyle}>
                   Username *
                 </label>
                 <input
@@ -308,18 +349,20 @@ export default function OnboardingPage() {
                     setError('');
                   }}
                   placeholder="e.g., cooldriver, speeddemon"
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-3 focus:outline-none placeholder-neutral-500"
+                  style={inputStyle}
                   maxLength={30}
                 />
-                <p className="text-xs text-slate-500 mt-2">
-                  This will be your unique identifier on Reputation
+                <p className="text-xs mt-2" style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
+                  This will be your unique identifier on MotoRate
                 </p>
               </div>
 
               <button
                 onClick={handleHandleSubmit}
                 disabled={isProcessing || !handle.trim()}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }}
               >
                 {isProcessing ? (
                   <>
@@ -339,8 +382,8 @@ export default function OnboardingPage() {
           {step === 'vehicle_info' && (
             <div className="space-y-6">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Add Your Vehicle (Optional)</h2>
-                <p className="text-slate-400">
+                <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '22px', color: 'var(--white,#eef4f8)', marginBottom: '8px' }}>Add Your Vehicle (Optional)</h2>
+                <p style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>
                   Add your vehicle to unlock features like creating posts and albums
                 </p>
               </div>
@@ -358,53 +401,56 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label style={labelStyle}>
                       Year *
                     </label>
                     <div className="relative">
                       <select
                         value={vehicleData.year}
                         onChange={(e) => handleVehicleInputChange('year', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
+                        className="w-full px-4 py-3 focus:outline-none pr-10"
+                        style={selectStyle}
                       >
                         <option value="">Select Year</option>
                         {VEHICLE_YEARS.map((year) => (
                           <option key={year} value={year}>{year}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" style={{ color: 'var(--dim,#6a7486)' }} />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label style={labelStyle}>
                       Make *
                     </label>
                     <div className="relative">
                       <select
                         value={vehicleData.make}
                         onChange={(e) => handleVehicleInputChange('make', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
+                        className="w-full px-4 py-3 focus:outline-none pr-10"
+                        style={selectStyle}
                       >
                         <option value="">Select Make</option>
                         {VEHICLE_MAKES.map((make) => (
                           <option key={make} value={make}>{make}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" style={{ color: 'var(--dim,#6a7486)' }} />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label style={labelStyle}>
                     Model *
                   </label>
                   <div className="relative">
                     <select
                       value={vehicleData.model}
                       onChange={(e) => handleVehicleInputChange('model', e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
+                      className="w-full px-4 py-3 focus:outline-none pr-10"
+                      style={{ ...selectStyle, opacity: !vehicleData.make ? 0.5 : 1 }}
                       disabled={!vehicleData.make}
                     >
                       <option value="">{vehicleData.make ? 'Select Model' : 'Select Make First'}</option>
@@ -412,12 +458,12 @@ export default function OnboardingPage() {
                         <option key={model} value={model}>{model}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" style={{ color: 'var(--dim,#6a7486)' }} />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label style={labelStyle}>
                     Trim (Optional)
                   </label>
                   <input
@@ -425,39 +471,42 @@ export default function OnboardingPage() {
                     value={vehicleData.trim}
                     onChange={(e) => handleVehicleInputChange('trim', e.target.value)}
                     placeholder="e.g., Sport, Limited, EX"
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-3 focus:outline-none placeholder-neutral-500"
+                    style={inputStyle}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label style={labelStyle}>
                     Color
                   </label>
                   <div className="relative">
                     <select
                       value={vehicleData.color}
                       onChange={(e) => handleVehicleInputChange('color', e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
+                      className="w-full px-4 py-3 focus:outline-none pr-10"
+                      style={selectStyle}
                     >
                       <option value="">Select Color</option>
                       {VEHICLE_COLORS.map((color) => (
                         <option key={color} value={color}>{color}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" style={{ color: 'var(--dim,#6a7486)' }} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label style={labelStyle}>
                       State *
                     </label>
                     <div className="relative">
                       <select
                         value={vehicleData.plateState}
                         onChange={(e) => handleVehicleInputChange('plateState', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
+                        className="w-full px-4 py-3 focus:outline-none pr-10"
+                        style={selectStyle}
                       >
                         <option value="">Select State</option>
                         {US_STATES.map((state) => (
@@ -466,12 +515,12 @@ export default function OnboardingPage() {
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" style={{ color: 'var(--dim,#6a7486)' }} />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label style={labelStyle}>
                       License Plate *
                     </label>
                     <input
@@ -479,14 +528,15 @@ export default function OnboardingPage() {
                       value={vehicleData.plateNumber}
                       onChange={(e) => handleVehicleInputChange('plateNumber', e.target.value.toUpperCase())}
                       placeholder="ABC1234"
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                      className="w-full px-4 py-3 focus:outline-none placeholder-neutral-500"
+                      style={{ ...inputStyle, fontFamily: "'JetBrains Mono',monospace" }}
                     />
                   </div>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Upload Vehicle Registration (Optional)</h3>
-                  <p className="text-sm text-slate-400 mb-4">
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
+                  <h3 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '18px', color: 'var(--white,#eef4f8)', marginBottom: '16px' }}>Upload Vehicle Registration (Optional)</h3>
+                  <p style={{ fontSize: '14px', color: 'var(--light,#a8bcc8)', marginBottom: '16px', fontFamily: "'Barlow',sans-serif" }}>
                     Upload a clear photo or scan of your vehicle registration document to verify ownership and get the Verified Owner badge.
                   </p>
 
@@ -498,10 +548,10 @@ export default function OnboardingPage() {
 
                     {!registrationFile ? (
                       <label className="block cursor-pointer">
-                        <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-orange-500 transition-all">
-                          <FileText className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                          <p className="text-slate-400">Click to upload registration</p>
-                          <p className="text-xs text-slate-500 mt-2">PDF, JPG, or PNG</p>
+                        <div className="border-2 border-dashed rounded-lg p-8 text-center transition-all" style={{ borderColor: 'rgba(255,255,255,0.15)' }}>
+                          <FileText className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--dim,#6a7486)' }} />
+                          <p style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>Click to upload registration</p>
+                          <p className="text-xs mt-2" style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>PDF, JPG, or PNG</p>
                         </div>
                         <input
                           type="file"
@@ -516,14 +566,15 @@ export default function OnboardingPage() {
                           <img
                             src={registrationPreview}
                             alt="Registration preview"
-                            className="w-full rounded-lg max-h-64 object-contain bg-slate-950"
+                            className="w-full rounded-lg max-h-64 object-contain"
+                            style={{ background: 'rgba(0,0,0,0.5)' }}
                           />
                         )}
-                        <div className="bg-slate-800 rounded-lg p-4 flex items-center gap-3">
-                          <FileText className="w-8 h-8 text-orange-500" />
+                        <div className="rounded-lg p-4 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                          <FileText className="w-8 h-8" style={{ color: 'var(--accent,#F97316)' }} />
                           <div className="flex-1">
-                            <p className="text-white font-medium">{registrationFile.name}</p>
-                            <p className="text-xs text-slate-400">
+                            <p style={{ color: 'var(--white,#eef4f8)', fontFamily: "'Barlow',sans-serif" }}>{registrationFile.name}</p>
+                            <p className="text-xs" style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
                               {(registrationFile.size / 1024 / 1024).toFixed(2)} MB
                             </p>
                           </div>
@@ -534,7 +585,8 @@ export default function OnboardingPage() {
                             setRegistrationFile(null);
                             setRegistrationPreview('');
                           }}
-                          className="text-sm text-orange-400 hover:text-orange-300"
+                          className="text-sm"
+                          style={{ color: 'var(--accent,#F97316)', fontFamily: "'Barlow',sans-serif" }}
                         >
                           Change document
                         </button>
@@ -547,14 +599,16 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleSkipVehicle}
                   disabled={isProcessing}
-                  className="px-6 py-3 bg-slate-700 text-slate-300 rounded-lg font-semibold hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }}
                 >
                   Skip for now
                 </button>
                 <button
                   onClick={handleVehicleSubmit}
                   disabled={isProcessing}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }}
                 >
                   {isProcessing ? (
                     <>
@@ -573,8 +627,8 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        <p className="text-center text-slate-500 text-sm mt-6">
-          By continuing, you agree to Reputation's Terms of Service
+        <p className="text-center text-sm mt-6" style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
+          By continuing, you agree to MotoRate's Terms of Service
         </p>
       </div>
     </div>

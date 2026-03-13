@@ -86,22 +86,31 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
     <div
       className={`card-v3 mb-2 p-3 relative flex items-start gap-3 transition-all duration-200 ${isDeleting ? 'opacity-0 -translate-x-8' : ''} ${isDeadLink ? 'opacity-40' : ''}`}
       style={{
+        background: 'var(--carbon-1,#0a0d14)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        borderRadius: '14px',
         borderLeft: (() => {
           if (notification.is_read) return '3px solid transparent';
-          return `3px solid var(--orange)`;
+          return `3px solid var(--accent,#F97316)`;
         })(),
-        background: !notification.is_read ? 'rgba(249,115,22,0.03)' : undefined,
+        ...((!notification.is_read) ? { background: 'rgba(249,115,22,0.03)' } : {}),
       }}
       {...swipeHandlers}
     >
       {/* Icon circle */}
-      <div className="bg-surface-2 border border-white/[0.035] rounded-full p-2 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div
+        className="rounded-full p-2 flex items-center justify-center flex-shrink-0 mt-0.5"
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
         <Icon className="w-4 h-4" strokeWidth={1.5} style={{ color }} />
       </div>
 
       {/* Unread dot */}
       {!notification.is_read && (
-        <div className="notif-dot" />
+        <div className="notif-dot" style={{ background: 'var(--accent,#F97316)' }} />
       )}
 
       {/* Content */}
@@ -109,13 +118,37 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => onClick(notification)}
       >
-        <p className={`text-[14px] font-medium leading-snug ${isDeadLink ? 'text-tertiary' : 'text-primary'}`}>
+        <p
+          className="leading-snug"
+          style={{
+            fontFamily: "'Barlow',sans-serif",
+            fontSize: '14px',
+            color: isDeadLink ? 'var(--dim,#6a7486)' : 'var(--white,#eef4f8)',
+          }}
+        >
           {notification.title}
         </p>
-        <p className="text-[12px] mt-0.5 leading-[1.5] text-secondary">
+        <p
+          className="mt-0.5 leading-[1.5]"
+          style={{
+            fontFamily: "'Barlow',sans-serif",
+            fontSize: '12px',
+            color: 'var(--light,#a8bcc8)',
+          }}
+        >
           {notification.message}
         </p>
-        <p className="text-[11px] font-mono mt-1.5 text-quaternary">
+        <p
+          className="mt-1.5"
+          style={{
+            fontFamily: "'Barlow Condensed',sans-serif",
+            fontWeight: 700,
+            fontSize: '9px',
+            textTransform: 'uppercase',
+            color: 'var(--dim,#6a7486)',
+            letterSpacing: '1px',
+          }}
+        >
           {formatTimeAgo(notification.created_at)}
         </p>
       </div>
@@ -125,7 +158,8 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
         {!notification.is_read && (
           <button
             onClick={e => { e.stopPropagation(); onMarkAsRead(notification.id); }}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-surface-2 text-positive"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: 'var(--accent,#F97316)' }}
             title="Mark as read"
           >
             <Check className="w-3.5 h-3.5" strokeWidth={2} />
@@ -133,7 +167,8 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
         )}
         <button
           onClick={e => { e.stopPropagation(); setIsDeleting(true); setTimeout(() => onDelete(notification.id), 300); }}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-surface-2 hover:text-negative text-quaternary"
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+          style={{ color: 'var(--dim,#6a7486)' }}
           title="Delete"
         >
           <X className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -281,16 +316,44 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="max-w-3xl mx-auto animate-page-enter">
+      <div className="max-w-3xl mx-auto animate-page-enter" style={{ background: 'var(--black,#030508)' }}>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 stg">
           <div>
-            <h1 className="text-[15px] font-semibold uppercase text-secondary" style={{ letterSpacing: '4px' }}>
+            <p
+              style={{
+                fontFamily: "'Barlow Condensed',sans-serif",
+                fontWeight: 700,
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                color: 'var(--dim,#6a7486)',
+                letterSpacing: '3px',
+                marginBottom: '4px',
+              }}
+            >
+              Activity
+            </p>
+            <h1
+              style={{
+                fontFamily: "'Rajdhani',sans-serif",
+                fontWeight: 700,
+                fontSize: '26px',
+                color: 'var(--white,#eef4f8)',
+                lineHeight: 1.1,
+              }}
+            >
               Notifications
             </h1>
             {unreadCount > 0 && (
-              <p className="text-[11px] mt-0.5 text-tertiary">
+              <p
+                style={{
+                  fontFamily: "'Barlow',sans-serif",
+                  fontSize: '11px',
+                  marginTop: '2px',
+                  color: 'var(--dim,#6a7486)',
+                }}
+              >
                 {unreadCount} unread
               </p>
             )}
@@ -298,8 +361,17 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[10px] font-semibold uppercase transition-all active:scale-95 bg-orange-500/15 text-orange-400 border border-orange-500/20"
-              style={{ letterSpacing: '1px' }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all active:scale-95"
+              style={{
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'transparent',
+                color: 'var(--light,#a8bcc8)',
+                fontFamily: "'Barlow Condensed',sans-serif",
+                fontWeight: 700,
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+              }}
             >
               <Check className="w-3 h-3" strokeWidth={2.5} />
               Mark all read
@@ -315,12 +387,17 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
-                  isActive
-                    ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
-                    : 'text-quaternary border border-white/5'
-                }`}
-                style={{ letterSpacing: '1.5px' }}
+                className="px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0 transition-all"
+                style={{
+                  fontFamily: "'Barlow Condensed',sans-serif",
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.5px',
+                  background: isActive ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.04)',
+                  color: isActive ? '#030508' : 'var(--dim,#6a7486)',
+                  border: isActive ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                }}
               >
                 {f.label}
               </button>
@@ -330,15 +407,41 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
         {/* Notification list */}
         {filteredNotifications.length === 0 ? (
-          <div className="card-v3 py-16 text-center space-y-4">
-            <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center bg-surface-2 border border-white/[0.06]">
-              <Bell className="w-5 h-5 text-quaternary" strokeWidth={1.2} />
+          <div
+            className="py-16 text-center space-y-4"
+            style={{
+              background: 'var(--carbon-1,#0a0d14)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: '14px',
+            }}
+          >
+            <div
+              className="w-12 h-12 mx-auto rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <Bell className="w-5 h-5" strokeWidth={1.2} style={{ color: 'var(--dim,#6a7486)' }} />
             </div>
             <div>
-              <p className="text-[14px] font-medium text-secondary">
+              <p
+                style={{
+                  fontFamily: "'Barlow',sans-serif",
+                  fontSize: '14px',
+                  color: 'var(--light,#a8bcc8)',
+                }}
+              >
                 {filter === 'all' ? 'No notifications yet' : `No ${filter} notifications`}
               </p>
-              <p className="text-[11px] mt-1 text-tertiary">
+              <p
+                style={{
+                  fontFamily: "'Barlow',sans-serif",
+                  fontSize: '11px',
+                  marginTop: '4px',
+                  color: 'var(--dim,#6a7486)',
+                }}
+              >
                 {filter === 'all'
                   ? "When someone interacts with your vehicles, you'll see it here"
                   : 'Try changing your filter to see more notifications'}
@@ -349,7 +452,17 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           <div>
             {/* Today Header */}
             <div className="flex items-center justify-between px-4 py-2 mb-2">
-              <span className="text-[10px] font-semibold uppercase font-mono text-quaternary" style={{ letterSpacing: '2.5px' }}>Today</span>
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  fontSize: '10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '2.5px',
+                  color: 'var(--dim,#6a7486)',
+                }}
+              >
+                Today
+              </span>
             </div>
 
             {/* Badge Celebration Card */}
@@ -364,11 +477,38 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
                   <Award className="w-5 h-5" strokeWidth={1.2} style={{ color: '#1a1400' }} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase" style={{ color: 'var(--orange)', letterSpacing: '2px' }}>Badge Earned</p>
-                  <p className="text-[14px] font-semibold mt-0.5 text-primary">
+                  <p
+                    style={{
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      fontSize: '10px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '2px',
+                      color: 'var(--accent,#F97316)',
+                    }}
+                  >
+                    Badge Earned
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "'Barlow',sans-serif",
+                      fontSize: '14px',
+                      marginTop: '2px',
+                      color: 'var(--white,#eef4f8)',
+                    }}
+                  >
                     {filteredNotifications.find(n => (n.type === 'badge_received' || n.type === 'badge_unlocked' || n.type === 'badge_awarded') && !n.is_read)?.title || 'New Badge'}
                   </p>
-                  <p className="text-[11px] mt-0.5 text-tertiary">Tap to view your achievement</p>
+                  <p
+                    style={{
+                      fontFamily: "'Barlow',sans-serif",
+                      fontSize: '11px',
+                      marginTop: '2px',
+                      color: 'var(--dim,#6a7486)',
+                    }}
+                  >
+                    Tap to view your achievement
+                  </p>
                 </div>
               </div>
             )}

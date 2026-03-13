@@ -248,38 +248,94 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto space-y-4" style={{ background: 'var(--black,#030508)' }}>
         <div>
-          <h1 className="text-2xl font-bold mb-1">Spot & Search</h1>
-          <p className="text-secondary text-sm">Find vehicles by plate or users by handle</p>
+          <h1
+            style={{
+              fontFamily: "'Rajdhani',sans-serif",
+              fontWeight: 700,
+              fontSize: '26px',
+              color: 'var(--white,#eef4f8)',
+              marginBottom: '4px',
+            }}
+          >
+            Spot & Search
+          </h1>
+          <p
+            style={{
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: 'var(--dim,#6a7486)',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Find vehicles by plate or users by handle
+          </p>
         </div>
 
-        <div className="bg-orange/10 border border-orange/50 rounded-lg p-3 flex items-start gap-2">
-          <Info className="w-4 h-4 text-accent-primary flex-shrink-0 mt-0.5" />
+        <div
+          className="rounded-lg p-3 flex items-start gap-2"
+          style={{
+            background: 'rgba(249,115,22,0.08)',
+            border: '1px solid rgba(249,115,22,0.2)',
+          }}
+        >
+          <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--accent,#F97316)' }} />
           <div className="text-xs">
-            <p className="text-accent-2 mb-0.5">
-              <span className="font-bold">User Search:</span> Start with <span className="font-mono bg-orange/20 px-1 rounded">@</span> (e.g., @username)
+            <p style={{ color: 'var(--light,#a8bcc8)', marginBottom: '2px', fontFamily: "'Barlow',sans-serif" }}>
+              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700 }}>User Search:</span>{' '}
+              Start with{' '}
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  background: 'rgba(249,115,22,0.1)',
+                  padding: '0 4px',
+                  borderRadius: '4px',
+                }}
+              >
+                @
+              </span>{' '}
+              (e.g., @username)
             </p>
-            <p className="text-accent-2">
-              <span className="font-bold">Plate Search:</span> Enter plate number without @
+            <p style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>
+              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700 }}>Plate Search:</span>{' '}
+              Enter plate number without @
             </p>
           </div>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-4 space-y-3 transition-all duration-300">
-          <div className="bg-surfacehighlight/50 rounded-xl p-3 mb-3 flex items-center gap-2 text-sm">
+        <div
+          className="p-4 space-y-3 transition-all duration-300"
+          style={{
+            background: 'var(--carbon-1,#0a0d14)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '14px',
+          }}
+        >
+          <div
+            className="rounded-xl p-3 mb-3 flex items-center gap-2 text-sm"
+            style={{ background: 'rgba(255,255,255,0.03)' }}
+          >
             {isUserSearch ? (
               <>
-                <User size={16} className="text-accent-primary" />
-                <span className="text-secondary">
-                  Searching by <span className="text-primary font-semibold">Username</span>
+                <User size={16} style={{ color: 'var(--accent,#F97316)' }} />
+                <span style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>
+                  Searching by{' '}
+                  <span style={{ color: 'var(--white,#eef4f8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700 }}>
+                    Username
+                  </span>
                 </span>
               </>
             ) : (
               <>
-                <Hash size={16} className="text-accent-primary" />
-                <span className="text-secondary">
-                  Searching by <span className="text-primary font-semibold">License Plate</span>
+                <Hash size={16} style={{ color: 'var(--accent,#F97316)' }} />
+                <span style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>
+                  Searching by{' '}
+                  <span style={{ color: 'var(--white,#eef4f8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700 }}>
+                    License Plate
+                  </span>
                 </span>
               </>
             )}
@@ -291,16 +347,28 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                   setSearchQuery('@');
                 }
               }}
-              className="ml-auto text-accent-primary text-sm hover:underline font-semibold transition-all"
+              className="ml-auto hover:underline transition-all"
+              style={{
+                color: 'var(--accent,#F97316)',
+                fontFamily: "'Barlow Condensed',sans-serif",
+                fontWeight: 700,
+                fontSize: '13px',
+              }}
             >
               Switch to {isUserSearch ? 'Plate' : 'Username'}
             </button>
           </div>
           <div className="relative">
-            <div className={`absolute left-3 top-1/2 -translate-y-1/2 text-secondary w-5 h-5 transition-all duration-300 ${isUserSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+            <div
+              className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-all duration-300 ${isUserSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+              style={{ color: 'var(--light,#a8bcc8)' }}
+            >
               <User className="w-5 h-5" />
             </div>
-            <div className={`absolute left-3 top-1/2 -translate-y-1/2 text-secondary w-5 h-5 transition-all duration-300 ${!isUserSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+            <div
+              className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-all duration-300 ${!isUserSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+              style={{ color: 'var(--light,#a8bcc8)' }}
+            >
               <Car className="w-5 h-5" />
             </div>
             <input
@@ -308,22 +376,46 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isUserSearch ? 'Search users (e.g., @johndoe)' : 'Enter plate number (e.g., ABC1234)'}
-              className={`w-full bg-surfacehighlight border border-surfacehighlight rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary placeholder-secondary transition-all duration-300 ${
-                !isUserSearch ? 'font-mono tracking-widest uppercase' : ''
-              }`}
+              className="w-full pl-10 pr-4 py-3 focus:outline-none transition-all duration-300"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
+                color: 'var(--white,#eef4f8)',
+                fontFamily: !isUserSearch ? "'JetBrains Mono',monospace" : "'Barlow',sans-serif",
+                letterSpacing: !isUserSearch ? '0.1em' : undefined,
+                textTransform: !isUserSearch ? 'uppercase' : undefined,
+              }}
             />
           </div>
 
           {!isUserSearch && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-1">
+                <label
+                  className="block mb-1"
+                  style={{
+                    fontFamily: "'Barlow Condensed',sans-serif",
+                    fontWeight: 700,
+                    fontSize: '10px',
+                    textTransform: 'uppercase',
+                    color: 'var(--dim,#6a7486)',
+                    letterSpacing: '0.08em',
+                  }}
+                >
                   State
                 </label>
                 <select
                   value={plateState}
                   onChange={(e) => setPlateState(e.target.value)}
-                  className="w-full bg-surfacehighlight border border-surfacehighlight rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                  className="w-full px-3 py-2 text-sm focus:outline-none"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    color: 'var(--white,#eef4f8)',
+                    fontFamily: "'Barlow',sans-serif",
+                  }}
                 >
                   {US_STATES.map((state) => (
                     <option key={state.code} value={state.code}>
@@ -338,7 +430,12 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                   <img src={capturedImage} alt="Captured plate" className="w-full max-h-32 object-cover" />
                   <button
                     onClick={() => setCapturedImage(null)}
-                    className="absolute top-1 right-1 p-1.5 bg-surface/90 backdrop-blur-sm rounded-lg hover:bg-surfacehighlight transition-colors"
+                    className="absolute top-1 right-1 p-1.5 backdrop-blur-sm rounded-lg transition-colors"
+                    style={{
+                      background: 'rgba(10,13,20,0.9)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'var(--light,#a8bcc8)',
+                    }}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -346,9 +443,23 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
               )}
 
               {ocrProcessing && (
-                <div className="bg-accent-primary/10 border border-accent-primary/50 rounded-lg p-3 text-center animate-in fade-in zoom-in-95 duration-300">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-primary mx-auto mb-2"></div>
-                  <p className="text-xs font-semibold">Processing image...</p>
+                <div
+                  className="rounded-lg p-3 text-center animate-in fade-in zoom-in-95 duration-300"
+                  style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}
+                >
+                  <div
+                    className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto mb-2"
+                    style={{ borderColor: 'var(--accent,#F97316)' }}
+                  />
+                  <p
+                    style={{
+                      fontSize: '12px',
+                      color: 'var(--light,#a8bcc8)',
+                      fontFamily: "'Barlow',sans-serif",
+                    }}
+                  >
+                    Processing image...
+                  </p>
                 </div>
               )}
 
@@ -356,7 +467,16 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="bg-accent-primary hover:bg-accent-hover rounded-lg px-3 py-2 font-bold uppercase tracking-wider text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  className="rounded-lg px-3 py-2 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  style={{
+                    background: 'var(--accent,#F97316)',
+                    color: '#030508',
+                    fontFamily: "'Barlow Condensed',sans-serif",
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                  }}
                 >
                   <Camera className="w-4 h-4" />
                   Take Photo
@@ -364,7 +484,17 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-lg px-3 py-2 font-bold uppercase tracking-wider text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  className="rounded-lg px-3 py-2 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  style={{
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'transparent',
+                    color: 'var(--light,#a8bcc8)',
+                    fontFamily: "'Barlow Condensed',sans-serif",
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                  }}
                 >
                   <Upload className="w-4 h-4" />
                   Upload Photo
@@ -386,7 +516,16 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
             <button
               type="submit"
               disabled={loading || ocrProcessing}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-primary to-accent-hover hover:shadow-lg hover:shadow-accent-primary/20 rounded-xl font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: 'var(--accent,#F97316)',
+                color: '#030508',
+                fontFamily: "'Barlow Condensed',sans-serif",
+                fontWeight: 700,
+                fontSize: '13px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
             >
               <Target className="w-5 h-5" />
               {loading ? 'Searching...' : 'Search Plate'}
@@ -395,17 +534,35 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
         )}
 
         {claimableVehicle && (
-          <div className="bg-gradient-to-br from-green-500/10 to-orange-500/10 border border-green-500/50 rounded-xl p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div
+            className="rounded-xl p-4 animate-in fade-in zoom-in-95 duration-300"
+            style={{
+              background: 'var(--carbon-1,#0a0d14)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: '14px',
+            }}
+          >
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <Award className="w-5 h-5 text-green-400" />
+              <div
+                className="p-2 rounded-lg"
+                style={{ background: 'rgba(34,197,94,0.12)' }}
+              >
+                <Award className="w-5 h-5" style={{ color: '#4ade80' }} />
               </div>
               <div>
-                <h3 className="font-bold text-green-300">
+                <h3
+                  style={{
+                    fontFamily: "'Rajdhani',sans-serif",
+                    fontWeight: 700,
+                    color: '#4ade80',
+                    fontSize: '16px',
+                  }}
+                >
                   {claimableVehicle.year} {claimableVehicle.make} {claimableVehicle.model}
                 </h3>
-                <p className="text-xs text-secondary">
-                  {claimableVehicle.color} • {claimableVehicle.state || plateState} • {claimableVehicle.owner_id ? 'Claimed' : 'Unclaimed'}
+                <p style={{ fontSize: '12px', color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
+                  {claimableVehicle.color} • {claimableVehicle.state || plateState} •{' '}
+                  {claimableVehicle.owner_id ? 'Claimed' : 'Unclaimed'}
                 </p>
               </div>
             </div>
@@ -415,7 +572,16 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 onClick={() => {
                   onNavigate('vehicle-detail', { vehicleId: claimableVehicle.id, scrollTo: 'reviews' });
                 }}
-                className="bg-surface border border-surfacehighlight hover:border-accent-primary/50 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
+                className="rounded-lg px-4 py-2 text-sm transition-all active:scale-95"
+                style={{
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'transparent',
+                  color: 'var(--light,#a8bcc8)',
+                  fontFamily: "'Barlow Condensed',sans-serif",
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
               >
                 Spots
               </button>
@@ -423,7 +589,15 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 onClick={() => {
                   onNavigate('vehicle-detail', { vehicleId: claimableVehicle.id, openReviewModal: true });
                 }}
-                className="bg-gradient-to-r from-accent-primary to-accent-hover hover:shadow-lg rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+                className="rounded-lg px-4 py-2 text-sm transition-all active:scale-95 flex items-center justify-center gap-1"
+                style={{
+                  background: 'var(--accent,#F97316)',
+                  color: '#030508',
+                  fontFamily: "'Barlow Condensed',sans-serif",
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
               >
                 <Star className="w-4 h-4" />
                 Spot This Plate
@@ -432,13 +606,31 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 <>
                   <button
                     onClick={() => onNavigate('vehicle-detail', { vehicleId: claimableVehicle.id })}
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
+                    className="rounded-lg px-4 py-2 text-sm transition-all active:scale-95"
+                    style={{
+                      background: 'rgba(34,197,94,0.15)',
+                      border: '1px solid rgba(34,197,94,0.3)',
+                      color: '#4ade80',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
                   >
                     Full Profile
                   </button>
                   <button
                     onClick={() => onNavigate('user-profile', claimableVehicle.owner_id)}
-                    className="bg-surface border border-surfacehighlight hover:border-accent-primary/50 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+                    className="rounded-lg px-4 py-2 text-sm transition-all active:scale-95 flex items-center justify-center gap-1"
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'transparent',
+                      color: 'var(--light,#a8bcc8)',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
                   >
                     <User className="w-4 h-4" />
                     Owner
@@ -447,7 +639,16 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
               ) : (
                 <button
                   onClick={() => setShowClaimModal(true)}
-                  className="col-span-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+                  className="col-span-2 rounded-lg px-4 py-2 text-sm transition-all active:scale-95 flex items-center justify-center gap-1"
+                  style={{
+                    background: 'rgba(34,197,94,0.15)',
+                    border: '1px solid rgba(34,197,94,0.3)',
+                    color: '#4ade80',
+                    fontFamily: "'Barlow Condensed',sans-serif",
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
                 >
                   <Award className="w-4 h-4" />
                   Claim This Vehicle
@@ -461,26 +662,48 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
           <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
             {loading && (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-primary mx-auto mb-2"></div>
-                <p className="text-secondary text-sm">Searching users...</p>
+                <div
+                  className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto mb-2"
+                  style={{ borderColor: 'var(--accent,#F97316)' }}
+                />
+                <p style={{ color: 'var(--dim,#6a7486)', fontSize: '14px', fontFamily: "'Barlow',sans-serif" }}>
+                  Searching users...
+                </p>
               </div>
             )}
 
             {!loading && hasSearched && (
               <div className="space-y-2">
                 {users.length === 0 ? (
-                  <div className="bg-surface border border-surfacehighlight rounded-xl p-8 text-center animate-in fade-in zoom-in-95 duration-300">
-                    <User className="w-10 h-10 text-secondary mx-auto mb-2 animate-in fade-in zoom-in-50 duration-500" />
-                    <p className="text-secondary">No users found</p>
-                    <p className="text-xs text-secondary mt-1">Try a different search term</p>
+                  <div
+                    className="p-8 text-center animate-in fade-in zoom-in-95 duration-300"
+                    style={{
+                      background: 'var(--carbon-1,#0a0d14)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: '14px',
+                    }}
+                  >
+                    <User
+                      className="w-10 h-10 mx-auto mb-2 animate-in fade-in zoom-in-50 duration-500"
+                      style={{ color: 'var(--dim,#6a7486)' }}
+                    />
+                    <p style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>No users found</p>
+                    <p style={{ fontSize: '12px', color: 'var(--dim,#6a7486)', marginTop: '4px', fontFamily: "'Barlow',sans-serif" }}>
+                      Try a different search term
+                    </p>
                   </div>
                 ) : (
                   users.map((user, index) => (
                     <button
                       key={user.id}
                       onClick={() => onNavigate('user-profile', user.id)}
-                      className="w-full bg-surface border border-surfacehighlight rounded-xl p-3 flex items-center gap-3 hover:border-accent-primary/30 hover:scale-[1.01] transition-all duration-200 text-left animate-in fade-in slide-in-from-left-4"
-                      style={{ animationDelay: `${index * 30}ms` }}
+                      className="w-full p-3 flex items-center gap-3 hover:scale-[1.01] transition-all duration-200 text-left animate-in fade-in slide-in-from-left-4"
+                      style={{
+                        background: 'var(--carbon-1,#0a0d14)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '14px',
+                        animationDelay: `${index * 30}ms`,
+                      }}
                     >
                       {user.avatar_url ? (
                         <img
@@ -489,12 +712,23 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                           className="w-10 h-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-surfacehighlight flex items-center justify-center">
-                          <User className="w-5 h-5 text-secondary" />
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ background: 'rgba(255,255,255,0.05)' }}
+                        >
+                          <User className="w-5 h-5" style={{ color: 'var(--dim,#6a7486)' }} />
                         </div>
                       )}
                       <div className="flex-1">
-                        <div className="font-bold">@{user.handle || 'anonymous'}</div>
+                        <div
+                          style={{
+                            fontFamily: "'Barlow Condensed',sans-serif",
+                            fontWeight: 700,
+                            color: 'var(--white,#eef4f8)',
+                          }}
+                        >
+                          @{user.handle || 'anonymous'}
+                        </div>
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
                         <FollowButton targetUserId={user.id} />
@@ -509,12 +743,29 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
       </div>
 
       {showCamera && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col animate-in fade-in duration-300">
-          <div className="flex items-center justify-between p-4 bg-surface animate-in slide-in-from-top-4 duration-500">
-            <h3 className="text-lg font-bold">Capture License Plate</h3>
+        <div className="fixed inset-0 z-50 flex flex-col animate-in fade-in duration-300" style={{ background: '#030508' }}>
+          <div
+            className="flex items-center justify-between p-4 animate-in slide-in-from-top-4 duration-500"
+            style={{ background: 'var(--carbon-1,#0a0d14)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+          >
+            <h3
+              style={{
+                fontFamily: "'Rajdhani',sans-serif",
+                fontWeight: 700,
+                fontSize: '18px',
+                color: 'var(--white,#eef4f8)',
+              }}
+            >
+              Capture License Plate
+            </h3>
             <button
               onClick={stopCamera}
-              className="p-2 hover:bg-surfacehighlight rounded-lg transition-all duration-200 hover:rotate-90 hover:scale-110"
+              className="p-2 rounded-lg transition-all duration-200 hover:rotate-90 hover:scale-110"
+              style={{
+                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.04)',
+                color: 'var(--light,#a8bcc8)',
+              }}
             >
               <X className="w-6 h-6" />
             </button>
@@ -527,13 +778,28 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-48 border-4 border-accent-primary rounded-2xl animate-pulse"></div>
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-48 rounded-2xl animate-pulse"
+                style={{ border: '4px solid var(--accent,#F97316)' }}
+              />
             </div>
           </div>
-          <div className="p-6 bg-surface animate-in slide-in-from-bottom-4 duration-500">
+          <div
+            className="p-6 animate-in slide-in-from-bottom-4 duration-500"
+            style={{ background: 'var(--carbon-1,#0a0d14)', borderTop: '1px solid rgba(255,255,255,0.05)' }}
+          >
             <button
               onClick={capturePhoto}
-              className="w-full bg-accent-primary hover:bg-accent-hover rounded-xl px-6 py-4 font-bold uppercase tracking-wider transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-2"
+              className="w-full rounded-xl px-6 py-4 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-2"
+              style={{
+                background: 'var(--accent,#F97316)',
+                color: '#030508',
+                fontFamily: "'Barlow Condensed',sans-serif",
+                fontWeight: 700,
+                fontSize: '13px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
             >
               <Camera className="w-6 h-6" />
               Capture Photo

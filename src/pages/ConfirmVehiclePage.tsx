@@ -33,14 +33,15 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-6" style={{ background: 'var(--black,#030508)' }}>
         <div className="mb-6">
           <button
             onClick={handleEdit}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            className="flex items-center gap-2 transition-colors mb-5"
+            style={{ color: 'var(--light,#a8bcc8)' }}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Edit Details</span>
+            <span className="text-sm" style={{ fontFamily: "'Barlow',sans-serif" }}>Edit Details</span>
           </button>
 
           <div className="flex items-center gap-3 mb-1">
@@ -48,21 +49,51 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
               {[1, 2, 3].map(i => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all ${i <= 2 ? 'w-8 bg-accent-primary' : 'w-4 bg-surfacehighlight'}`}
+                  style={{
+                    height: '6px',
+                    borderRadius: '9999px',
+                    width: i <= 2 ? '32px' : '16px',
+                    background: i <= 2 ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.1)',
+                    transition: 'all 0.2s',
+                  }}
                 />
               ))}
             </div>
-            <span className="text-xs text-secondary">Step 2 of 3 — 66%</span>
+            <span style={{ fontSize: '12px', color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
+              Step 2 of 3 — 66%
+            </span>
           </div>
 
-          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
+          <h1
+            style={{
+              fontFamily: "'Rajdhani',sans-serif",
+              fontWeight: 700,
+              fontSize: '26px',
+              color: 'var(--white,#eef4f8)',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+            }}
+          >
             Is this your vehicle?
           </h1>
-          <p className="text-secondary text-sm">Confirm the vehicle before rating</p>
+          <p style={{ color: 'var(--light,#a8bcc8)', fontSize: '14px', fontFamily: "'Barlow',sans-serif" }}>
+            Confirm the vehicle before rating
+          </p>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl overflow-hidden mb-6">
-          <div className="relative aspect-video bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center overflow-hidden">
+        <div
+          style={{
+            background: 'var(--carbon-1,#0a0d14)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '14px',
+            overflow: 'hidden',
+            marginBottom: '24px',
+          }}
+        >
+          <div
+            className="relative aspect-video flex items-center justify-center overflow-hidden"
+            style={{ background: 'var(--carbon-1,#0a0d14)', borderRadius: '12px 12px 0 0' }}
+          >
             {wizardData.stockImageUrl ? (
               <>
                 <img
@@ -87,7 +118,9 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
                     >
                       <Car className="w-10 h-10" style={{ color: colorHex }} />
                     </div>
-                    <p className="text-xs text-secondary">Image unavailable</p>
+                    <p style={{ fontSize: '12px', color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
+                      Image unavailable
+                    </p>
                   </div>
                 </div>
               </>
@@ -99,7 +132,9 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
                 >
                   <Car className="w-10 h-10" style={{ color: colorHex }} />
                 </div>
-                <p className="text-xs text-secondary">No image available</p>
+                <p style={{ fontSize: '12px', color: 'var(--dim,#6a7486)', fontFamily: "'Barlow',sans-serif" }}>
+                  No image available
+                </p>
               </div>
             )}
             <div
@@ -110,7 +145,16 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
           </div>
 
           <div className="p-6">
-            <h2 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-4">
+            <h2
+              style={{
+                fontFamily: "'Rajdhani',sans-serif",
+                fontWeight: 700,
+                fontSize: '26px',
+                color: 'var(--white,#eef4f8)',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
+              }}
+            >
               {vehicleName || 'Unknown Vehicle'}
             </h2>
 
@@ -124,9 +168,37 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
                 { label: 'State', value: wizardData.plateState || '—' },
                 { label: 'Plate', value: wizardData.plateNumber || '—' },
               ].map(item => (
-                <div key={item.label} className="bg-surfacehighlight rounded-xl p-3">
-                  <p className="text-xs text-secondary uppercase tracking-wider font-bold mb-1">{item.label}</p>
-                  <p className="font-bold text-primary capitalize">{item.value}</p>
+                <div
+                  key={item.label}
+                  style={{
+                    background: 'var(--carbon-2,#0e1320)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      fontSize: '8px',
+                      textTransform: 'uppercase',
+                      color: 'var(--dim,#6a7486)',
+                      marginBottom: '4px',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    {item.label}
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "'JetBrains Mono',monospace",
+                      fontSize: '13px',
+                      color: 'var(--white,#eef4f8)',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -136,15 +208,33 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={handleEdit}
-            className="flex items-center justify-center gap-2 py-3.5 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all active:scale-95"
+            style={{
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'transparent',
+              color: 'var(--light,#a8bcc8)',
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '13px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
           >
             <Edit2 className="w-4 h-4" />
             Edit
           </button>
           <button
             onClick={handleNext}
-            className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight transition-all active:scale-95 text-white hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+            className="flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all active:scale-95 hover:opacity-90"
+            style={{
+              background: 'var(--accent,#F97316)',
+              color: '#030508',
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '13px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
           >
             Looks Good
             <ChevronRight className="w-4 h-4" />

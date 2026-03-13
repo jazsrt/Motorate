@@ -30,8 +30,20 @@ function StarRow({
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div className="flex items-center justify-between py-4 border-b border-surfacehighlight last:border-0">
-      <span className="font-heading font-bold uppercase tracking-tight text-sm text-secondary w-24">{label}</span>
+    <div className="flex items-center justify-between py-4 last:border-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <span
+        className="w-24"
+        style={{
+          fontFamily: "'Barlow Condensed',sans-serif",
+          fontWeight: 700,
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.1em',
+          fontSize: '12px',
+          color: 'var(--light,#a8bcc8)',
+        }}
+      >
+        {label}
+      </span>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map(star => (
           <button
@@ -42,16 +54,25 @@ function StarRow({
             className="p-1 transition-transform active:scale-90"
           >
             <Star
-              className={`w-8 h-8 transition-colors ${
-                star <= (hovered || value)
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'fill-surfacehighlight text-surfacehighlight'
-              }`}
+              className="w-8 h-8 transition-colors"
+              style={{
+                fill: star <= (hovered || value) ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+                color: star <= (hovered || value) ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+              }}
             />
           </button>
         ))}
       </div>
-      <span className={`text-lg font-bold w-8 text-right ${value ? 'text-primary' : 'text-neutral-600'}`}>
+      <span
+        className="w-8 text-right"
+        style={{
+          fontFamily: "'Rajdhani',sans-serif",
+          fontWeight: 700,
+          fontSize: '18px',
+          fontVariantNumeric: 'tabular-nums',
+          color: value ? 'var(--white,#eef4f8)' : 'var(--dim,#6a7486)',
+        }}
+      >
         {value ? `${value}.0` : '—'}
       </span>
     </div>
@@ -301,14 +322,15 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-6" style={{ background: 'var(--black,#030508)', minHeight: '100%' }}>
         <div className="mb-6">
           <button
             onClick={() => onNavigate('scan')}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            className="flex items-center gap-2 transition-colors mb-5"
+            style={{ color: 'var(--dim,#6a7486)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.1em' }}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <span>Back</span>
           </button>
 
           <div className="flex items-center gap-3 mb-1">
@@ -317,21 +339,21 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                 <div
                   key={i}
                   className="h-1.5 rounded-full transition-all w-8"
-                  style={{ background: 'linear-gradient(90deg, #f97316, #f59e0b)' }}
+                  style={{ background: 'var(--accent,#F97316)' }}
                 />
               ))}
             </div>
-            <span className="text-xs text-secondary">Step 3 of 3 — 100%</span>
+            <span className="text-xs" style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>Step 3 of 3 — 100%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
+          <h1 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '24px', color: 'var(--white,#eef4f8)', textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: '4px' }}>
             Quick Spot
           </h1>
-          <p className="text-secondary text-sm">{vehicleName || 'Rate the vehicle'}</p>
+          <p className="text-sm" style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>{vehicleName || 'Rate the vehicle'}</p>
         </div>
 
         {/* Vehicle Identity Card */}
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-4 mb-5">
+        <div className="p-4 mb-5" style={{ background: 'var(--carbon-1,#0a0d14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px' }}>
           <div className="flex items-center gap-4">
             <LicensePlateDisplay
               stateCode={wizardData.plateState}
@@ -339,17 +361,17 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
               className="scale-75 origin-left"
             />
             <div className="min-w-0">
-              <p className="font-heading font-bold text-lg text-primary truncate">
+              <p className="truncate" style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '18px', color: 'var(--white,#eef4f8)' }}>
                 {vehicleName || 'Unknown Vehicle'}
               </p>
               {wizardData.color && (
-                <p className="text-sm text-secondary capitalize">{wizardData.color}{wizardData.trim ? ` • ${wizardData.trim}` : ''}</p>
+                <p className="text-sm capitalize" style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>{wizardData.color}{wizardData.trim ? ` • ${wizardData.trim}` : ''}</p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-5 mb-4">
+        <div className="p-5 mb-4" style={{ background: 'var(--carbon-1,#0a0d14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px' }}>
           <StarRow label="Driver" value={driverRating} onChange={setDriverRating} />
           <StarRow label="Driving" value={drivingRating} onChange={setDrivingRating} />
           <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
@@ -358,24 +380,26 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         <div className="grid grid-cols-2 gap-3 mb-4">
           <button
             onClick={() => setSentiment('love')}
-            className={`flex items-center justify-center gap-2 py-4 rounded-xl font-heading font-bold uppercase tracking-tight text-base transition-all active:scale-95 border-2 ${
+            className="flex items-center justify-center gap-2 py-4 rounded-xl transition-all active:scale-95"
+            style={
               sentiment === 'love'
-                ? 'bg-rose-500/20 border-rose-500 text-rose-400'
-                : 'bg-surface border-surfacehighlight text-secondary hover:border-rose-500/50'
-            }`}
+                ? { background: 'rgba(249,115,22,0.15)', border: '1px solid var(--accent,#F97316)', color: 'var(--accent,#F97316)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }
+                : { border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }
+            }
           >
-            <Heart className={`w-5 h-5 ${sentiment === 'love' ? 'fill-rose-400' : ''}`} />
+            <Heart className="w-5 h-5" style={{ fill: sentiment === 'love' ? 'var(--accent,#F97316)' : 'none' }} />
             Love It
           </button>
           <button
             onClick={() => setSentiment('hate')}
-            className={`flex items-center justify-center gap-2 py-4 rounded-xl font-heading font-bold uppercase tracking-tight text-base transition-all active:scale-95 border-2 ${
+            className="flex items-center justify-center gap-2 py-4 rounded-xl transition-all active:scale-95"
+            style={
               sentiment === 'hate'
-                ? 'bg-neutral-700/50 border-neutral-400 text-neutral-300'
-                : 'bg-surface border-surfacehighlight text-secondary hover:border-neutral-500/50'
-            }`}
+                ? { background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#ef4444', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }
+                : { border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }
+            }
           >
-            <ThumbsDown className={`w-5 h-5 ${sentiment === 'hate' ? 'fill-neutral-300' : ''}`} />
+            <ThumbsDown className="w-5 h-5" style={{ fill: sentiment === 'hate' ? '#ef4444' : 'none' }} />
             Hate It
           </button>
         </div>
@@ -386,7 +410,8 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             onChange={(e) => setComment(e.target.value)}
             placeholder="What caught your eye? How was the driver?"
             rows={3}
-            className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3 text-primary placeholder-neutral-600 focus:outline-none focus:border-orange transition-colors resize-none text-sm"
+            className="w-full px-4 py-3 rounded-xl focus:outline-none resize-none text-sm"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--white,#eef4f8)', fontFamily: "'Barlow',sans-serif" }}
           />
         </div>
 
@@ -400,7 +425,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             className="hidden"
           />
           {photoPreview ? (
-            <div className="relative rounded-xl overflow-hidden border border-surfacehighlight">
+            <div className="relative rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
               <img
                 src={photoPreview}
                 alt="Spot photo"
@@ -419,10 +444,11 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           ) : (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-surface border border-dashed border-surfacehighlight hover:border-[rgba(249,115,22,0.5)] rounded-xl text-secondary hover:text-accent-2 text-sm font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm transition-colors"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}
             >
               <Camera className="w-4 h-4" />
-              Add a Photo <span className="text-neutral-600">(optional)</span>
+              Add a Photo <span style={{ color: 'var(--dim,#6a7486)' }}>(optional)</span>
               <Image className="w-4 h-4 ml-1" />
             </button>
           )}
@@ -443,11 +469,11 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         <button
           onClick={handleSubmitQuick}
           disabled={!canSubmit || submitting || uploadingPhoto}
-          className="w-full py-3.5 rounded-xl text-white text-[15px] font-bold font-heading tracking-wide flex items-center justify-center gap-2 mb-3 disabled:opacity-40"
-          style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+          className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 mb-3 disabled:opacity-40 transition-all active:scale-95"
+          style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.08em' }}
         >
           {(submitting || uploadingPhoto) ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           ) : null}
           {uploadingPhoto ? 'Uploading photo...' : 'Submit Quick Spot (+15 pts)'}
         </button>
@@ -455,7 +481,12 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         <button
           onClick={handleGoDetailed}
           disabled={!canSubmit}
-          className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-[#F97316] to-[#fb923c] hover:from-[#F97316] hover:to-[#fb923c] disabled:from-surfacehighlight disabled:to-surfacehighlight disabled:text-secondary rounded-xl font-heading font-bold uppercase tracking-tight text-base transition-all active:scale-95 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
+          className="w-full flex items-center justify-center gap-3 py-4 rounded-xl transition-all active:scale-95 disabled:cursor-not-allowed"
+          style={
+            canSubmit
+              ? { background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.4)', color: 'var(--accent,#F97316)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }
+              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--dim,#6a7486)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }
+          }
         >
           <Zap className="w-5 h-5" />
           +20 PTS: Add Year, Make & Model
@@ -483,13 +514,14 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           }}
         >
           <div
-            className="bg-surface border border-surfacehighlight rounded-2xl p-6 max-w-md w-full"
+            className="p-6 max-w-md w-full"
+            style={{ background: 'var(--carbon-1,#0a0d14)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-heading font-bold uppercase tracking-tight text-primary mb-3">
+            <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: '20px', color: 'var(--white,#eef4f8)', textTransform: 'uppercase', marginBottom: '12px' }}>
               Want to leave a Full Spot for +20 bonus RP?
             </h2>
-            <p className="text-sm text-secondary mb-6">
+            <p className="text-sm mb-6" style={{ color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow',sans-serif" }}>
               Add detailed ratings (Looks, Sound, Condition) to earn extra reputation points
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -509,7 +541,8 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                     reputationEarned: 15,
                   });
                 }}
-                className="py-3 bg-surface border border-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-secondary hover:text-primary hover:border-primary transition-all"
+                className="py-3 rounded-xl transition-all"
+                style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'var(--light,#a8bcc8)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px' }}
               >
                 No, I'm Done
               </button>
@@ -527,8 +560,8 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                     existingReviewId: reviewId,
                   });
                 }}
-                className="py-3 rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+                className="py-3 rounded-xl transition-all active:scale-95"
+                style={{ background: 'var(--accent,#F97316)', color: '#030508', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: 'uppercase', fontSize: '12px' }}
               >
                 Yes, Upgrade to Full Spot
               </button>

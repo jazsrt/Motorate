@@ -15,6 +15,7 @@ import { BadgeCoin } from '../components/BadgeCoin';
 import { RepHeroCard } from '../components/RepHeroCard';
 import { Zap, Layers, Target, Eye, UserPlus, Crosshair as CrosshairIcon } from 'lucide-react';
 import { shareToSocial } from '../components/ShareCardGenerator';
+import { getTierFromScore, REPUTATION_TIERS } from '../lib/tierConfig';
 
 interface ProfilePageProps {
   onNavigate: OnNavigate;
@@ -41,42 +42,13 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
   return <span className="font-mono font-semibold text-primary">{current.toLocaleString()}</span>;
 }
 
-function getTierName(score: number): string {
-  if (score >= 10000) return 'Legend';
-  if (score >= 7500) return 'Road General';
-  if (score >= 5000) return 'Iconic';
-  if (score >= 3000) return 'Road Captain';
-  if (score >= 1500) return 'Street Racer';
-  if (score >= 500) return 'Cruiser';
-  return 'Permit';
-}
-
-const PROFILE_TIERS = [
-  { name: 'Permit', min: 0 },
-  { name: 'Prospect', min: 100 },
-  { name: 'Contender', min: 300 },
-  { name: 'Competitor', min: 600 },
-  { name: 'Veteran', min: 1000 },
-  { name: 'Expert', min: 2000 },
-  { name: 'Master', min: 3500 },
-  { name: 'Legend', min: 5500 },
-  { name: 'Icon', min: 8000 },
-];
-
 function getNextMilestone(score: number) {
-  for (const tier of PROFILE_TIERS) {
+  for (const tier of REPUTATION_TIERS) {
     if (score < tier.min) {
       return { name: tier.name, target: tier.min, remaining: tier.min - score };
     }
   }
-  return null; // already at max
-}
-
-function getTierBorderColor(score: number): string {
-  if (score >= 5500) return '#c8a45a';
-  if (score >= 2000) return '#909aaa';
-  if (score >= 600) return '#F97316';
-  return '#9a7a58';
+  return null;
 }
 
 function ChangeArrow({ value }: { value: number }) {
@@ -640,7 +612,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <h2 style={{ fontSize: '18px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                <h2 className="font-heading text-[18px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>
                   {profile?.handle || 'Anonymous'}
                 </h2>
                 {profile?.role === 'owner' && (
@@ -648,7 +620,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 )}
               </div>
               {profile?.bio && (
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }} className="mb-2">
+                <p className="text-[13px] text-[#c0c8d4] mb-2" style={{ lineHeight: 1.5 }}>
                   {profile.bio}
                 </p>
               )}
@@ -732,17 +704,16 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             {/* Rep score inline */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <span
-                className="mono"
+                className="font-mono text-[28px] font-bold text-[#F97316]"
                 style={{
-                  fontSize: 28, fontWeight: 700, color: 'var(--orange)',
                   textShadow: '0 0 12px rgba(249,115,22,0.2)', lineHeight: 1,
                 }}
               >
                 <CountUp target={profile?.reputation_score || 0} />
               </span>
               <div style={{ width: 1, height: 20, background: 'var(--border-2)' }} />
-              <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, color: 'var(--t3)' }}>
-                {getTierName(profile?.reputation_score || 0)}
+              <span className="font-label text-[11px] uppercase tracking-[2.5px] text-[#909aaa]">
+                {getTierFromScore(profile?.reputation_score || 0)}
               </span>
             </div>
 
@@ -752,35 +723,35 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 className="text-center hover:opacity-70 transition-opacity btn-press"
               >
                 <div className="stat-pop-1"><CountUp target={userPosts.filter(p => p.post_type === 'spot').length} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--t4)', marginTop: 2 }}>Spotted</div>
+                <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa]" style={{ marginTop: 2 }}>Spotted</div>
               </button>
               <button
                 onClick={() => setShowBadgesModal(true)}
                 className="text-center hover:opacity-70 transition-opacity btn-press"
               >
                 <div className="stat-pop-2"><CountUp target={userBadges.length} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--t4)', marginTop: 2 }}>Badges</div>
+                <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa]" style={{ marginTop: 2 }}>Badges</div>
               </button>
               <button
                 onClick={() => onNavigate('my-garage')}
                 className="text-center hover:opacity-70 transition-opacity btn-press"
               >
                 <div className="stat-pop-3"><CountUp target={vehicles.length} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--t4)', marginTop: 2 }}>Garage</div>
+                <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa]" style={{ marginTop: 2 }}>Garage</div>
               </button>
               <button
                 onClick={async () => { await loadFollowersList(); setShowFollowersModal(true); }}
                 className="text-center hover:opacity-70 transition-opacity btn-press"
               >
                 <div className="stat-pop-4"><CountUp target={followerCount} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--t4)', marginTop: 2 }}>Followers</div>
+                <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa]" style={{ marginTop: 2 }}>Followers</div>
               </button>
               <button
                 onClick={async () => { await loadFollowingList(); setShowFollowingModal(true); }}
                 className="text-center hover:opacity-70 transition-opacity btn-press"
               >
                 <div className="stat-pop-5"><CountUp target={followingCount} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--t4)', marginTop: 2 }}>Following</div>
+                <div className="font-label text-[9px] uppercase tracking-[2px] text-[#909aaa]" style={{ marginTop: 2 }}>Following</div>
               </button>
             </div>
           </div>
@@ -831,7 +802,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             const milestone = getNextMilestone(profile?.reputation_score || 0);
             if (!milestone) return null;
             const score = profile?.reputation_score || 0;
-            const prevTierMin = PROFILE_TIERS.reduce((prev, t) => t.min <= score ? t.min : prev, 0);
+            const prevTierMin = REPUTATION_TIERS.reduce((prev, t) => t.min <= score ? t.min : prev, 0);
             const progress = ((score - prevTierMin) / (milestone.target - prevTierMin)) * 100;
             return (
               <div className="section-4 mb-4">
@@ -891,8 +862,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 {vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
-                    className="rounded-[12px] p-4 card-interactive card-lift"
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                    className="bg-[#111111] border border-white/[0.06] rounded-xl p-4 card-interactive card-lift"
                     onClick={() => onViewVehicle(vehicle.id)}
                   >
                     <div className="flex items-center justify-between">
@@ -918,7 +888,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           {/* Activity */}
           <div className="mb-4 section-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold uppercase" style={{ color: '#909aaa', letterSpacing: '2.5px' }}>Activity</span>
+              <span className="font-label text-[11px] uppercase tracking-[2.5px] text-[#909aaa]">Activity</span>
               <span className="text-[12px] font-medium" style={{ color: '#F97316' }}>Today: +0 pts</span>
             </div>
             {loadingPosts ? (
@@ -934,9 +904,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 {userPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="rounded-xl overflow-hidden bg-surface border card-lift"
+                    className="bg-[#111111] border border-white/[0.06] rounded-xl overflow-hidden card-lift"
                     style={{
-                      borderColor: post.moderation_status === 'rejected' ? 'var(--status-rejected-border)' : post.moderation_status === 'pending' ? 'var(--status-pending-border)' : 'var(--border)',
+                      borderColor: post.moderation_status === 'rejected' ? 'var(--status-rejected-border)' : post.moderation_status === 'pending' ? 'var(--status-pending-border)' : undefined,
                       opacity: post.moderation_status === 'rejected' ? 0.6 : 1,
                     }}
                   >
@@ -1222,7 +1192,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSpotsGivenModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Spots Given</h3>
+              <h3 className="font-heading text-[18px] font-bold text-primary">Spots Given</h3>
               <button onClick={() => setShowSpotsGivenModal(false)} className="text-secondary hover:text-primary btn-press">✕</button>
             </div>
             <div className="p-4 space-y-2">
@@ -1262,7 +1232,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSpotsReceivedModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Spots Received</h3>
+              <h3 className="font-heading text-[18px] font-bold text-primary">Spots Received</h3>
               <button onClick={() => setShowSpotsReceivedModal(false)} className="text-secondary hover:text-primary btn-press">✕</button>
             </div>
             <div className="p-4 space-y-2">
@@ -1298,7 +1268,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowBadgesModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">My Badges ({userBadges.length})</h3>
+              <h3 className="font-heading text-[18px] font-bold text-primary">My Badges ({userBadges.length})</h3>
               <button onClick={() => setShowBadgesModal(false)} className="text-secondary hover:text-primary btn-press">✕</button>
             </div>
             <div className="p-4">
@@ -1340,7 +1310,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFollowersModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Followers ({followerCount})</h3>
+              <h3 className="font-heading text-[18px] font-bold text-primary">Followers ({followerCount})</h3>
               <button onClick={() => setShowFollowersModal(false)} className="text-secondary hover:text-primary btn-press">✕</button>
             </div>
             <div className="p-4 space-y-2">
@@ -1379,7 +1349,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFollowingModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Following ({followingCount})</h3>
+              <h3 className="font-heading text-[18px] font-bold text-primary">Following ({followingCount})</h3>
               <button onClick={() => setShowFollowingModal(false)} className="text-secondary hover:text-primary btn-press">✕</button>
             </div>
             <div className="p-4 space-y-2">

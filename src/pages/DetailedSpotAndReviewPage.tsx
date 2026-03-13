@@ -35,8 +35,22 @@ function StarRow({
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-surfacehighlight last:border-0">
-      <span className="font-heading font-bold uppercase tracking-tight text-sm text-secondary w-28">{label}</span>
+    <div
+      className="flex items-center justify-between py-3 last:border-0"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      <span
+        style={{
+          fontFamily: "'Barlow Condensed',sans-serif",
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          fontSize: '13px',
+          color: 'var(--light,#a8bcc8)',
+          width: '7rem',
+        }}
+      >
+        {label}
+      </span>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map(star => (
           <button
@@ -47,16 +61,25 @@ function StarRow({
             className="p-0.5 transition-transform active:scale-90"
           >
             <Star
-              className={`w-7 h-7 transition-colors ${
-                star <= (hovered || value)
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'fill-surfacehighlight text-surfacehighlight'
-              }`}
+              className="w-7 h-7 transition-colors"
+              style={{
+                fill: star <= (hovered || value) ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+                color: star <= (hovered || value) ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+              }}
             />
           </button>
         ))}
       </div>
-      <span className={`text-sm font-bold w-8 text-right ${value ? 'text-primary' : 'text-neutral-600'}`}>
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono',monospace",
+          fontSize: '14px',
+          fontVariantNumeric: 'tabular-nums',
+          color: value ? 'var(--white,#eef4f8)' : 'var(--dim,#6a7486)',
+          width: '2rem',
+          textAlign: 'right',
+        }}
+      >
         {value ? `${value}.0` : '—'}
       </span>
     </div>
@@ -65,17 +88,46 @@ function StarRow({
 
 function ReadOnlyStarRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-surfacehighlight/50 last:border-0">
-      <span className="text-xs font-bold uppercase tracking-wider text-secondary w-20">{label}</span>
+    <div
+      className="flex items-center justify-between py-2 last:border-0"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+    >
+      <span
+        style={{
+          fontFamily: "'Barlow Condensed',sans-serif",
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          fontSize: '12px',
+          color: 'var(--light,#a8bcc8)',
+          width: '5rem',
+        }}
+      >
+        {label}
+      </span>
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map(star => (
           <Star
             key={star}
-            className={`w-4 h-4 ${star <= value ? 'fill-yellow-400 text-yellow-400' : 'fill-neutral-700 text-neutral-700'}`}
+            className="w-4 h-4"
+            style={{
+              fill: star <= value ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+              color: star <= value ? 'var(--accent,#F97316)' : 'rgba(255,255,255,0.15)',
+            }}
           />
         ))}
       </div>
-      <span className="text-sm font-bold text-primary w-8 text-right">{value}.0</span>
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono',monospace",
+          fontSize: '14px',
+          fontVariantNumeric: 'tabular-nums',
+          color: 'var(--white,#eef4f8)',
+          width: '2rem',
+          textAlign: 'right',
+        }}
+      >
+        {value}.0
+      </span>
     </div>
   );
 }
@@ -288,20 +340,30 @@ export function DetailedSpotAndReviewPage({
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-6" style={{ background: 'var(--black,#030508)' }}>
         <div className="mb-6">
           <button
             onClick={() => onNavigate('quick-spot-review', { wizardData, driverRating, drivingRating, vehicleRating, sentiment, comment })}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            className="flex items-center gap-2 transition-colors mb-5"
+            style={{ color: 'var(--light,#a8bcc8)' }}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <span className="text-sm" style={{ fontFamily: "'Barlow',sans-serif" }}>Back</span>
           </button>
 
-          <h1 className="text-2xl font-heading font-bold uppercase tracking-tight text-primary mb-1">
+          <h1
+            style={{
+              fontFamily: "'Rajdhani',sans-serif",
+              fontWeight: 700,
+              fontSize: '26px',
+              color: 'var(--white,#eef4f8)',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+            }}
+          >
             {upgradeFromQuickSpot ? 'FULL SPOT UPGRADE' : 'Full Spot'}
           </h1>
-          <p className="text-secondary text-sm">
+          <p style={{ color: 'var(--light,#a8bcc8)', fontSize: '14px', fontFamily: "'Barlow',sans-serif" }}>
             {upgradeFromQuickSpot
               ? 'Add detailed ratings for +20 bonus RP'
               : (vehicleName || 'Complete the review for +35 pts')
@@ -309,17 +371,51 @@ export function DetailedSpotAndReviewPage({
           </p>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-4 mb-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-3">Carried Over</p>
+        <div
+          className="p-4 mb-4"
+          style={{
+            background: 'var(--carbon-1,#0a0d14)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '14px',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: 'var(--dim,#6a7486)',
+              marginBottom: '12px',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Carried Over
+          </p>
           <ReadOnlyStarRow label="Driver" value={driverRating} />
           <ReadOnlyStarRow label="Driving" value={drivingRating} />
           <ReadOnlyStarRow label="Vehicle" value={vehicleRating} />
-          <div className="mt-3 pt-3 border-t border-surfacehighlight/50">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold ${
-              sentiment === 'love'
-                ? 'bg-rose-500/20 text-rose-400'
-                : 'bg-neutral-700/50 text-neutral-300'
-            }`}>
+          <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
+              style={
+                sentiment === 'love'
+                  ? {
+                      background: 'rgba(249,115,22,0.15)',
+                      border: '1px solid var(--accent,#F97316)',
+                      color: 'var(--accent,#F97316)',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                    }
+                  : {
+                      background: 'rgba(239,68,68,0.1)',
+                      border: '1px solid #ef4444',
+                      color: '#ef4444',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                    }
+              }
+            >
               {sentiment === 'love'
                 ? <><Heart className="w-4 h-4 fill-current" /> Love It</>
                 : <><ThumbsDown className="w-4 h-4" /> Hate It</>
@@ -328,9 +424,37 @@ export function DetailedSpotAndReviewPage({
           </div>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-5 mb-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-1">Additional Ratings</p>
-          <p className="text-xs text-secondary mb-3">Required for full spot</p>
+        <div
+          className="p-5 mb-4"
+          style={{
+            background: 'var(--carbon-1,#0a0d14)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '14px',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: 'var(--dim,#6a7486)',
+              marginBottom: '2px',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Additional Ratings
+          </p>
+          <p
+            style={{
+              fontSize: '12px',
+              color: 'var(--dim,#6a7486)',
+              fontFamily: "'Barlow',sans-serif",
+              marginBottom: '12px',
+            }}
+          >
+            Required for full spot
+          </p>
           <StarRow label="Looks" value={looksRating} onChange={setLooksRating} />
           <StarRow label="Sound" value={soundRating} onChange={setSoundRating} />
           <StarRow label="Condition" value={conditionRating} onChange={setConditionRating} />
@@ -348,22 +472,71 @@ export function DetailedSpotAndReviewPage({
         </div>
 
         <div className="mb-6">
-          <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-            Comment <span className="text-neutral-600 font-normal normal-case">(optional)</span>
+          <label
+            className="block mb-2"
+            style={{
+              fontFamily: "'Barlow Condensed',sans-serif",
+              fontWeight: 700,
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              color: 'var(--dim,#6a7486)',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Comment{' '}
+            <span
+              style={{
+                color: 'var(--dim,#6a7486)',
+                fontFamily: "'Barlow',sans-serif",
+                fontWeight: 400,
+                textTransform: 'none',
+              }}
+            >
+              (optional)
+            </span>
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder={upgradeFromQuickSpot ? "Anything else to add about this ride?" : "Share your experience with this vehicle..."}
             rows={4}
-            className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3 text-primary placeholder-neutral-600 focus:outline-none focus:border-accent-primary transition-colors resize-none text-sm"
+            className="w-full focus:outline-none transition-colors resize-none text-sm"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              color: 'var(--white,#eef4f8)',
+              padding: '12px 16px',
+              fontFamily: "'Barlow',sans-serif",
+            }}
           />
         </div>
 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || submitting}
-          className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-[#F97316] to-[#fb923c] hover:from-[#F97316] hover:to-[#fb923c] disabled:from-surfacehighlight disabled:to-surfacehighlight disabled:text-secondary rounded-xl font-heading font-bold uppercase tracking-tight text-lg transition-all active:scale-95 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
+          className="w-full flex items-center justify-center gap-3 py-4 rounded-xl transition-all active:scale-95 disabled:cursor-not-allowed"
+          style={
+            canSubmit && !submitting
+              ? {
+                  background: 'var(--accent,#F97316)',
+                  color: '#030508',
+                  fontFamily: "'Barlow Condensed',sans-serif",
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }
+              : {
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'var(--dim,#6a7486)',
+                  fontFamily: "'Barlow Condensed',sans-serif",
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }
+          }
         >
           {submitting ? (
             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
