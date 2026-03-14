@@ -792,7 +792,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}
                   className="text-xs px-3 py-1.5 bg-[var(--border2)] hover:bg-[var(--border2)] rounded-lg text-[var(--t3)] font-medium transition-all"
                 >
-                  View Profile
+                  Follow Owner
                 </button>
               </div>
             </div>

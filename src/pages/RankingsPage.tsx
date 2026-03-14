@@ -44,6 +44,7 @@ interface LeaderboardUser {
   driver_rating_count: number;
   follower_count: number;
   badge_count: number;
+  vehicle_name: string | null;
 }
 
 type VehicleTabType = 'local' | 'national' | 'make';
@@ -192,7 +193,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
       const userIds = profiles.map(p => p.id);
 
-      const [followersResult, badgesResult] = await Promise.all([
+      const [followersResult, badgesResult, vehiclesResult] = await Promise.all([
         supabase
           .from('follows')
           .select('following_id')
@@ -200,7 +201,13 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         supabase
           .from('user_badges')
           .select('user_id')
-          .in('user_id', userIds)
+          .in('user_id', userIds),
+        supabase
+          .from('vehicles')
+          .select('owner_id, make, model')
+          .in('owner_id', userIds)
+          .eq('is_claimed', true)
+          .order('created_at', { ascending: true })
       ]);
 
       const followerCounts = (followersResult.data || []).reduce((acc, row) => {
@@ -213,6 +220,14 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         return acc;
       }, {} as Record<string, number>);
 
+      // Map first claimed vehicle per user
+      const vehicleNames: Record<string, string> = {};
+      (vehiclesResult.data || []).forEach((v: any) => {
+        if (!vehicleNames[v.owner_id]) {
+          vehicleNames[v.owner_id] = [v.make, v.model].filter(Boolean).join(' ');
+        }
+      });
+
       const leaderboardData: LeaderboardUser[] = profiles.map(p => ({
         id: p.id,
         handle: p.handle || 'Anonymous',
@@ -222,6 +237,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         driver_rating_count: p.driver_rating_count || 0,
         follower_count: followerCounts[p.id] || 0,
         badge_count: badgeCounts[p.id] || 0,
+        vehicle_name: vehicleNames[p.id] || null,
       }));
 
       setLeaderboard(leaderboardData);
@@ -403,7 +419,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 textAlign: 'center' as const,
                 marginTop: '4px',
               }}>
-                {top3[1].handle}
+                {top3[1].vehicle_name || top3[1].handle}
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
@@ -473,7 +489,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 textAlign: 'center' as const,
                 marginTop: '4px',
               }}>
-                {top3[0].handle}
+                {top3[0].vehicle_name || top3[0].handle}
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
@@ -543,7 +559,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 textAlign: 'center' as const,
                 marginTop: '4px',
               }}>
-                {top3[2].handle}
+                {top3[2].vehicle_name || top3[2].handle}
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
@@ -705,7 +721,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap' as const,
                 }}>
-                  {leader.handle}
+                  {leader.vehicle_name || leader.handle}
                 </div>
                 <div style={{
                   fontFamily: "'Barlow Condensed', sans-serif",
