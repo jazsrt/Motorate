@@ -472,7 +472,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                         <img src={vehicle.photo_url_2} alt="" className="w-full h-28 object-cover" />
                       ) : (
                         <div className="w-full h-28 bg-surface-2 flex items-center justify-center">
-                          <Car className="w-8 h-8 text-quaternary opacity-40" strokeWidth={1.2} />
+                          <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                         </div>
                       )}
                     </div>
@@ -482,7 +482,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                     </div>
                   ) : (
                     <div className="h-24 bg-gradient-to-br from-surface-2 to-surface-3 flex items-center justify-center">
-                      <Car className="w-10 h-10 text-quaternary opacity-30" strokeWidth={1.2} />
+                      <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                     </div>
                   )}
                   <div className="p-3">
@@ -670,7 +670,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           }}
         >
           {[
-            { label: 'PLATES', value: vehicles.length },
+            { label: 'VEHICLES', value: vehicles.length },
             { label: 'SPOTS', value: fleetStats.totalSpots },
             { label: 'FOLLOWERS', value: followerCount },
             { label: 'BADGES', value: badgeCount },
@@ -791,8 +791,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: 'var(--surface-2, #1a1d24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Car style={{ width: 32, height: 32, color: 'var(--muted, #6b7280)', opacity: 0.3 }} strokeWidth={1.2} />
+                        <div style={{ width: '100%', height: '100%', background: 'var(--carbon-2,#0e1320)' }}>
                         </div>
                       )}
                       {/* Gradient overlay */}

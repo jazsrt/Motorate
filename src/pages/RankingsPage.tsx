@@ -35,16 +35,16 @@ interface StickerType {
   vehicle_count: number;
 }
 
-interface LeaderboardUser {
-  id: string;
-  handle: string;
-  avatar_url: string | null;
+interface RankedVehicle {
+  vehicle_id: string;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  stock_image_url: string | null;
+  profile_image_url: string | null;
+  owner_id: string;
+  owner_handle: string;
   reputation_score: number;
-  avg_driver_rating: number;
-  driver_rating_count: number;
-  follower_count: number;
-  badge_count: number;
-  vehicle_name: string | null;
 }
 
 type VehicleTabType = 'local' | 'national' | 'make';
@@ -90,7 +90,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [activityCounts, setActivityCounts] = useState<Record<string, number>>({});
   const [stickers, setStickers] = useState<StickerType[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [leaderboard, setLeaderboard] = useState<RankedVehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -180,67 +180,38 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
   async function loadLeaderboard() {
     try {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, handle, avatar_url, reputation_score, avg_driver_rating, driver_rating_count')
-        .order('reputation_score', { ascending: false })
-        .limit(50);
+      const { data: vehicles } = await supabase
+        .from('vehicles')
+        .select(`
+          id, make, model, year, stock_image_url, profile_image_url, owner_id,
+          owner:profiles!vehicles_owner_id_fkey(handle, reputation_score)
+        `)
+        .eq('is_claimed', true)
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-      if (!profiles) {
+      if (!vehicles) {
         setLeaderboard([]);
         return;
       }
 
-      const userIds = profiles.map(p => p.id);
+      const ranked: RankedVehicle[] = vehicles
+        .filter((v: any) => v.owner)
+        .map((v: any) => ({
+          vehicle_id: v.id,
+          make: v.make,
+          model: v.model,
+          year: v.year,
+          stock_image_url: v.stock_image_url,
+          profile_image_url: v.profile_image_url,
+          owner_id: v.owner_id,
+          owner_handle: v.owner?.handle || 'Anonymous',
+          reputation_score: v.owner?.reputation_score || 0,
+        }))
+        .sort((a: RankedVehicle, b: RankedVehicle) => b.reputation_score - a.reputation_score)
+        .slice(0, 50);
 
-      const [followersResult, badgesResult, vehiclesResult] = await Promise.all([
-        supabase
-          .from('follows')
-          .select('following_id')
-          .in('following_id', userIds),
-        supabase
-          .from('user_badges')
-          .select('user_id')
-          .in('user_id', userIds),
-        supabase
-          .from('vehicles')
-          .select('owner_id, make, model')
-          .in('owner_id', userIds)
-          .eq('is_claimed', true)
-          .order('created_at', { ascending: true })
-      ]);
-
-      const followerCounts = (followersResult.data || []).reduce((acc, row) => {
-        acc[row.following_id] = (acc[row.following_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const badgeCounts = (badgesResult.data || []).reduce((acc, row) => {
-        acc[row.user_id] = (acc[row.user_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Map first claimed vehicle per user
-      const vehicleNames: Record<string, string> = {};
-      (vehiclesResult.data || []).forEach((v: any) => {
-        if (!vehicleNames[v.owner_id]) {
-          vehicleNames[v.owner_id] = [v.make, v.model].filter(Boolean).join(' ');
-        }
-      });
-
-      const leaderboardData: LeaderboardUser[] = profiles.map(p => ({
-        id: p.id,
-        handle: p.handle || 'Anonymous',
-        avatar_url: p.avatar_url,
-        reputation_score: p.reputation_score || 0,
-        avg_driver_rating: p.avg_driver_rating || 0,
-        driver_rating_count: p.driver_rating_count || 0,
-        follower_count: followerCounts[p.id] || 0,
-        badge_count: badgeCounts[p.id] || 0,
-        vehicle_name: vehicleNames[p.id] || null,
-      }));
-
-      setLeaderboard(leaderboardData);
+      setLeaderboard(ranked);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
       setLeaderboard([]);
@@ -370,226 +341,36 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         </div>
 
         {/* Podium - Top 3 */}
-        {top3.length >= 3 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            gap: '6px',
-            padding: '0 16px 20px',
-            height: '240px',
-          }}>
-            {/* Silver - #2 (order 1) */}
-            <div
-              style={{ order: 1, cursor: 'pointer', textAlign: 'center' as const }}
-              onClick={() => onNavigate('user-profile', top3[1].id)}
-            >
-              {top3[1].avatar_url ? (
-                <img
-                  src={top3[1].avatar_url}
-                  alt={top3[1].handle}
-                  style={{
-                    width: '92px',
-                    height: '62px',
-                    borderRadius: '6px',
-                    objectFit: 'cover' as const,
-                    border: '1px solid rgba(154,176,192,0.3)',
-                    display: 'block',
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '92px',
-                  height: '62px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(154,176,192,0.3)',
-                  background: '#121a2c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Car size={24} style={{ color: '#9abccc' }} />
-                </div>
-              )}
-              <div style={{
-                fontFamily: "'Rajdhani', sans-serif",
-                fontSize: '13px',
-                fontWeight: 700,
-                color: 'white',
-                textAlign: 'center' as const,
-                marginTop: '4px',
-              }}>
-                {top3[1].vehicle_name || top3[1].handle}
-              </div>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '9px',
-                fontWeight: 500,
-                color: 'var(--accent, #F97316)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {formatRP(top3[1].reputation_score)}
-              </div>
-              <div style={{
-                width: '92px',
-                height: '36px',
-                background: 'linear-gradient(135deg, #2c3a50, #445566)',
-                borderRadius: '4px 4px 0 0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: '6px',
-              }}>
-                <span style={{
-                  fontFamily: "'Rajdhani', sans-serif",
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  color: '#fff',
-                }}>2ND</span>
-              </div>
+        {top3.length >= 3 && (() => {
+          const podiumConfig = [
+            { idx: 1, order: 1, w: 92, h: 62, blockH: 36, label: '2ND', labelSize: 16, border: 'rgba(154,176,192,0.3)', bg: 'linear-gradient(135deg, #2c3a50, #445566)' },
+            { idx: 0, order: 2, w: 118, h: 80, blockH: 52, label: '1ST', labelSize: 22, border: 'rgba(249,115,22,0.45)', bg: 'linear-gradient(135deg, #F97316, #ff6000)' },
+            { idx: 2, order: 3, w: 92, h: 62, blockH: 26, label: '3RD', labelSize: 14, border: 'rgba(192,120,64,0.3)', bg: 'linear-gradient(135deg, #182036, #2c3a50)' },
+          ];
+          return (
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '6px', padding: '0 16px 20px', height: '240px' }}>
+              {podiumConfig.map(cfg => {
+                const v = top3[cfg.idx];
+                const vImg = v.profile_image_url || v.stock_image_url;
+                const vName = [v.make, v.model].filter(Boolean).join(' ') || 'Vehicle';
+                return (
+                  <div key={cfg.idx} style={{ order: cfg.order, cursor: 'pointer', textAlign: 'center' as const }} onClick={() => onNavigate('vehicle-detail', { vehicleId: v.vehicle_id })}>
+                    {vImg ? (
+                      <img src={vImg} alt={vName} style={{ width: cfg.w, height: cfg.h, borderRadius: 6, objectFit: 'cover' as const, border: `1px solid ${cfg.border}`, display: 'block' }} />
+                    ) : (
+                      <div style={{ width: cfg.w, height: cfg.h, borderRadius: 6, border: `1px solid ${cfg.border}`, background: 'var(--carbon-2, #0e1320)' }} />
+                    )}
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'center' as const, marginTop: 4 }}>{vName}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 500, color: 'var(--accent, #F97316)', fontVariantNumeric: 'tabular-nums' }}>{formatRP(v.reputation_score)}</div>
+                    <div style={{ width: cfg.w, height: cfg.blockH, background: cfg.bg, borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
+                      <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: cfg.labelSize, fontWeight: 700, color: '#fff' }}>{cfg.label}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-            {/* Gold - #1 (order 2) */}
-            <div
-              style={{ order: 2, cursor: 'pointer', textAlign: 'center' as const }}
-              onClick={() => onNavigate('user-profile', top3[0].id)}
-            >
-              {top3[0].avatar_url ? (
-                <img
-                  src={top3[0].avatar_url}
-                  alt={top3[0].handle}
-                  style={{
-                    width: '118px',
-                    height: '80px',
-                    borderRadius: '6px',
-                    objectFit: 'cover' as const,
-                    border: '1px solid rgba(249,115,22,0.45)',
-                    display: 'block',
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '118px',
-                  height: '80px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(249,115,22,0.45)',
-                  background: '#121a2c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Car size={32} style={{ color: '#f0a030' }} />
-                </div>
-              )}
-              <div style={{
-                fontFamily: "'Rajdhani', sans-serif",
-                fontSize: '13px',
-                fontWeight: 700,
-                color: 'white',
-                textAlign: 'center' as const,
-                marginTop: '4px',
-              }}>
-                {top3[0].vehicle_name || top3[0].handle}
-              </div>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '9px',
-                fontWeight: 500,
-                color: 'var(--accent, #F97316)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {formatRP(top3[0].reputation_score)}
-              </div>
-              <div style={{
-                width: '118px',
-                height: '52px',
-                background: 'linear-gradient(135deg, #F97316, #ff6000)',
-                borderRadius: '4px 4px 0 0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: '6px',
-              }}>
-                <span style={{
-                  fontFamily: "'Rajdhani', sans-serif",
-                  fontSize: '22px',
-                  fontWeight: 700,
-                  color: '#fff',
-                }}>1ST</span>
-              </div>
-            </div>
-
-            {/* Bronze - #3 (order 3) */}
-            <div
-              style={{ order: 3, cursor: 'pointer', textAlign: 'center' as const }}
-              onClick={() => onNavigate('user-profile', top3[2].id)}
-            >
-              {top3[2].avatar_url ? (
-                <img
-                  src={top3[2].avatar_url}
-                  alt={top3[2].handle}
-                  style={{
-                    width: '92px',
-                    height: '62px',
-                    borderRadius: '6px',
-                    objectFit: 'cover' as const,
-                    border: '1px solid rgba(192,120,64,0.3)',
-                    display: 'block',
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: '92px',
-                  height: '62px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(192,120,64,0.3)',
-                  background: '#121a2c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Car size={24} style={{ color: '#b07840' }} />
-                </div>
-              )}
-              <div style={{
-                fontFamily: "'Rajdhani', sans-serif",
-                fontSize: '13px',
-                fontWeight: 700,
-                color: 'white',
-                textAlign: 'center' as const,
-                marginTop: '4px',
-              }}>
-                {top3[2].vehicle_name || top3[2].handle}
-              </div>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '9px',
-                fontWeight: 500,
-                color: 'var(--accent, #F97316)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {formatRP(top3[2].reputation_score)}
-              </div>
-              <div style={{
-                width: '92px',
-                height: '26px',
-                background: 'linear-gradient(135deg, #182036, #2c3a50)',
-                borderRadius: '4px 4px 0 0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: '6px',
-              }}>
-                <span style={{
-                  fontFamily: "'Rajdhani', sans-serif",
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: '#fff',
-                }}>3RD</span>
-              </div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* List Header */}
         <div style={{
@@ -640,8 +421,11 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
           </div>
         )}
 
-        {rest.map((leader, idx) => {
+        {rest.map((v, idx) => {
           const rank = idx + 4;
+          const vImg = v.profile_image_url || v.stock_image_url;
+          const vName = [v.make, v.model].filter(Boolean).join(' ') || 'Vehicle';
+          const vSub = [v.make, v.year].filter(Boolean).join(' · ');
 
           const rankStyle: React.CSSProperties = {
             fontFamily: "'Rajdhani', sans-serif",
@@ -659,8 +443,8 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
           return (
             <div
-              key={leader.id}
-              onClick={() => onNavigate('user-profile', leader.id)}
+              key={v.vehicle_id}
+              onClick={() => onNavigate('vehicle-detail', { vehicleId: v.vehicle_id })}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -676,82 +460,21 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 (e.currentTarget as HTMLElement).style.background = 'transparent';
               }}
             >
-              {/* Rank Number */}
-              <div style={rankStyle}>
-                {rank}
-              </div>
+              <div style={rankStyle}>{rank}</div>
 
-              {/* Thumbnail */}
-              {leader.avatar_url ? (
-                <img
-                  src={leader.avatar_url}
-                  alt={leader.handle}
-                  style={{
-                    width: '64px',
-                    height: '44px',
-                    borderRadius: '4px',
-                    objectFit: 'cover' as const,
-                    background: '#121a2c',
-                  }}
-                />
+              {vImg ? (
+                <img src={vImg} alt={vName} style={{ width: 64, height: 44, borderRadius: 4, objectFit: 'cover' as const, background: '#121a2c' }} />
               ) : (
-                <div style={{
-                  width: '64px',
-                  height: '44px',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                  background: '#121a2c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Car size={20} style={{ color: 'var(--dim)' }} />
-                </div>
+                <div style={{ width: 64, height: 44, borderRadius: 4, background: 'var(--carbon-2, #0e1320)' }} />
               )}
 
-              {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontFamily: "'Rajdhani', sans-serif",
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  color: 'white',
-                  lineHeight: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap' as const,
-                }}>
-                  {leader.vehicle_name || leader.handle}
-                </div>
-                <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  color: 'var(--dim)',
-                  marginTop: '1px',
-                }}>
-                  {formatRP(leader.reputation_score)} RP &middot; #{rank}
-                </div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: 'white', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{vName}</div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, color: 'var(--dim)', marginTop: 1 }}>{vSub} &middot; #{rank}</div>
               </div>
 
-              {/* Right - RP */}
               <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
-                <div style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'white',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
-                  {formatRP(leader.reputation_score)}
-                </div>
-                <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontSize: '9px',
-                  color: 'var(--dim)',
-                }}>
-                  &mdash;
-                </div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: 'white', fontVariantNumeric: 'tabular-nums' }}>{formatRP(v.reputation_score)}</div>
               </div>
             </div>
           );

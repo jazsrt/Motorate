@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Star, Heart, ThumbsDown, ChevronDown, Car, Flag } from 'lucide-react';
+import { X, Star, Heart, ThumbsDown, ChevronDown, Flag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { UserAvatar } from './UserAvatar';
@@ -407,7 +407,7 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
             {reviews.length === 0 && unlinkedSpots.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-16 h-16 bg-surfacehighlight rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Car className="w-8 h-8 text-secondary" />
+                  <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                 </div>
                 <p className="text-secondary">No spots yet</p>
                 <p className="text-sm text-neutral-600 mt-1">Be the first to spot this plate</p>

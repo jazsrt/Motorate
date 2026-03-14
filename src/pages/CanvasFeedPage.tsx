@@ -260,7 +260,7 @@ export function CanvasFeedPage({ onNavigate }: CanvasFeedPageProps) {
                   className="absolute inset-0 flex items-center justify-center"
                   style={{ background: 'var(--carbon-1)' }}
                 >
-                  <Car className="w-20 h-20" strokeWidth={0.5} style={{ color: 'var(--carbon-3)' }} />
+                  <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                 </div>
               )}
 

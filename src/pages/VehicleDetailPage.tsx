@@ -697,7 +697,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               { label: 'City Rank', value: '—' },
             ].map((s) => (
               <div key={s.label} className="flex flex-col items-center gap-0.5">
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 18, fontWeight: 700, color: s.label === 'Fans' ? 'var(--accent, #F97316)' : 'var(--white, #eef4f8)', fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.label}</span>
               </div>
             ))}

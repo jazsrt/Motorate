@@ -119,14 +119,18 @@ export function PlateSearch({ onSearch, onCameraScan, onNavigateToVehicle, initi
               value={plateNumber}
               onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
               placeholder="ABC 1234"
-              className="flex-1 font-mono rounded-lg px-4 py-3 text-sm font-semibold tracking-[2px] uppercase outline-none transition-all"
+              className="flex-1 rounded-lg px-4 py-3 uppercase outline-none transition-all"
               style={{
-                background: 'var(--s2)',
-                border: '1px solid var(--border)',
-                color: 'var(--t1)',
+                background: 'linear-gradient(135deg, #ece4d4, #f4ecdc, #ece4d4)',
+                border: '2px solid #888',
+                color: '#111',
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '32px',
+                letterSpacing: '0.3em',
+                fontWeight: 700,
               }}
               onFocus={(e) => (e.target.style.borderColor = 'var(--orange)')}
-              onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
+              onBlur={(e) => (e.target.style.borderColor = '#888')}
             />
             <select
               value={state}

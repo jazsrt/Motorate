@@ -9,7 +9,7 @@ export function LicensePlateDisplay({ stateCode, plateNumber, className = '' }: 
     <div
       className={`inline-flex flex-col items-center px-4 py-2 rounded-lg border ${className}`}
       style={{
-        background: 'linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%)',
+        background: 'linear-gradient(135deg, #ece4d4, #f4ecdc, #ece4d4)',
         borderColor: '#888',
         minWidth: '120px',
       }}

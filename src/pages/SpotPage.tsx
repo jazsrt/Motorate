@@ -510,7 +510,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                           justifyContent: 'center',
                         }}
                       >
-                        <Car style={{ width: '18px', height: '18px', color: 'var(--muted, #909aaa)' }} strokeWidth={1.5} />
+                        <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                       </div>
                       {/* Plate + Car name */}
                       <div style={{ flex: 1, minWidth: 0 }}>

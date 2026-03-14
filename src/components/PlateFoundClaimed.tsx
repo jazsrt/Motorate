@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, CheckCircle, Heart, ThumbsDown, Wrench, Car } from 'lucide-react';
+import { Star, CheckCircle, Heart, ThumbsDown, Wrench } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { TierBadge } from './TierBadge';
 import { UserAvatar } from './UserAvatar';
@@ -206,7 +206,7 @@ export function PlateFoundClaimed({
                 </div>
               ) : (
                 <div className="aspect-video bg-gradient-to-br from-surface to-surfacehighlight flex items-center justify-center">
-                  <Car className="w-16 h-16 text-quaternary" />
+                  <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                 </div>
               )}
               <div className="p-5">

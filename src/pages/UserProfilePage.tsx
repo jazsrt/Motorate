@@ -647,7 +647,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                           </div>
                         ) : (
                           <div className="aspect-video bg-[#0a0a0a] flex items-center justify-center">
-                            <Car className="w-12 h-12 text-[#909aaa]/50" />
+                            <div style={{ width:'100%', height:'100%', background:'var(--carbon-2,#0e1320)' }} />
                           </div>
                         )}
                         <div className="p-4">
