@@ -10,7 +10,7 @@ import { LiveStatsBar } from './LiveStatsBar';
 
 interface LayoutProps {
   children: ReactNode;
-  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage';
+  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications';
   onNavigate: (page: string, data?: any) => void;
 }
 
@@ -108,8 +108,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const navItems = [
     { id: 'feed' as const, icon: Home, label: 'Feed' },
-    { id: 'scan' as const, icon: Camera, label: 'Spot' },
-    { id: 'rankings' as const, icon: Award, label: 'Badges' },
+    { id: 'rankings' as const, icon: Award, label: 'Rankings' },
+    { id: 'scan' as const, icon: Camera, label: 'Spot', isCenter: true },
     { id: 'my-garage' as const, icon: Car, label: 'Garage' },
     { id: 'profile' as const, icon: User, label: 'Profile' },
   ];
@@ -126,7 +126,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           className="topbar-logo hover:opacity-70 transition-opacity"
           aria-label="Return to feed"
         >
-          MOTORATE
+          MOTO<em style={{ fontStyle: 'normal', color: 'var(--accent)' }}>R</em>ATE
         </button>
 
         {user && (
@@ -157,6 +157,33 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
+            if ((item as any).isCenter) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  className="flex-1 flex flex-col items-center -mt-6 relative"
+                >
+                  <div
+                    style={{
+                      width: '52px',
+                      height: '52px',
+                      background: 'var(--accent)',
+                      borderRadius: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 0 30px rgba(249,115,22,0.5), 0 4px 16px rgba(0,0,0,0.6)',
+                    }}
+                  >
+                    <Icon size={24} strokeWidth={2} style={{ color: 'var(--black)' }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)', marginTop: '2px' }}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            }
             return (
               <button
                 key={item.id}

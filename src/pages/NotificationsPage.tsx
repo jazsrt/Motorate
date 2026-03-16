@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, Check, Trash2, Award, Heart, MessageCircle, UserPlus, Shield, Car, Star, Tag, Eye, X } from 'lucide-react';
+import { Bell, Check, Trash2, Award, Heart, MessageCircle, UserPlus, Shield, Car, Star, Tag, Eye, X, MapPin } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ import { type Badge } from '../lib/badges';
 
 interface Notification {
   id: string;
-  type: 'review' | 'badge_received' | 'badge_unlocked' | 'badge_awarded' | 'comment' | 'like' | 'follow' | 'message' | 'admin_action';
+  type: 'review' | 'badge_received' | 'badge_unlocked' | 'badge_awarded' | 'comment' | 'like' | 'follow' | 'spot' | 'message' | 'admin_action';
   title: string;
   message: string;
   is_read: boolean;
@@ -42,11 +42,23 @@ function getIcon(type: Notification['type']) {
       return { Icon: UserPlus, color: 'var(--t3)' };
     case 'review':
       return { Icon: Star, color: 'var(--orange)' };
+    case 'spot':
+      return { Icon: MapPin, color: 'var(--accent)' };
     case 'admin_action':
       return { Icon: Shield, color: 'var(--orange)' };
     default:
       return { Icon: Bell, color: 'var(--t4)' };
   }
+}
+
+function getDateGroup(dateString: string): 'today' | 'yesterday' | 'this_week' | 'older' {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000);
+  if (diffDays < 1) return 'today';
+  if (diffDays < 2) return 'yesterday';
+  if (diffDays < 7) return 'this_week';
+  return 'older';
 }
 
 function formatTimeAgo(dateString: string): string {
@@ -84,18 +96,41 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
 
   return (
     <div
-      className={`card-v3 mb-2 p-3 relative flex items-start gap-3 transition-all duration-200 ${isDeleting ? 'opacity-0 -translate-x-8' : ''} ${isDeadLink ? 'opacity-40' : ''}`}
+      className={`relative flex items-start gap-3 transition-all duration-200 ${isDeleting ? 'opacity-0 -translate-x-8' : ''} ${isDeadLink ? 'opacity-40' : ''}`}
       style={{
+        padding: '12px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
         borderLeft: (() => {
-          if (notification.is_read) return '3px solid transparent';
-          return `3px solid var(--orange)`;
+          switch(notification.type) {
+            case 'review': case 'like': case 'spot': return '3px solid var(--accent)';
+            case 'badge_received': case 'badge_unlocked': case 'badge_awarded': return '3px solid var(--gold)';
+            case 'follow': return '3px solid var(--steel)';
+            case 'comment': return '3px solid var(--blue)';
+            default: return '3px solid transparent';
+          }
         })(),
         background: !notification.is_read ? 'rgba(249,115,22,0.03)' : undefined,
       }}
       {...swipeHandlers}
     >
       {/* Icon circle */}
-      <div className="bg-surface-2 border border-white/[0.035] rounded-full p-2 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div
+        className="flex items-center justify-center flex-shrink-0 mt-0.5"
+        style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: (() => {
+            switch(notification.type) {
+              case 'review': case 'like': case 'spot': return 'rgba(249,115,22,0.12)';
+              case 'badge_received': case 'badge_unlocked': case 'badge_awarded': return 'rgba(240,160,48,0.12)';
+              case 'follow': return 'rgba(255,255,255,0.06)';
+              case 'comment': return 'rgba(56,136,238,0.1)';
+              default: return 'rgba(255,255,255,0.06)';
+            }
+          })(),
+        }}
+      >
         <Icon className="w-4 h-4" strokeWidth={1.5} style={{ color }} />
       </div>
 
@@ -109,13 +144,16 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => onClick(notification)}
       >
-        <p className={`text-[14px] font-medium leading-snug ${isDeadLink ? 'text-tertiary' : 'text-primary'}`}>
+        <p
+          className={`leading-snug ${isDeadLink ? '' : ''}`}
+          style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 500, color: isDeadLink ? 'var(--dim)' : 'var(--bright)' }}
+        >
           {notification.title}
         </p>
-        <p className="text-[12px] mt-0.5 leading-[1.5] text-secondary">
+        <p className="mt-0.5 leading-[1.5]" style={{ fontSize: '11px', color: 'var(--dim)' }}>
           {notification.message}
         </p>
-        <p className="text-[11px] font-mono mt-1.5 text-quaternary">
+        <p className="mt-1.5 text-right" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)' }}>
           {formatTimeAgo(notification.created_at)}
         </p>
       </div>
@@ -257,7 +295,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   const getCategory = (type: Notification['type']): NotificationFilter => {
     if (['badge_received', 'badge_unlocked', 'badge_awarded'].includes(type)) return 'badges';
     if (['like', 'comment', 'follow'].includes(type)) return 'social';
-    if (type === 'review') return 'vehicles';
+    if (type === 'review' || type === 'spot') return 'vehicles';
     return 'all';
   };
 
@@ -280,13 +318,13 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   ];
 
   return (
-    <Layout currentPage="profile" onNavigate={onNavigate}>
+    <Layout currentPage="notifications" onNavigate={onNavigate}>
       <div className="max-w-3xl mx-auto page-enter">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 stg">
           <div>
-            <h1 className="text-[15px] font-semibold uppercase text-secondary" style={{ letterSpacing: '4px' }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700 }}>
               Notifications
             </h1>
             {unreadCount > 0 && (
@@ -347,42 +385,45 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           </div>
         ) : (
           <div>
-            {/* Today Header */}
-            <div className="flex items-center justify-between px-4 py-2 mb-2">
-              <span className="text-[10px] font-semibold uppercase font-mono text-quaternary" style={{ letterSpacing: '2.5px' }}>Today</span>
-            </div>
+            {(() => {
+              const groups: Record<string, Notification[]> = {};
+              filteredNotifications.forEach(n => {
+                const group = getDateGroup(n.created_at);
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(n);
+              });
 
-            {/* Badge Celebration Card */}
-            {filteredNotifications.some(n => (n.type === 'badge_received' || n.type === 'badge_unlocked' || n.type === 'badge_awarded') && !n.is_read) && (
-              <div
-                className="card-v3 flex items-center gap-3.5 mb-2 px-4 py-4 relative overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.08), var(--s1) 50%)', border: '1px solid rgba(249,115,22,0.15)' }}
-              >
-                <div className="absolute top-0 left-[20%] right-[20%] h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--orange), transparent)' }} />
-                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'linear-gradient(145deg, #806828, #a8883e 40%, #c8a45a 55%, #a8883e 70%, #806828)', boxShadow: '0 0 20px rgba(249,115,22,0.12)' }}>
-                  <Award className="w-5 h-5" strokeWidth={1.2} style={{ color: '#1a1400' }} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase" style={{ color: 'var(--orange)', letterSpacing: '2px' }}>Badge Earned</p>
-                  <p className="text-[14px] font-semibold mt-0.5 text-primary">
-                    {filteredNotifications.find(n => (n.type === 'badge_received' || n.type === 'badge_unlocked' || n.type === 'badge_awarded') && !n.is_read)?.title || 'New Badge'}
-                  </p>
-                  <p className="text-[11px] mt-0.5 text-tertiary">Tap to view your achievement</p>
-                </div>
-              </div>
-            )}
+              const groupLabels: Record<string, string> = {
+                today: 'Today',
+                yesterday: 'Yesterday',
+                this_week: 'This Week',
+                older: 'Earlier',
+              };
 
-            {filteredNotifications.map(notification => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onDelete={deleteNotification}
-                onMarkAsRead={markAsRead}
-                onClick={handleNotificationClick}
-                isDeadLink={deadLinkNotifications.has(notification.id)}
-              />
-            ))}
+              return (['today', 'yesterday', 'this_week', 'older'] as const)
+                .filter(g => groups[g]?.length > 0)
+                .map(g => (
+                  <div key={g}>
+                    <div style={{
+                      padding: '10px 20px 4px',
+                      fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700,
+                      letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--muted)',
+                    }}>
+                      {groupLabels[g]}
+                    </div>
+                    {groups[g].map(notification => (
+                      <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        onDelete={deleteNotification}
+                        onMarkAsRead={markAsRead}
+                        onClick={handleNotificationClick}
+                        isDeadLink={deadLinkNotifications.has(notification.id)}
+                      />
+                    ))}
+                  </div>
+                ));
+            })()}
           </div>
         )}
       </div>

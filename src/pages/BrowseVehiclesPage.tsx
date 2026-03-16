@@ -142,7 +142,7 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
     <Layout currentPage="search" onNavigate={onNavigate}>
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-primary mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-primary mb-2 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
             <Car className="w-8 h-8 text-accent-primary" />
             Browse Vehicles
           </h1>
@@ -249,29 +249,49 @@ function VehicleCard({ vehicle, onNavigate, currentUserId }: VehicleCardProps) {
         )}
 
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-          <div className="flex items-center gap-3 text-white text-sm">
+          <div className="flex items-center gap-3 text-white text-sm" style={{ fontFamily: 'var(--font-cond)' }}>
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span>{vehicle.spot_count || 0} Spots</span>
+            </div>
+            <span className="text-white/50">&middot;</span>
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" />
               <span>{vehicle.avg_rating ? vehicle.avg_rating.toFixed(1) : 'N/A'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
-              <span>{vehicle.spot_count || 0}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="p-4">
-        <h3 className="font-bold text-lg text-primary group-hover:text-accent-primary transition-colors">
+        <h3 className="text-primary group-hover:text-accent-primary transition-colors" style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700 }}>
           {vehicle.year} {vehicle.make} {vehicle.model}
         </h3>
-        <p className="text-sm text-secondary mt-1">{vehicle.color}</p>
-        {vehicle.is_claimed && (
-          <span className="inline-block mt-2 text-xs bg-accent-primary/10 text-accent-primary px-2 py-1 rounded-full font-medium">
-            Claimed
+        <p className="mt-1" style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', color: 'var(--dim)' }}>{vehicle.color}</p>
+        <div className="mt-1" style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)' }}>
+          {vehicle.spot_count || 0} Spots &middot; 0 Followers
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <span style={{
+            fontFamily: 'var(--font-cond)',
+            fontSize: '10px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            color: 'var(--accent)',
+            background: 'var(--accent-dim)',
+            borderRadius: '12px',
+            padding: '4px 10px',
+            border: '1px solid rgba(249,115,22,0.25)',
+            display: 'inline-block',
+          }}>
+            Spot
           </span>
-        )}
+          {vehicle.is_claimed && (
+            <span className="inline-block text-xs bg-green-500/10 text-green-400 px-2 py-1 rounded-full font-medium">
+              Claimed
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

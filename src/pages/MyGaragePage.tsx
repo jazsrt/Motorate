@@ -190,23 +190,39 @@ function VehicleCard({
             {plateNumber}
           </div>
         )}
-        <div className="text-[12px] text-secondary font-light mt-1">
+        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }} className="text-[12px] text-secondary mt-1">
           {[vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(' ')}
         </div>
 
         <div className="flex gap-4 mt-2.5">
-          <span className="text-[10px] text-quaternary">
-            <span className="font-mono text-primary font-semibold">{spotCount}</span> spots
+          <span style={{ fontSize: '10px', color: 'var(--dim)', fontFamily: 'var(--font-cond)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--accent)', fontWeight: 700, fontSize: '14px' }}>{spotCount}</span> Spots
           </span>
-          <span className="text-[10px] text-quaternary">
-            <span className="font-mono text-primary font-semibold">
-              {avgRating ? Number(avgRating).toFixed(1) : '—'}
-            </span> rating
-          </span>
-          <span className="text-[10px] text-quaternary">
-            <span className="font-mono text-primary font-semibold">{modCount}</span> mods
+          <span style={{ fontSize: '10px', color: 'var(--dim)', fontFamily: 'var(--font-cond)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--bright)', fontWeight: 600 }}>{(vehicle as any).follower_count ?? 0}</span> Followers
           </span>
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate('scan', { plateNumber: plateNumber });
+          }}
+          style={{
+            marginTop: '8px',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px',
+            padding: '5px 12px',
+            color: 'var(--dim)',
+            fontFamily: 'var(--font-cond)',
+            fontWeight: 600,
+            fontSize: '11px',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase' as const,
+          }}
+        >
+          Log a Spot
+        </button>
       </div>
 
       {/* Sticker Strip */}
@@ -491,58 +507,77 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     <Layout currentPage="my-garage" onNavigate={handleNavigate}>
       <div className="pb-24 page-enter">
 
-        {/* FLEET OVERVIEW */}
-        {vehicles.length > 0 && (
-          <>
-            <div className="slbl stg">Fleet Overview</div>
-            <div className="card-v3 card-v3-lift mx-4 mb-4 p-4 stg v3-stagger v3-stagger-1">
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: 'Vehicles', value: fleetStats.vehicleCount },
-                  { label: 'Avg Rating', value: fleetStats.avgRating },
-                  { label: 'Spots', value: fleetStats.totalSpots },
-                  { label: 'Stickers', value: fleetStats.totalStickers },
-                ].map(stat => (
-                  <div key={stat.label} className="text-center">
-                    <div className="font-mono text-[18px] font-semibold text-primary leading-none">
-                      {stat.value}
-                    </div>
-                    <div className="text-[8px] font-medium uppercase tracking-[2px] text-quaternary mt-1">
-                      {stat.label}
-                    </div>
+        {/* GARAGE HERO */}
+        {vehicles.length > 0 && (() => {
+          const heroVehicle = vehicles[0];
+          const heroPhoto = heroVehicle.photos?.[0]?.url || heroVehicle.photo_url || heroVehicle.stock_image_url || stockImages[heroVehicle.id];
+          return (
+            <div style={{ position: 'relative', width: '100%', height: '240px', overflow: 'hidden' }}>
+              {heroPhoto ? <img src={heroPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--carbon-3)' }} />}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%', background: 'linear-gradient(to top, rgba(3,5,8,0.97) 0%, rgba(3,5,8,0.5) 50%, transparent 100%)' }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to bottom, rgba(3,5,8,0.6) 0%, transparent 100%)' }} />
+              <div style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '2px solid var(--accent)', background: 'var(--carbon-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    {/* User avatar or icon */}
                   </div>
-                ))}
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700, color: 'var(--white)' }}>{user?.user_metadata?.full_name || 'My Garage'}</div>
+                    <div style={{ fontFamily: 'var(--font-cond)', fontSize: '11px', color: 'var(--dim)' }}>@{user?.user_metadata?.handle || 'driver'}</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </>
+          );
+        })()}
+
+        {/* STATS BAR */}
+        {vehicles.length > 0 && (
+          <div style={{ display: 'flex', background: 'var(--carbon-1)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            {[
+              { label: 'Vehicles', value: fleetStats.vehicleCount },
+              { label: 'Spots', value: fleetStats.totalSpots },
+              { label: 'Followers', value: '—' },
+              { label: 'Badges', value: '—' },
+            ].map(stat => (
+              <div key={stat.label} style={{ flex: 1, textAlign: 'center', padding: '14px 0' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700, color: 'var(--white)' }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
-        {/* YOUR PLATES */}
+        {/* THE FLEET - HORIZONTAL CAROUSEL */}
         {vehicles.length > 0 ? (
           <>
-            <div className="slbl stg">Your {vehicles.length === 1 ? 'Plate' : 'Plates'} · {vehicles.length}</div>
-            {vehicles.map(vehicle => (
-              <VehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                stickers={vehicleStickerCounts[vehicle.id] || []}
-                stockImages={stockImages}
-                onNavigate={handleNavigate}
-                onPhotosUpdated={() => loadVehicles()}
-              />
-            ))}
-
-            {/* Claim Next Plate CTA */}
-            <div
-              className="card-v3 card-v3-lift mx-4 mb-4 flex items-center gap-3 px-4 py-4 cursor-pointer active:opacity-80"
-              onClick={() => setShowClaimSearch(true)}
-            >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-accent-dim">
-                <Plus className="w-[18px] h-[18px] text-orange" strokeWidth={1.2} />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-primary">Claim your next plate</p>
-                <p className="text-[8px] mt-0.5 text-quaternary">Add another vehicle to your garage</p>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--muted)', padding: '16px 20px 8px' }}>THE FLEET &middot; {vehicles.length}</div>
+            <div style={{ overflowX: 'auto', display: 'flex', gap: '10px', padding: '16px', scrollbarWidth: 'none' }}>
+              {vehicles.map(vehicle => {
+                const photo = vehicle.photos?.[0]?.url || vehicle.photo_url || vehicle.stock_image_url || stockImages[vehicle.id];
+                const spotCount = vehicle.spot_count ?? vehicle.spots_count ?? 0;
+                return (
+                  <div key={vehicle.id} onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })} style={{ width: '170px', flexShrink: 0, borderRadius: '10px', overflow: 'hidden', position: 'relative', cursor: 'pointer', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ height: '115px', overflow: 'hidden' }}>
+                      {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--carbon-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Car style={{ width: '24px', height: '24px', color: 'var(--muted)' }} /></div>}
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 100%)' }} />
+                    </div>
+                    <div style={{ padding: '8px 10px' }}>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--accent)' }}>{vehicle.make}</div>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, color: 'var(--white)' }}>{vehicle.model || vehicle.make}</div>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)', marginTop: '2px' }}>{spotCount} Spots &middot; {(vehicle as any).follower_count ?? 0} Followers</div>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* + Claim Vehicle tile */}
+              <div onClick={() => setShowClaimSearch(true)} style={{ width: '100px', flexShrink: 0, borderRadius: '10px', height: '175px', background: 'var(--carbon-2)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                <Plus style={{ width: '22px', height: '22px', color: 'var(--accent)' }} />
+                <span style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--dim)' }}>Claim Vehicle</span>
               </div>
             </div>
           </>

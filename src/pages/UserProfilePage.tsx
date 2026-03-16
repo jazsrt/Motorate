@@ -17,10 +17,10 @@ import { ReportModal } from '../components/ReportModal';
 import { PrivacyGate } from '../components/PrivacyGate';
 import { ProfileInsights } from '../components/ProfileInsights';
 import { trackProfileView, checkIfFollowing } from '../lib/profileViews';
-import { ReputationScore } from '../components/ReputationScore';
 import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
+import { getTierFromScore } from '../lib/tierConfig';
 
 interface UserProfilePageProps {
   userId: string;
@@ -308,7 +308,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-heading font-bold">Profile</h1>
+          <h1 className="text-xl font-heading font-bold" style={{ fontFamily: 'var(--font-display)' }}>Profile</h1>
         </div>
 
         <div className="bg-surface border border-white/[0.06] rounded-xl p-6 stg">
@@ -342,7 +342,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl font-heading font-bold">@{profile?.handle || 'Anonymous'}</h2>
+                  <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>@{profile?.handle || 'Anonymous'}</h2>
                   {profile?.role === 'owner' && <VerifiedBadge size="md" />}
                   {isPrivate && (
                     <div className="flex items-center gap-1 px-2 py-1 bg-surfacehighlight rounded-lg">
@@ -363,14 +363,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                   <p className="text-sm text-secondary mt-2 max-w-md">{profile.bio}</p>
                 )}
 
-                {/* Reputation Score */}
-                <div className="flex items-center gap-4 mt-2 flex-wrap">
-                  <ReputationScore
-                    userId={userId}
-                    size="md"
-                    showLabel={true}
-                  />
-                </div>
+                {/* Profile Views */}
 
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-1.5 text-xs text-secondary">
@@ -382,7 +375,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
                 {canViewContent && badges.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2">Trophy Case</p>
+                    <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-cond)' }}>Trophy Case</p>
                     <div className="flex items-center gap-1.5">
                       {badges
                         .sort((a, b) => new Date(a.earned_at).getTime() - new Date(b.earned_at).getTime())
@@ -495,28 +488,28 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
           <div className="grid grid-cols-4 gap-3 mt-6 stg">
             <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-accent-primary">
+              <div className="text-[22px] font-bold text-accent-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                 {spotsCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Spots</div>
+              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Spots Given</div>
             </div>
             <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-positive">
-                {reviewsCount.toLocaleString()}
-              </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Reviews</div>
-            </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-accent-2">
+              <div className="text-[22px] font-bold text-accent-2" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                 {followerCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Followers</div>
+              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Followers</div>
             </div>
             <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-heading font-bold text-orange">
-                {followingCount.toLocaleString()}
+              <div className="text-[22px] font-bold text-positive" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+                {vehicles.length.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1">Following</div>
+              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Vehicles</div>
+            </div>
+            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
+              <div className="text-[22px] font-bold text-orange" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+                {badges.length.toLocaleString()}
+              </div>
+              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Badges</div>
             </div>
           </div>
         </div>
@@ -532,41 +525,35 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
         {isOwnProfile && <ProfileInsights profileId={userId} />}
 
-        {canViewContent && (
-          <div className="card-v3 p-4 mb-4 stg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: 'var(--t4)' }}>Reputation</span>
-              <span className="font-mono text-[24px] font-bold" style={{ color: '#F97316' }}>
-                {profile?.reputation_score?.toLocaleString() || '0'}
-              </span>
+        {canViewContent && (() => {
+          const tier = getTierFromScore(profile?.reputation_score || 0);
+          return (
+            <div className="card-v3 p-4 mb-4 stg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] uppercase tracking-wider" style={{ fontFamily: 'var(--font-cond)', color: 'var(--t4)' }}>Progress</span>
+                <span className="text-[14px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: '#F97316' }}>
+                  {tier.name}
+                </span>
+              </div>
+              <div className="w-full bg-surfacehighlight rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${tier.progress}%`,
+                    background: 'linear-gradient(90deg, #F97316, #fb923c)'
+                  }}
+                />
+              </div>
+              {tier.nextTier && (
+                <div className="flex items-center justify-end mt-1.5">
+                  <span className="text-[12px] font-semibold" style={{ fontFamily: 'var(--font-mono)', color: '#F97316' }}>
+                    Progress to {tier.nextTier}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="w-full bg-surfacehighlight rounded-full h-2.5 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(((profile?.reputation_score || 0) / 10000) * 100, 100)}%`,
-                  background: 'linear-gradient(90deg, #F97316, #fb923c)'
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between mt-1.5">
-              <span className="text-[10px] text-quaternary">0</span>
-              <span className="text-[14px] font-semibold" style={{ color: '#F97316' }}>
-                {(() => {
-                  const s = profile?.reputation_score || 0;
-                  if (s >= 10000) return 'Legend';
-                  if (s >= 7500) return 'Road General';
-                  if (s >= 5000) return 'Highway King';
-                  if (s >= 3000) return 'Road Captain';
-                  if (s >= 1500) return 'Street Racer';
-                  if (s >= 500) return 'Cruiser';
-                  return 'Rookie';
-                })()}
-              </span>
-              <span className="text-[10px] text-quaternary">10,000</span>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {canViewContent && (
           <div className="stg">
@@ -578,6 +565,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                     ? 'border-accent-primary text-primary'
                     : 'border-transparent text-secondary hover:text-primary'
                 }`}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Garage
               </button>
@@ -588,6 +576,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                     ? 'border-accent-primary text-primary'
                     : 'border-transparent text-secondary hover:text-primary'
                 }`}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Activity
               </button>
@@ -598,6 +587,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                     ? 'border-accent-primary text-primary'
                     : 'border-transparent text-secondary hover:text-primary'
                 }`}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Badges
               </button>
@@ -608,6 +598,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                     ? 'border-accent-primary text-primary'
                     : 'border-transparent text-secondary hover:text-primary'
                 }`}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Spots
               </button>
@@ -682,7 +673,6 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                   <div className="flex gap-2 mb-4">
                     {[
                       { label: 'Spots', value: weeklyMetrics.spotsThisWeek, delta: weeklyMetrics.spotsThisWeek - weeklyMetrics.spotsLastWeek },
-                      { label: 'Rep +', value: weeklyMetrics.repEarnedThisWeek },
                       { label: 'Likes', value: weeklyMetrics.likesReceivedThisWeek },
                     ].map(m => (
                       <div key={m.label} className="flex-1 rounded-xl px-3 py-2.5 text-center"

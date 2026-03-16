@@ -6,6 +6,7 @@ interface BadgeCoinProps {
   tier: BadgeTier;
   name: string;
   icon?: React.ReactNode;
+  icon_path?: string;
   locked?: boolean;
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
@@ -30,7 +31,7 @@ const ICON_SIZE_MAP = {
   lg: 24,
 };
 
-export function BadgeCoin({ tier, name, icon, locked = false, size = 'md', onClick }: BadgeCoinProps) {
+export function BadgeCoin({ tier, name, icon, icon_path, locked = false, size = 'md', onClick }: BadgeCoinProps) {
   const config = TIER_CONFIG[tier];
 
   return (
@@ -45,6 +46,15 @@ export function BadgeCoin({ tier, name, icon, locked = false, size = 'md', onCli
       >
         {locked ? (
           <Lock size={ICON_SIZE_MAP[size]} className="text-quaternary opacity-30" strokeWidth={1.2} />
+        ) : icon_path ? (
+          <img
+            src={icon_path}
+            alt={name}
+            width={ICON_SIZE_MAP[size] + 8}
+            height={ICON_SIZE_MAP[size] + 8}
+            style={{ objectFit: 'contain', borderRadius: '50%', display: 'block' }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
         ) : (
           icon || (
             <svg

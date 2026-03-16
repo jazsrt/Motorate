@@ -268,18 +268,29 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               <div className="flex-1 space-y-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-4xl lg:text-5xl font-heading font-black uppercase tracking-tight bg-gradient-to-r from-white via-accent-primary to-[#fb923c] bg-clip-text text-transparent">
+                    <h1 className="text-4xl lg:text-5xl uppercase tracking-tight bg-gradient-to-r from-white via-accent-primary to-[#fb923c] bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
                       {vehicleDisplay}
                     </h1>
                     {!isActive && (
-                      <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs font-bold border border-orange-500/50">
+                      <span style={{
+                        fontFamily: 'var(--font-cond)',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        letterSpacing: '0.16em',
+                        textTransform: 'uppercase',
+                        color: 'var(--dim)',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '3px',
+                        padding: '3px 8px',
+                      }}>
                         UNCLAIMED
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 px-4 py-2 bg-surface/80 backdrop-blur-sm rounded-xl border border-surfacehighlight w-fit">
-                    <span className="text-xs font-bold text-secondary uppercase">Plate:</span>
+                    <span className="text-xs font-bold text-secondary uppercase" style={{ fontFamily: 'var(--font-cond)' }}>Plate:</span>
                     <span className="font-mono font-bold text-lg tracking-wider">{plateState}-{plateNum}</span>
                   </div>
 
@@ -293,16 +304,16 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-accent-primary">{posts.length}</div>
-                    <div className="text-xs font-bold text-secondary uppercase">Reviews</div>
+                    <div className="text-2xl font-bold text-accent-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{posts.length}</div>
+                    <div className="text-xs font-bold text-secondary" style={{ fontFamily: 'var(--font-cond)', textTransform: 'uppercase' }}>Spots</div>
                   </div>
                   <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-[#F97316]">{averageRatings.vehicle.toFixed(1)}</div>
-                    <div className="text-xs font-bold text-secondary uppercase">Vehicle</div>
+                    <div className="text-2xl font-bold text-[#F97316]" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>0</div>
+                    <div className="text-xs font-bold text-secondary" style={{ fontFamily: 'var(--font-cond)', textTransform: 'uppercase' }}>Followers</div>
                   </div>
                   <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-accent-primary">{averageRatings.driver.toFixed(1)}</div>
-                    <div className="text-xs font-bold text-secondary uppercase">Driver</div>
+                    <div className="text-2xl font-bold text-accent-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>0</div>
+                    <div className="text-xs font-bold text-secondary" style={{ fontFamily: 'var(--font-cond)', textTransform: 'uppercase' }}>Views</div>
                   </div>
                 </div>
               </div>
@@ -324,7 +335,17 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
                     </p>
                     <button
                       onClick={() => setShowClaimModal(true)}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-xl px-6 py-3 font-bold uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-green-500/30"
+                      className="hover:opacity-90 transition-all active:scale-95 shadow-lg px-6 py-3"
+                      style={{
+                        background: 'var(--accent)',
+                        borderRadius: '8px',
+                        fontFamily: 'var(--font-cond)',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'var(--black)',
+                      }}
                     >
                       Claim This Vehicle
                     </button>
@@ -340,13 +361,13 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
           <div className="mb-8 bg-gradient-to-br from-surface via-surfacehighlight to-surface border border-surfacehighlight rounded-2xl p-6 shadow-2xl">
             <div className="flex items-center gap-2 mb-6">
               <Star className="w-6 h-6 text-[#F97316]" />
-              <h2 className="text-2xl font-heading font-bold uppercase tracking-tight">Community Ratings</h2>
+              <h2 className="text-2xl font-heading font-bold uppercase tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Community Ratings</h2>
               <span className="text-sm text-secondary">({posts.length} review{posts.length !== 1 ? 's' : ''})</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-[#F97316]/20">
-                <div className="text-xs font-bold text-secondary uppercase mb-2">The Vehicle</div>
+                <div className="text-xs font-bold text-secondary uppercase mb-2" style={{ fontFamily: 'var(--font-cond)' }}>The Vehicle</div>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-3xl font-black text-[#F97316]">{averageRatings.vehicle.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>
@@ -355,7 +376,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               </div>
 
               <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-orange/20">
-                <div className="text-xs font-bold text-secondary uppercase mb-2">The Driver</div>
+                <div className="text-xs font-bold text-secondary uppercase mb-2" style={{ fontFamily: 'var(--font-cond)' }}>The Driver</div>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-3xl font-black text-accent-primary">{averageRatings.driver.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>
@@ -364,7 +385,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
               </div>
 
               <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-orange-500/20">
-                <div className="text-xs font-bold text-secondary uppercase mb-2">The Driving</div>
+                <div className="text-xs font-bold text-secondary uppercase mb-2" style={{ fontFamily: 'var(--font-cond)' }}>The Driving</div>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-3xl font-black text-accent-2">{averageRatings.driving.toFixed(1)}</div>
                   <div className="text-sm text-secondary">/ 5.0</div>

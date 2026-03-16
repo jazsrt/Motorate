@@ -313,24 +313,24 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
     <Layout currentPage="rankings" onNavigate={onNavigate}>
       <div className="pb-20">
 
-        {/* Tab Bar */}
-        <div className="px-4 pt-4 mb-4">
-          <div className="flex gap-1 p-1 rounded-[10px] bg-[var(--s1)] border border-[var(--border2)]">
-            {TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex-1 py-2 rounded-[8px] transition-all font-heading text-sm font-bold"
-                style={{
-                  color: activeTab === tab.id ? '#f2f4f7' : '#909aaa',
-                  background: activeTab === tab.id ? 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1))' : 'transparent',
-                  border: activeTab === tab.id ? '1px solid rgba(249,115,22,0.25)' : '1px solid transparent',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {/* Page Header */}
+        <div style={{ padding: '56px 20px 16px', background: 'linear-gradient(to bottom, var(--carbon-0), transparent)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>
+            RANK<em style={{ fontStyle: 'normal', color: 'var(--accent)' }}>INGS</em>
           </div>
+          <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            Chicago · Illinois
+          </div>
+        </div>
+
+        {/* Tab Bar */}
+        <div style={{ display: 'flex', margin: '0 20px 20px', background: 'rgba(10,13,20,0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden' }}>
+          {TABS.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              style={{ flex: 1, padding: '8px 0', fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', borderRight: '1px solid rgba(255,255,255,0.05)', color: activeTab === tab.id ? 'var(--accent)' : 'var(--dim)', background: activeTab === tab.id ? 'rgba(249,115,22,0.12)' : 'transparent' }}>
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Badges Tab */}
@@ -341,7 +341,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
             <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <h3 className="font-heading text-xl font-bold text-primary">Badge Collection</h3>
+                  <h3 className="font-heading text-xl font-bold text-primary" style={{ fontFamily: 'var(--font-display)' }}>Badge Collection</h3>
                   <p className="text-xs text-tertiary mt-0.5">
                     {earnedBadgesList.length} of {allBadges.length} earned
                   </p>
@@ -601,7 +601,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
             {allBadges.length === 0 && (
               <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-2xl p-12 text-center">
                 <Award className="w-12 h-12 text-tertiary mx-auto mb-4" />
-                <h3 className="font-heading text-xl font-bold text-primary mb-2">No Badges Found</h3>
+                <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>No Badges Found</h3>
                 <p className="text-sm text-secondary">Badge data may still be loading. Try refreshing.</p>
               </div>
             )}
@@ -651,16 +651,19 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[rgba(249,115,22,0.2)] border border-[rgba(249,115,22,0.4)] flex-shrink-0">
-                        <span className="font-heading text-base font-bold text-accent-2">#{userRank}</span>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, color: 'var(--accent)' }}>#{userRank}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-bold tracking-[1px] uppercase text-accent-2 mb-0.5">Your Rank</div>
-                        <div className="font-heading text-sm font-bold text-primary">@{userData.handle}</div>
+                        <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '2px' }}>Your Rank</div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: 'var(--white)' }}>@{userData.handle}</div>
                       </div>
                       <div className="text-right">
                         <div
-                          className="font-heading text-2xl font-bold"
                           style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '24px',
+                            fontWeight: 700,
+                            fontVariantNumeric: 'tabular-nums',
                             background: 'linear-gradient(135deg, #F97316, #fb923c)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
@@ -668,7 +671,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                         >
                           {userData.reputation_score.toLocaleString()}
                         </div>
-                        <div className="text-[10px] text-secondary">Reputation</div>
+                        <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>SCORE</div>
                       </div>
                     </div>
                   </div>
@@ -725,11 +728,11 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                           {rank === 3 && <Medal className="w-3 h-3 text-white" />}
                         </div>
                       </div>
-                      <div className="text-[11px] font-bold text-primary truncate mb-1">@{leader.handle}</div>
-                      <div className="text-xs font-bold" style={{ color: podiumColors.icon }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>@{leader.handle}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, color: podiumColors.icon, fontVariantNumeric: 'tabular-nums' }}>
                         {leader.reputation_score.toLocaleString()}
                       </div>
-                      <div className="text-[9px] text-tertiary">REP</div>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dim)' }}>SCORE</div>
                     </button>
                   );
                 })}
@@ -738,15 +741,15 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
             {/* Leaderboard List */}
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 mb-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                 <Trophy className="w-3.5 h-3.5 text-orange" />
-                <span className="text-xs font-bold text-primary">Top Riders</span>
+                <span style={{ fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>Top Riders</span>
               </div>
 
               {leaderboard.length === 0 && (
                 <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-8 text-center">
                   <Trophy className="w-12 h-12 text-tertiary mx-auto mb-4" />
-                  <h3 className="font-heading text-xl font-bold text-primary mb-2">No Rankings Yet</h3>
+                  <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>No Rankings Yet</h3>
                   <p className="text-sm text-secondary">Be the first to earn reputation and climb the ranks</p>
                 </div>
               )}
@@ -756,63 +759,54 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 const isCurrentUser = leader.id === user?.id;
 
                 return (
-                  <button
+                  <div
                     key={leader.id}
                     onClick={() => onNavigate('user-profile', leader.id)}
-                    className="w-full bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-3 flex items-center gap-3 transition-all hover:border-[#2a4a6a] hover:translate-x-1"
-                    style={isCurrentUser ? {
-                      background: 'linear-gradient(135deg, rgba(249,115,22,0.08), rgba(251,146,60,0.05))',
-                      border: '1px solid rgba(249,115,22,0.25)',
-                    } : {}}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px',
+                      borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer',
+                      ...(isCurrentUser ? { background: 'rgba(249,115,22,0.06)' } : {}),
+                    }}
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-4 border border-[var(--border2)] flex-shrink-0">
-                      <span className="text-xs font-bold text-secondary">#{rank}</span>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700, color: 'var(--muted)', minWidth: '32px' }}>
+                      {rank}
                     </div>
 
                     {leader.avatar_url ? (
                       <img
                         src={leader.avatar_url}
                         alt={leader.handle}
-                        className="w-9 h-9 rounded-full object-cover border border-[var(--border2)] flex-shrink-0"
+                        style={{ width: '52px', height: '36px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-surface-4 border border-[var(--border2)] flex-shrink-0">
+                      <div style={{ width: '52px', height: '36px', borderRadius: '4px', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <Users className="w-4 h-4 text-tertiary" />
                       </div>
                     )}
 
-                    <div className="flex-1 min-w-0 text-left">
-                      <div className="font-heading text-sm font-bold text-primary truncate">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         @{leader.handle}
                         {isCurrentUser && (
-                          <span className="ml-1.5 text-[10px] font-normal text-accent-2">(You)</span>
+                          <span style={{ marginLeft: '6px', fontSize: '10px', fontWeight: 400, color: 'var(--accent)' }}>(You)</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-tertiary">
-                        <span className="flex items-center gap-0.5">
-                          <Users className="w-3 h-3" />
-                          {leader.follower_count}
-                        </span>
-                        <span className="flex items-center gap-0.5">
-                          <Award className="w-3 h-3" />
-                          {leader.badge_count}
-                        </span>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                        <span>{leader.follower_count} followers</span>
+                        <span>{leader.badge_count} badges</span>
                         {leader.driver_rating_count > 0 && (
-                          <span className="flex items-center gap-0.5">
-                            <StarIcon className="w-3 h-3 fill-current text-orange" />
-                            {leader.avg_driver_rating.toFixed(1)}
-                          </span>
+                          <span>{leader.avg_driver_rating.toFixed(1)} rating</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-heading text-lg font-bold text-primary">
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 600, color: 'var(--white)', fontVariantNumeric: 'tabular-nums' }}>
                         {leader.reputation_score.toLocaleString()}
                       </div>
-                      <div className="text-[9px] text-tertiary">REP</div>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>SCORE</div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -825,7 +819,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
           <div className="px-4">
             <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-8 text-center">
               <Zap className="w-12 h-12 text-tertiary mx-auto mb-4" />
-              <h3 className="font-heading text-xl font-bold text-primary mb-2">Quests Coming Soon</h3>
+              <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>Quests Coming Soon</h3>
               <p className="text-sm text-secondary">Complete challenges to earn exclusive rewards</p>
             </div>
           </div>

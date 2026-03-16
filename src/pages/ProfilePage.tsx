@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { LogOut, Car, Upload, Award, Shield, MessageCircle, CheckCircle, Plus, MapPin, Zap, Layers, Target, Eye, Users, Star as StarIcon, Crosshair, Sticker, Share2 } from 'lucide-react';
+import { LogOut, Car, Upload, Award, Shield, MessageCircle, CheckCircle, Plus, MapPin, Zap, Target, Users, Crosshair, Share2 } from 'lucide-react';
 import { shareToSocial } from '../components/ShareCardGenerator';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PhotoLightbox } from '../components/PhotoLightbox';
@@ -13,6 +13,8 @@ import { getUserBadges, type UserBadge } from '../lib/badges';
 import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { CreditCard as Edit } from 'lucide-react';
 import { BadgeCoin } from '../components/BadgeCoin';
+import { getTierFromScore } from '../lib/tierConfig';
+import { getBadgeImagePath } from '../lib/badgeUtils';
 
 interface ProfilePageProps {
   onNavigate: OnNavigate;
@@ -36,7 +38,7 @@ function CountUp({ target, duration = 800 }: { target: number; duration?: number
     return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
   }, [target, duration]);
 
-  return <span className="font-mono font-semibold text-primary">{current.toLocaleString()}</span>;
+  return <span className="font-mono font-semibold text-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{current.toLocaleString()}</span>;
 }
 
 function ChangeArrow({ value }: { value: number }) {
@@ -52,36 +54,6 @@ function ChangeArrow({ value }: { value: number }) {
       </span>
     </span>
   );
-}
-
-const TIERS = [
-  { name: 'Rookie',     min: 0 },
-  { name: 'Prospect',   min: 100 },
-  { name: 'Contender',  min: 300 },
-  { name: 'Competitor', min: 600 },
-  { name: 'Veteran',    min: 1000 },
-  { name: 'Expert',     min: 2000 },
-  { name: 'Master',     min: 3500 },
-  { name: 'Legend',      min: 5500 },
-  { name: 'Icon',       min: 8000 },
-];
-
-function getTierInfo(score: number) {
-  let current = TIERS[0];
-  let nextTier = TIERS[1];
-  for (let i = TIERS.length - 1; i >= 0; i--) {
-    if (score >= TIERS[i].min) {
-      current = TIERS[i];
-      nextTier = TIERS[i + 1] || null;
-      break;
-    }
-  }
-  const isMax = !nextTier;
-  const nextMin = nextTier?.min ?? current.min;
-  const range = nextMin - current.min;
-  const progress = isMax ? 100 : range > 0 ? Math.min(((score - current.min) / range) * 100, 100) : 100;
-  const remaining = isMax ? 0 : nextMin - score;
-  return { name: current.name, nextName: nextTier?.name || current.name, progress, nextMin, remaining, isMax };
 }
 
 function getTierColor(score: number) {
@@ -589,25 +561,10 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
   // Derived data
   const repScore = profile?.reputation_score || 0;
-  const tier = getTierInfo(repScore);
+  const tierInfo = getTierFromScore(repScore);
   const tierColor = getTierColor(repScore);
   const spotCount = userPosts.filter(p => p.post_type === 'spot').length;
-  const reviewCount = userPosts.filter(p => p.post_type === 'review').length;
 
-  // Rep breakdown estimates
-  const repBreakdown = useMemo(() => {
-    const total = repScore || 1;
-    const spotEst = spotCount * 10;
-    const reviewEst = reviewCount * 15;
-    const badgeEst = userBadges.length * 25;
-    const communityEst = Math.max(0, total - spotEst - reviewEst - badgeEst);
-    return [
-      { label: 'Spotting', value: spotEst, color: '#F97316', hint: 'Points from spotting vehicles' },
-      { label: 'Reviews', value: reviewEst, color: '#fb923c', hint: 'Points from detailed reviews' },
-      { label: 'Community', value: communityEst, color: '#5aaa7a', hint: 'Likes, comments, follows' },
-      { label: 'Badges', value: badgeEst, color: '#c8a45a', hint: 'Badge achievement awards' },
-    ];
-  }, [repScore, spotCount, reviewCount, userBadges.length]);
 
   if (loading) {
     return (
@@ -672,7 +629,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               {/* Handle + Location */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <h2 style={{ fontSize: 18, fontWeight: 500, color: 'var(--t1)' }}>
+                  <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-display)' }}>
                     {profile?.handle || 'Anonymous'}
                   </h2>
                   {profile?.role === 'owner' && (
@@ -680,14 +637,14 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                   )}
                 </div>
                 {profile?.bio && (
-                  <p style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.5, fontWeight: 300 }} className="mb-1 line-clamp-2">
+                  <p style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.5, fontFamily: 'var(--font-body)' }} className="mb-1 line-clamp-2">
                     {profile.bio}
                   </p>
                 )}
                 {profile?.location && (
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" strokeWidth={1.2} style={{ color: 'var(--t4)' }} />
-                    <span style={{ fontSize: 11, fontWeight: 300, color: 'var(--t3)' }}>{profile.location}</span>
+                    <span style={{ fontSize: 12, color: 'var(--dim)', fontFamily: 'var(--font-body)' }}>{profile.location}</span>
                   </div>
                 )}
               </div>
@@ -738,27 +695,17 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               </div>
             </div>
 
-            {/* Rep Score + City Rank */}
-            <div className="flex items-center gap-4 mt-4 px-1">
-              <div>
-                <span
-                  className="mono"
-                  style={{ fontSize: 28, fontWeight: 700, color: 'var(--orange)', textShadow: '0 0 20px rgba(249,115,22,.2)', lineHeight: 1 }}
-                >
-                  {repScore.toLocaleString()}
+            {/* City Rank */}
+            {cityRank && (
+              <div className="flex items-center gap-2 mt-3 px-1">
+                <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t2)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+                  #{cityRank}
                 </span>
-                <span className="mono" style={{ fontSize: 10, fontWeight: 500, color: 'var(--t3)', marginLeft: 4 }}>RP</span>
-              </div>
-              <div style={{ width: 1, height: 28, background: 'var(--border-2)' }} />
-              <div>
-                <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t2)' }}>
-                  #{cityRank || '—'}
-                </span>
-                <span style={{ fontSize: 10, fontWeight: 300, color: 'var(--t3)', marginLeft: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 300, color: 'var(--t3)' }}>
                   in {profile?.location || 'your city'}
                 </span>
               </div>
-            </div>
+            )}
 
             {/* Pinned Badges Trophy Shelf */}
             {pinnedBadges.length > 0 && (
@@ -776,62 +723,42 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               </div>
             )}
 
-            {/* Stats Strip */}
-            <div className="grid grid-cols-5 gap-0 mt-4 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-              <button
-                onClick={async () => { await loadSpotsGiven(); setShowSpotsGivenModal(true); }}
-                className="text-center hover:opacity-70 transition-opacity btn-press"
-              >
-                <div className="stat-pop-1"><CountUp target={spotCount} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: 'var(--t4)', marginTop: 2 }}>Spotted</div>
-              </button>
-              <button
-                onClick={() => setShowBadgesModal(true)}
-                className="text-center hover:opacity-70 transition-opacity btn-press"
-              >
-                <div className="stat-pop-2"><CountUp target={reviewCount} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: 'var(--t4)', marginTop: 2 }}>Reviews</div>
-              </button>
-              <button
-                className="text-center hover:opacity-70 transition-opacity btn-press"
-                onClick={() => {}}
-              >
-                <div className="stat-pop-3"><CountUp target={vehicles.length} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: 'var(--t4)', marginTop: 2 }}>Garage</div>
-              </button>
-              <button
-                onClick={async () => { await loadFollowersList(); setShowFollowersModal(true); }}
-                className="text-center hover:opacity-70 transition-opacity btn-press"
-              >
-                <div className="stat-pop-4"><CountUp target={followerCount} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: 'var(--t4)', marginTop: 2 }}>Followers</div>
-              </button>
-              <button
-                onClick={async () => { await loadFollowingList(); setShowFollowingModal(true); }}
-                className="text-center hover:opacity-70 transition-opacity btn-press"
-              >
-                <div className="stat-pop-5"><CountUp target={followingCount} /></div>
-                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: 'var(--t4)', marginTop: 2 }}>Following</div>
-              </button>
-            </div>
           </div>
         </div>
+
+        {/* ═══ Stats Bar ═══ */}
+        {(() => {
+          const stats = [
+            { label: 'Spots Given', value: spotCount, onClick: async () => { await loadSpotsGiven(); setShowSpotsGivenModal(true); } },
+            { label: 'Followers', value: followerCount, onClick: async () => { await loadFollowersList(); setShowFollowersModal(true); } },
+            { label: 'Vehicles', value: vehicles.length, onClick: () => {} },
+            { label: 'Badges', value: userBadges.length, onClick: () => setShowBadgesModal(true) },
+          ];
+          return (
+            <div style={{ display: 'flex', margin: '0 20px 16px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', overflow: 'hidden' }}>
+              {stats.map((stat, i) => (
+                <button key={stat.label} onClick={stat.onClick} style={{ flex: 1, padding: '12px 0', textAlign: 'center', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.06)' : undefined, background: 'transparent', cursor: 'pointer' }} className="btn-press">
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700, color: 'var(--white)' }}>{stat.value}</div>
+                  <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>{stat.label}</div>
+                </button>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* ═══ Weekly Pulse ═══ */}
         <div className="px-4 mt-4 v3-stagger v3-stagger-2">
           <div className="flex items-center gap-1.5 mb-3">
             <Zap className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>
+            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>
               Weekly Pulse
             </span>
           </div>
           <div className="card-v3 overflow-hidden">
             {[
-              { icon: <Eye className="w-4 h-4" strokeWidth={1.2} />, label: 'Profile Views', value: profileViewCount, change: 0 },
-              { icon: <Users className="w-4 h-4" strokeWidth={1.2} />, label: 'New Followers', value: followerCount, change: 0 },
               { icon: <Crosshair className="w-4 h-4" strokeWidth={1.2} />, label: 'Spots Given', value: weeklySpots, change: weeklySpots },
-              { icon: <Car className="w-4 h-4" strokeWidth={1.2} />, label: 'Spots Received', value: 0, change: 0 },
-              { icon: <Award className="w-4 h-4" strokeWidth={1.2} />, label: 'Stickers Earned', value: weeklyStickers, change: weeklyStickers },
+              { icon: <Users className="w-4 h-4" strokeWidth={1.2} />, label: 'New Followers', value: followerCount, change: 0 },
+              { icon: <Car className="w-4 h-4" strokeWidth={1.2} />, label: 'Vehicles Active', value: vehicles.length, change: 0 },
             ].map((row, i) => (
               <div
                 key={row.label}
@@ -840,53 +767,26 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               >
                 <span style={{ color: 'var(--t4)' }}>{row.icon}</span>
                 <span className="flex-1" style={{ fontSize: 13, fontWeight: 300, color: 'var(--t2)' }}>{row.label}</span>
-                <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginRight: 8 }}>{row.value}</span>
+                <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginRight: 8, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{row.value}</span>
                 <ChangeArrow value={row.change} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* ═══ Rep Breakdown ═══ */}
-        <div className="px-4 mt-4 v3-stagger v3-stagger-3">
-          <div className="flex items-center gap-1.5 mb-3">
-            <Layers className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>
-              Rep Breakdown
-            </span>
+        {/* ═══ Tier Progress ═══ */}
+        <div style={{ margin: '0 20px 16px', padding: '12px 14px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontFamily: 'var(--font-cond)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent)' }}>{tierInfo.name}</span>
+            <span style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)' }}>Progress to {tierInfo.nextTier || 'Max'}</span>
           </div>
-          <div className="card-v3 p-4 space-y-4">
-            {repBreakdown.map((item) => {
-              const pct = repScore > 0 ? Math.max(2, (item.value / repScore) * 100) : 0;
-              return (
-                <div key={item.label}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--t2)' }}>{item.label}</span>
-                    <span className="mono" style={{ fontSize: 11, fontWeight: 600, color: item.color }}>
-                      {item.value.toLocaleString()} RP
-                    </span>
-                  </div>
-                  <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,.06)' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        borderRadius: 3,
-                        width: `${pct}%`,
-                        background: `linear-gradient(90deg, ${item.color}, ${item.color}CC)`,
-                        boxShadow: `0 0 8px ${item.color}40`,
-                        transition: 'width 0.8s cubic-bezier(.22,.68,0,1.2)',
-                      }}
-                    />
-                  </div>
-                  <p style={{ fontSize: 10, fontWeight: 300, color: 'var(--t4)', marginTop: 3 }}>{item.hint}</p>
-                </div>
-              );
-            })}
+          <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px' }}>
+            <div style={{ height: '100%', background: 'var(--accent)', borderRadius: '2px', width: `${tierInfo.progress}%` }} />
           </div>
         </div>
 
         {/* ═══ Next Milestone ═══ */}
-        {!tier.isMax && (
+        {tierInfo.nextTier && (
           <div className="px-4 mt-4 v3-stagger v3-stagger-4">
             <div className="rare-card-v3 card-v3 p-4" style={{ position: 'relative', overflow: 'hidden' }}>
               <div className="flex items-center gap-3 mb-3">
@@ -897,11 +797,11 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                   <Target className="w-5 h-5" strokeWidth={1.5} style={{ color: '#1a1400' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 8, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2px', color: 'var(--t4)' }}>
+                  <div style={{ fontSize: 8, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2px', color: 'var(--t4)', fontFamily: 'var(--font-display)' }}>
                     Next Milestone
                   </div>
-                  <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginTop: 2 }}>
-                    {tier.remaining.toLocaleString()} RP to {tier.nextName}
+                  <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginTop: 2, fontFamily: 'var(--font-display)' }}>
+                    Progress to {tierInfo.nextTier}
                   </div>
                 </div>
               </div>
@@ -910,7 +810,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                   style={{
                     height: '100%',
                     borderRadius: 3,
-                    width: `${tier.progress}%`,
+                    width: `${tierInfo.progress}%`,
                     background: 'linear-gradient(90deg, var(--orange), #fb923c)',
                     boxShadow: '0 0 8px rgba(249,115,22,0.4)',
                     transition: 'width 1s cubic-bezier(.22,.68,0,1.2)',
@@ -918,8 +818,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 />
               </div>
               <div className="flex justify-between mt-1.5">
-                <span className="mono" style={{ fontSize: 10, color: 'var(--t3)' }}>{repScore.toLocaleString()}</span>
-                <span className="mono" style={{ fontSize: 10, color: 'var(--t3)' }}>{tier.nextMin.toLocaleString()}</span>
+                <span className="mono" style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{tierInfo.name}</span>
+                <span className="mono" style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{tierInfo.nextTier}</span>
               </div>
             </div>
           </div>
@@ -930,7 +830,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Award className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>
+              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>
                 Badges
               </span>
               <span style={{ fontSize: 10, color: 'var(--t4)', marginLeft: 4 }}>{userBadges.length} Earned</span>
@@ -951,6 +851,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     <BadgeCoin
                       tier={(userBadge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
                       name={userBadge.badge.name}
+                      icon_path={getBadgeImagePath(userBadge.badge)}
                       size="md"
                     />
                     <div style={{ fontSize: 9, color: 'var(--t4)', textAlign: 'center', lineHeight: 1.3 }} className="line-clamp-2">
@@ -979,7 +880,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Car className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>
+              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>
                 My Garage
               </span>
             </div>
@@ -1022,7 +923,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         {/* ═══ Activity ═══ */}
         <div className="px-4 mt-4 v3-stagger v3-stagger-7">
           <div className="flex items-center justify-between mb-3">
-            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>Activity</span>
+            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>Activity</span>
           </div>
           {loadingPosts ? (
             <div className="flex justify-center py-8">
@@ -1085,7 +986,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         {allPhotos.length > 0 && (
           <div className="px-4 mt-4">
             <div className="flex items-center justify-between mb-3">
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>Photos</span>
+              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>Photos</span>
               <span style={{ fontSize: 11, color: 'var(--t4)' }}>{allPhotos.length} total</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -1137,7 +1038,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         {userStickers.length > 0 && (
           <div className="px-4 mt-4">
             <div className="flex items-center justify-between mb-3">
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)' }}>Bumper Stickers</span>
+              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>Bumper Stickers</span>
               <span style={{ fontSize: 11, color: 'var(--t4)' }}>{userStickers.length} received</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -1291,6 +1192,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                         <BadgeCoin
                           tier={(userBadge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
                           name={userBadge.badge.name}
+                          icon_path={getBadgeImagePath(userBadge.badge)}
                           size="lg"
                         />
                         <div className="text-[10px] text-center text-tertiary line-clamp-2">
@@ -1347,7 +1249,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     </div>
                     <div className="flex-1 text-left">
                       <div className="text-sm font-semibold text-primary">@{follower.handle}</div>
-                      <div className="text-xs text-tertiary">{follower.reputation_score || 0} pts</div>
+                      <div className="text-xs text-tertiary">Follower</div>
                     </div>
                   </button>
                 ))
@@ -1388,7 +1290,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     </div>
                     <div className="flex-1 text-left">
                       <div className="text-sm font-semibold text-primary">@{followed.handle}</div>
-                      <div className="text-xs text-tertiary">{followed.reputation_score || 0} pts</div>
+                      <div className="text-xs text-tertiary">Following</div>
                     </div>
                   </button>
                 ))

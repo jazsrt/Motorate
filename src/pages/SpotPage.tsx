@@ -346,27 +346,25 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           <div className="grid grid-cols-2 gap-3 mb-8 stg">
             <button
               onClick={() => setShowCameraModal(true)}
-              className="flex flex-col items-center gap-3 p-5 bg-surface border border-surfacehighlight rounded-2xl hover:border-accent-primary/60 hover:bg-surfacehighlight transition-all active:scale-95 group"
+              className="flex flex-col items-center gap-3 p-5 hover:border-accent-primary/60 transition-all active:scale-95 group"
+              style={{ background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px' }}
             >
-              <div className="w-12 h-12 bg-accent-primary/10 rounded-xl flex items-center justify-center group-hover:bg-accent-primary/20 transition-colors">
-                <Camera className="w-6 h-6 text-accent-primary" />
-              </div>
+              <Camera style={{ width: '28px', height: '28px', color: 'var(--accent)' }} />
               <div className="text-center">
-                <p className="font-heading font-bold uppercase tracking-tight text-sm text-primary">Scan a Plate</p>
-                <p className="text-xs text-secondary mt-0.5">Camera + OCR</p>
+                <p style={{ fontFamily: 'var(--font-cond)', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Scan a Plate</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--dim)' }} className="mt-0.5">Camera + OCR</p>
               </div>
             </button>
 
             <button
               onClick={handleUploadPhoto}
-              className="flex flex-col items-center gap-3 p-5 bg-surface border border-surfacehighlight rounded-2xl hover:border-accent-primary/60 hover:bg-surfacehighlight transition-all active:scale-95 group"
+              className="flex flex-col items-center gap-3 p-5 hover:border-accent-primary/60 transition-all active:scale-95 group"
+              style={{ background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px' }}
             >
-              <div className="w-12 h-12 bg-orange/10 rounded-xl flex items-center justify-center group-hover:bg-orange/20 transition-colors">
-                <Upload className="w-6 h-6 text-accent-primary" />
-              </div>
+              <Upload style={{ width: '28px', height: '28px', color: 'var(--accent)' }} />
               <div className="text-center">
-                <p className="font-heading font-bold uppercase tracking-tight text-sm text-primary">Upload Photo</p>
-                <p className="text-xs text-secondary mt-0.5">Auto-fill with OCR</p>
+                <p style={{ fontFamily: 'var(--font-cond)', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Upload Photo</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--dim)' }} className="mt-0.5">Auto-fill with OCR</p>
               </div>
             </button>
           </div>
@@ -379,7 +377,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
               style={{ background: 'linear-gradient(180deg, #1c1814 0%, rgba(28,24,20,0.5) 100%)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[8px] font-semibold uppercase" style={{ color: '#909aaa', letterSpacing: '2.5px' }}>This Week's Run</span>
+                <span style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>This Week's Run</span>
                 <span className="text-[8px]" style={{ color: '#6a7486' }}>
                   Personal best: <span style={{ color: '#F97316' }}>{weeklyMetrics.bestWeekSpots > 0 ? weeklyMetrics.bestWeekSpots : '—'}</span>
                 </span>
@@ -436,14 +434,14 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           <div className="mt-12 stg">
             <div className="relative flex items-center gap-4 mb-6">
               <div className="flex-1 h-px" style={{ background: 'var(--border-2)' }} />
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#f2f4f7' }}>
+              <span style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>
                 Recent Spots
               </span>
               <div className="flex-1 h-px" style={{ background: 'var(--border-2)' }} />
             </div>
 
             {recentSpots.length > 0 ? (
-              <div className="space-y-2">
+              <div>
                 {recentSpots.map((spot) => {
                   const v = spot.vehicle;
                   if (!v || !v.make || !v.model) return null;
@@ -451,36 +449,25 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                     <button
                       key={spot.id}
                       onClick={() => onNavigate('vehicle-detail', v.id)}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl transition-colors"
+                      className="w-full transition-colors"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border-2)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--surface-2)';
-                        e.currentTarget.style.borderColor = 'var(--accent)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'var(--surface)';
-                        e.currentTarget.style.borderColor = 'var(--border-2)';
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 20px',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
                       }}
                     >
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border-2)' }}
-                      >
-                        <Car className="w-5 h-5" strokeWidth={1.5} style={{ color: 'var(--accent)' }} />
-                      </div>
                       <div className="flex-1 text-left min-w-0">
-                        <div className="font-semibold text-[13px]" style={{ color: 'var(--text-primary)' }}>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700 }}>
                           {v.year} {v.make} {v.model}
                         </div>
-                        <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                        <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', color: 'var(--dim)' }} className="mt-0.5">
                           {v.plate_state} • {v.plate_number}
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="text-lg font-bold" style={{ color: 'var(--accent)' }}>1</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 600, color: 'var(--accent)' }}>1</div>
                         <div className="text-[9px] uppercase" style={{ color: 'var(--text-quaternary)', letterSpacing: '0.5px' }}>
                           spot
                         </div>

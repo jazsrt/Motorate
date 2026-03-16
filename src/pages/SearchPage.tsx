@@ -250,17 +250,17 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
     <Layout currentPage="scan" onNavigate={onNavigate}>
       <div className="max-w-4xl mx-auto space-y-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Spot & Search</h1>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '22px' }}>Spot & Search</h1>
           <p className="text-secondary text-sm">Find vehicles by plate or users by handle</p>
         </div>
 
-        <div className="bg-orange/10 border border-orange/50 rounded-lg p-3 flex items-start gap-2">
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }} className="rounded-lg p-3 flex items-start gap-2">
           <Info className="w-4 h-4 text-accent-primary flex-shrink-0 mt-0.5" />
           <div className="text-xs">
-            <p className="text-accent-2 mb-0.5">
-              <span className="font-bold">User Search:</span> Start with <span className="font-mono bg-orange/20 px-1 rounded">@</span> (e.g., @username)
+            <p className="text-secondary mb-0.5">
+              <span className="font-bold">User Search:</span> Start with <span className="font-mono px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>@</span> (e.g., @username)
             </p>
-            <p className="text-accent-2">
+            <p className="text-secondary">
               <span className="font-bold">Plate Search:</span> Enter plate number without @
             </p>
           </div>
@@ -307,8 +307,18 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isUserSearch ? 'Search users (e.g., @johndoe)' : 'Enter plate number (e.g., ABC1234)'}
-              className={`w-full bg-surfacehighlight border border-surfacehighlight rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary placeholder-secondary transition-all duration-300 ${
+              placeholder="Search plate, make, model, city…"
+              style={{
+                background: 'var(--carbon-2)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                fontFamily: 'var(--font-body)',
+                fontSize: '14px',
+                color: 'var(--white)',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              className={`w-full rounded-xl pl-10 pr-4 py-3 focus:outline-none placeholder:text-[var(--light)] transition-all duration-300 ${
                 !isUserSearch ? 'font-mono tracking-widest uppercase' : ''
               }`}
             />
@@ -401,10 +411,10 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 <Award className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <h3 className="font-bold text-green-300">
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700 }} className="text-green-300">
                   {claimableVehicle.year} {claimableVehicle.make} {claimableVehicle.model}
                 </h3>
-                <p className="text-xs text-secondary">
+                <p style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', color: 'var(--dim)' }}>
                   {claimableVehicle.color} • {claimableVehicle.state || plateState} • {claimableVehicle.owner_id ? 'Claimed' : 'Unclaimed'}
                 </p>
               </div>
@@ -426,7 +436,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                 className="bg-gradient-to-r from-accent-primary to-accent-hover hover:shadow-lg rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
               >
                 <Star className="w-4 h-4" />
-                Spot This Plate
+                <span style={{ fontFamily: 'var(--font-cond)' }}>Spot This Plate</span>
               </button>
               {claimableVehicle.owner_id ? (
                 <>
@@ -494,7 +504,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
                         </div>
                       )}
                       <div className="flex-1">
-                        <div className="font-bold">@{user.handle || 'anonymous'}</div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '15px' }}>@{user.handle || 'anonymous'}</div>
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
                         <FollowButton targetUserId={user.id} />

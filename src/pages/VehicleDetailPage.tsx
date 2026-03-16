@@ -25,7 +25,6 @@ import { StickerSlab } from '../components/StickerSlab';
 import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
 import { BADGE_TIER_THRESHOLDS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
-import { ArcGauge } from '../components/gauges/ArcGauge';
 
 interface VehicleDetailPageProps {
   vehicleId: string;
@@ -123,6 +122,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [modsByCategory, setModsByCategory] = useState<Record<string, any[]>>({});
   const [vehicleImages, setVehicleImages] = useState<VehicleImage[]>([]);
   const [spotCount, setSpotCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [viewCount, setViewCount] = useState(0);
   const [showSpotReviewModal, setShowSpotReviewModal] = useState(false);
 
   useModerationSubscription(() => !guestMode && loadVehicleData());
@@ -598,17 +599,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         </Helmet>
       )}
       <div className="pb-24 page-enter">
-        <div className="px-4 pt-4 mb-4 stg">
-          <button
-            onClick={goBack}
-            className="flex items-center gap-1.5 mb-2 transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
-            <span className="label-micro">{isOwner ? 'My Vehicle' : 'Plate Profile'}</span>
-          </button>
-        </div>
-
         {error && (
           <div className="mx-4 mb-4 rounded-[12px] p-3 flex items-start gap-3" style={{ background: 'rgba(138,74,74,0.12)', border: '1px solid rgba(138,74,74,0.3)' }}>
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--negative)' }} strokeWidth={1.5} />
@@ -628,7 +618,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   className="w-full h-full object-cover"
                   onError={() => setHeroImgError(true)}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                {/* Top gradient */}
+                <div className="absolute top-0 left-0 right-0" style={{ height: '45%', background: 'linear-gradient(to bottom, rgba(3,5,8,0.82) 0%, transparent 100%)' }} />
+                {/* Bottom gradient */}
+                <div className="absolute bottom-0 left-0 right-0" style={{ height: '65%', background: 'linear-gradient(to top, rgba(3,5,8,0.97) 0%, rgba(3,5,8,0.6) 40%, transparent 100%)' }} />
               </div>
             ) : (
               <div className="w-full h-52 bg-gradient-to-br from-[var(--bg)] to-[var(--s2)] flex items-center justify-center">
@@ -637,22 +630,26 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             );
           })()}
 
-          <div className="absolute top-3 left-3">
+          {/* Back button */}
+          <button
+            onClick={goBack}
+            className="absolute top-3 left-3 flex items-center justify-center transition-all active:scale-90"
+            style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <ArrowLeft className="w-4 h-4 text-white" strokeWidth={1.5} />
+          </button>
+
+          {/* Verified / Claimed badge */}
+          <div className="absolute top-3 left-14">
             <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider backdrop-blur-sm"
               style={
                 vehicle.verification_tier === 'vin_verified'
-                  ? { background: 'rgba(249,115,22,.85)', color: '#fff' }
+                  ? { fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'var(--green)', background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: '3px', padding: '3px 8px' }
                   : vehicle.is_claimed
-                    ? { background: 'rgba(22,163,74,.85)', color: '#fff' }
-                    : { background: 'rgba(217,119,6,.85)', color: '#fff' }
+                    ? { fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'var(--green)', background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: '3px', padding: '3px 8px' }
+                    : { fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'var(--muted)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '3px 8px' }
               }
             >
-              {vehicle.verification_tier === 'vin_verified' && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 12 15 16 10"/>
-                </svg>
-              )}
               {vehicle.verification_tier === 'vin_verified'
                 ? 'VERIFIED'
                 : vehicle.is_claimed
@@ -673,20 +670,25 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicle.id}`,
               }, user?.id);
             }}
-            className="absolute top-3 right-3 w-9 h-9 rounded-lg flex items-center justify-center backdrop-blur-sm transition-all active:scale-90"
-            style={{ background: 'rgba(0,0,0,.55)', border: '1px solid rgba(255,255,255,.1)' }}
+            className="absolute top-3 right-3 flex items-center justify-center transition-all active:scale-90"
+            style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
             title="Share this vehicle"
           >
             <Share2 className="w-4 h-4 text-white" strokeWidth={1.5} />
           </button>
 
-          {vehicle.plate_number && (
-            <div className="absolute bottom-3 left-3 bg-black/75 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/10">
-              <span className="text-white text-sm font-mono font-bold">
-                {vehicle.state ? `${vehicle.state} — ` : ''}{vehicle.plate_number}
-              </span>
+          {/* Vehicle identity at bottom of hero */}
+          <div className="absolute bottom-3 left-3 right-3">
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: 'var(--accent)', marginBottom: 2 }}>
+              {vehicle.make || 'Unknown'}
             </div>
-          )}
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700, color: 'var(--white)', lineHeight: 1, marginBottom: 4 }}>
+              {vehicle.model || 'Vehicle'}
+            </div>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '11px', fontWeight: 600, color: 'var(--light)' }}>
+              {[vehicle.year, vehicle.vin_trim || vehicle.color].filter(Boolean).join(' · ')}
+            </div>
+          </div>
 
           {isOwner && (
             <button
@@ -699,22 +701,46 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           )}
         </div>
 
-        {/* Stats Bar */}
-        <div className="px-4 mt-4 mb-2 stg">
-          <div className="flex justify-around px-4 py-4">
-            <ArcGauge value={spotCount} max={200} label="Spots" />
-            <ArcGauge
-              value={reviews.length > 0 ? reviews.reduce((a, r) => {
-                const vals = [r.rating_vehicle, r.rating_driver, r.rating_driving, r.looks_rating, r.sound_rating, r.condition_rating].filter(v => v != null && v > 0) as number[];
-                return a + (vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : 0);
-              }, 0) / reviews.length : 0}
-              max={5}
-              label="Rating"
-              format="decimal"
-              color="gold"
-            />
-            <ArcGauge value={reviews.length} max={100} label="Reviews" color="steel" />
+        {/* Stats Strip */}
+        <div style={{ display: 'flex', background: 'var(--carbon-1)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* Followers */}
+          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>{followerCount}</div>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Followers</div>
           </div>
+          {/* Spots — primary accent */}
+          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--accent)' }}>{spotCount}</div>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Spots</div>
+          </div>
+          {/* Views */}
+          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>{viewCount}</div>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Views</div>
+          </div>
+          {/* Rank */}
+          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>{'\u2014'}</div>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Rank</div>
+          </div>
+        </div>
+
+        {/* Primary Actions */}
+        <div style={{ display: 'flex', gap: 8, padding: '14px 16px' }}>
+          <button
+            onClick={() => {
+              if (guestMode) { setGuestJoinAction('log a spot'); setShowGuestJoinModal(true); }
+              else onNavigate('scan', { vehicleId });
+            }}
+            style={{ flex: 1.5, background: 'var(--accent)', borderRadius: '8px', padding: '12px', fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--black)', border: 'none', cursor: 'pointer' }}
+          >
+            Log Spot
+          </button>
+          <button
+            style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--light)', cursor: 'pointer' }}
+          >
+            Follow
+          </button>
         </div>
 
         {/* Rating Breakdown + Sentiment */}
@@ -755,38 +781,23 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         )}
 
         <div className="px-4 stg">
-          {/* Identity Card */}
-          <div className="card-v3 card-v3-lift p-5 mb-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <h1 className="font-heading text-[22px] font-semibold text-white mb-1">
-                  {vehicle.year || vehicle.make || vehicle.model
-                    ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''}`.trim()
-                    : 'Unknown Vehicle'}
-                </h1>
-                <div className="flex items-center gap-2 flex-wrap text-sm text-gray-400">
-                  {vehicle.color && (
-                    <span className="capitalize">{vehicle.color}</span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => setShowShareModal(true)}
-                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all active:scale-95 bg-[var(--border2)] hover:bg-[var(--border2)]"
-              >
-                <Share2 className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
-              </button>
+          {/* Plate number + Unclaimed notice */}
+          {vehicle.plate_number && (
+            <div className="mb-3">
+              <span className="text-white text-sm font-mono font-bold">
+                {vehicle.state ? `${vehicle.state} \u2014 ` : ''}{vehicle.plate_number}
+              </span>
             </div>
+          )}
 
-            {isUnclaimed && (
-              <div className="bg-amber-900/15 border border-amber-700/40 rounded-xl p-3 mb-4 flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-accent-primary flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-accent-primary">
-                  This plate hasn't been claimed yet — View community spots below or claim this plate if it's yours.
-                </p>
-              </div>
-            )}
-          </div>
+          {isUnclaimed && (
+            <div className="bg-amber-900/15 border border-amber-700/40 rounded-xl p-3 mb-4 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-accent-primary flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-accent-primary">
+                This plate hasn't been claimed yet — View community spots below or claim this plate if it's yours.
+              </p>
+            </div>
+          )}
 
           {/* Owner Card — claimed vehicles only */}
           {vehicle.is_claimed && vehicle.owner && (
@@ -849,7 +860,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                       </svg>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 400, color: '#f2f4f7' }}>Factory Specifications</div>
+                      <div style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 400, color: '#f2f4f7' }}>Factory Specifications</div>
                       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 500, color: '#F97316', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>VIN Decoded</div>
                     </div>
                     <div style={{
@@ -880,26 +891,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer active:opacity-80" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06), var(--s1))', border: '1px solid rgba(249,115,22,0.12)' }}>
                 <Heart className="w-3 h-3 flex-shrink-0" strokeWidth={1.2} style={{ color: '#F97316' }} />
                 <span className="text-[9px]" style={{ color: 'var(--t3)' }}>Give Bumper Sticker</span>
-                <span className="text-[9px] font-medium ml-auto" style={{ color: '#F97316' }}>+5</span>
               </div>
             </div>
           )}
 
-          {/* Primary CTA — Spot This Plate (non-owners only) */}
-          {!isOwner && user && !guestMode && (
-            <div className="mb-4 space-y-2">
-              <button
-                onClick={() => onNavigate('scan', { vehicleId })}
-                className="w-full py-4 rounded-xl font-heading font-bold uppercase tracking-tight text-white flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg relative"
-                style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
-              >
-                SPOT THIS PLATE
-                <span className="absolute right-4 bg-black/20 px-2 py-0.5 rounded-full text-xs font-bold">
-                  {spotCount === 0 ? '+15 pts' : '+15 pts'}
-                </span>
-              </button>
-            </div>
-          )}
+          {/* Primary CTA moved to actions strip above */}
 
           {/* Claim Section — unclaimed vehicles */}
           {isUnclaimed && (
@@ -1293,7 +1289,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
         {!isOwner && user && (
           <>
-            {/* Earn Hints */}
+            {/* Action Hints */}
             <div className="flex gap-2 px-4 mb-3">
               <div
                 className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer active:opacity-80"
@@ -1302,7 +1298,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               >
                 <Star className="w-3 h-3 flex-shrink-0" strokeWidth={1.2} style={{ color: 'var(--orange)' }} />
                 <span className="text-[9px] text-secondary">Spot a vehicle</span>
-                <span className="text-[9px] font-medium ml-auto" style={{ color: 'var(--orange)' }}>+15</span>
               </div>
               <div
                 className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer active:opacity-80"
@@ -1310,7 +1305,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               >
                 <Heart className="w-3 h-3 flex-shrink-0" strokeWidth={1.2} style={{ color: 'var(--orange)' }} />
                 <span className="text-[9px] text-secondary">Give Bumper Sticker</span>
-                <span className="text-[9px] font-medium ml-auto" style={{ color: 'var(--orange)' }}>+5</span>
               </div>
             </div>
             <div className="mb-6">
