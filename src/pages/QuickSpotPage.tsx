@@ -11,6 +11,74 @@ interface QuickSpotPageProps {
   wizardData: SpotWizardData;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  background: '#070a0f',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderRadius: 8,
+  padding: '11px 14px',
+  fontFamily: "'Barlow', sans-serif",
+  fontSize: 14,
+  color: '#eef4f8',
+  outline: 'none',
+};
+
+const labelStyle: React.CSSProperties = {
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontSize: 9,
+  fontWeight: 700,
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase' as const,
+  color: '#7a8e9e',
+  marginBottom: 6,
+  display: 'block',
+};
+
+const primaryBtnStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '13px',
+  background: '#F97316',
+  border: 'none',
+  borderRadius: 8,
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontSize: 12,
+  fontWeight: 700,
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase' as const,
+  color: '#000',
+  cursor: 'pointer',
+};
+
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  appearance: 'none' as const,
+  paddingRight: 36,
+};
+
+const selectWrapperStyle: React.CSSProperties = {
+  position: 'relative',
+};
+
+const chevronStyle: React.CSSProperties = {
+  position: 'absolute',
+  right: 12,
+  top: '50%',
+  transform: 'translateY(-50%)',
+  width: 14,
+  height: 14,
+  color: '#5a6e7e',
+  pointerEvents: 'none' as const,
+};
+
+const loadingTextStyle: React.CSSProperties = {
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase' as const,
+  color: '#3a4e60',
+};
+
 export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
   const { showToast } = useToast();
   const [makes, setMakes] = useState<string[]>([]);
@@ -81,134 +149,181 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <div className="mb-6">
+      <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }}>
+        <div style={{ marginBottom: 24 }}>
           <button
             onClick={() => onNavigate('scan')}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: 'uppercase' as const,
+              color: '#5a6e7e',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: 20,
+            }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft style={{ width: 16, height: 16 }} />
+            <span>Back</span>
           </button>
 
-          <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center gap-1.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {[1, 2, 3].map(i => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all ${i === 1 ? 'w-8' : 'w-4 bg-surfacehighlight'}`}
-                  style={i === 1 ? { background: 'linear-gradient(90deg, #f97316, #f59e0b)' } : {}}
+                  style={{
+                    height: 6,
+                    borderRadius: 9999,
+                    transition: 'all 0.3s',
+                    ...(i === 1
+                      ? { width: 32, background: 'linear-gradient(90deg, #f97316, #f59e0b)' }
+                      : { width: 16, background: 'rgba(255,255,255,0.08)' }),
+                  }}
                 />
               ))}
             </div>
-            <span className="text-xs text-secondary">Step 1 of 3 — 33%</span>
+            <span style={{ fontSize: 12, color: '#5a6e7e' }}>Step 1 of 3 — 33%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 style={{
+            fontFamily: "'Rajdhani', sans-serif",
+            fontSize: 22,
+            fontWeight: 700,
+            color: '#eef4f8',
+            textTransform: 'uppercase' as const,
+            letterSpacing: '-0.01em',
+            marginBottom: 4,
+          }}>
             YOU'RE THE FIRST TO SPOT!
           </h1>
-          <p className="text-secondary text-sm mb-2">
+          <p style={{ color: '#5a6e7e', fontSize: 14, marginBottom: 8 }}>
             Fill in what you know to earn bonus points
           </p>
-          <p className="text-xs text-secondary mb-3">
+          <p style={{ fontSize: 12, color: '#5a6e7e', marginBottom: 12 }}>
             +5 RP for make/model · +3 RP for color · +2 RP for year
           </p>
           {wizardData.plateState && wizardData.plateNumber && (
-            <div className="bg-surface border border-surfacehighlight rounded-xl px-4 py-3 mb-4 inline-flex items-center gap-2">
-              <span className="font-mono tracking-widest text-accent-primary font-bold text-lg uppercase">
+            <div style={{
+              background: '#0a0d14',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 12,
+              padding: '12px 16px',
+              marginBottom: 16,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: '0.15em',
+                color: '#F97316',
+                fontWeight: 700,
+                fontSize: 18,
+                textTransform: 'uppercase' as const,
+              }}>
                 {wizardData.plateState} {wizardData.plateNumber}
               </span>
             </div>
           )}
         </div>
 
-        <div className="space-y-4 mb-8">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 32 }}>
+          {/* Make */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-              Make <span className="text-red-400">*</span>
+            <label style={labelStyle}>
+              Make <span style={{ color: '#f87171' }}>*</span>
             </label>
-            <div className="relative">
+            <div style={selectWrapperStyle}>
               <select
                 value={make}
                 onChange={(e) => { setMake(e.target.value); setModel(''); setTrim(''); }}
                 disabled={loadingMakes}
-                className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3.5 text-primary appearance-none focus:outline-none focus:border-accent-primary transition-colors pr-10 disabled:opacity-50"
+                style={{ ...selectStyle, opacity: loadingMakes ? 0.5 : 1 }}
               >
                 <option value="">{loadingMakes ? 'Loading...' : 'Select make...'}</option>
                 {makes.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none" />
+              <ChevronDown style={chevronStyle} />
             </div>
           </div>
 
+          {/* Model */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-              Model <span className="text-red-400">*</span>
+            <label style={labelStyle}>
+              Model <span style={{ color: '#f87171' }}>*</span>
             </label>
-            <div className="relative">
+            <div style={selectWrapperStyle}>
               <select
                 value={model}
                 onChange={(e) => { setModel(e.target.value); setTrim(''); }}
                 disabled={!make || loadingModels}
-                className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3.5 text-primary appearance-none focus:outline-none focus:border-accent-primary transition-colors pr-10 disabled:opacity-50"
+                style={{ ...selectStyle, opacity: (!make || loadingModels) ? 0.5 : 1 }}
               >
                 <option value="">{loadingModels ? 'Loading...' : !make ? 'Select make first' : 'Select model...'}</option>
                 {models.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none" />
+              <ChevronDown style={chevronStyle} />
             </div>
           </div>
 
+          {/* Color */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-              Color <span className="text-red-400">*</span>
+            <label style={labelStyle}>
+              Color <span style={{ color: '#f87171' }}>*</span>
             </label>
-            <div className="relative">
+            <div style={selectWrapperStyle}>
               <select
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3.5 text-primary appearance-none focus:outline-none focus:border-accent-primary transition-colors pr-10"
+                style={selectStyle}
               >
                 <option value="">Select color...</option>
                 {colors.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none" />
+              <ChevronDown style={chevronStyle} />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Year + Trim row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-                Year <span className="text-neutral-600">(optional)</span>
+              <label style={labelStyle}>
+                Year <span style={{ color: '#4a5568' }}>(optional)</span>
               </label>
-              <div className="relative">
+              <div style={selectWrapperStyle}>
                 <select
                   value={year}
                   onChange={(e) => { setYear(e.target.value); setTrim(''); }}
-                  className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3.5 text-primary appearance-none focus:outline-none focus:border-accent-primary transition-colors pr-10"
+                  style={selectStyle}
                 >
                   <option value="">Any year</option>
                   {years.map(y => <option key={y} value={String(y)}>{y}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none" />
+                <ChevronDown style={chevronStyle} />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-                Trim <span className="text-neutral-600">(optional)</span>
+              <label style={labelStyle}>
+                Trim <span style={{ color: '#4a5568' }}>(optional)</span>
               </label>
-              <div className="relative">
+              <div style={selectWrapperStyle}>
                 <select
                   value={trim}
                   onChange={(e) => setTrim(e.target.value)}
                   disabled={!year || !model || loadingTrims}
-                  className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3.5 text-primary appearance-none focus:outline-none focus:border-accent-primary transition-colors pr-10 disabled:opacity-50"
+                  style={{ ...selectStyle, opacity: (!year || !model || loadingTrims) ? 0.5 : 1 }}
                 >
                   <option value="">{loadingTrims ? 'Loading...' : !year ? 'Select year first' : trims.length === 0 ? 'No trims found' : 'Select trim...'}</option>
                   {trims.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none" />
+                <ChevronDown style={chevronStyle} />
               </div>
             </div>
           </div>
@@ -217,11 +332,19 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
         <button
           onClick={handleNext}
           disabled={!canProceed}
-          className="w-full flex items-center justify-center gap-3 py-4 disabled:bg-surfacehighlight disabled:text-secondary rounded-xl font-heading font-bold uppercase tracking-tight text-lg transition-all active:scale-95 disabled:cursor-not-allowed text-white"
-          style={canProceed ? { background: 'linear-gradient(135deg, #f97316, #f59e0b)' } : {}}
+          style={{
+            ...primaryBtnStyle,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            ...(canProceed
+              ? { background: 'linear-gradient(135deg, #f97316, #f59e0b)', color: '#000' }
+              : { background: 'rgba(255,255,255,0.08)', color: '#5a6e7e', cursor: 'not-allowed' }),
+          }}
         >
           Next: Confirm
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight style={{ width: 18, height: 18 }} />
         </button>
       </div>
     </Layout>

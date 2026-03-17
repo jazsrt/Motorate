@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, Mail, Lightbulb } from 'lucide-react';
-import { Logo } from '../components/Logo';
+import { AlertCircle } from 'lucide-react';
 
 const carImages = [
   'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=1920',
@@ -16,6 +15,11 @@ const carImages = [
   'https://images.pexels.com/photos/1149831/pexels-photo-1149831.jpeg?auto=compress&cs=tinysrgb&w=1920',
   'https://images.pexels.com/photos/1680135/pexels-photo-1680135.jpeg?auto=compress&cs=tinysrgb&w=1920',
 ];
+
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
+const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6, display: 'block' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' };
+const ghostBtnStyle: React.CSSProperties = { width: '100%', padding: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', cursor: 'pointer' };
 
 interface RegisterPageProps {
   onSuccess: () => void;
@@ -31,6 +35,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [bgIdx] = useState(() => Math.floor(Math.random() * carImages.length));
 
   const handleAccountCreation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,200 +138,85 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden">
-        <div className="absolute inset-0 z-0 flex flex-col">
-          <div className="flex flex-col animate-scroll-down">
-            {[...carImages, ...carImages].map((image, index) => (
-              <div
-                key={`${image}-${index}`}
-                className="w-full h-screen flex-shrink-0"
-                style={{
-                  backgroundImage: `url(${image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              />
-            ))}
+      <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#030508' }}>
+        <img src={carImages[bgIdx]} alt="" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.22) saturate(0.6)', zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(to bottom, rgba(3,5,8,0.6) 0%, rgba(3,5,8,0.85) 60%, rgba(3,5,8,0.97) 100%)', zIndex: 1 }} />
+        <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 380, margin: '0 auto', padding: '24px 16px' }}>
+          <div style={{ background: 'rgba(10,13,20,0.92)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px 28px', backdropFilter: 'blur(20px)', textAlign: 'center' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#20c060', marginBottom: 6 }}>Check your email</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>We sent a confirmation link to <span style={{ color: '#eef4f8' }}>{email}</span></div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#3a4e60', marginTop: 12 }}>Click the link to verify your account</div>
+            <button onClick={onSwitchToLogin} style={{ ...ghostBtnStyle, marginTop: 20 }}>Back to Sign In</button>
           </div>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        </div>
-        <div className="w-full max-w-md text-center relative z-10">
-          <Logo size="large" />
-          <div className="mt-8 card-crisp bg-surface border-accent-primary">
-            <div className="mb-4 flex justify-center">
-              <Mail className="w-10 h-10 text-accent-primary" strokeWidth={1.5} />
-            </div>
-            <h2 className="font-heading font-bold text-2xl mb-4">Check Your Email</h2>
-            <p className="text-secondary mb-6">
-              We've sent a confirmation link to <span className="text-accent-primary font-heading font-bold">{email}</span>
-            </p>
-            <p className="text-sm text-secondary mb-6">
-              Click the link in the email to verify your account and complete your profile setup.
-            </p>
-            <div className="bg-surfacehighlight rounded-xl p-4 text-sm text-secondary">
-              <p className="mb-2 flex items-start gap-1.5"><Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={1.5} /> Tip: Check your spam folder if you don't see the email</p>
-            </div>
-          </div>
-          <button
-            onClick={onSwitchToLogin}
-            className="mt-6 text-accent-primary hover:text-accent-hover text-sm font-heading font-semibold transition-colors active:scale-95"
-          >
-            Back to Sign In
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden">
-      <div className="absolute inset-0 z-0 flex flex-col">
-        <div className="flex flex-col animate-scroll-down">
-          {[...carImages, ...carImages].map((image, index) => (
-            <div
-              key={`${image}-${index}`}
-              className="w-full h-screen flex-shrink-0"
-              style={{
-                backgroundImage: `url(${image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            />
-          ))}
-        </div>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      </div>
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#030508' }}>
+      <img src={carImages[bgIdx]} alt="" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.22) saturate(0.6)', zIndex: 0 }} />
+      <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(to bottom, rgba(3,5,8,0.6) 0%, rgba(3,5,8,0.85) 60%, rgba(3,5,8,0.97) 100%)', zIndex: 1 }} />
+      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 380, margin: '0 auto', padding: '24px 16px' }}>
+        <div style={{ background: 'rgba(10,13,20,0.92)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px 28px', backdropFilter: 'blur(20px)' }}>
+          {/* Wordmark */}
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#eef4f8' }}>MOTO<span style={{ color: '#F97316' }}>R</span>ATE</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#5a6e7e', marginTop: 4 }}>Reputation for Real Cars</div>
+          </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <Logo size="large" />
-          <p className="text-secondary mt-4 text-sm">Create your account</p>
-        </div>
-
-        <form onSubmit={handleAccountCreation} className="space-y-6 bg-surface/95 backdrop-blur-md rounded-xl p-8 border border-surfacehighlight shadow-2xl">
+          {/* Error */}
           {error && (
-            <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
-              <p className="text-sm text-red-300">{error}</p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', marginBottom: 16 }}>
+              <AlertCircle style={{ width: 14, height: 14, color: '#ef4444', flexShrink: 0, marginTop: 1 }} />
+              <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#fca5a5' }}>{error}</span>
             </div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              inputMode="email"
-              autoComplete="email"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck="false"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-enhanced w-full placeholder:text-neutral-500"
-              placeholder="you@example.com"
-              required
-            />
+          <form onSubmit={handleAccountCreation}>
+            {/* Username */}
+            <div style={{ marginBottom: 14 }}>
+              <label htmlFor="handle" style={labelStyle}>Username</label>
+              <input type="text" id="handle" autoComplete="username" autoCapitalize="off" value={handle} onChange={e => setHandle(e.target.value.toLowerCase())} placeholder="yourhandle" required minLength={3} pattern="[a-zA-Z0-9_]+" style={inputStyle} onFocus={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'} onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'} />
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#3a4e60', marginTop: 4 }}>Letters, numbers, and underscores only</div>
+            </div>
+
+            {/* Email */}
+            <div style={{ marginBottom: 14 }}>
+              <label htmlFor="email" style={labelStyle}>Email</label>
+              <input type="email" id="email" inputMode="email" autoComplete="email" autoCapitalize="off" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required style={inputStyle} onFocus={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'} onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'} />
+            </div>
+
+            {/* Password */}
+            <div style={{ marginBottom: 18 }}>
+              <label htmlFor="password" style={labelStyle}>Password</label>
+              <input type="password" id="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} style={inputStyle} onFocus={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'} onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'} />
+            </div>
+
+            {/* Create Account */}
+            <button type="submit" disabled={loading} style={{ ...primaryBtnStyle, opacity: loading ? 0.45 : 1 }}>
+              {loading ? 'Creating account\u2026' : 'Create Account'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#3a4e60' }}>or</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
           </div>
 
-          <div>
-            <label htmlFor="handle" className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
-              Username
-            </label>
-            <input
-              type="text"
-              id="handle"
-              autoComplete="username"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck="false"
-              value={handle}
-              onChange={(e) => setHandle(e.target.value.toLowerCase())}
-              className="input-enhanced w-full placeholder:text-neutral-500"
-              placeholder="yourhandle"
-              required
-              minLength={3}
-              pattern="[a-zA-Z0-9_]+"
-            />
-            <p className="text-xs text-secondary mt-1">Letters, numbers, and underscores only</p>
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-heading font-semibold mb-2" style={{ color: 'var(--t2)' }}>
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              autoComplete="new-password"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck="false"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-enhanced w-full placeholder:text-neutral-500"
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: 'var(--orange)', boxShadow: '0 4px 16px rgba(249,115,22,0.25)', border: '1px solid rgba(249,115,22,0.4)' }}
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
+          {/* Google OAuth */}
+          <button type="button" onClick={() => handleOAuthSignIn('google')} disabled={loading} style={{ ...ghostBtnStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
           </button>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-surfacehighlight"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-wider">
-              <span className="bg-surface px-3 text-secondary font-heading font-bold">Or sign up with</span>
-            </div>
+          {/* Switch to login */}
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>Already have an account? </span>
+            <button onClick={onSwitchToLogin} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 600, color: '#F97316', textDecoration: 'underline', textUnderlineOffset: 3 }}>Sign in</button>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleOAuthSignIn('google')}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-100 text-black font-heading font-semibold rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Google
-            </button>
-            <button
-              type="button"
-              onClick={() => handleOAuthSignIn('facebook')}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-heading font-semibold rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              Facebook
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={onSwitchToLogin}
-            className="text-accent-primary hover:text-accent-hover text-sm font-heading font-semibold transition-colors active:scale-95"
-          >
-            Already have an account? Sign in
-          </button>
         </div>
       </div>
     </div>

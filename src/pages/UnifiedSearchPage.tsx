@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, User, Car, MapPin, Target, AlertCircle } from 'lucide-react';
+import { Search, User, Car, MapPin, Target, AlertCircle, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { FollowButton } from '../components/FollowButton';
 import { UserAvatar } from '../components/UserAvatar';
@@ -355,62 +355,167 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
 
   const totalResults = users.length + vehicles.length;
 
+  const isPlateMode = searchMode === 'plate';
+
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Search</h1>
-          <p className="text-secondary">Find members, vehicles, and more</p>
-        </div>
+      <div style={{ minHeight: '100vh', background: '#060910' }}>
+        {/* Sticky Header */}
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          background: 'rgba(6,9,14,0.97)',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          padding: '52px 16px 10px',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+        }}>
+          <h1 style={{
+            fontFamily: "'Rajdhani', sans-serif",
+            fontSize: 22,
+            fontWeight: 700,
+            color: '#eef4f8',
+            margin: 0,
+            marginBottom: 12,
+          }}>
+            Search
+          </h1>
 
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-4">
-          <div className="flex gap-2 mb-4">
+          {/* Mode Toggle Pills + Camera Button Row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <button
               onClick={() => setSearchMode('general')}
-              className={`flex-1 py-2 px-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all ${
-                searchMode === 'general'
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surfacehighlight text-secondary hover:bg-surfacehighlight/70'
-              }`}
+              style={{
+                borderRadius: 20,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase' as const,
+                padding: '6px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                ...(searchMode === 'general'
+                  ? { background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.35)', color: '#F97316' }
+                  : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: '#5a6e7e' }
+                ),
+              }}
             >
-              <Search className="w-4 h-4 inline mr-2" />
-              General
+              User
             </button>
             <button
               onClick={() => setSearchMode('plate')}
-              className={`flex-1 py-2 px-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all ${
-                searchMode === 'plate'
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surfacehighlight text-secondary hover:bg-surfacehighlight/70'
-              }`}
+              style={{
+                borderRadius: 20,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase' as const,
+                padding: '6px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                ...(searchMode === 'plate'
+                  ? { background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.35)', color: '#F97316' }
+                  : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: '#5a6e7e' }
+                ),
+              }}
             >
-              <Target className="w-4 h-4 inline mr-2" />
-              License Plate
+              Plate
             </button>
+
+            <div style={{ flex: 1 }} />
+
+            {searchMode === 'plate' && (
+              <button
+                onClick={() => setShowCameraModal(true)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: '#0a0d14',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#5a6e7e',
+                  padding: 0,
+                }}
+              >
+                <Target style={{ width: 16, height: 16 }} />
+              </button>
+            )}
           </div>
 
-          {searchMode === 'general' ? (
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary w-5 h-5" />
+          {/* Search Input (general mode only) */}
+          {searchMode === 'general' && (
+            <div style={{ position: 'relative' }}>
+              <Search style={{
+                position: 'absolute',
+                left: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 16,
+                height: 16,
+                color: '#5a6e7e',
+                pointerEvents: 'none',
+              }} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search @username, make, model..."
-                className="w-full bg-surfacehighlight border border-surfacehighlight rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent-primary placeholder-secondary"
+                style={{
+                  width: '100%',
+                  background: '#0a0d14',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 10,
+                  padding: '11px 40px 11px 38px',
+                  fontFamily: "'Barlow', sans-serif",
+                  fontSize: 14,
+                  color: '#eef4f8',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
                 autoFocus
               />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#5a6e7e',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <X style={{ width: 14, height: 14 }} />
+                </button>
+              )}
             </div>
-          ) : null}
+          )}
         </div>
 
+        {/* Plate Search Component */}
         {searchMode === 'plate' && plateViewState === 'search' && (
-          <PlateSearch
-            initialPlate={plateNumber}
-            onSearch={handlePlateSearch}
-            onCameraScan={() => setShowCameraModal(true)}
-            onNavigateToVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
-          />
+          <div style={{ padding: '16px 16px 0' }}>
+            <PlateSearch
+              initialPlate={plateNumber}
+              onSearch={handlePlateSearch}
+              onCameraScan={() => setShowCameraModal(true)}
+              onNavigateToVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
+            />
+          </div>
         )}
 
         {showCameraModal && (
@@ -424,55 +529,76 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
         )}
 
         {searchMode === 'plate' && plateViewState === 'loading' && (
-          <div className="px-4 pt-10 text-center">
+          <div style={{ padding: '40px 16px', textAlign: 'center' }}>
             <div
-              className="w-10 h-10 rounded-full border-2 animate-spin mx-auto mb-4"
-              style={{ borderColor: 'rgba(249,115,22,0.2)', borderTopColor: '#f97316' }}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                border: '2px solid rgba(249,115,22,0.2)',
+                borderTopColor: '#f97316',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 16px',
+              }}
             />
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-              Searching {plateState} — <span style={{ fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '2px' }}>{plateNumber}</span>
+            <p style={{ fontSize: 14, color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", margin: 0 }}>
+              Searching {plateState} —{' '}
+              <span style={{
+                fontWeight: 600,
+                color: '#eef4f8',
+                letterSpacing: '2px',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>
+                {plateNumber}
+              </span>
             </p>
           </div>
         )}
 
         {searchMode === 'plate' && plateViewState === 'not-found' && (
-          <PlateNotFound
-            state={plateState}
-            plateNumber={plateNumber}
-            onCancel={handleBackToPlateSearch}
-            onCreate={handleCreateVehicle}
-            onClaimVehicle={() => {
-              if (!user) {
-                showToast('Please log in to claim a vehicle', 'error');
-                return;
-              }
-              showToast('Please create the vehicle profile first', 'info');
-            }}
-            loading={loading}
-          />
+          <div style={{ padding: '16px 16px 0' }}>
+            <PlateNotFound
+              state={plateState}
+              plateNumber={plateNumber}
+              onCancel={handleBackToPlateSearch}
+              onCreate={handleCreateVehicle}
+              onClaimVehicle={() => {
+                if (!user) {
+                  showToast('Please log in to claim a vehicle', 'error');
+                  return;
+                }
+                showToast('Please create the vehicle profile first', 'info');
+              }}
+              loading={loading}
+            />
+          </div>
         )}
 
         {searchMode === 'plate' && plateViewState === 'unclaimed' && plateVehicle && (
-          <PlateFoundUnclaimed
-            state={plateState}
-            plateNumber={plateNumber}
-            vehicle={plateVehicle}
-            onSpotAndReview={handleSpotAndReview}
-            onClaimVehicle={handleClaimVehicle}
-            onViewVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
-            isLoggedIn={!!user}
-          />
+          <div style={{ padding: '16px 16px 0' }}>
+            <PlateFoundUnclaimed
+              state={plateState}
+              plateNumber={plateNumber}
+              vehicle={plateVehicle}
+              onSpotAndReview={handleSpotAndReview}
+              onClaimVehicle={handleClaimVehicle}
+              onViewVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
+              isLoggedIn={!!user}
+            />
+          </div>
         )}
 
         {searchMode === 'plate' && plateViewState === 'claimed' && plateVehicle && (
-          <PlateFoundClaimed
-            state={plateState}
-            plateNumber={plateNumber}
-            vehicle={plateVehicle as any}
-            onLeaveReview={handleSpotAndReview}
-            onBack={handleBackToPlateSearch}
-            onViewOwnerProfile={(userId) => onNavigate('user-profile', userId)}
-          />
+          <div style={{ padding: '16px 16px 0' }}>
+            <PlateFoundClaimed
+              state={plateState}
+              plateNumber={plateNumber}
+              vehicle={plateVehicle as any}
+              onLeaveReview={handleSpotAndReview}
+              onBack={handleBackToPlateSearch}
+              onViewOwnerProfile={(userId) => onNavigate('user-profile', userId)}
+            />
+          </div>
         )}
 
         {showClaimModal && plateVehicle && user && (
@@ -498,162 +624,380 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
           />
         )}
 
+        {/* General search: loading */}
         {searchMode === 'general' && loading && (
-          <div className="text-center py-12">
-            <div className="animate-pulse text-secondary">Searching...</div>
+          <div style={{ textAlign: 'center', padding: '48px 16px' }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                border: '2px solid rgba(249,115,22,0.2)',
+                borderTopColor: '#f97316',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 16px',
+              }}
+            />
+            <p style={{ fontSize: 12, color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", margin: 0 }}>
+              Searching...
+            </p>
           </div>
         )}
 
+        {/* General search: no results */}
         {searchMode === 'general' && !loading && hasSearched && totalResults === 0 && (
-          <div className="bg-surface border border-surfacehighlight rounded-xl">
-            <EmptyState
-              icon={Search}
-              title="No results found"
-              description={`No users or vehicles found matching "${query}". Try a different search or create a shadow profile for a vehicle.`}
-              actionLabel="Create Shadow Profile"
-              onAction={() => setSearchMode('plate')}
-            />
+          <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+            <div style={{ marginBottom: 8 }}>
+              <Search style={{ width: 32, height: 32, color: '#3a4e60', margin: '0 auto 12px' }} />
+            </div>
+            <h3 style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#eef4f8',
+              margin: '0 0 6px',
+            }}>
+              No results found
+            </h3>
+            <p style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontSize: 12,
+              color: '#5a6e7e',
+              margin: '0 0 16px',
+              lineHeight: 1.5,
+            }}>
+              No users or vehicles found matching &ldquo;{query}&rdquo;.
+              Try a different search or create a shadow profile.
+            </p>
+            <button
+              onClick={() => setSearchMode('plate')}
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase' as const,
+                background: 'rgba(249,115,22,0.10)',
+                border: '1px solid rgba(249,115,22,0.35)',
+                color: '#F97316',
+                borderRadius: 20,
+                padding: '8px 18px',
+                cursor: 'pointer',
+              }}
+            >
+              Create Shadow Profile
+            </button>
             {currentUserHandle && (
-              <p className="text-center text-secondary text-xs pb-4">
-                Your handle: <span className="font-bold text-accent-primary">@{currentUserHandle}</span>
+              <p style={{
+                fontSize: 10,
+                color: '#5a6e7e',
+                fontFamily: "'Barlow', sans-serif",
+                marginTop: 12,
+              }}>
+                Your handle: <span style={{ fontWeight: 700, color: '#F97316' }}>@{currentUserHandle}</span>
               </p>
             )}
           </div>
         )}
 
+        {/* General search: results */}
         {searchMode === 'general' && !loading && hasSearched && totalResults > 0 && (
-          <div className="space-y-6">
+          <div>
             {users.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <User className="w-5 h-5 text-secondary" />
-                  <h2 className="font-bold uppercase tracking-wider text-sm text-secondary">
-                    Members ({users.length})
-                  </h2>
+                {/* Section Header */}
+                <div style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.24em',
+                  textTransform: 'uppercase' as const,
+                  color: '#3a4e60',
+                  padding: '14px 16px 6px',
+                }}>
+                  Users ({users.length})
                 </div>
-                <div className="space-y-2">
-                  {users.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => onNavigate('user-profile', user.id)}
-                      className="w-full bg-surface border border-surfacehighlight rounded-xl p-4 flex items-center gap-4 hover:border-accent-primary/50 hover:bg-surfacehighlight/50 transition-all text-left group"
-                    >
-                      <div className="relative">
-                        {user.avatar_url ? (
-                          <img
-                            src={user.avatar_url}
-                            alt={user.handle || 'User'}
-                            className="w-14 h-14 rounded-full object-cover ring-2 ring-surfacehighlight group-hover:ring-accent-primary/30 transition-all"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-full bg-surfacehighlight flex items-center justify-center ring-2 ring-surfacehighlight group-hover:ring-accent-primary/30 transition-all">
-                            <User className="w-7 h-7 text-secondary" />
-                          </div>
-                        )}
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-accent-primary rounded-full flex items-center justify-center">
-                          <User className="w-3 h-3 text-white" />
-                        </div>
+                {users.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => onNavigate('user-profile', u.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 16px',
+                      borderBottom: '1px solid rgba(255,255,255,0.03)',
+                      width: '100%',
+                      background: 'none',
+                      border: 'none',
+                      borderBlockEnd: '1px solid rgba(255,255,255,0.03)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {u.avatar_url ? (
+                      <img
+                        src={u.avatar_url}
+                        alt={u.handle || 'User'}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        background: 'rgba(255,255,255,0.05)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <User style={{ width: 16, height: 16, color: '#5a6e7e' }} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-primary truncate">
-                          @{user.handle || 'anonymous'}
-                        </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontFamily: "'Rajdhani', sans-serif",
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: '#eef4f8',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        @{u.handle || 'anonymous'}
                       </div>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <FollowButton targetUserId={user.id} />
+                      <div style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 10,
+                        color: '#5a6e7e',
+                      }}>
+                        Member
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FollowButton targetUserId={u.id} />
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
 
             {vehicles.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Car className="w-5 h-5 text-secondary" />
-                  <h2 className="font-bold uppercase tracking-wider text-sm text-secondary">
-                    Vehicles ({vehicles.length})
-                  </h2>
+                {/* Section Header */}
+                <div style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.24em',
+                  textTransform: 'uppercase' as const,
+                  color: '#3a4e60',
+                  padding: '14px 16px 6px',
+                }}>
+                  Vehicles ({vehicles.length})
                 </div>
-                <div className="space-y-2">
-                  {vehicles.map((vehicle) => (
-                    <button
-                      key={vehicle.id}
-                      onClick={() => handleVehicleClick(vehicle)}
-                      className="w-full bg-surface border border-surfacehighlight rounded-xl p-4 flex items-center gap-4 hover:border-accent-primary/50 hover:bg-surfacehighlight/50 transition-all text-left group"
-                    >
-                      <div className="relative">
-                        <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-accent-primary/20 to-accent-hover/20 flex items-center justify-center ring-2 ring-surfacehighlight group-hover:ring-accent-primary/30 transition-all">
-                          <Car className="w-7 h-7 text-accent-primary" />
-                        </div>
+                {vehicles.map((vehicle) => (
+                  <button
+                    key={vehicle.id}
+                    onClick={() => handleVehicleClick(vehicle)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 16px',
+                      borderBottom: '1px solid rgba(255,255,255,0.03)',
+                      width: '100%',
+                      background: 'none',
+                      border: 'none',
+                      borderBlockEnd: '1px solid rgba(255,255,255,0.03)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {vehicle.stock_image_url ? (
+                      <img
+                        src={vehicle.stock_image_url}
+                        alt={`${vehicle.make} ${vehicle.model}`}
+                        style={{
+                          width: 56,
+                          height: 38,
+                          borderRadius: 4,
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 56,
+                        height: 38,
+                        borderRadius: 4,
+                        background: 'rgba(255,255,255,0.04)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <Car style={{ width: 18, height: 18, color: '#3a4e60' }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontFamily: "'Rajdhani', sans-serif",
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: '#eef4f8',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {vehicle.year} {vehicle.make} {vehicle.model}
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}>
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: 10,
+                          color: '#5a6e7e',
+                        }}>
+                          {vehicle.color}
+                        </span>
                         {vehicle.is_claimed && (
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
+                          <span style={{
+                            fontFamily: "'Barlow Condensed', sans-serif",
+                            fontSize: 8,
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase' as const,
+                            background: 'rgba(34,197,94,0.10)',
+                            border: '1px solid rgba(34,197,94,0.30)',
+                            color: '#22c55e',
+                            borderRadius: 10,
+                            padding: '2px 8px',
+                          }}>
+                            Claimed
+                          </span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-primary truncate">
-                          {vehicle.year} {vehicle.make} {vehicle.model}
-                        </div>
-                        <div className="text-sm text-secondary">
-                          {vehicle.color} • {vehicle.is_claimed ? 'Claimed' : 'Unclaimed'}
-                        </div>
-                      </div>
-                      <div className="text-accent-primary group-hover:translate-x-1 transition-transform">
-                        →
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
           </div>
         )}
 
+        {/* General search: empty state (no query) */}
         {searchMode === 'general' && !query.trim() && !loading && (
-          <div className="space-y-4">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-accent-primary/10 rounded-lg flex-shrink-0">
-                  <Search className="w-6 h-6 text-accent-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold mb-2">Quick Search Tips</h3>
-                  <ul className="text-sm text-secondary space-y-1.5">
-                    <li className="flex items-start gap-2">
-                      <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Find members by their @handle</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Car className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Search vehicles by make or model</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Target className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>View profiles and rate vehicles</span>
-                    </li>
-                  </ul>
+          <div style={{ padding: '24px 16px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+              marginBottom: 20,
+            }}>
+              <Search style={{ width: 18, height: 18, color: '#3a4e60', flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <h3 style={{
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#eef4f8',
+                  margin: '0 0 8px',
+                }}>
+                  Quick Search Tips
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <User style={{ width: 14, height: 14, color: '#5a6e7e', flexShrink: 0, marginTop: 1 }} />
+                    <span style={{
+                      fontFamily: "'Barlow', sans-serif",
+                      fontSize: 12,
+                      color: '#5a6e7e',
+                    }}>
+                      Find members by their @handle
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <Car style={{ width: 14, height: 14, color: '#5a6e7e', flexShrink: 0, marginTop: 1 }} />
+                    <span style={{
+                      fontFamily: "'Barlow', sans-serif",
+                      fontSize: 12,
+                      color: '#5a6e7e',
+                    }}>
+                      Search vehicles by make or model
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <Target style={{ width: 14, height: 14, color: '#5a6e7e', flexShrink: 0, marginTop: 1 }} />
+                    <span style={{
+                      fontFamily: "'Barlow', sans-serif",
+                      fontSize: 12,
+                      color: '#5a6e7e',
+                    }}>
+                      View profiles and rate vehicles
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-accent-primary/10 to-accent-hover/10 border border-accent-primary/30 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-accent-primary rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-white" />
+            <div style={{
+              background: 'rgba(249,115,22,0.04)',
+              border: '1px solid rgba(249,115,22,0.12)',
+              borderRadius: 10,
+              padding: 16,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  background: 'rgba(249,115,22,0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <Target style={{ width: 14, height: 14, color: '#F97316' }} />
                 </div>
-                <h3 className="font-bold">Looking for a license plate?</h3>
+                <h3 style={{
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: '#eef4f8',
+                  margin: 0,
+                }}>
+                  Looking for a license plate?
+                </h3>
               </div>
-              <p className="text-sm text-secondary mb-4">
+              <p style={{
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: 12,
+                color: '#5a6e7e',
+                margin: '0 0 12px',
+              }}>
                 Spot and rate vehicles by their license plate
               </p>
               <button
-                onClick={() => onNavigate('scan')}
-                className="px-4 py-2 bg-accent-primary hover:bg-accent-hover rounded-lg font-bold uppercase tracking-wider text-sm transition-all active:scale-95"
+                onClick={() => setSearchMode('plate')}
+                style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase' as const,
+                  background: 'rgba(249,115,22,0.10)',
+                  border: '1px solid rgba(249,115,22,0.35)',
+                  color: '#F97316',
+                  borderRadius: 20,
+                  padding: '8px 18px',
+                  cursor: 'pointer',
+                }}
               >
                 Search by Plate
               </button>
@@ -661,6 +1005,13 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
           </div>
         )}
       </div>
+
+      {/* Keyframe for spinner */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </Layout>
   );
 }

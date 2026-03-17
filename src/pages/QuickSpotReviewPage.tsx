@@ -13,6 +13,10 @@ import { LicensePlateDisplay } from '../components/LicensePlateDisplay';
 import { StickerSelector } from '../components/StickerSelector';
 import { giveSticker } from '../lib/stickerService';
 
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
+const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 6, display: 'block' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
+
 interface QuickSpotReviewPageProps {
   onNavigate: OnNavigate;
   wizardData: SpotWizardData;
@@ -30,28 +34,24 @@ function StarRow({
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div className="flex items-center justify-between py-4 border-b border-surfacehighlight last:border-0">
-      <span className="font-heading font-bold uppercase tracking-tight text-sm text-secondary w-24">{label}</span>
-      <div className="flex items-center gap-1">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', width: 80 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
             onClick={() => onChange(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
-            className="p-1 transition-transform active:scale-90"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
           >
             <Star
-              className={`w-8 h-8 transition-colors ${
-                star <= (hovered || value)
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'fill-surfacehighlight text-surfacehighlight'
-              }`}
+              style={{ width: 32, height: 32, fill: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)', color: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)' }}
             />
           </button>
         ))}
       </div>
-      <span className={`text-lg font-bold w-8 text-right ${value ? 'text-primary' : 'text-neutral-600'}`}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', width: 32, textAlign: 'right', color: value ? '#eef4f8' : '#3a3a3a' }}>
         {value ? `${value}.0` : '—'}
       </span>
     </div>
@@ -95,8 +95,13 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
+  const [isNewPlate, setIsNewPlate] = useState(false);
+
   const ensureVehicleExists = async (): Promise<string> => {
-    if (wizardData.vehicleId) return wizardData.vehicleId;
+    if (wizardData.vehicleId) {
+      setIsNewPlate(false);
+      return wizardData.vehicleId;
+    }
 
     const plateHash = wizardData.plateHash || await hashPlate(wizardData.plateState, wizardData.plateNumber);
 
@@ -106,7 +111,12 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
       .eq('plate_hash', plateHash)
       .maybeSingle();
 
-    if (existing) return existing.id;
+    if (existing) {
+      setIsNewPlate(false);
+      return existing.id;
+    }
+
+    setIsNewPlate(true);
 
     const { data: newVehicle, error } = await supabase
       .from('vehicles')
@@ -154,7 +164,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         spotter_id: user.id,
         vehicle_id: vehicleId,
         spot_type: 'quick',
-        reputation_earned: 15,
+        reputation_earned: 10,
       };
       if (photoUrl) spotPayload.photo_url = photoUrl;
 
@@ -218,6 +228,16 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         referenceType: 'review',
         referenceId: reviewData.id,
       });
+
+      // New plate bonus (+2 pts)
+      if (isNewPlate) {
+        await calculateAndAwardReputation({
+          userId: user.id,
+          action: 'NEW_PLATE_BONUS',
+          referenceType: 'vehicle',
+          referenceId: vehicleId,
+        });
+      }
 
       // STEP 5: Check for badge awards (counts from spot_history and reviews)
       try {
@@ -299,137 +319,167 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
 
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
 
+  const loveActive = sentiment === 'love';
+  const hateActive = sentiment === 'hate';
+
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <div className="mb-6">
+      <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }}>
+        <div style={{ marginBottom: 24 }}>
           <button
             onClick={() => onNavigate('scan')}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 20, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e' }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft style={{ width: 16, height: 16 }} />
+            <span>Back</span>
           </button>
 
-          <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center gap-1.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {[1, 2, 3].map(i => (
                 <div
                   key={i}
-                  className="h-1.5 rounded-full transition-all w-8"
-                  style={{ background: 'linear-gradient(90deg, #f97316, #f59e0b)' }}
+                  style={{ height: 6, borderRadius: 9999, width: 32, background: '#F97316' }}
                 />
               ))}
             </div>
-            <span className="text-xs text-secondary">Step 3 of 3 — 100%</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e' }}>Step 3 of 3 — 100%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '4px 0' }}>
             Quick Spot
           </h1>
-          <p className="text-secondary text-sm">{vehicleName || 'Rate the vehicle'}</p>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>{vehicleName || 'Rate the vehicle'}</p>
         </div>
 
         {/* Vehicle Identity Card */}
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-4 mb-5">
-          <div className="flex items-center gap-4">
+        <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <LicensePlateDisplay
               stateCode={wizardData.plateState}
               plateNumber={wizardData.plateNumber}
               className="scale-75 origin-left"
             />
-            <div className="min-w-0">
-              <p className="font-heading font-bold text-lg text-primary truncate">
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {vehicleName || 'Unknown Vehicle'}
               </p>
               {wizardData.color && (
-                <p className="text-sm text-secondary capitalize">{wizardData.color}{wizardData.trim ? ` • ${wizardData.trim}` : ''}</p>
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: '4px 0 0' }}>{wizardData.color}{wizardData.trim ? ` \u2022 ${wizardData.trim}` : ''}</p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-5 mb-4">
+        <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '4px 20px', marginBottom: 16 }}>
           <StarRow label="Driver" value={driverRating} onChange={setDriverRating} />
           <StarRow label="Driving" value={drivingRating} onChange={setDrivingRating} />
           <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
           <button
             onClick={() => setSentiment('love')}
-            className={`flex items-center justify-center gap-2 py-4 rounded-xl font-heading font-bold uppercase tracking-tight text-base transition-all active:scale-95 border-2 ${
-              sentiment === 'love'
-                ? 'bg-rose-500/20 border-rose-500 text-rose-400'
-                : 'bg-surface border-surfacehighlight text-secondary hover:border-rose-500/50'
-            }`}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '11px',
+              borderRadius: 8,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              ...(loveActive
+                ? { background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.4)', color: '#F97316' }
+                : { background: '#0a0d14', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
+            }}
           >
-            <Heart className={`w-5 h-5 ${sentiment === 'love' ? 'fill-rose-400' : ''}`} />
+            <Heart style={{ width: 18, height: 18, fill: loveActive ? '#F97316' : 'none' }} />
             Love It
           </button>
           <button
             onClick={() => setSentiment('hate')}
-            className={`flex items-center justify-center gap-2 py-4 rounded-xl font-heading font-bold uppercase tracking-tight text-base transition-all active:scale-95 border-2 ${
-              sentiment === 'hate'
-                ? 'bg-neutral-700/50 border-neutral-400 text-neutral-300'
-                : 'bg-surface border-surfacehighlight text-secondary hover:border-neutral-500/50'
-            }`}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '11px',
+              borderRadius: 8,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              ...(hateActive
+                ? { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }
+                : { background: '#0a0d14', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
+            }}
           >
-            <ThumbsDown className={`w-5 h-5 ${sentiment === 'hate' ? 'fill-neutral-300' : ''}`} />
+            <ThumbsDown style={{ width: 18, height: 18, fill: hateActive ? '#ef4444' : 'none' }} />
             Hate It
           </button>
         </div>
 
-        <div className="mb-4">
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Comment</label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="What caught your eye? How was the driver?"
             rows={3}
-            className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3 text-primary placeholder-neutral-600 focus:outline-none focus:border-orange transition-colors resize-none text-sm"
+            style={{ ...inputStyle, resize: 'none' as const, lineHeight: 1.55 }}
           />
         </div>
 
-        <div className="mb-6">
+        <div style={{ marginBottom: 24 }}>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             capture="environment"
             onChange={handlePhotoSelect}
-            className="hidden"
+            style={{ display: 'none' }}
           />
           {photoPreview ? (
-            <div className="relative rounded-xl overflow-hidden border border-surfacehighlight">
+            <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
               <img
                 src={photoPreview}
                 alt="Spot photo"
-                className="w-full h-40 object-cover"
+                style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
               />
               <button
                 onClick={clearPhoto}
-                className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 rounded-full transition-colors"
+                style={{ position: 'absolute', top: 8, right: 8, padding: 6, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <X className="w-4 h-4 text-white" />
+                <X style={{ width: 16, height: 16, color: '#fff' }} />
               </button>
-              <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded-lg">
-                <span className="text-xs text-white font-medium">Photo attached</span>
+              <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: 6 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, color: '#fff' }}>Photo attached</span>
               </div>
             </div>
           ) : (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-surface border border-dashed border-surfacehighlight hover:border-[rgba(249,115,22,0.5)] rounded-xl text-secondary hover:text-accent-2 text-sm font-medium transition-colors"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', background: '#0a0d14', border: '1px dashed rgba(255,255,255,0.07)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e', cursor: 'pointer' }}
             >
-              <Camera className="w-4 h-4" />
-              Add a Photo <span className="text-neutral-600">(optional)</span>
-              <Image className="w-4 h-4 ml-1" />
+              <Camera style={{ width: 16, height: 16 }} />
+              Add a Photo
+              <span style={{ color: '#3a3a3a' }}>(optional)</span>
+              <Image style={{ width: 16, height: 16, marginLeft: 4 }} />
             </button>
           )}
         </div>
 
         {/* Bumper Stickers */}
-        <div className="mb-5">
+        <div style={{ marginBottom: 20 }}>
           <StickerSelector
             selectedStickers={selectedStickerIds}
             onToggleSticker={(id) => {
@@ -443,29 +493,30 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         <button
           onClick={handleSubmitQuick}
           disabled={!canSubmit || submitting || uploadingPhoto}
-          className="w-full py-3.5 rounded-xl text-white text-[15px] font-bold font-heading tracking-wide flex items-center justify-center gap-2 mb-3 disabled:opacity-40"
-          style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+          style={{ ...primaryBtnStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12, opacity: (!canSubmit || submitting || uploadingPhoto) ? 0.4 : 1 }}
         >
           {(submitting || uploadingPhoto) ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           ) : null}
           {uploadingPhoto ? 'Uploading photo...' : 'Submit Quick Spot (+15 pts)'}
         </button>
 
-        <button
-          onClick={handleGoDetailed}
-          disabled={!canSubmit}
-          className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-[#F97316] to-[#fb923c] hover:from-[#F97316] hover:to-[#fb923c] disabled:from-surfacehighlight disabled:to-surfacehighlight disabled:text-secondary rounded-xl font-heading font-bold uppercase tracking-tight text-base transition-all active:scale-95 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
-        >
-          <Zap className="w-5 h-5" />
-          +20 PTS: Add Year, Make & Model
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 8, padding: '12px 14px' }}>
+          <button
+            onClick={handleGoDetailed}
+            disabled={!canSubmit}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '11px', background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: !canSubmit ? '#5a6e7e' : '#F97316', cursor: !canSubmit ? 'not-allowed' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
+          >
+            <Zap style={{ width: 18, height: 18 }} />
+            +20 PTS: Add Year, Make & Model
+            <ChevronRight style={{ width: 16, height: 16 }} />
+          </button>
+        </div>
       </div>
 
       {showUpgradePrompt && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={() => {
             setShowUpgradePrompt(false);
             onNavigate('completed-review', {
@@ -483,16 +534,16 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           }}
         >
           <div
-            className="bg-surface border border-surfacehighlight rounded-2xl p-6 max-w-md w-full"
+            style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, maxWidth: 448, width: '100%' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-heading font-black uppercase tracking-tight text-primary mb-3">
+            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginTop: 0, marginBottom: 12 }}>
               Want to leave a Full Spot for +20 bonus RP?
             </h2>
-            <p className="text-sm text-secondary mb-6">
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', marginBottom: 24, lineHeight: 1.5 }}>
               Add detailed ratings (Looks, Sound, Condition) to earn extra reputation points
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button
                 onClick={() => {
                   setShowUpgradePrompt(false);
@@ -509,7 +560,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                     reputationEarned: 15,
                   });
                 }}
-                className="py-3 bg-surface border border-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-secondary hover:text-primary hover:border-primary transition-all"
+                style={{ padding: '12px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e', cursor: 'pointer' }}
               >
                 No, I'm Done
               </button>
@@ -527,8 +578,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                     existingReviewId: reviewId,
                   });
                 }}
-                className="py-3 rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+                style={{ ...primaryBtnStyle, padding: '12px' }}
               >
                 Yes, Upgrade to Full Spot
               </button>

@@ -3,6 +3,8 @@ import { Layout } from '../components/Layout';
 import { type OnNavigate } from '../types/navigation';
 import type { SpotWizardData } from '../types/spot';
 
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
+
 interface ConfirmVehiclePageProps {
   onNavigate: OnNavigate;
   wizardData: SpotWizardData;
@@ -33,58 +35,61 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <div className="mb-6">
+      <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }}>
+        <div style={{ marginBottom: 24 }}>
           <button
             onClick={handleEdit}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 20, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e' }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Edit Details</span>
+            <ArrowLeft style={{ width: 16, height: 16 }} />
+            <span>Edit Details</span>
           </button>
 
-          <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center gap-1.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {[1, 2, 3].map(i => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all ${i <= 2 ? 'w-8 bg-accent-primary' : 'w-4 bg-surfacehighlight'}`}
+                  style={{
+                    height: 6,
+                    borderRadius: 9999,
+                    width: i <= 2 ? 32 : 16,
+                    background: i <= 2 ? '#F97316' : 'rgba(255,255,255,0.06)',
+                  }}
                 />
               ))}
             </div>
-            <span className="text-xs text-secondary">Step 2 of 3 — 66%</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e' }}>Step 2 of 3 — 66%</span>
           </div>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '4px 0' }}>
             Does this look right?
           </h1>
-          <p className="text-secondary text-sm">Confirm the vehicle before rating</p>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>Confirm the vehicle before rating</p>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl overflow-hidden mb-6">
-          <div className="relative aspect-video bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center">
-            <div className="text-center">
+        <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ position: 'relative', aspectRatio: '16/9', background: 'linear-gradient(135deg, #1a1a1a, #111)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
               <div
-                className="w-20 h-20 rounded-2xl mx-auto mb-3 flex items-center justify-center"
-                style={{ backgroundColor: colorHex + '33', border: `2px solid ${colorHex}66` }}
+                style={{ width: 80, height: 80, borderRadius: 16, margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colorHex + '33', border: `2px solid ${colorHex}66` }}
               >
-                <Car className="w-10 h-10" style={{ color: colorHex }} />
+                <Car style={{ width: 40, height: 40, color: colorHex }} />
               </div>
-              <p className="text-xs text-secondary">Stock image preview</p>
+              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>Stock image preview</p>
             </div>
             <div
-              className="absolute bottom-3 right-3 w-8 h-8 rounded-full border-2 border-white/30 shadow-lg"
-              style={{ backgroundColor: colorHex }}
+              style={{ position: 'absolute', bottom: 12, right: 12, width: 40, height: 40, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.12)', backgroundColor: colorHex, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
               title={wizardData.color}
             />
           </div>
 
-          <div className="p-6">
-            <h2 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-4">
+          <div style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 16, marginTop: 0 }}>
               {vehicleName || 'Unknown Vehicle'}
             </h2>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
                 { label: 'Make', value: wizardData.make },
                 { label: 'Model', value: wizardData.model },
@@ -94,30 +99,29 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
                 { label: 'State', value: wizardData.plateState || '—' },
                 { label: 'Plate', value: wizardData.plateNumber || '—' },
               ].map(item => (
-                <div key={item.label} className="bg-surfacehighlight rounded-xl p-3">
-                  <p className="text-xs text-secondary uppercase tracking-wider font-bold mb-1">{item.label}</p>
-                  <p className="font-bold text-primary capitalize">{item.value}</p>
+                <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 12 }}>
+                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 4, marginTop: 0 }}>{item.label}</p>
+                  <p style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, color: '#eef4f8', textTransform: 'capitalize', margin: 0, fontSize: 15 }}>{item.value}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <button
             onClick={handleEdit}
-            className="flex items-center justify-center gap-2 py-3.5 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight transition-all active:scale-95"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e', cursor: 'pointer' }}
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 style={{ width: 16, height: 16 }} />
             Edit
           </button>
           <button
             onClick={handleNext}
-            className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight transition-all active:scale-95 text-white hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+            style={{ ...primaryBtnStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
           >
             Looks Good
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight style={{ width: 16, height: 16 }} />
           </button>
         </div>
       </div>

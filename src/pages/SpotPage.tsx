@@ -74,6 +74,62 @@ const US_STATES = [
   { code: 'DC', name: 'District of Columbia' },
 ];
 
+const cardStyle: React.CSSProperties = {
+  background: '#0a0d14',
+  border: '1px solid rgba(255,255,255,0.06)',
+  borderRadius: 10,
+};
+
+const cardTitleStyle: React.CSSProperties = {
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontSize: 13,
+  fontWeight: 700,
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.1em',
+};
+
+const cardSubtitleStyle: React.CSSProperties = {
+  fontFamily: "'Barlow', sans-serif",
+  fontSize: 11,
+  color: '#5a6e7e',
+};
+
+const sectionHeaderStyle: React.CSSProperties = {
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontSize: 8,
+  fontWeight: 700,
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase' as const,
+  color: '#7a8e9e',
+};
+
+const recentRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  padding: '10px 20px',
+  borderBottom: '1px solid rgba(255,255,255,0.04)',
+};
+
+const vehicleNameStyle: React.CSSProperties = {
+  fontFamily: "'Rajdhani', sans-serif",
+  fontSize: 15,
+  fontWeight: 700,
+};
+
+const plateTextStyle: React.CSSProperties = {
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontSize: 10,
+  color: '#5a6e7e',
+};
+
+const spotCountStyle: React.CSSProperties = {
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: 14,
+  fontWeight: 600,
+  color: '#F97316',
+};
+
 type ViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading' | 'revealing';
 
 export function SpotPage({ onNavigate }: SpotPageProps) {
@@ -342,47 +398,67 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
       {viewState === 'search' && (
-        <div className="max-w-lg mx-auto px-4 py-6 page-enter">
-          <div className="grid grid-cols-2 gap-3 mb-8 stg">
+        <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }} className="page-enter">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 32 }} className="stg">
             <button
               onClick={() => setShowCameraModal(true)}
-              className="flex flex-col items-center gap-3 p-5 hover:border-accent-primary/60 transition-all active:scale-95 group"
-              style={{ background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px' }}
+              style={{
+                ...cardStyle,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 12,
+                padding: 20,
+                cursor: 'pointer',
+              }}
             >
-              <Camera style={{ width: '28px', height: '28px', color: 'var(--accent)' }} />
-              <div className="text-center">
-                <p style={{ fontFamily: 'var(--font-cond)', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Scan a Plate</p>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--dim)' }} className="mt-0.5">Camera + OCR</p>
+              <Camera style={{ width: 28, height: 28, color: '#F97316' }} />
+              <div style={{ textAlign: 'center' }}>
+                <p style={cardTitleStyle}>Scan a Plate</p>
+                <p style={{ ...cardSubtitleStyle, marginTop: 2 }}>Camera + OCR</p>
               </div>
             </button>
 
             <button
               onClick={handleUploadPhoto}
-              className="flex flex-col items-center gap-3 p-5 hover:border-accent-primary/60 transition-all active:scale-95 group"
-              style={{ background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px' }}
+              style={{
+                ...cardStyle,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 12,
+                padding: 20,
+                cursor: 'pointer',
+              }}
             >
-              <Upload style={{ width: '28px', height: '28px', color: 'var(--accent)' }} />
-              <div className="text-center">
-                <p style={{ fontFamily: 'var(--font-cond)', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Upload Photo</p>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--dim)' }} className="mt-0.5">Auto-fill with OCR</p>
+              <Upload style={{ width: 28, height: 28, color: '#F97316' }} />
+              <div style={{ textAlign: 'center' }}>
+                <p style={cardTitleStyle}>Upload Photo</p>
+                <p style={{ ...cardSubtitleStyle, marginTop: 2 }}>Auto-fill with OCR</p>
               </div>
             </button>
           </div>
 
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
 
           {user && (
             <div
-              className="rounded-xl p-4 mb-6 stg"
-              style={{ background: 'linear-gradient(180deg, #1c1814 0%, rgba(28,24,20,0.5) 100%)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="stg"
+              style={{
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 24,
+                background: 'linear-gradient(180deg, #1c1814 0%, rgba(28,24,20,0.5) 100%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <span style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>This Week's Run</span>
-                <span className="text-[8px]" style={{ color: '#6a7486' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={sectionHeaderStyle}>This Week's Run</span>
+                <span style={{ fontSize: 8, color: '#6a7486' }}>
                   Personal best: <span style={{ color: '#F97316' }}>{weeklyMetrics.bestWeekSpots > 0 ? weeklyMetrics.bestWeekSpots : '—'}</span>
                 </span>
               </div>
-              <div className="flex items-end gap-1.5 h-[60px] mb-2">
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 60, marginBottom: 8 }}>
                 {weeklySpots.map((count, i) => {
                   const maxCount = Math.max(...weeklySpots, 1);
                   const height = count > 0 ? Math.max(15, (count / maxCount) * 100) : 4;
@@ -390,35 +466,41 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                   const isToday = i === currentDayIdx;
                   const isPast = i < currentDayIdx;
                   return (
-                    <div key={i} className="flex-1 flex items-end justify-center">
+                    <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                       <div
-                        className="w-full rounded-sm transition-all"
                         style={{
+                          width: '100%',
                           height: `${height}%`,
-                          minHeight: '4px',
+                          minHeight: 4,
                           background: isToday ? '#F97316' : isPast ? 'rgba(249,115,22,0.4)' : '#302c24',
-                          borderRadius: '3px',
+                          borderRadius: 3,
+                          transition: 'all 0.3s',
                         }}
                       />
                     </div>
                   );
                 })}
               </div>
-              <div className="flex justify-between mb-2">
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
                   const currentDayIdx = (new Date().getDay() + 6) % 7;
                   return (
                     <span
                       key={i}
-                      className="flex-1 text-center text-[7px]"
-                      style={{ color: i === currentDayIdx ? '#F97316' : '#6a7486', fontWeight: i === currentDayIdx ? 600 : 300 }}
+                      style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        fontSize: 7,
+                        color: i === currentDayIdx ? '#F97316' : '#6a7486',
+                        fontWeight: i === currentDayIdx ? 600 : 300,
+                      }}
                     >
                       {d}
                     </span>
                   );
                 })}
               </div>
-              <p className="text-[9px] text-center" style={{ color: '#909aaa' }}>
+              <p style={{ fontSize: 9, textAlign: 'center', color: '#909aaa' }}>
                 <strong style={{ color: '#f2f4f7' }}>{weeklySpots[(new Date().getDay() + 6) % 7]}</strong> spots today · <strong style={{ color: '#f2f4f7' }}>{weekTotal}</strong> this week
               </p>
             </div>
@@ -431,13 +513,13 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             onNavigateToVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
           />
 
-          <div className="mt-12 stg">
-            <div className="relative flex items-center gap-4 mb-6">
-              <div className="flex-1 h-px" style={{ background: 'var(--border-2)' }} />
-              <span style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+          <div style={{ marginTop: 48 }} className="stg">
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+              <span style={sectionHeaderStyle}>
                 Recent Spots
               </span>
-              <div className="flex-1 h-px" style={{ background: 'var(--border-2)' }} />
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
             </div>
 
             {recentSpots.length > 0 ? (
@@ -449,26 +531,24 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                     <button
                       key={spot.id}
                       onClick={() => onNavigate('vehicle-detail', v.id)}
-                      className="w-full transition-colors"
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '10px 20px',
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        ...recentRowStyle,
+                        width: '100%',
+                        background: 'transparent',
+                        cursor: 'pointer',
                       }}
                     >
-                      <div className="flex-1 text-left min-w-0">
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700 }}>
+                      <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                        <div style={vehicleNameStyle}>
                           {v.year} {v.make} {v.model}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', color: 'var(--dim)' }} className="mt-0.5">
+                        <div style={{ ...plateTextStyle, marginTop: 2 }}>
                           {v.plate_state} • {v.plate_number}
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 600, color: 'var(--accent)' }}>1</div>
-                        <div className="text-[9px] uppercase" style={{ color: 'var(--text-quaternary)', letterSpacing: '0.5px' }}>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={spotCountStyle}>1</div>
+                        <div style={{ fontSize: 9, textTransform: 'uppercase' as const, color: '#4a5568', letterSpacing: '0.5px' }}>
                           spot
                         </div>
                       </div>
@@ -477,12 +557,18 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                 })}
               </div>
             ) : (
-              <div className="text-center py-8 px-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <Car className="w-8 h-8 mx-auto mb-3" strokeWidth={1.5} style={{ color: 'var(--text-quaternary)' }} />
-                <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <div style={{
+                textAlign: 'center',
+                padding: '32px 16px',
+                borderRadius: 12,
+                background: '#0a0d14',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <Car style={{ width: 32, height: 32, margin: '0 auto 12px', color: '#3a4e60' }} strokeWidth={1.5} />
+                <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4, color: '#8a9aaa' }}>
                   No recent spots yet
                 </p>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                <p style={{ fontSize: 12, color: '#5a6e7e' }}>
                   Be the first to spot a ride in your area
                 </p>
               </div>
@@ -502,19 +588,26 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       )}
 
       {viewState === 'loading' && (
-        <div className="px-4 pt-10 text-center">
+        <div style={{ padding: '40px 16px', textAlign: 'center' }}>
           <div
-            className="w-10 h-10 rounded-full border-2 animate-spin mx-auto mb-4"
-            style={{ borderColor: 'rgba(249,115,22,0.2)', borderTopColor: '#f97316' }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              border: '2px solid rgba(249,115,22,0.2)',
+              borderTopColor: '#f97316',
+              margin: '0 auto 16px',
+              animation: 'spin 1s linear infinite',
+            }}
           />
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-            Searching {state} — <span style={{ fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '2px' }}>{plateNumber}</span>
+          <p style={{ fontSize: 14, color: '#8a9aaa' }}>
+            Searching {state} — <span style={{ fontWeight: 600, color: '#eef4f8', letterSpacing: 2 }}>{plateNumber}</span>
           </p>
         </div>
       )}
 
       {viewState === 'revealing' && (
-        <div className="px-4 pt-10 flex flex-col items-center gap-6">
+        <div style={{ padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
           {/* Phase 1: Plate slides in */}
           <div
             style={{
@@ -523,9 +616,23 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
               transition: 'all 0.5s cubic-bezier(.25,.46,.45,.94)',
             }}
           >
-            <div className="relative bg-white rounded-lg px-8 py-4 shadow-xl border-4 border-gray-800">
-              <div className="absolute top-1.5 left-3 text-[10px] text-gray-600 font-bold">{stateCode}</div>
-              <div className="text-3xl font-mono font-extrabold text-black tracking-widest text-center">
+            <div style={{
+              position: 'relative',
+              background: 'white',
+              borderRadius: 8,
+              padding: '16px 32px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+              border: '4px solid #1f2937',
+            }}>
+              <div style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, color: '#4b5563', fontWeight: 700 }}>{stateCode}</div>
+              <div style={{
+                fontSize: 30,
+                fontFamily: 'monospace',
+                fontWeight: 800,
+                color: '#000',
+                letterSpacing: '0.15em',
+                textAlign: 'center',
+              }}>
                 {plateNumber.toUpperCase()}
               </div>
             </div>
@@ -534,8 +641,10 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           {/* Phase 2: Scanning line */}
           {revealPhase >= 2 && revealPhase < 4 && (
             <div
-              className="w-48 h-0.5 rounded-full"
               style={{
+                width: 192,
+                height: 2,
+                borderRadius: 9999,
                 background: 'linear-gradient(90deg, transparent, #F97316, transparent)',
                 animation: 'plate-scan 0.8s ease-in-out infinite',
               }}
@@ -551,11 +660,18 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
               textAlign: 'center',
             }}
           >
-            <p className="text-sm font-heading font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>
+            <p style={{
+              fontSize: 14,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.1em',
+              color: '#F97316',
+            }}>
               {revealResult?.found ? 'Vehicle Found' : 'New Plate Detected'}
             </p>
             {revealResult?.found && revealResult.vehicle && (
-              <p className="text-xs text-secondary mt-1">
+              <p style={{ fontSize: 12, color: '#8a9aaa', marginTop: 4 }}>
                 {revealResult.vehicle.year} {revealResult.vehicle.make} {revealResult.vehicle.model}
               </p>
             )}
@@ -564,14 +680,28 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       )}
 
       {viewState !== 'search' && viewState !== 'loading' && (
-        <div className="px-4 pt-4">
+        <div style={{ padding: '16px 16px 0' }}>
           <button
             onClick={handleBack}
-            className="flex items-center gap-1.5 mb-4 transition-colors hover:text-accent-2"
-            style={{ color: 'var(--text-secondary)' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 16,
+              color: '#8a9aaa',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
-            <span className="label-micro">Back to Search</span>
+            <ArrowLeft style={{ width: 16, height: 16 }} strokeWidth={1.5} />
+            <span style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase' as const,
+            }}>Back to Search</span>
           </button>
         </div>
       )}

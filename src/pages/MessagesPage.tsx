@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
-import { MessageCircle, Send, Search, Plus, Check, CheckCheck, X, Users, Paperclip, File, Download } from 'lucide-react';
+import { MessageCircle, Send, Search, Plus, Check, CheckCheck, X, Users, Paperclip, File, Download, ArrowLeft } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 
 interface Conversation {
   id: string;
@@ -577,119 +579,138 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="h-[calc(100vh-120px)] flex gap-4">
-        <div className="w-80 flex-shrink-0 bg-surface border border-surfacehighlight rounded-xl flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-surfacehighlight flex-shrink-0">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold">Messages</h2>
+      <div style={{ height: 'calc(100vh - 120px)', display: 'flex', gap: 0 }}>
+        {/* Conversation list sidebar */}
+        <div style={{ width: 320, flexShrink: 0, background: '#0a0e17', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Sticky header */}
+          <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0a0e17' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: 0 }}>Messages</h2>
               <button
                 onClick={() => {
                   setShowComposeModal(true);
                   loadFollowers();
                 }}
-                className="p-2 bg-accent-primary hover:bg-accent-hover rounded-lg transition-colors active:scale-95"
+                style={{ width: 32, height: 32, background: '#0a0d14', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#f97316' }}
                 title="New Message"
               >
-                <Plus size={20} />
+                <Plus size={16} />
               </button>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" size={16} />
+            <div style={{ position: 'relative' }}>
+              <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e' }} size={15} />
               <input
                 type="text"
                 placeholder="Search conversations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surfacehighlight border border-surfacehighlight rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                style={{ ...inputStyle, borderRadius: 20, paddingLeft: 36, fontSize: 13 }}
               />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          {/* Conversation rows */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             {filteredConversations.length === 0 ? (
-              <div className="p-6 text-center text-secondary text-sm">
+              <div style={{ padding: 24, textAlign: 'center', color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", fontSize: 13 }}>
                 {searchQuery ? 'No conversations found' : 'No conversations yet'}
               </div>
             ) : (
-              <div className="divide-y divide-surfacehighlight">
-                {filteredConversations.map((conv) => {
-                  const isActive = selectedConversation === conv.id;
-                  return (
-                    <button
-                      key={conv.id}
-                      onClick={() => setSelectedConversation(conv.id)}
-                      className={`w-full p-4 hover:bg-surfacehighlight transition-colors text-left ${
-                        isActive ? 'bg-surfacehighlight' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {conv.other_user?.avatar_url ? (
-                          <img
-                            src={conv.other_user.avatar_url}
-                            alt={getConversationTitle(conv)}
-                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F97316] to-[#fb923c] flex items-center justify-center flex-shrink-0">
-                            <MessageCircle size={20} />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="font-semibold text-sm truncate">
-                              {getConversationTitle(conv)}
-                            </span>
-                            <span className="text-xs text-secondary flex-shrink-0">
-                              {formatTime(conv.last_message_at)}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs text-secondary truncate">
-                              {conv.last_message || 'No messages yet'}
-                            </p>
-                            {conv.unread_count > 0 && (
-                              <span className="bg-accent-primary text-white text-xs px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 min-w-[20px] text-center">
-                                {conv.unread_count}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+              filteredConversations.map((conv) => {
+                const isActive = selectedConversation === conv.id;
+                return (
+                  <button
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv.id)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: isActive ? 'rgba(249,115,22,0.05)' : 'transparent',
+                      border: 'none',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = isActive ? 'rgba(249,115,22,0.05)' : 'transparent'; }}
+                  >
+                    {conv.other_user?.avatar_url ? (
+                      <img
+                        src={conv.other_user.avatar_url}
+                        alt={getConversationTitle(conv)}
+                        style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                      />
+                    ) : (
+                      <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #F97316, #fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
+                        <MessageCircle size={18} />
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 3 }}>
+                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {getConversationTitle(conv)}
+                        </span>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#5a6e7e', flexShrink: 0 }}>
+                          {formatTime(conv.last_message_at)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {conv.last_message || 'No messages yet'}
+                        </p>
+                        {conv.unread_count > 0 && (
+                          <span style={{ background: '#f97316', color: '#fff', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, minWidth: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 4px' }}>
+                            {conv.unread_count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
 
-        <div className="flex-1 bg-surface border border-surfacehighlight rounded-xl flex flex-col overflow-hidden">
+        {/* Message thread area */}
+        <div style={{ flex: 1, background: '#080c14', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
           {selectedConversation && currentConversation ? (
             <>
-              <div className="px-6 py-4 border-b border-surfacehighlight flex items-center gap-3 flex-shrink-0">
+              {/* Thread header */}
+              <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: '#080c14' }}>
+                <button
+                  onClick={() => setSelectedConversation(null)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5a6e7e', display: 'flex', alignItems: 'center', padding: 4 }}
+                >
+                  <ArrowLeft size={18} />
+                </button>
                 {currentConversation.other_user?.avatar_url ? (
                   <img
                     src={currentConversation.other_user.avatar_url}
                     alt={getConversationTitle(currentConversation)}
-                    className="w-10 h-10 rounded-full object-cover"
+                    style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F97316] to-[#fb923c] flex items-center justify-center">
-                    <MessageCircle size={20} />
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #F97316, #fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                    <MessageCircle size={14} />
                   </div>
                 )}
-                <div>
-                  <h3 className="font-semibold">{getConversationTitle(currentConversation)}</h3>
-                  <p className="text-xs text-secondary">Active now</p>
-                </div>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 17, fontWeight: 700, color: '#eef4f8' }}>
+                  {getConversationTitle(currentConversation)}
+                </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {/* Messages area */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', paddingBottom: 80, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-secondary">
-                      <MessageCircle size={48} className="mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">No messages yet. Start the conversation!</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <div style={{ textAlign: 'center', color: '#5a6e7e' }}>
+                      <MessageCircle size={48} style={{ margin: '0 auto 12px', opacity: 0.4, display: 'block' }} />
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13 }}>No messages yet. Start the conversation!</p>
                     </div>
                   </div>
                 ) : (
@@ -701,36 +722,39 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
                     return (
                       <div
                         key={msg.id}
-                        className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                        style={{ display: 'flex', gap: 8, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}
                       >
                         {!isOwn && (
-                          <div className="w-8 h-8 flex-shrink-0">
+                          <div style={{ width: 26, height: 26, flexShrink: 0, marginTop: 2 }}>
                             {showAvatar && msg.sender?.avatar_url ? (
                               <img
                                 src={msg.sender.avatar_url}
                                 alt={msg.sender.handle}
-                                className="w-8 h-8 rounded-full object-cover"
+                                style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }}
                               />
                             ) : showAvatar ? (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F97316] to-[#fb923c] flex items-center justify-center text-xs">
+                              <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #F97316, #fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>
                                 {msg.sender?.handle[0].toUpperCase()}
                               </div>
                             ) : null}
                           </div>
                         )}
-                        <div className={`max-w-md ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                        <div style={{ maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 3, alignItems: isOwn ? 'flex-end' : 'flex-start' }}>
                           <div
-                            className={`px-4 py-2 rounded-2xl ${
-                              isOwn
-                                ? 'bg-accent-primary text-white rounded-br-sm'
-                                : 'bg-surfacehighlight text-primary rounded-bl-sm'
-                            }`}
+                            style={{
+                              padding: '10px 14px',
+                              ...(isOwn
+                                ? { background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '12px 12px 3px 12px' }
+                                : { background: '#0e1320', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px 12px 12px 3px' }
+                              ),
+                              color: '#eef4f8'
+                            }}
                           >
                             {msg.image_url && (
                               <img
                                 src={msg.image_url}
                                 alt="attachment"
-                                className="mb-2 rounded-lg max-w-full"
+                                style={{ marginBottom: 8, borderRadius: 8, maxWidth: '100%', display: 'block' }}
                               />
                             )}
                             {msg.attachment_url && msg.attachment_type?.startsWith('image/') && (
@@ -738,7 +762,7 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
                                 <img
                                   src={msg.attachment_url}
                                   alt="Attachment"
-                                  className="mb-2 rounded-lg max-w-xs cursor-pointer hover:opacity-90"
+                                  style={{ marginBottom: 8, borderRadius: 8, maxWidth: 280, cursor: 'pointer', display: 'block' }}
                                 />
                               </a>
                             )}
@@ -747,39 +771,50 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
                                 href={msg.attachment_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={`flex items-center gap-3 p-3 rounded-xl mb-2 ${isOwn ? 'bg-white/10' : 'bg-surface border border-surfacehighlight'}`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 10,
+                                  padding: 10,
+                                  borderRadius: 10,
+                                  marginBottom: 8,
+                                  background: isOwn ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                                  border: isOwn ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                                  textDecoration: 'none',
+                                  color: 'inherit'
+                                }}
                               >
-                                <File className="w-6 h-6 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">{msg.attachment_name || 'File'}</p>
+                                <File style={{ width: 22, height: 22, flexShrink: 0, color: '#5a6e7e' }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#eef4f8' }}>{msg.attachment_name || 'File'}</p>
                                   {msg.attachment_size && (
-                                    <p className="text-xs opacity-70">{formatFileSize(msg.attachment_size)}</p>
+                                    <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', margin: '2px 0 0' }}>{formatFileSize(msg.attachment_size)}</p>
                                   )}
                                 </div>
-                                <Download className="w-4 h-4 flex-shrink-0" />
+                                <Download style={{ width: 14, height: 14, flexShrink: 0, color: '#5a6e7e' }} />
                               </a>
                             )}
-                            {msg.content && <p className="text-sm break-words">{msg.content}</p>}
+                            {msg.content && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, margin: 0, lineHeight: 1.45, wordBreak: 'break-word' }}>{msg.content}</p>}
                           </div>
-                          <div className={`flex items-center gap-1 text-xs text-secondary px-1`}>
-                            <span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 2, paddingRight: 2 }}>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#5a6e7e' }}>
                               {new Date(msg.created_at).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit'
                               })}
                             </span>
                             {isOwn && (
-                              <span>
+                              <span style={{ display: 'flex', alignItems: 'center' }}>
                                 {isRead ? (
-                                  <CheckCheck size={14} className="text-accent-primary" />
+                                  <CheckCheck size={12} style={{ color: '#22c55e' }} />
                                 ) : (
-                                  <Check size={14} className="text-secondary" />
+                                  <Check size={12} style={{ color: '#5a6e7e' }} />
                                 )}
                               </span>
                             )}
                           </div>
                         </div>
-                        {isOwn && <div className="w-8"></div>}
+                        {isOwn && <div style={{ width: 26 }} />}
                       </div>
                     );
                   })
@@ -792,71 +827,86 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
                 type="file"
                 accept="image/*,application/pdf"
                 onChange={handleFileSelect}
-                className="hidden"
+                style={{ display: 'none' }}
               />
 
+              {/* Attachment preview */}
               {attachment && (
-                <div className="px-4 py-3 bg-surfacehighlight/50 border-t border-surfacehighlight">
-                  <div className="flex items-center gap-3 p-3 bg-surface rounded-lg">
+                <div style={{ padding: '10px 16px', background: 'rgba(14,19,32,0.7)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, background: '#0a0e17', borderRadius: 10 }}>
                     {attachmentPreview ? (
-                      <img src={attachmentPreview} alt="Preview" className="w-16 h-16 object-cover rounded" />
+                      <img src={attachmentPreview} alt="Preview" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 6 }} />
                     ) : (
-                      <div className="w-16 h-16 bg-surfacehighlight rounded flex items-center justify-center">
-                        <File className="w-8 h-8 text-secondary" />
+                      <div style={{ width: 52, height: 52, background: '#0e1320', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <File style={{ width: 24, height: 24, color: '#5a6e7e' }} />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{attachment.name}</p>
-                      <p className="text-xs text-secondary mt-1">{formatFileSize(attachment.size)}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#eef4f8' }}>{attachment.name}</p>
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: '3px 0 0' }}>{formatFileSize(attachment.size)}</p>
                     </div>
-                    <button onClick={removeAttachment} className="p-2 hover:bg-surfacehighlight rounded">
-                      <X className="w-5 h-5 text-secondary" />
+                    <button onClick={removeAttachment} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: '#5a6e7e' }}>
+                      <X style={{ width: 18, height: 18 }} />
                     </button>
                   </div>
                 </div>
               )}
 
-              <form onSubmit={sendMessage} className="p-4 border-t border-surfacehighlight flex-shrink-0">
-                <div className="flex gap-2">
+              {/* Message input bar */}
+              <form onSubmit={sendMessage} style={{ position: 'sticky', bottom: 0, padding: '12px 16px', background: 'rgba(6,9,14,0.97)', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading || !!attachment}
-                    className="p-3 bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-xl transition-colors disabled:opacity-50"
+                    style={{ width: 36, height: 36, borderRadius: 10, background: '#0e1320', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploading || attachment ? 'not-allowed' : 'pointer', opacity: uploading || attachment ? 0.4 : 1, color: '#5a6e7e', flexShrink: 0 }}
                   >
-                    <Paperclip size={18} className="text-secondary" />
+                    <Paperclip size={16} />
                   </button>
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={attachment ? "Add a message..." : "Type a message..."}
-                    className="flex-1 bg-surfacehighlight border border-surfacehighlight rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    style={{ ...inputStyle, borderRadius: 20, padding: '9px 16px', fontSize: 13, flex: 1 }}
                     autoFocus
                     disabled={uploading}
                   />
                   <button
                     type="submit"
                     disabled={(!newMessage.trim() && !attachment) || uploading}
-                    className="bg-accent-primary text-white px-6 py-3 rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      background: (newMessage.trim() || attachment) && !uploading ? '#f97316' : '#0e1320',
+                      border: (newMessage.trim() || attachment) && !uploading ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: (!newMessage.trim() && !attachment) || uploading ? 'not-allowed' : 'pointer',
+                      color: '#fff',
+                      flexShrink: 0,
+                      transition: 'background 0.15s, border 0.15s'
+                    }}
                   >
                     {uploading ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                     ) : (
-                      <Send size={18} />
+                      <Send size={15} />
                     )}
                   </button>
                 </div>
               </form>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-md px-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-accent-primary to-[#fb923c] rounded-full flex items-center justify-center mx-auto mb-6">
-                  <MessageCircle size={48} className="text-white" />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <div style={{ textAlign: 'center', maxWidth: 340, padding: '0 24px' }}>
+                <div style={{ width: 80, height: 80, background: 'linear-gradient(135deg, #f97316, #fb923c)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                  <MessageCircle size={38} style={{ color: '#fff' }} />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Start a Conversation</h3>
-                <p className="text-secondary mb-6">
+                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '0 0 8px' }}>Start a Conversation</h3>
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', margin: '0 0 20px', lineHeight: 1.5 }}>
                   Connect with fellow car enthusiasts. Share your passion, ask questions, or just chat about rides.
                 </p>
                 <button
@@ -864,9 +914,9 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
                     setShowComposeModal(true);
                     loadFollowers();
                   }}
-                  className="px-6 py-3 bg-accent-primary hover:bg-accent-hover rounded-xl font-bold transition-colors active:scale-95 inline-flex items-center gap-2"
+                  style={{ padding: '10px 22px', background: '#f97316', border: 'none', borderRadius: 10, fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
                 >
-                  <Plus size={20} />
+                  <Plus size={17} />
                   New Message
                 </button>
               </div>
@@ -875,117 +925,122 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
         </div>
       </div>
 
+      {/* Compose modal */}
       {showComposeModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-surface border border-surfacehighlight rounded-xl w-full max-w-md max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b border-surfacehighlight">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold">New Message</h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+          <div style={{ background: '#0a0e17', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, width: '100%', maxWidth: 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', margin: 0 }}>New Message</h3>
                 <button
                   onClick={() => {
                     setShowComposeModal(false);
                     setUserSearchQuery('');
                     setUserSearchResults([]);
                   }}
-                  className="p-2 hover:bg-surfacehighlight rounded-lg transition-colors"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: '#5a6e7e' }}
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" size={16} />
+              <div style={{ position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e' }} size={15} />
                 <input
                   type="text"
                   placeholder="Search users..."
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="w-full bg-surfacehighlight border border-surfacehighlight rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                  style={{ ...inputStyle, borderRadius: 20, paddingLeft: 36, fontSize: 13 }}
                   autoFocus
                 />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
               {userSearchQuery.trim() ? (
                 searchingUsers ? (
-                  <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-3"></div>
-                    <p className="text-secondary text-sm">Searching...</p>
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <div style={{ width: 28, height: 28, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#f97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+                    <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Searching...</p>
                   </div>
                 ) : userSearchResults.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users size={48} className="mx-auto mb-3 text-secondary opacity-50" />
-                    <p className="text-secondary text-sm">No users found</p>
-                    <p className="text-secondary text-xs">Try a different search term</p>
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <Users size={40} style={{ margin: '0 auto 12px', color: '#5a6e7e', opacity: 0.4, display: 'block' }} />
+                    <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', margin: '0 0 4px' }}>No users found</p>
+                    <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e' }}>Try a different search term</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <p className="text-xs text-secondary mb-3 uppercase tracking-wider font-semibold">
+                  <div>
+                    <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 10 }}>
                       Search Results
                     </p>
-                    {userSearchResults.map((user) => (
+                    {userSearchResults.map((u) => (
                       <button
-                        key={user.id}
-                        onClick={() => createOrOpenConversation(user.id)}
-                        className="w-full p-3 hover:bg-surfacehighlight rounded-lg transition-colors text-left flex items-center gap-3"
+                        key={u.id}
+                        onClick={() => createOrOpenConversation(u.id)}
+                        style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 2 }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                       >
-                        {user.avatar_url ? (
+                        {u.avatar_url ? (
                           <img
-                            src={user.avatar_url}
-                            alt={user.handle}
-                            className="w-12 h-12 rounded-full object-cover"
+                            src={u.avatar_url}
+                            alt={u.handle}
+                            style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F97316] to-[#fb923c] flex items-center justify-center text-sm font-bold">
-                            {user.handle[0].toUpperCase()}
+                          <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #F97316, #fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                            {u.handle[0].toUpperCase()}
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">@{user.handle}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{u.handle}</p>
                         </div>
                       </button>
                     ))}
                   </div>
                 )
               ) : loadingFollowers ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-3"></div>
-                  <p className="text-secondary text-sm">Loading followers...</p>
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <div style={{ width: 28, height: 28, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#f97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Loading followers...</p>
                 </div>
               ) : followers.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users size={48} className="mx-auto mb-3 text-secondary opacity-50" />
-                  <p className="text-secondary text-sm mb-2">Start by searching for someone</p>
-                  <p className="text-secondary text-xs">
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <Users size={40} style={{ margin: '0 auto 12px', color: '#5a6e7e', opacity: 0.4, display: 'block' }} />
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', margin: '0 0 4px' }}>Start by searching for someone</p>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e' }}>
                     Type a username above to find people to message
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <p className="text-xs text-secondary mb-3 uppercase tracking-wider font-semibold">
+                <div>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 10 }}>
                     Your Followers
                   </p>
                   {followers.map((follower) => (
                     <button
                       key={follower.id}
                       onClick={() => createOrOpenConversation(follower.id)}
-                      className="w-full p-3 hover:bg-surfacehighlight rounded-lg transition-colors text-left flex items-center gap-3"
+                      style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 2 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       {follower.avatar_url ? (
                         <img
                           src={follower.avatar_url}
                           alt={follower.handle}
-                          className="w-12 h-12 rounded-full object-cover"
+                          style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover' }}
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F97316] to-[#fb923c] flex items-center justify-center text-sm font-bold">
+                        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #F97316, #fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
                           {follower.handle[0].toUpperCase()}
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">@{follower.handle}</p>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{follower.handle}</p>
                         {(follower.car_make || follower.car_model) && (
-                          <p className="text-xs text-secondary truncate">
+                          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {follower.car_make} {follower.car_model}
                           </p>
                         )}

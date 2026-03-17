@@ -11,6 +11,9 @@ import type { SpotWizardData } from '../types/spot';
 import { StickerSelector } from '../components/StickerSelector';
 import { giveSticker } from '../lib/stickerService';
 
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
+
 interface DetailedSpotAndReviewPageProps {
   onNavigate: OnNavigate;
   wizardData: SpotWizardData;
@@ -35,28 +38,30 @@ function StarRow({
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-surfacehighlight last:border-0">
-      <span className="font-heading font-bold uppercase tracking-tight text-sm text-secondary w-28">{label}</span>
-      <div className="flex items-center gap-1">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', width: 80 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
             onClick={() => onChange(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
-            className="p-0.5 transition-transform active:scale-90"
+            style={{ padding: 2, background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.1s' }}
           >
             <Star
-              className={`w-7 h-7 transition-colors ${
-                star <= (hovered || value)
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'fill-surfacehighlight text-surfacehighlight'
-              }`}
+              style={{
+                width: 28,
+                height: 28,
+                fill: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)',
+                color: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)',
+                transition: 'color 0.15s, fill 0.15s',
+              }}
             />
           </button>
         ))}
       </div>
-      <span className={`text-sm font-bold w-8 text-right ${value ? 'text-primary' : 'text-neutral-600'}`}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', width: 32, textAlign: 'right', color: value ? '#eef4f8' : '#525252' }}>
         {value ? `${value}.0` : '—'}
       </span>
     </div>
@@ -65,17 +70,22 @@ function StarRow({
 
 function ReadOnlyStarRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-surfacehighlight/50 last:border-0">
-      <span className="text-xs font-bold uppercase tracking-wider text-secondary w-20">{label}</span>
-      <div className="flex items-center gap-0.5">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', width: 80 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         {[1, 2, 3, 4, 5].map(star => (
           <Star
             key={star}
-            className={`w-4 h-4 ${star <= value ? 'fill-yellow-400 text-yellow-400' : 'fill-neutral-700 text-neutral-700'}`}
+            style={{
+              width: 16,
+              height: 16,
+              fill: star <= value ? '#F97316' : 'rgba(255,255,255,0.06)',
+              color: star <= value ? '#F97316' : 'rgba(255,255,255,0.06)',
+            }}
           />
         ))}
       </div>
-      <span className="text-sm font-bold text-primary w-8 text-right">{value}.0</span>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', width: 32, textAlign: 'right', color: '#eef4f8' }}>{value}.0</span>
     </div>
   );
 }
@@ -103,8 +113,13 @@ export function DetailedSpotAndReviewPage({
 
   const canSubmit = looksRating > 0 && soundRating > 0 && conditionRating > 0;
 
+  const [isNewPlate, setIsNewPlate] = useState(false);
+
   const ensureVehicleExists = async (): Promise<string> => {
-    if (wizardData.vehicleId) return wizardData.vehicleId;
+    if (wizardData.vehicleId) {
+      setIsNewPlate(false);
+      return wizardData.vehicleId;
+    }
 
     const plateHash = wizardData.plateHash || await hashPlate(wizardData.plateState, wizardData.plateNumber);
 
@@ -114,7 +129,12 @@ export function DetailedSpotAndReviewPage({
       .eq('plate_hash', plateHash)
       .maybeSingle();
 
-    if (existing) return existing.id;
+    if (existing) {
+      setIsNewPlate(false);
+      return existing.id;
+    }
+
+    setIsNewPlate(true);
 
     const { data: newVehicle, error } = await supabase
       .from('vehicles')
@@ -185,7 +205,7 @@ export function DetailedSpotAndReviewPage({
             spotter_id: user.id,
             vehicle_id: vehicleId,
             spot_type: 'full',
-            reputation_earned: 35,
+            reputation_earned: 15,
           })
           .select('id')
           .single();
@@ -263,7 +283,7 @@ export function DetailedSpotAndReviewPage({
           .from('spot_history')
           .update({
             spot_type: 'full',
-            reputation_earned: 35,
+            reputation_earned: 15,
           })
           .eq('review_id', reviewId);
 
@@ -274,12 +294,21 @@ export function DetailedSpotAndReviewPage({
           referenceId: reviewId,
         });
       } else {
-        // Reputation already calculated for new full spot
         await calculateAndAwardReputation({
           userId: user.id,
           action: 'SPOT_FULL_REVIEW',
           referenceType: 'review',
           referenceId: reviewId,
+        });
+      }
+
+      // New plate bonus (+2 pts)
+      if (isNewPlate) {
+        await calculateAndAwardReputation({
+          userId: user.id,
+          action: 'NEW_PLATE_BONUS',
+          referenceType: 'vehicle',
+          referenceId: vehicleId,
         });
       }
 
@@ -310,20 +339,20 @@ export function DetailedSpotAndReviewPage({
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <div className="mb-6">
+      <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px 100px 16px' }}>
+        <div style={{ marginBottom: 24 }}>
           <button
             onClick={() => onNavigate('quick-spot-review', { wizardData, driverRating, drivingRating, vehicleRating, sentiment, comment })}
-            className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-5"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: '#7a8e9e', cursor: 'pointer', marginBottom: 20, padding: 0 }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft style={{ width: 16, height: 16 }} />
+            <span style={{ fontSize: 14, fontFamily: "'Barlow', sans-serif", fontWeight: 500 }}>Back</span>
           </button>
 
-          <h1 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
+          <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px 0' }}>
             {upgradeFromQuickSpot ? 'FULL SPOT UPGRADE' : 'Full Spot'}
           </h1>
-          <p className="text-secondary text-sm">
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#7a8e9e', margin: 0 }}>
             {upgradeFromQuickSpot
               ? 'Add detailed ratings for +20 bonus RP'
               : (vehicleName || 'Complete the review for +35 pts')
@@ -331,34 +360,44 @@ export function DetailedSpotAndReviewPage({
           </p>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-4 mb-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-3">Carried Over</p>
+        {/* Carried Over Section */}
+        <div style={{ background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#7a8e9e', margin: '0 0 12px 0' }}>Carried Over</p>
           <ReadOnlyStarRow label="Driver" value={driverRating} />
           <ReadOnlyStarRow label="Driving" value={drivingRating} />
           <ReadOnlyStarRow label="Vehicle" value={vehicleRating} />
-          <div className="mt-3 pt-3 border-t border-surfacehighlight/50">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold ${
-              sentiment === 'love'
-                ? 'bg-rose-500/20 text-rose-400'
-                : 'bg-neutral-700/50 text-neutral-300'
-            }`}>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 8,
+              fontSize: 14,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              background: sentiment === 'love' ? 'rgba(244,63,94,0.2)' : 'rgba(64,64,64,0.5)',
+              color: sentiment === 'love' ? '#fb7185' : '#d4d4d4',
+            }}>
               {sentiment === 'love'
-                ? <><Heart className="w-4 h-4 fill-current" /> Love It</>
-                : <><ThumbsDown className="w-4 h-4" /> Hate It</>
+                ? <><Heart style={{ width: 16, height: 16, fill: 'currentColor' }} /> Love It</>
+                : <><ThumbsDown style={{ width: 16, height: 16 }} /> Hate It</>
               }
             </div>
           </div>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-2xl p-5 mb-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-1">Additional Ratings</p>
-          <p className="text-xs text-secondary mb-3">Required for full spot</p>
+        {/* Additional Ratings Section */}
+        <div style={{ background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#7a8e9e', margin: '0 0 4px 0' }}>Additional Ratings</p>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', margin: '0 0 12px 0' }}>Required for full spot</p>
           <StarRow label="Looks" value={looksRating} onChange={setLooksRating} />
           <StarRow label="Sound" value={soundRating} onChange={setSoundRating} />
           <StarRow label="Condition" value={conditionRating} onChange={setConditionRating} />
         </div>
 
-        <div className="mb-4">
+        {/* Sticker Selector */}
+        <div style={{ marginTop: 20, marginBottom: 16 }}>
           <StickerSelector
             selectedStickers={selectedStickerIds}
             onToggleSticker={(id) => {
@@ -369,29 +408,43 @@ export function DetailedSpotAndReviewPage({
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">
-            Comment <span className="text-neutral-600 font-normal normal-case">(optional)</span>
+        {/* Comment */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 8 }}>
+            Comment <span style={{ color: '#525252', fontWeight: 400, textTransform: 'none' }}>(optional)</span>
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder={upgradeFromQuickSpot ? "Anything else to add about this ride?" : "Share your experience with this vehicle..."}
             rows={4}
-            className="w-full bg-surface border border-surfacehighlight rounded-xl px-4 py-3 text-primary placeholder-neutral-600 focus:outline-none focus:border-accent-primary transition-colors resize-none text-sm"
+            style={{ ...inputStyle, resize: 'none', height: 'auto' }}
           />
         </div>
+      </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={!canSubmit || submitting}
-          className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-[#F97316] to-[#fb923c] hover:from-[#F97316] hover:to-[#fb923c] disabled:from-surfacehighlight disabled:to-surfacehighlight disabled:text-secondary rounded-xl font-heading font-bold uppercase tracking-tight text-lg transition-all active:scale-95 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
-        >
-          {submitting ? (
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : null}
-          {upgradeFromQuickSpot ? 'Submit Upgrade (+20 pts)' : 'Submit Full Spot (+35 pts)'}
-        </button>
+      {/* Fixed bottom submit button */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px', background: 'linear-gradient(to top, #070a0f 80%, transparent)', zIndex: 40 }}>
+        <div style={{ maxWidth: 512, margin: '0 auto' }}>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting}
+            style={{
+              ...primaryBtnStyle,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              opacity: (!canSubmit || submitting) ? 0.4 : 1,
+              cursor: (!canSubmit || submitting) ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {submitting ? (
+              <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            ) : null}
+            Submit Full Spot +35 RP
+          </button>
+        </div>
       </div>
     </Layout>
   );

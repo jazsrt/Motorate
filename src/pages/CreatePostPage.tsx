@@ -11,6 +11,10 @@ import { useToast } from '../contexts/ToastContext';
 import { validateVideoFile, formatFileSize, formatDuration, getVideoMetadata, VIDEO_CONSTRAINTS } from '../utils/videoHelpers';
 import { calculateAndAwardReputation, getDailyPostCount } from '../lib/reputation';
 
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
+const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 6, display: 'block' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
+
 interface CreatePostPageProps {
   onNavigate: OnNavigate;
 }
@@ -369,46 +373,46 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   return (
     <Layout currentPage="feed" onNavigate={onNavigate}>
       {showSpectatorModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6 space-y-6">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 text-orange-500" />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+          <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, maxWidth: 400, width: '100%', padding: 28 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+              <div style={{ width: 56, height: 56, background: 'rgba(249,115,22,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertCircle style={{ width: 28, height: 28, color: '#F97316' }} />
               </div>
             </div>
 
-            {upgradeRequested ? (
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-bold uppercase tracking-wider text-green-400">Request Submitted!</h3>
-                <p className="text-secondary">
+            {upgradereRequested ? (
+              <div style={{ textAlign: 'center' }}>
+                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#4ade80', marginBottom: 8 }}>Request Submitted!</h3>
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.55 }}>
                   An admin will review your upgrade request soon. You'll receive a notification once it's been processed.
                 </p>
               </div>
             ) : (
               <>
-                <div className="text-center space-y-2">
-                  <h3 className="text-xl font-bold uppercase tracking-wider">Upgrade Required</h3>
-                  <p className="text-secondary">
+                <div style={{ textAlign: 'center', marginBottom: 18 }}>
+                  <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#eef4f8', marginBottom: 8 }}>Upgrade Required</h3>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.55 }}>
                     Spectator accounts can browse and engage, but creating posts requires a User account.
                   </p>
                 </div>
-                <div className="bg-surfacehighlight rounded-xl p-4 space-y-2 text-sm">
-                  <p className="font-bold">To create content, you can:</p>
-                  <ul className="space-y-1 text-secondary">
-                    <li>✓ Request upgrade to User account (quick & free)</li>
-                    <li>✓ Claim your vehicle to get full access</li>
-                    <li>✓ Browse community content as spectator</li>
-                  </ul>
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14, marginBottom: 18 }}>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>To create content, you can:</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {['Request upgrade to User account (quick & free)', 'Claim your vehicle to get full access', 'Browse community content as spectator'].map(item => (
+                      <span key={item} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e' }}>{'✓ ' + item}</span>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
 
-            <div className="flex flex-col gap-3">
-              {!upgradeRequested && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
+              {!upgradereRequested && (
                 <>
                   <button
                     onClick={handleUpgradeRequest}
-                    className="w-full bg-gradient-to-r from-accent-primary to-accent-hover hover:shadow-lg hover:shadow-accent-primary/20 rounded-xl px-4 py-3 font-bold uppercase tracking-wider text-sm transition-all active:scale-95"
+                    style={{ ...primaryBtnStyle, borderRadius: 10 }}
                   >
                     Request Upgrade
                   </button>
@@ -417,7 +421,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                       setShowSpectatorModal(false);
                       onNavigate('profile');
                     }}
-                    className="w-full bg-surfacehighlight hover:bg-surfacehover rounded-xl px-4 py-3 font-bold uppercase tracking-wider text-sm transition-all"
+                    style={{ width: '100%', padding: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#eef4f8', cursor: 'pointer' }}
                   >
                     Claim Vehicle
                   </button>
@@ -428,41 +432,42 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                   setShowSpectatorModal(false);
                   onNavigate('feed');
                 }}
-                className="w-full bg-surface hover:bg-surfacehighlight border border-surfacehighlight rounded-xl px-4 py-3 font-bold uppercase tracking-wider text-sm transition-all"
+                style={{ width: '100%', padding: 13, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', cursor: 'pointer' }}
               >
-                {upgradeRequested ? 'Close' : 'Cancel'}
+                {upgradereRequested ? 'Close' : 'Cancel'}
               </button>
             </div>
           </div>
         </div>
       )}
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleCancel}
-            className="p-2 hover:bg-surfacehighlight rounded-lg transition-colors flex-shrink-0"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h2 className="font-heading font-bold mb-2">Create Post</h2>
-            <p className="text-secondary text-sm">Share your car</p>
+
+      <div style={{ maxWidth: 560, margin: '0 auto', paddingBottom: 90 }}>
+        {/* Sticky header */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(6,9,14,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', padding: '14px 0 12px', marginBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <button
+              onClick={handleCancel}
+              aria-label="Go back"
+              style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <ChevronLeft style={{ width: 16, height: 16, color: '#7a8e9e' }} />
+            </button>
+            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: 0 }}>Create Post</h2>
           </div>
         </div>
 
         {isSpectator && (
-          <div className="card-crisp bg-orange-900/20 border-orange-500">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" strokeWidth={1.5} />
+          <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 12, padding: 18, marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <AlertCircle style={{ width: 22, height: 22, color: '#F97316', flexShrink: 0, marginTop: 2 }} strokeWidth={1.5} />
               <div>
-                <h3 className="font-heading font-bold text-lg text-white mb-2">Drivers Only</h3>
-                <p className="text-slate-300 mb-4 text-sm">
+                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>Drivers Only</h3>
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#8a9aaa', lineHeight: 1.5, marginBottom: 14 }}>
                   Add your car to leave comments and create posts. Complete onboarding to unlock posting features.
                 </p>
                 <button
                   onClick={() => onNavigate('profile')}
-                  className="btn-primary"
+                  style={{ ...primaryBtnStyle, width: 'auto', padding: '10px 22px', borderRadius: 8 }}
                 >
                   Go to Profile
                 </button>
@@ -473,135 +478,162 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
         {!isSpectator && (
           <>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="card-crisp p-0 overflow-hidden">
-            {image ? (
-              <div className="relative">
-                {contentType === 'video' ? (
-                  <video src={image || undefined} controls className="w-full max-h-[500px]" />
+            <form onSubmit={handleSubmit}>
+              {/* Media upload zone */}
+              <div style={{ marginBottom: 18 }}>
+                {image ? (
+                  <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden' }}>
+                    {contentType === 'video' ? (
+                      <video src={image || undefined} controls style={{ width: '100%', maxHeight: 500, display: 'block' }} />
+                    ) : (
+                      <img src={image || undefined} alt="Post preview" style={{ width: '100%', display: 'block', borderRadius: 12 }} />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImage(null);
+                        setMediaFile(null);
+                        setContentType('image');
+                      }}
+                      style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: '50%', background: 'rgba(6,9,14,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    >
+                      <X style={{ width: 14, height: 14, color: '#ccc' }} strokeWidth={1.5} />
+                    </button>
+                  </div>
                 ) : (
-                  <img src={image || undefined} alt="Post preview" className="w-full" />
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,video/mp4,video/webm,video/ogg"
+                      capture="environment"
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                      id="camera-input"
+                    />
+                    <label
+                      htmlFor="camera-input"
+                      style={{ height: 200, borderRadius: 12, background: '#0a0d14', border: '2px dashed rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer' }}
+                    >
+                      <Camera style={{ width: 28, height: 28, color: '#3a4e60' }} />
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#5a6e7e' }}>Add Photo or Video</span>
+                      <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#3a4e60' }}>
+                        Images: Max 10MB | Videos: MP4, WebM, Ogg - Max 50MB, 5min
+                      </span>
+                    </label>
+                  </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImage(null);
-                    setMediaFile(null);
-                    setContentType('image');
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-surface/90 backdrop-blur-sm rounded-xl hover:bg-surfacehighlight transition-all active:scale-95"
-                >
-                  <X className="w-5 h-5" strokeWidth={1.5} />
-                </button>
               </div>
-            ) : (
-              <div className="p-6">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/mp4,video/webm,video/ogg"
-                  capture="environment"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="camera-input"
+
+              {/* Rate limit error */}
+              {!isAllowed && <div style={{ marginBottom: 14 }}><RateLimitError action="post" remainingTime={remainingTime} /></div>}
+
+              {/* Error message */}
+              {error && (
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
+                  <AlertCircle style={{ width: 16, height: 16, color: '#ef4444', flexShrink: 0, marginTop: 2 }} />
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#fca5a5', margin: 0, lineHeight: 1.45 }}>{error}</p>
+                </div>
+              )}
+
+              {/* Caption */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={labelStyle}>Caption</label>
+                <textarea
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'none', lineHeight: 1.55 }}
+                  placeholder="Write a caption..."
                 />
-                <label
-                  htmlFor="camera-input"
-                  className="w-full bg-accent-primary hover:bg-accent-hover rounded-xl px-6 py-4 font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Camera className="w-6 h-6" />
-                  Take Photo / Upload
-                </label>
-                <p className="text-xs text-neutral-400 text-center mt-3">
-                  Images: Max 10MB | Videos: MP4 (H.264), WebM, Ogg - Max 50MB, 5min
-                </p>
               </div>
-            )}
 
-              <div className="p-6 space-y-4">
-                {!isAllowed && <RateLimitError action="post" remainingTime={remainingTime} />}
-                {error && (
-                  <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-300">{error}</p>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-                    Caption
-                  </label>
-                  <textarea
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    rows={3}
-                    className="w-full bg-surfacehighlight border border-surfacehighlight rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
-                    placeholder="Write a caption..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-3">
-                    Privacy
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {privacyOptions.map(({ value, icon: Icon, label, desc }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setPrivacyLevel(value)}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          privacyLevel === value
-                            ? 'border-accent-primary bg-accent-primary/10'
-                            : 'border-surfacehighlight bg-surfacehighlight hover:border-accent-primary/50'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 mx-auto mb-1" />
-                        <div className="text-xs font-bold">{label}</div>
-                        <div className="text-[10px] text-secondary">{desc}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-                    Location <span className="text-xs font-normal normal-case">(Optional)</span>
-                  </label>
+              {/* Location */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={labelStyle}>Location <span style={{ fontWeight: 400, letterSpacing: '0.04em', textTransform: 'none' }}>(Optional)</span></label>
+                <div style={{ position: 'relative' }}>
                   <input
                     type="text"
                     value={locationLabel}
                     onChange={(e) => setLocationLabel(e.target.value)}
-                    className="w-full bg-surfacehighlight border border-surfacehighlight rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    style={{ ...inputStyle, paddingRight: 40 }}
                     placeholder="Chicago, IL"
                   />
-                  {coordinates && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
-                      <MapPin className="w-4 h-4" />
-                      <span>GPS location detected (fuzzed for privacy)</span>
-                    </div>
-                  )}
-                  {detectingLocation && (
-                    <div className="mt-2 text-xs text-secondary">Detecting GPS location...</div>
-                  )}
-                  {!coordinates && !detectingLocation && (
-                    <p className="mt-2 text-xs text-secondary">
-                      Enter a city or general area, or allow location access for precise location
-                    </p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={detectLocation}
+                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                  >
+                    <MapPin style={{ width: 16, height: 16, color: coordinates ? '#4ade80' : '#3a4e60' }} />
+                  </button>
                 </div>
+                {coordinates && (
+                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin style={{ width: 12, height: 12, color: '#4ade80' }} />
+                    <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#4ade80' }}>GPS location detected (fuzzed for privacy)</span>
+                  </div>
+                )}
+                {detectingLocation && (
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', display: 'block', marginTop: 6 }}>Detecting GPS location...</span>
+                )}
+                {!coordinates && !detectingLocation && (
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', display: 'block', marginTop: 6 }}>
+                    Enter a city or general area, or allow location access for precise location
+                  </span>
+                )}
+              </div>
 
+              {/* Privacy selector */}
+              <div style={{ marginBottom: 24 }}>
+                <label style={labelStyle}>Privacy</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  {privacyOptions.map(({ value, icon: Icon, label, desc }) => {
+                    const active = privacyLevel === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setPrivacyLevel(value)}
+                        style={{
+                          padding: '14px 8px',
+                          borderRadius: 10,
+                          border: active ? '1px solid rgba(249,115,22,0.35)' : '1px solid rgba(255,255,255,0.05)',
+                          background: active ? 'rgba(249,115,22,0.08)' : '#0a0d14',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Icon style={{ width: 18, height: 18, color: active ? '#F97316' : '#5a6e7e' }} />
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: active ? '#F97316' : '#8a9aaa' }}>{label}</span>
+                        <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e' }}>{desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </form>
+
+            {/* Fixed bottom submit */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, background: 'rgba(6,9,14,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              <div style={{ maxWidth: 560, margin: '0 auto' }}>
                 <button
-                  type="submit"
-                  disabled={loading || !isAllowed}
-                  className="w-full bg-gradient-to-r from-accent-primary to-accent-hover hover:shadow-lg hover:shadow-accent-primary/20 disabled:from-surfacehighlight disabled:to-surfacehighlight disabled:cursor-not-allowed rounded-xl px-6 py-4 font-bold uppercase tracking-wider transition-all active:scale-95"
+                  type="button"
+                  onClick={handleSubmit as any}
+                  disabled={loading || !isAllowed || !image}
+                  style={{
+                    ...primaryBtnStyle,
+                    opacity: (loading || !isAllowed || !image) ? 0.35 : 1,
+                    cursor: (loading || !isAllowed || !image) ? 'not-allowed' : 'pointer',
+                  }}
                 >
                   {loading ? 'Posting...' : !isAllowed ? 'Rate Limited' : 'Share Post'}
                 </button>
               </div>
             </div>
-        </form>
-        </>
+          </>
         )}
       </div>
     </Layout>

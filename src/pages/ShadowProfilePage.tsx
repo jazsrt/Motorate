@@ -195,7 +195,7 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
   if (loading) {
     return (
       <Layout currentPage="feed" onNavigate={onNavigate}>
-        <div className="flex items-center justify-center min-h-screen">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
           <LoadingSpinner />
         </div>
       </Layout>
@@ -205,18 +205,52 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
   if (!vehicleDetails) {
     return (
       <Layout currentPage="feed" onNavigate={onNavigate}>
-        <div className="max-w-2xl mx-auto p-6">
-          <div className="bg-surface border border-surfacehighlight rounded-2xl p-12 text-center">
-            <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-            <h2 className="text-2xl font-bold mb-2">Vehicle Not Found</h2>
-            <p className="text-secondary mb-6">
+        <div style={{ maxWidth: 672, margin: '0 auto', padding: 24 }}>
+          <div style={{
+            background: '#0a0d14',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 16,
+            padding: 48,
+            textAlign: 'center',
+          }}>
+            <AlertCircle style={{ width: 64, height: 64, margin: '0 auto 16px', color: '#f87171' }} />
+            <h2 style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase' as const,
+              color: '#eef4f8',
+              marginBottom: 8,
+            }}>Vehicle Not Found</h2>
+            <p style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontSize: 13,
+              color: '#7a8e9e',
+              marginBottom: 24,
+            }}>
               No data found for this license plate.
             </p>
             <button
               onClick={() => onNavigate('feed')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-accent-primary hover:bg-accent-hover rounded-xl font-bold transition-all"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                background: '#f97316',
+                borderRadius: 8,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase' as const,
+                color: '#000',
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft style={{ width: 18, height: 18 }} />
               Back to Feed
             </button>
           </div>
@@ -229,192 +263,291 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
     ? `${vehicleDetails.year || ''} ${vehicleDetails.make} ${vehicleDetails.model}`.trim()
     : 'Unknown Vehicle';
 
+  const overallAvg = posts.length > 0
+    ? ((averageRatings.vehicle + averageRatings.driver + averageRatings.driving) / 3).toFixed(1)
+    : '0.0';
+
   const positiveStickers = bumperStickers.filter(s => s.isPositive);
   const negativeStickers = bumperStickers.filter(s => !s.isPositive);
 
   return (
     <Layout currentPage="feed" onNavigate={onNavigate}>
-      <div className="max-w-5xl mx-auto pb-24">
-        {/* Hero Header with Glassmorphism */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/20 via-[#fb923c]/20 to-pink-500/20 backdrop-blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.3),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(244,114,182,0.2),transparent_50%)]" />
+      <div style={{ maxWidth: 480, margin: '0 auto', paddingBottom: 96, background: '#060910' }}>
 
-          <div className="relative p-8 space-y-6">
-            <button
-              onClick={() => onNavigate('feed')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-surface/80 backdrop-blur-sm hover:bg-surfacehighlight rounded-xl transition-all active:scale-95"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span className="font-bold">Back</span>
-            </button>
-
-            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-              {/* Vehicle Image */}
-              {vehicleDetails.stock_image_url ? (
-                <img
-                  src={vehicleDetails.stock_image_url}
-                  alt={vehicleDisplay}
-                  className="w-full lg:w-48 h-48 rounded-2xl object-cover border-4 border-accent-primary/30 shadow-2xl shadow-accent-primary/20"
-                />
-              ) : (
-                <div className="w-full lg:w-48 h-48 rounded-2xl bg-gradient-to-br from-accent-primary/20 to-[#fb923c]/20 border-4 border-accent-primary/30 flex items-center justify-center shadow-2xl">
-                  <Car className="w-24 h-24 text-accent-primary" />
-                </div>
-              )}
-
-              {/* Vehicle Info */}
-              <div className="flex-1 space-y-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-4xl lg:text-5xl uppercase tracking-tight bg-gradient-to-r from-white via-accent-primary to-[#fb923c] bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
-                      {vehicleDisplay}
-                    </h1>
-                    {!isActive && (
-                      <span style={{
-                        fontFamily: 'var(--font-cond)',
-                        fontSize: '9px',
-                        fontWeight: 700,
-                        letterSpacing: '0.16em',
-                        textTransform: 'uppercase',
-                        color: 'var(--dim)',
-                        background: 'rgba(255,255,255,0.06)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '3px',
-                        padding: '3px 8px',
-                      }}>
-                        UNCLAIMED
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 px-4 py-2 bg-surface/80 backdrop-blur-sm rounded-xl border border-surfacehighlight w-fit">
-                    <span className="text-xs font-bold text-secondary uppercase" style={{ fontFamily: 'var(--font-cond)' }}>Plate:</span>
-                    <span className="font-mono font-bold text-lg tracking-wider">{plateState}-{plateNum}</span>
-                  </div>
-
-                  {vehicleDetails.color && (
-                    <p className="text-sm text-secondary mt-2">
-                      <span className="font-bold">Color:</span> {vehicleDetails.color}
-                    </p>
-                  )}
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-accent-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{posts.length}</div>
-                    <div className="text-xs font-bold text-secondary" style={{ fontFamily: 'var(--font-cond)', textTransform: 'uppercase' }}>Spots</div>
-                  </div>
-                  <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-[#F97316]" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>0</div>
-                    <div className="text-xs font-bold text-secondary" style={{ fontFamily: 'var(--font-cond)', textTransform: 'uppercase' }}>Followers</div>
-                  </div>
-                  <div className="bg-surface/80 backdrop-blur-sm rounded-xl p-3 border border-surfacehighlight text-center">
-                    <div className="text-2xl font-bold text-accent-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>0</div>
-                    <div className="text-xs font-bold text-secondary" style={{ fontFamily: 'var(--font-cond)', textTransform: 'uppercase' }}>Views</div>
-                  </div>
-                </div>
-              </div>
+        {/* Hero Section - 220px */}
+        <div style={{ position: 'relative', width: '100%', height: 220, overflow: 'hidden' }}>
+          {vehicleDetails.stock_image_url ? (
+            <>
+              <img
+                src={vehicleDetails.stock_image_url}
+                alt={vehicleDisplay}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  filter: 'brightness(0.55) saturate(0.7)',
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(to top, rgba(3,5,8,0.98) 0%, rgba(3,5,8,0.4) 60%, transparent 100%)',
+              }} />
+            </>
+          ) : (
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: '#080b12',
+              backgroundImage: 'linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px)',
+              backgroundSize: '28px 28px',
+            }}>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(to top, rgba(3,5,8,0.98) 0%, rgba(3,5,8,0.4) 60%, transparent 100%)',
+              }} />
             </div>
+          )}
 
-            {/* Claim CTA */}
-            {!isActive && user && (
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 border-2 border-green-500/50 backdrop-blur-sm shadow-2xl">
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Award className="w-7 h-7 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold mb-2 text-green-300">
-                      Is This Your Vehicle?
-                    </h3>
-                    <p className="text-sm text-secondary mb-4">
-                      Claim this vehicle to manage its profile, respond to reviews, and showcase your ride to the community.
-                    </p>
-                    <button
-                      onClick={() => setShowClaimModal(true)}
-                      className="hover:opacity-90 transition-all active:scale-95 shadow-lg px-6 py-3"
-                      style={{
-                        background: 'var(--accent)',
-                        borderRadius: '8px',
-                        fontFamily: 'var(--font-cond)',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        letterSpacing: '0.12em',
-                        textTransform: 'uppercase',
-                        color: 'var(--black)',
-                      }}
-                    >
-                      Claim This Vehicle
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Back Button */}
+          <button
+            onClick={() => onNavigate('feed')}
+            style={{
+              position: 'absolute',
+              top: 14,
+              left: 14,
+              width: 34,
+              height: 34,
+              borderRadius: '50%',
+              background: 'rgba(6,9,14,0.75)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#eef4f8',
+              padding: 0,
+              zIndex: 10,
+            }}
+          >
+            <ChevronLeft style={{ width: 16, height: 16 }} />
+          </button>
+
+          {/* UNCLAIMED badge */}
+          {!isActive && (
+            <div style={{
+              position: 'absolute',
+              top: 18,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 8,
+              fontWeight: 700,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase' as const,
+              color: '#7a8e9e',
+              zIndex: 10,
+            }}>
+              UNCLAIMED
+            </div>
+          )}
+
+          {/* Bottom text overlay */}
+          <div style={{
+            position: 'absolute',
+            bottom: 16,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            zIndex: 10,
+          }}>
+            {/* Make/model label */}
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 8,
+              fontWeight: 700,
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase' as const,
+              color: 'rgba(249,115,22,0.88)',
+              marginBottom: 4,
+            }}>
+              {vehicleDisplay}
+            </div>
+            {/* Plate number */}
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 24,
+              fontWeight: 600,
+              color: '#eef4f8',
+              letterSpacing: '0.18em',
+            }}>
+              {plateState}-{plateNum}
+            </div>
           </div>
         </div>
 
-        {/* Community Ratings */}
-        {posts.length > 0 && (
-          <div className="mb-8 bg-gradient-to-br from-surface via-surfacehighlight to-surface border border-surfacehighlight rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center gap-2 mb-6">
-              <Star className="w-6 h-6 text-[#F97316]" />
-              <h2 className="text-2xl font-heading font-bold uppercase tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Community Ratings</h2>
-              <span className="text-sm text-secondary">({posts.length} review{posts.length !== 1 ? 's' : ''})</span>
+        {/* Stats Strip */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          background: '#0a0d14',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+        }}>
+          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+            <div style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#eef4f8',
+            }}>{posts.length}</div>
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase' as const,
+              color: '#445566',
+            }}>Spots</div>
+          </div>
+          <div style={{
+            textAlign: 'center',
+            padding: '12px 0',
+            borderLeft: '1px solid rgba(255,255,255,0.04)',
+            borderRight: '1px solid rgba(255,255,255,0.04)',
+          }}>
+            <div style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#eef4f8',
+            }}>{overallAvg}</div>
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase' as const,
+              color: '#445566',
+            }}>Avg Rating</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+            <div style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#eef4f8',
+            }}>{bumperStickers.length}</div>
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase' as const,
+              color: '#445566',
+            }}>Stickers</div>
+          </div>
+        </div>
+
+        {/* Claim CTA */}
+        {!isActive && user && (
+          <div style={{
+            margin: '16px 16px 0',
+            padding: 16,
+            background: 'rgba(249,115,22,0.08)',
+            border: '1px solid rgba(249,115,22,0.25)',
+            borderRadius: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase' as const,
+                color: '#eef4f8',
+                marginBottom: 2,
+              }}>Is this your vehicle?</div>
+              <div style={{
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: 10,
+                color: '#7a8e9e',
+              }}>Claim to manage profile &amp; respond to reviews</div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-[#F97316]/20">
-                <div className="text-xs font-bold text-secondary uppercase mb-2" style={{ fontFamily: 'var(--font-cond)' }}>The Vehicle</div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-[#F97316]">{averageRatings.vehicle.toFixed(1)}</div>
-                  <div className="text-sm text-secondary">/ 5.0</div>
-                </div>
-                <StarRating value={averageRatings.vehicle} onChange={() => {}} readOnly size="large" />
-              </div>
-
-              <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-orange/20">
-                <div className="text-xs font-bold text-secondary uppercase mb-2" style={{ fontFamily: 'var(--font-cond)' }}>The Driver</div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-accent-primary">{averageRatings.driver.toFixed(1)}</div>
-                  <div className="text-sm text-secondary">/ 5.0</div>
-                </div>
-                <StarRating value={averageRatings.driver} onChange={() => {}} readOnly size="large" />
-              </div>
-
-              <div className="p-5 bg-surfacehighlight/50 backdrop-blur-sm rounded-xl border border-orange-500/20">
-                <div className="text-xs font-bold text-secondary uppercase mb-2" style={{ fontFamily: 'var(--font-cond)' }}>The Driving</div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="text-3xl font-black text-accent-2">{averageRatings.driving.toFixed(1)}</div>
-                  <div className="text-sm text-secondary">/ 5.0</div>
-                </div>
-                <StarRating value={averageRatings.driving} onChange={() => {}} readOnly size="large" />
-              </div>
-            </div>
+            <button
+              onClick={() => setShowClaimModal(true)}
+              style={{
+                padding: '8px 18px',
+                background: '#f97316',
+                borderRadius: 6,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase' as const,
+                color: '#000',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap' as const,
+              }}
+            >
+              Claim
+            </button>
           </div>
         )}
 
         {/* Bumper Stickers */}
         {bumperStickers.length > 0 && (
-          <div className="mb-8 space-y-6">
+          <div style={{ padding: '16px 16px 0' }}>
             {positiveStickers.length > 0 && (
-              <div className="bg-gradient-to-br from-surface via-surfacehighlight to-surface border border-surfacehighlight rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <ThumbsUp className="w-6 h-6 text-green-400" />
-                  <h2 className="text-xl font-heading font-bold uppercase tracking-tight">Vehicle Highlights</h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
+              <div style={{ marginBottom: 10 }}>
+                <div style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase' as const,
+                  color: '#445566',
+                  marginBottom: 8,
+                }}>Vehicle Highlights</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {positiveStickers.map((sticker) => (
                     <div
                       key={sticker.tag}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 shadow-lg shadow-green-500/20 flex items-center gap-2"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 10px',
+                        borderRadius: 4,
+                        background: 'rgba(34,197,94,0.1)',
+                        border: '1px solid rgba(34,197,94,0.2)',
+                      }}
                     >
-                      <span className="font-bold text-sm">{sticker.tag}</span>
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-bold">
-                        {sticker.count}
-                      </span>
+                      <span style={{
+                        fontFamily: "'Barlow Condensed', sans-serif",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase' as const,
+                        color: '#4ade80',
+                      }}>{sticker.tag}</span>
+                      <span style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 8,
+                        fontWeight: 600,
+                        color: 'rgba(74,222,128,0.6)',
+                      }}>{sticker.count}</span>
                     </div>
                   ))}
                 </div>
@@ -422,21 +555,44 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
             )}
 
             {negativeStickers.length > 0 && (
-              <div className="bg-gradient-to-br from-surface via-surfacehighlight to-surface border border-surfacehighlight rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <ThumbsDown className="w-6 h-6 text-red-400" />
-                  <h2 className="text-xl font-heading font-bold uppercase tracking-tight">Driver Behavior</h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
+              <div style={{ marginBottom: 10 }}>
+                <div style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase' as const,
+                  color: '#445566',
+                  marginBottom: 8,
+                }}>Driver Behavior</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {negativeStickers.map((sticker) => (
                     <div
                       key={sticker.tag}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 shadow-lg shadow-red-500/20 flex items-center gap-2"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 10px',
+                        borderRadius: 4,
+                        background: 'rgba(239,68,68,0.1)',
+                        border: '1px solid rgba(239,68,68,0.2)',
+                      }}
                     >
-                      <span className="font-bold text-sm">{sticker.tag}</span>
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-bold">
-                        {sticker.count}
-                      </span>
+                      <span style={{
+                        fontFamily: "'Barlow Condensed', sans-serif",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase' as const,
+                        color: '#f87171',
+                      }}>{sticker.tag}</span>
+                      <span style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 8,
+                        fontWeight: 600,
+                        color: 'rgba(248,113,113,0.6)',
+                      }}>{sticker.count}</span>
                     </div>
                   ))}
                 </div>
@@ -445,13 +601,75 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
           </div>
         )}
 
-        {/* Reviews */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-heading font-bold uppercase tracking-tight flex items-center gap-2">
-              <MessageCircle className="w-6 h-6 text-accent-primary" />
-              All Spots
-            </h2>
+        {/* Section label */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '18px 16px 6px',
+        }}>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase' as const,
+            color: '#445566',
+          }}>All Spots</div>
+          <button
+            onClick={() =>
+              onNavigate('scan', {
+                plateState,
+                plateNumber: plateNum,
+              })
+            }
+            style={{
+              padding: '5px 12px',
+              background: '#f97316',
+              borderRadius: 5,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase' as const,
+              color: '#000',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <Sparkles style={{ width: 10, height: 10 }} />
+            Add Review
+          </button>
+        </div>
+
+        {/* Posts */}
+        {posts.length === 0 ? (
+          <div style={{
+            margin: '0 16px',
+            padding: 40,
+            border: '1px dashed rgba(255,255,255,0.08)',
+            borderRadius: 10,
+            textAlign: 'center',
+          }}>
+            <Camera style={{ width: 40, height: 40, margin: '0 auto 12px', color: '#445566' }} />
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase' as const,
+              color: '#7a8e9e',
+              marginBottom: 6,
+            }}>No Spots Yet</div>
+            <div style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontSize: 11,
+              color: '#445566',
+              marginBottom: 16,
+            }}>Be the first to review this vehicle!</div>
             <button
               onClick={() =>
                 onNavigate('scan', {
@@ -459,118 +677,162 @@ export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowPro
                   plateNumber: plateNum,
                 })
               }
-              className="bg-gradient-to-r from-accent-primary to-[#fb923c] hover:shadow-lg hover:shadow-accent-primary/30 rounded-xl px-6 py-3 font-bold uppercase tracking-wider text-sm transition-all active:scale-95"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 16px',
+                background: '#f97316',
+                borderRadius: 6,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase' as const,
+                color: '#000',
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                Add Review
-              </span>
+              <Star style={{ width: 12, height: 12 }} />
+              Leave First Review
             </button>
           </div>
-
-          {posts.length === 0 ? (
-            <div className="bg-surface border-2 border-dashed border-surfacehighlight rounded-2xl p-12 text-center">
-              <Camera className="w-16 h-16 mx-auto mb-4 text-secondary" />
-              <h3 className="text-xl font-bold mb-2">No Spots Yet</h3>
-              <p className="text-secondary mb-6">Be the first to review this vehicle!</p>
-              <button
-                onClick={() =>
-                  onNavigate('scan', {
-                    plateState,
-                    plateNumber: plateNum,
-                  })
-                }
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-primary to-[#fb923c] hover:shadow-lg rounded-xl font-bold transition-all"
+        ) : (
+          <div>
+            {posts.map((post) => (
+              <div
+                key={post.id}
+                style={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                }}
               >
-                <Star className="w-5 h-5" />
-                Leave First Review
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-gradient-to-br from-surface via-surfacehighlight to-surface border border-surfacehighlight rounded-2xl p-6 shadow-xl hover:shadow-accent-primary/20 transition-all"
-                >
-                  {/* Author Info */}
-                  <div className="flex items-start gap-4 mb-4">
-                    <UserAvatar
-                      avatarUrl={post.author.avatar_url}
-                      handle={post.author.handle}
-                      size="large"
-                      className="border-2 border-accent-primary/50"
-                    />
-                    <div className="flex-1">
-                      <div className="font-bold">@{post.author.handle}</div>
-                      <div className="text-xs text-secondary">
-                        {new Date(post.created_at).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Ratings */}
-                    <div className="flex flex-col gap-2">
-                      {post.rating_vehicle && (
-                        <div className="flex items-center gap-1 bg-[#F97316]/10 px-2 py-1 rounded-lg">
-                          <Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" />
-                          <span className="text-sm font-bold">{post.rating_vehicle}</span>
-                          <span className="text-xs text-secondary">Vehicle</span>
-                        </div>
-                      )}
-                      {post.rating_driver && (
-                        <div className="flex items-center gap-1 bg-orange/10 px-2 py-1 rounded-lg">
-                          <Star className="w-4 h-4 fill-[#F97316] text-accent-primary" />
-                          <span className="text-sm font-bold">{post.rating_driver}</span>
-                          <span className="text-xs text-secondary">Driver</span>
-                        </div>
-                      )}
-                      {post.rating_driving && (
-                        <div className="flex items-center gap-1 bg-accent-2/10 px-2 py-1 rounded-lg">
-                          <Star className="w-4 h-4 fill-[#fb923c] text-accent-2" />
-                          <span className="text-sm font-bold">{post.rating_driving}</span>
-                          <span className="text-xs text-secondary">Driving</span>
-                        </div>
-                      )}
+                {/* Author row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <UserAvatar
+                    avatarUrl={post.author.avatar_url}
+                    handle={post.author.handle}
+                    size="small"
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontSize: 9,
+                      fontWeight: 700,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase' as const,
+                      color: '#eef4f8',
+                    }}>@{post.author.handle}</div>
+                    <div style={{
+                      fontFamily: "'Barlow', sans-serif",
+                      fontSize: 8,
+                      color: '#445566',
+                    }}>
+                      {new Date(post.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
                     </div>
                   </div>
 
-                  {/* Media */}
-                  {post.image_url && !post.video_url && (
-                    <img
-                      src={post.image_url}
-                      alt="Review"
-                      className="w-full rounded-xl mb-4 max-h-96 object-cover"
-                    />
-                  )}
-                  {post.video_url && (
-                    <video
-                      src={post.video_url}
-                      controls
-                      className="w-full rounded-xl mb-4 max-h-96"
-                    />
-                  )}
-
-                  {/* Caption */}
-                  {post.caption && (
-                    <p className="text-sm leading-relaxed mb-3">{post.caption}</p>
-                  )}
-
-                  {/* Location */}
-                  {post.location_label && (
-                    <div className="text-xs text-secondary flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      Spotted in {post.location_label}
-                    </div>
-                  )}
+                  {/* Ratings compact */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {post.rating_vehicle && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <Star style={{ width: 10, height: 10, fill: '#f97316', color: '#f97316' }} />
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: '#eef4f8',
+                        }}>{post.rating_vehicle}</span>
+                      </div>
+                    )}
+                    {post.rating_driver && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <Star style={{ width: 10, height: 10, fill: '#f97316', color: '#f97316' }} />
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: '#eef4f8',
+                        }}>{post.rating_driver}</span>
+                      </div>
+                    )}
+                    {post.rating_driving && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <Star style={{ width: 10, height: 10, fill: '#fb923c', color: '#fb923c' }} />
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: '#eef4f8',
+                        }}>{post.rating_driving}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                {/* Media */}
+                {post.image_url && !post.video_url && (
+                  <img
+                    src={post.image_url}
+                    alt="Review"
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      maxHeight: 280,
+                      objectFit: 'cover',
+                    }}
+                  />
+                )}
+                {post.video_url && (
+                  <video
+                    src={post.video_url}
+                    controls
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      maxHeight: 280,
+                    }}
+                  />
+                )}
+
+                {/* Caption */}
+                {post.caption && (
+                  <p style={{
+                    fontFamily: "'Barlow', sans-serif",
+                    fontSize: 12,
+                    color: '#7a8e9e',
+                    lineHeight: 1.5,
+                    margin: 0,
+                    marginBottom: 4,
+                  }}>{post.caption}</p>
+                )}
+
+                {/* Location */}
+                {post.location_label && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontFamily: "'Barlow', sans-serif",
+                    fontSize: 9,
+                    color: '#445566',
+                    marginTop: 4,
+                  }}>
+                    <Eye style={{ width: 9, height: 9 }} />
+                    Spotted in {post.location_label}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {showClaimModal && vehicleId && vehicleDetails && user && (
