@@ -61,22 +61,29 @@ interface ReputationResult {
   error?: string;
 }
 
-// MotoRate Reputation Formula (Exact):
-// - Posts created: × 10 points
-// - Comments left: × 3 points
-// - Likes received: × 5 points
-// - Badges earned: × 20 points
-// - Verifications: × 50 points
-// - Positive stickers received: × 2 points
-// - Negative stickers received: × -5 points
+// MotoRate Reputation Formula:
+// - Quick Spot: 10 pts
+// - Full Spot: 15 pts
+// - New Plate Bonus: +2 pts
+// - Upgrade to Full: 5 pts
+// - Create Post: 5 pts (2 pts if over daily limit)
+// - Comment: 2 pts
+// - Receive Like: 0 pts
+// - Earn Badge: 10 pts
+// - Claim Vehicle: 25 pts
+// - Positive Sticker: 1 pt
+// - Negative Sticker: -1 pt
 export const REPUTATION_POINTS = {
-  CREATE_POST: 10,
-  ADD_COMMENT: 3,
-  RECEIVE_LIKE: 5,
-  EARN_BADGE: 20,
-  VERIFY_VEHICLE: 50,
-  POSITIVE_STICKER: 2,
-  NEGATIVE_STICKER: -5,
+  CREATE_POST: 5,
+  ADD_COMMENT: 2,
+  RECEIVE_LIKE: 0,
+  EARN_BADGE: 10,
+  VERIFY_VEHICLE: 25,
+  POSITIVE_STICKER: 1,
+  NEGATIVE_STICKER: -1,
+  SPOT_QUICK: 10,
+  SPOT_FULL: 15,
+  NEW_PLATE_BONUS: 2,
 } as const;
 
 /**
@@ -109,6 +116,8 @@ export async function calculateAndAwardReputation(
     case 'NEGATIVE_STICKER_RECEIVED':
     case 'SPOT_QUICK_REVIEW':
     case 'SPOT_FULL_REVIEW':
+    case 'SPOT_UPGRADE_TO_FULL':
+    case 'NEW_PLATE_BONUS':
       pointsToAward = config.points;
       break;
 

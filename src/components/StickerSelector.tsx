@@ -2,6 +2,22 @@ import { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown, Lightbulb } from 'lucide-react';
 import { getStickerDefinitions, type StickerDefinition } from '../lib/stickers';
 
+// Map Lucide icon names to emojis for sticker display
+const STICKER_EMOJI_MAP: Record<string, string> = {
+  // Positive
+  Sparkles: '✨', Gauge: '🏎️', Heart: '😇', Zap: '⚡', Target: '🅿️',
+  // Negative
+  AlertTriangle: '🦶', AlertCircle: '🐷', ArrowDown: '🚗💨', X: '🚫', Ban: '🅿️❌',
+  // Fun
+  Star: '💪', Music: '🔊', Cloud: '💨', Sticker: '🏷️', Wrench: '🔧',
+  // Community
+  Users: '🤝', Flag: '🏁', Gift: '💚', Crown: '👑', GraduationCap: '🎓',
+};
+
+function getStickerEmoji(iconName: string): string {
+  return STICKER_EMOJI_MAP[iconName] || '🏷️';
+}
+
 interface StickerSelectorProps {
   selectedStickers: string[];
   onToggleSticker: (stickerType: string) => void;
@@ -52,6 +68,14 @@ export function StickerSelector({ selectedStickers, onToggleSticker, maxPositive
     return (
       <div className="text-center py-6 text-secondary">
         Loading stickers...
+      </div>
+    );
+  }
+
+  if (stickers.length === 0) {
+    return (
+      <div className="text-center py-4 text-secondary text-sm">
+        No bumper stickers available yet
       </div>
     );
   }
@@ -126,7 +150,7 @@ export function StickerSelector({ selectedStickers, onToggleSticker, maxPositive
                 ${!canSelect && !isSelected ? 'opacity-30 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
               `}
             >
-              <span className="text-2xl">{sticker.icon_name}</span>
+              <span className="text-2xl">{getStickerEmoji(sticker.icon_name)}</span>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-xs truncate">{sticker.name}</div>
                 <div className="text-xs text-secondary/70 truncate">{sticker.description}</div>

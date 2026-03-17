@@ -28,6 +28,28 @@ import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
 
+function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
+  const cat = (badge.category ?? '').toLowerCase();
+  const rar = (badge.rarity ?? '').toLowerCase();
+  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
+  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
+  return 'milestone';
+}
+
+function getTopBadge(badges: any[]): { name: string; icon?: string; type: 'prestige' | 'milestone' | 'identity' } | null {
+  if (!badges || badges.length === 0) return null;
+  const order: Record<string, number> = { prestige: 0, milestone: 1, identity: 2 };
+  const sorted = [...badges].sort((a, b) => (order[getBadgeType(a)] ?? 1) - (order[getBadgeType(b)] ?? 1));
+  const top = sorted[0];
+  return { name: top.name, icon: top.icon, type: getBadgeType(top) };
+}
+
+function formatRP(n: number | null | undefined): string {
+  if (n == null) return '—';
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+
 interface MyGaragePageProps {
   onNavigate?: (page: string, data?: any) => void;
 }
@@ -268,6 +290,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [claimSearchResult, setClaimSearchResult] = useState<any | null>(null);
   const [claimSearchError, setClaimSearchError] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [userBadgesForGarage, setUserBadgesForGarage] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -373,6 +396,23 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       }
     }
     setVehicles(allVehicles);
+
+    // Load user badges for garage tiles
+    if (user?.id) {
+      const { data: badgeData } = await supabase
+        .from('user_badges')
+        .select('badge_id, badges(id, name, icon_name, category, rarity, tier)')
+        .eq('user_id', user.id)
+        .limit(20);
+      if (badgeData) {
+        setUserBadgesForGarage(
+          badgeData.filter((ub: any) => ub.badges).map((ub: any) => ({
+            id: ub.badges.id, name: ub.badges.name, icon: ub.badges.icon_name,
+            category: ub.badges.category, rarity: ub.badges.rarity, tier: ub.badges.tier,
+          }))
+        );
+      }
+    }
 
     // Load vehicle follow counts
     const vehicleIds = allVehicles.map((v: any) => v.id);
@@ -573,21 +613,60 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         {/* THE FLEET - HORIZONTAL CAROUSEL */}
         {vehicles.length > 0 ? (
           <>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--muted)', padding: '16px 20px 8px' }}>THE FLEET &middot; {vehicles.length}</div>
+            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--muted)', padding: '16px 20px 8px' }}>My Vehicles &middot; {vehicles.length}</div>
             <div style={{ overflowX: 'auto', display: 'flex', gap: '10px', padding: '16px', scrollbarWidth: 'none' }}>
-              {vehicles.map(vehicle => {
+              {vehicles.map((vehicle, idx) => {
                 const photo = vehicle.photos?.[0]?.url || vehicle.photo_url || vehicle.stock_image_url || stockImages[vehicle.id];
-                const spotCount = vehicle.spot_count ?? vehicle.spots_count ?? 0;
+                const plateNumber = vehicle.plate_number || vehicle.license_plate || '';
                 return (
-                  <div key={vehicle.id} onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })} style={{ width: '170px', flexShrink: 0, borderRadius: '10px', overflow: 'hidden', position: 'relative', cursor: 'pointer', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ height: '115px', overflow: 'hidden' }}>
+                  <div key={vehicle.id} onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })} style={{ width: '160px', flexShrink: 0, borderRadius: '10px', overflow: 'hidden', position: 'relative', cursor: 'pointer', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ height: '98px', overflow: 'hidden', position: 'relative' }}>
                       {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--carbon-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Car style={{ width: '24px', height: '24px', color: 'var(--muted)' }} /></div>}
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 100%)' }} />
+                      {/* Rank number */}
+                      <div style={{ position: 'absolute', top: 6, right: 8, zIndex: 4, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)' }}>#{idx + 1}</div>
+                      {/* Badge overlay */}
+                      {(() => {
+                        const topBadge = getTopBadge(userBadgesForGarage);
+                        if (!topBadge) return null;
+                        return (
+                          <div style={{ position: 'absolute', bottom: 6, left: 8, zIndex: 4 }}>
+                            <div style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 3,
+                              padding: '3px 7px', borderRadius: 5, flexShrink: 0,
+                              ...(topBadge.type === 'prestige' ? { background: 'linear-gradient(135deg, rgba(245,204,85,0.18), rgba(240,160,48,0.10))', border: '1px solid rgba(240,160,48,0.55)' }
+                                : topBadge.type === 'milestone' ? { background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.32)' }
+                                : { background: 'rgba(154,176,192,0.08)', border: '1px solid rgba(154,176,192,0.22)' }),
+                            }}>
+                              {topBadge.icon && <span style={{ fontSize: 10, lineHeight: 1 }}>{topBadge.icon}</span>}
+                              <span style={{
+                                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                                letterSpacing: '0.08em', textTransform: 'uppercase',
+                                color: topBadge.type === 'prestige' ? '#f0a030' : topBadge.type === 'milestone' ? '#F97316' : '#9ab0c0',
+                              }}>{topBadge.name}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div style={{ padding: '8px 10px' }}>
                       <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--accent)' }}>{vehicle.make}</div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, color: 'var(--white)' }}>{vehicle.model || vehicle.make}</div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)', marginTop: '2px' }}>{spotCount} Spots &middot; {(vehicle as any)._vehicleFollowerCount ?? 0} Following</div>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vehicle.model || vehicle.make}</div>
+                      {plateNumber && (
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, letterSpacing: '0.15em', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{plateNumber}</div>
+                      )}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                        {[
+                          { v: formatRP((vehicle as any).reputation_score), l: 'RP', hi: true },
+                          { v: String(vehicle.spot_count ?? vehicle.spots_count ?? 0), l: 'Spots', hi: false },
+                          { v: String((vehicle as any)._vehicleFollowerCount ?? 0), l: 'Fans', hi: false },
+                        ].map(({ v, l, hi }) => (
+                          <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: hi ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{v}</div>
+                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 6, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#445566' }}>{l}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );

@@ -12,7 +12,7 @@ import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { TierBadge, type VerificationTier } from '../components/TierBadge';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Edit, Trash2, AlertCircle, Upload, X, Star, Shield, Key, Info, Share2, ChevronLeft, User, Wrench, Disc3, Palette, Armchair, Droplet, FileText, Download, Car, MapPin, MoreHorizontal, Camera, BookOpen, ChevronRight, ChevronDown, Heart } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, AlertCircle, Upload, X, Star, Shield, Key, Info, Share2, ChevronLeft, User, Wrench, Disc3, Palette, Armchair, Droplet, FileText, Download, Car, MapPin, MoreHorizontal, Camera, BookOpen, ChevronRight, ChevronDown, Heart, CheckCircle } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { shareToSocial } from '../components/ShareCardGenerator';
@@ -26,6 +26,16 @@ import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
 import { BADGE_TIER_THRESHOLDS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
 import { VehicleFollowButton } from '../components/VehicleFollowButton';
+import { FollowButton } from '../components/FollowButton';
+import { BadgeChip } from '../components/badges/BadgeChip';
+
+function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null; }): 'prestige' | 'milestone' | 'identity' {
+  const cat = (badge.category ?? '').toLowerCase();
+  const rar = (badge.rarity ?? '').toLowerCase();
+  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
+  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
+  return 'milestone';
+}
 
 interface VehicleDetailPageProps {
   vehicleId: string;
@@ -178,6 +188,12 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
 }
 
 export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSheet, guestMode = false, scrollTo, openReviewModal }: VehicleDetailPageProps) {
+  const C = {
+    black: '#030508', carbon0: '#070a0f', carbon1: '#0a0d14', carbon2: '#0e1320',
+    steel: '#2c3a50', muted: '#445566', dim: '#7a8e9e', light: '#a8bcc8', white: '#eef4f8',
+    accent: '#F97316', accentDim: 'rgba(249,115,22,0.12)', green: '#20c060', gold: '#f0a030',
+  } as const;
+
   const { user } = useAuth();
   const { goBack, getReturnLabel } = useNavigation();
   const returnLabel = getReturnLabel();
@@ -189,6 +205,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [spotCount, setSpotCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
+  const [cityRank, setCityRank] = useState<number | null>(null);
   const [showSpotReviewModal, setShowSpotReviewModal] = useState(false);
 
   useModerationSubscription(() => !guestMode && loadVehicleData());
@@ -208,6 +225,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
+  const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);
   const isOwner = user && vehicle?.owner_id === user.id;
   const isUnclaimed = vehicle && !vehicle.is_claimed;
   const canClaim = user && isUnclaimed && !vehicle?.owner_id;
@@ -371,6 +389,23 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       setModsByCategory(categories);
     }
     if (imagesData) setVehicleImages(imagesData);
+
+    if (vehicleData?.owner_id) {
+      const { data: badgeData } = await supabase
+        .from('user_badges')
+        .select('badge_id, badges(id, name, icon_name, category, rarity, tier)')
+        .eq('user_id', vehicleData.owner_id)
+        .limit(20);
+      if (badgeData) {
+        setVehicleBadges(
+          badgeData.filter((ub: any) => ub.badges).map((ub: any) => ({
+            id: ub.badges.id, name: ub.badges.name, icon: ub.badges.icon_name,
+            category: ub.badges.category, rarity: ub.badges.rarity, tier: ub.badges.tier,
+          }))
+        );
+      }
+    }
+
     setLoading(false);
   };
 
@@ -427,7 +462,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;
 
-    // Delete from reviews table (cascade will handle posts)
     const { error: deleteError } = await supabase
       .from('reviews')
       .delete()
@@ -622,13 +656,39 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const loveCount = reviews.filter(r => r.sentiment === 'love').length;
   const hateCount = reviews.filter(r => r.sentiment === 'hate').length;
 
+  // Derive hero image
+  const vehicleImageUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
+
+  // Derive encounter count from reviews
+  const encounterCount = reviews.length;
+
+  // Derive RP score (sum of all avg ratings)
+  const rpScore = ratingCategories.length > 0
+    ? Math.round(ratingCategories.reduce((s, c) => s + c.avg, 0) * 10)
+    : 0;
+
+  // VIN specs for specs grid
+  const vinSpecs = vehicle ? [
+    { label: 'Engine', value: vehicle.vin_engine_displacement ? `${vehicle.vin_engine_displacement}${vehicle.vin_engine_cylinders ? ` ${vehicle.vin_engine_cylinders}-cyl` : ''}` : null },
+    { label: 'Power', value: vehicle.vin_horsepower ? `${vehicle.vin_horsepower} hp` : null },
+    { label: '0-60', value: null },
+    { label: 'Color', value: vehicle.color },
+    { label: 'Trans.', value: vehicle.vin_transmission },
+    { label: 'Drive', value: vehicle.vin_drive_type },
+  ].filter(s => s.value) : [];
+
+  // Powertrain string
+  const powertrain = [vehicle?.vin_fuel_type, vehicle?.vin_drive_type].filter(Boolean).join(' / ');
+
+  // Verification badge color
+  const verBadgeColor = vehicle?.verification_tier === 'vin_verified' ? C.green : vehicle?.is_claimed ? C.green : C.dim;
+
   if (loading) {
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
-        <div className="flex items-center justify-center py-16">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
           <div
-            className="w-8 h-8 rounded-full border-2 animate-spin"
-            style={{ borderColor: 'var(--border-3)', borderTopColor: 'var(--accent)' }}
+            style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${C.carbon2}`, borderTopColor: C.accent, animation: 'spin 1s linear infinite' }}
           />
         </div>
       </Layout>
@@ -638,12 +698,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   if (!vehicle) {
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
-        <div className="text-center py-16 px-4">
-          <p style={{ fontSize: '15px', color: 'var(--text-tertiary)' }}>Vehicle not found</p>
+        <div style={{ textAlign: 'center', padding: '64px 16px' }}>
+          <p style={{ fontSize: 15, color: C.dim }}>Vehicle not found</p>
           <button
             onClick={onBack}
-            className="mt-4"
-            style={{ fontSize: '13px', color: 'var(--accent)' }}
+            style={{ marginTop: 16, fontSize: 13, color: C.accent, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             Go Back
           </button>
@@ -670,63 +729,64 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           )}
         </Helmet>
       )}
-      <div className="pb-24 page-enter">
+
+      <div style={{ paddingBottom: 96 }}>
         {error && (
-          <div className="mx-4 mb-4 rounded-[12px] p-3 flex items-start gap-3" style={{ background: 'rgba(138,74,74,0.12)', border: '1px solid rgba(138,74,74,0.3)' }}>
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--negative)' }} strokeWidth={1.5} />
-            <p style={{ fontSize: '13px', color: 'var(--negative)' }}>{error}</p>
+          <div style={{ margin: '0 16px 16px', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'flex-start', gap: 12, background: 'rgba(138,74,74,0.12)', border: '1px solid rgba(138,74,74,0.3)' }}>
+            <AlertCircle size={16} style={{ color: '#ef4444', flexShrink: 0, marginTop: 2 }} strokeWidth={1.5} />
+            <p style={{ fontSize: 13, color: '#ef4444' }}>{error}</p>
           </div>
         )}
 
-        {/* Hero Image */}
-        <div className="relative w-full stg v3-stagger v3-stagger-1" style={{ minHeight: 200 }}>
+        {/* ── 1. HERO (310px) ── */}
+        <div style={{ position: 'relative', width: '100%', height: 310, overflow: 'hidden', background: C.black }}>
           {(() => {
-            const heroUrl = vehicleImages[0]?.image_url || vehicle.stock_image_url || vehicle.profile_image_url || carImageryUrl;
+            const heroUrl = vehicle.profile_image_url || vehicle.stock_image_url || carImageryUrl;
             return heroUrl && !heroImgError ? (
-              <div className="relative w-full h-52 overflow-hidden">
-                <img
-                  src={heroUrl}
-                  alt="Vehicle"
-                  className="w-full h-full object-cover"
-                  onError={() => setHeroImgError(true)}
-                />
-                {/* Top gradient */}
-                <div className="absolute top-0 left-0 right-0" style={{ height: '45%', background: 'linear-gradient(to bottom, rgba(3,5,8,0.82) 0%, transparent 100%)' }} />
-                {/* Bottom gradient */}
-                <div className="absolute bottom-0 left-0 right-0" style={{ height: '65%', background: 'linear-gradient(to top, rgba(3,5,8,0.97) 0%, rgba(3,5,8,0.6) 40%, transparent 100%)' }} />
-              </div>
+              <img
+                src={heroUrl}
+                alt="Vehicle"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={() => setHeroImgError(true)}
+              />
             ) : (
-              <div className="w-full h-52 bg-gradient-to-br from-[var(--bg)] to-[var(--s2)] flex items-center justify-center">
-                <Car className="w-20 h-20 text-quaternary" />
+              /* Dark HUD fallback */
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: `radial-gradient(ellipse at 50% 60%, ${C.carbon2} 0%, ${C.black} 70%)`,
+              }}>
+                <div style={{
+                  position: 'absolute', inset: 0, opacity: 0.06,
+                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+                  backgroundSize: '40px 40px',
+                }} />
+                <Car size={80} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', color: C.steel, opacity: 0.3 }} />
               </div>
             );
           })()}
 
+          {/* Gradient overlay */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, rgba(3,5,8,0.48) 0%, transparent 28%, transparent 42%, rgba(3,5,8,1) 100%), linear-gradient(to right, rgba(3,5,8,0.2) 0%, transparent 55%)',
+          }} />
+
           {/* Back button */}
           <button
             onClick={goBack}
-            className="absolute top-3 left-3 flex items-center justify-center transition-all active:scale-90"
-            style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ position: 'absolute', top: 14, left: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
           >
-            <ArrowLeft className="w-4 h-4 text-white" strokeWidth={1.5} />
+            <ArrowLeft size={16} color={C.white} strokeWidth={1.5} />
           </button>
 
-          {/* Verified / Claimed badge */}
-          <div className="absolute top-3 left-14">
-            <span
-              style={
-                vehicle.verification_tier === 'vin_verified'
-                  ? { fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'var(--green)', background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: '3px', padding: '3px 8px' }
-                  : vehicle.is_claimed
-                    ? { fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'var(--green)', background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: '3px', padding: '3px 8px' }
-                    : { fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'var(--muted)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '3px 8px' }
-              }
-            >
-              {vehicle.verification_tier === 'vin_verified'
-                ? 'VERIFIED'
-                : vehicle.is_claimed
-                  ? 'CLAIMED'
-                  : 'UNCLAIMED'}
+          {/* Verification badge */}
+          <div style={{ position: 'absolute', top: 14, left: 60, display: 'flex', alignItems: 'center', gap: 5, zIndex: 2 }}>
+            <Shield size={13} color={verBadgeColor} strokeWidth={2} />
+            <span style={{
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+              letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: verBadgeColor,
+            }}>
+              {vehicle.verification_tier === 'vin_verified' ? 'Verified' : vehicle.is_claimed ? 'Claimed' : 'Unclaimed'}
             </span>
           </div>
 
@@ -742,109 +802,292 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicle.id}`,
               }, user?.id);
             }}
-            className="absolute top-3 right-3 flex items-center justify-center transition-all active:scale-90"
-            style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ position: 'absolute', top: 14, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
             title="Share this vehicle"
           >
-            <Share2 className="w-4 h-4 text-white" strokeWidth={1.5} />
+            <Share2 size={16} color={C.white} strokeWidth={1.5} />
           </button>
 
-          {/* Vehicle identity at bottom of hero */}
-          <div className="absolute bottom-3 left-3 right-3">
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: 'var(--accent)', marginBottom: 2 }}>
+          {/* Hero bottom content */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 18px 16px', zIndex: 2 }}>
+            {/* Make eyebrow */}
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.26em', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 2 }}>
               {vehicle.make || 'Unknown'}
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700, color: 'var(--white)', lineHeight: 1, marginBottom: 4 }}>
+            {/* Model */}
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 32, fontWeight: 700, color: C.white, textTransform: 'uppercase' as const, lineHeight: 0.92, marginBottom: 4 }}>
               {vehicle.model || 'Vehicle'}
             </div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '11px', fontWeight: 600, color: 'var(--light)' }}>
-              {[vehicle.year, vehicle.vin_trim || vehicle.color].filter(Boolean).join(' · ')}
+            {/* Year + powertrain */}
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 600, color: C.light, marginBottom: 10 }}>
+              {[vehicle.year, vehicle.vin_trim, powertrain].filter(Boolean).join(' / ')}
+            </div>
+
+            {/* RP score + City Rank row */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 34, fontWeight: 700, color: C.white, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{rpScore}</span>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: C.accent }}>RP</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.dim, marginRight: 4 }}>City</span>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 30, fontWeight: 700, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                  {cityRank != null ? `#${cityRank}` : '\u2014'}
+                </span>
+              </div>
+            </div>
+
+            {/* CTAs: VehicleFollowButton + Log Enc. */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <VehicleFollowButton
+                  vehicleId={vehicleId}
+                  vehicleOwnerId={vehicle?.owner_id}
+                  isPrivateVehicle={vehicle?.is_private || false}
+                  onFollowChange={() => loadVehicleData()}
+                />
+              </div>
+              <button
+                onClick={() => {
+                  if (guestMode) { setGuestJoinAction('log a spot'); setShowGuestJoinModal(true); }
+                  else onNavigate('scan', { vehicleId });
+                }}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '10px 0', borderRadius: 8,
+                  background: 'transparent', border: `1px solid ${C.accent}`,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                  letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer',
+                }}
+              >
+                <MapPin size={13} strokeWidth={2} />
+                Log Enc.
+              </button>
             </div>
           </div>
 
+          {/* Owner edit photos button */}
           {isOwner && (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1.5 transition-all active:scale-95"
+              style={{ position: 'absolute', top: 14, right: 60, background: 'rgba(7,10,15,0.7)', backdropFilter: 'blur(8px)', padding: '6px 10px', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', zIndex: 2 }}
             >
-              <Camera className="w-3 h-3 text-[var(--t3)]" strokeWidth={1.5} />
-              <span className="text-[10px] text-[var(--t3)] font-medium">Edit Photos</span>
+              <Camera size={12} strokeWidth={1.5} color={C.dim} />
+              <span style={{ fontSize: 10, color: C.dim, fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>Edit</span>
             </button>
           )}
         </div>
 
-        {/* Stats Strip */}
-        <div style={{ display: 'flex', background: 'var(--carbon-1)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          {/* Followers */}
+        {/* Hidden file inputs */}
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+        <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
+
+        {/* ── 2. STAT STRIP ── */}
+        <div style={{ display: 'flex', background: C.carbon1, borderBottom: `1px solid rgba(255,255,255,0.05)` }}>
+          {/* Trackers */}
           <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>{followerCount}</div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Followers</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.accent, fontVariantNumeric: 'tabular-nums' }}>{followerCount}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.6)' }}>Trackers</div>
           </div>
-          {/* Spots — primary accent */}
+          {/* Spots */}
           <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--accent)' }}>{spotCount}</div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Spots</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{spotCount}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.muted }}>Spots</div>
           </div>
-          {/* Views */}
+          {/* Encounters */}
           <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>{viewCount}</div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Views</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{encounterCount}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.muted }}>Encounters</div>
           </div>
-          {/* Rank */}
+          {/* City Rank */}
           <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>{'\u2014'}</div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)' }}>Rank</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{cityRank != null ? `#${cityRank}` : '\u2014'}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.muted }}>City Rank</div>
           </div>
         </div>
 
-        {/* Primary Actions */}
-        <div style={{ display: 'flex', gap: 8, padding: '14px 16px' }}>
-          <button
-            onClick={() => {
-              if (guestMode) { setGuestJoinAction('log a spot'); setShowGuestJoinModal(true); }
-              else onNavigate('scan', { vehicleId });
+        {/* ── 3. OWNER STRIP ── */}
+        {vehicle.is_claimed && vehicle.owner && (
+          <div
+            onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
+              background: C.carbon0, borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer',
             }}
-            style={{ flex: 1.5, background: 'var(--accent)', borderRadius: '8px', padding: '12px', fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--black)', border: 'none', cursor: 'pointer' }}
           >
-            Log Spot
-          </button>
-          <VehicleFollowButton
-            vehicleId={vehicleId}
-            vehicleOwnerId={vehicle?.owner_id}
-            isPrivateVehicle={vehicle?.is_private || false}
-            onFollowChange={() => loadVehicleData()}
-          />
+            <UserAvatar
+              avatarUrl={vehicle.owner.avatar_url}
+              handle={vehicle.owner.handle || 'unknown'}
+              size="md"
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: C.white }}>
+                @{vehicle.owner.handle || 'anonymous'}
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, color: C.dim, letterSpacing: '0.08em' }}>
+                Owner {vehicle.verification_tier === 'vin_verified' ? '· Verified' : '· Claimed'}
+              </div>
+            </div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <FollowButton targetUserId={vehicle.owner.id} size="sm" />
+            </div>
+          </div>
+        )}
+
+        {/* ── 4. FOLLOW NOTE ── */}
+        {vehicle.is_claimed && vehicle.owner && (
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 18px',
+            background: C.accentDim, borderBottom: '1px solid rgba(249,115,22,0.15)',
+          }}>
+            <Info size={14} style={{ color: C.accent, flexShrink: 0, marginTop: 2 }} strokeWidth={1.5} />
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.accent, lineHeight: 1.4 }}>
+              Track this vehicle for spot & RP alerts. Follow the owner to see their whole fleet.
+            </p>
+          </div>
+        )}
+
+        {/* ── 5. BADGE RACK ── */}
+        {vehicleBadges.length > 0 && (
+          <div style={{ background: C.carbon0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Badges Earned</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: C.steel, fontVariantNumeric: 'tabular-nums' }}>{vehicleBadges.length}</span>
+            </div>
+            <div style={{ padding: '0 18px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {[...vehicleBadges].sort((a, b) => {
+                const order = { prestige: 0, milestone: 1, identity: 2 } as Record<string, number>;
+                return (order[getBadgeType(a)] ?? 1) - (order[getBadgeType(b)] ?? 1);
+              }).map(badge => (
+                <BadgeChip key={badge.id} name={badge.name} icon={badge.icon} type={getBadgeType(badge)} size="md" />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── 6. PHOTO GALLERY ── */}
+        {vehicleImages.length > 0 && (
+          <div style={{ padding: '16px 0 16px 18px' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
+              Photos
+            </div>
+            <div style={{ display: 'flex', gap: 0, overflowX: 'auto', paddingRight: 18 }}>
+              {vehicleImages.map((img, i) => (
+                <div key={img.id} style={{ position: 'relative', flexShrink: 0, width: i === 0 ? 160 : 90, height: 110 }}>
+                  <img
+                    src={img.image_url}
+                    alt="Vehicle"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                  {img.is_primary && (
+                    <div style={{ position: 'absolute', top: 6, left: 6, background: C.accent, color: C.black, fontSize: 8, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>
+                      Primary
+                    </div>
+                  )}
+                  {isOwner && (
+                    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
+                      {!img.is_primary && (
+                        <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Star size={11} color={C.accent} />
+                        </button>
+                      )}
+                      <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={11} color="#fca5a5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upload button for owner when no images */}
+        {isOwner && vehicleImages.length === 0 && (
+          <div style={{ padding: '16px 18px' }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 8,
+                background: C.carbon1, border: `1px dashed ${C.steel}`,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.dim,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              <Upload size={14} />
+              {uploading ? 'Uploading...' : 'Add First Photo'}
+            </button>
+          </div>
+        )}
+
+        {/* ── 7. SPECS GRID ── */}
+        {vinSpecs.length > 0 && (
+          <div style={{ padding: '0 18px 16px' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
+              Specs
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+              {vinSpecs.map(spec => (
+                <div key={spec.label} style={{ background: C.carbon1, padding: '10px 12px' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.steel, marginBottom: 4 }}>
+                    {spec.label}
+                  </div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: C.white, fontVariantNumeric: 'tabular-nums' }}>
+                    {spec.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── 8. BUMPER STICKERS ── */}
+        <div style={{ padding: '0 18px 16px' }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
+            Bumper Stickers
+          </div>
+          <StickerSlab vehicleId={vehicleId} />
+          {!isOwner && user && !guestMode && (
+            <div style={{ marginTop: 10 }}>
+              <VehicleStickerSelector vehicleId={vehicleId} onStickerGiven={loadVehicleData} />
+            </div>
+          )}
         </div>
 
-        {/* Rating Breakdown + Sentiment */}
+        {/* ── 9. RATING BREAKDOWN ── */}
         {ratingCategories.length > 0 && (
-          <div className="px-4 mb-4 stg">
-            <div className="card-v3 card-v3-lift p-4 space-y-3">
-              {/* Sentiment Counts */}
+          <div style={{ padding: '0 18px 16px' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
+              Ratings
+            </div>
+            <div style={{ background: C.carbon1, borderRadius: 10, padding: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+              {/* Sentiment counts */}
               {(loveCount > 0 || hateCount > 0) && (
-                <div className="flex items-center justify-center gap-6 pb-3 border-b border-white/[0.06]">
-                  <div className="flex items-center gap-1.5 text-rose-400">
-                    <Heart className="w-4 h-4 fill-current" />
-                    <span className="text-sm font-bold">{loveCount}</span>
-                    <span className="text-xs text-rose-400/70">Love It</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fb7185' }}>
+                    <Heart size={14} fill="currentColor" />
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{loveCount}</span>
+                    <span style={{ fontSize: 11, color: 'rgba(251,113,133,0.7)' }}>Love It</span>
                   </div>
-                  <div className="w-px h-4 bg-white/10" />
-                  <div className="flex items-center gap-1.5 text-red-400">
-                    <span className="text-sm">&#10005;</span>
-                    <span className="text-sm font-bold">{hateCount}</span>
-                    <span className="text-xs text-red-400/70">Hate It</span>
+                  <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f87171' }}>
+                    <X size={14} />
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{hateCount}</span>
+                    <span style={{ fontSize: 11, color: 'rgba(248,113,113,0.7)' }}>Hate It</span>
                   </div>
                 </div>
               )}
 
-              {/* Category Breakdown */}
-              <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+              {/* Category grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 16, rowGap: 8 }}>
                 {ratingCategories.map(cat => (
-                  <div key={cat.label} className="flex items-center justify-between">
-                    <span className="text-[10px] text-secondary uppercase tracking-wider">{cat.label}</span>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-[#F97316] text-[#F97316]" />
-                      <span className="text-xs font-bold text-primary">{cat.avg.toFixed(1)}</span>
+                  <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: C.steel, textTransform: 'uppercase' as const, letterSpacing: '0.12em' }}>{cat.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ color: C.accent, fontSize: 12 }}>{'\u2605'}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
                     </div>
                   </div>
                 ))}
@@ -853,582 +1096,103 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        <div className="px-4 stg">
-          {/* Plate number + Unclaimed notice */}
-          {vehicle.plate_number && (
-            <div className="mb-3">
-              <span className="text-white text-sm font-mono font-bold">
-                {vehicle.state ? `${vehicle.state} \u2014 ` : ''}{vehicle.plate_number}
-              </span>
-            </div>
-          )}
-
-          {isUnclaimed && (
-            <div className="bg-amber-900/15 border border-amber-700/40 rounded-xl p-3 mb-4 flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-accent-primary flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-accent-primary">
-                This plate hasn't been claimed yet — View community spots below or claim this plate if it's yours.
+        {/* ── 10. OWNER ACTIONS ── */}
+        {/* Claim CTA */}
+        {isUnclaimed && (
+          <div style={{ padding: '0 18px 16px' }}>
+            <div style={{ background: 'rgba(32,192,96,0.06)', border: `1px solid rgba(32,192,96,0.22)`, borderRadius: 10, padding: 16, textAlign: 'center' as const }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 12 }}>
+                Is this your car?
+              </div>
+              <button
+                onClick={() => {
+                  if (canClaim) setShowClaimModal(true);
+                  else { setGuestJoinAction('claim a plate'); setShowGuestJoinModal(true); }
+                }}
+                style={{
+                  width: '100%', padding: 13, borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: C.green, color: '#001a0a',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                  letterSpacing: '0.18em', textTransform: 'uppercase' as const,
+                }}
+              >
+                Claim This Plate
+              </button>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.steel, marginTop: 8 }}>
+                Claiming lets you manage your vehicle profile and respond to reviews
               </p>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Owner Card — claimed vehicles only */}
-          {vehicle.is_claimed && vehicle.owner && (
-            <div className="card-v3 card-v3-lift p-4 mb-4" style={{ boxShadow: '0 0 12px rgba(249,115,22,0.08)' }}>
-              <p className="text-[10px] text-tertiary uppercase tracking-[1.2px] font-bold mb-3">Vehicle Owner</p>
-              <div className="flex items-center gap-3">
-                <UserAvatar
-                  avatarUrl={vehicle.owner.avatar_url}
-                  handle={vehicle.owner.handle || 'unknown'}
-                  size="md"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-white text-sm">@{vehicle.owner.handle || 'anonymous'}</p>
-                </div>
-                <button
-                  onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}
-                  className="text-xs px-3 py-1.5 bg-[var(--border2)] hover:bg-[var(--border2)] rounded-lg text-[var(--t3)] font-medium transition-all"
-                >
-                  View Profile
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Factory Specs — VIN-verified vehicles only */}
-          {vehicle.vin && vehicle.verification_tier === 'vin_verified' && (() => {
-            const specs = [
-              { label: 'Body', value: vehicle.vin_body_class },
-              { label: 'Drivetrain', value: vehicle.vin_drive_type },
-              { label: 'Fuel', value: vehicle.vin_fuel_type },
-              { label: 'Engine', value: [vehicle.vin_engine_displacement, vehicle.vin_engine_cylinders ? `${vehicle.vin_engine_cylinders}-cyl` : ''].filter(Boolean).join(' ') || null },
-              { label: 'HP', value: vehicle.vin_horsepower ? `${vehicle.vin_horsepower} hp` : null },
-              { label: 'Trans', value: vehicle.vin_transmission },
-              { label: 'Doors', value: vehicle.vin_doors },
-              { label: 'Origin', value: vehicle.vin_plant_country },
-            ].filter(s => s.value);
-
-            if (specs.length === 0) return null;
-
-            return (
-              <div className="v3-stagger v3-stagger-3" style={{
-                margin: '0 16px 16px', borderRadius: 14, overflow: 'hidden', position: 'relative',
-                background: 'repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0px, transparent 1px, transparent 2px, rgba(255,255,255,.008) 3px), linear-gradient(180deg, #141c28, #111a24)',
-                border: '1px solid rgba(249,115,22,.1)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,.04), 0 2px 12px rgba(0,0,0,.35)',
-              }}>
-                {/* Orange glow accents */}
-                <div style={{ position: 'absolute', inset: -1, borderRadius: 14, background: 'linear-gradient(135deg, rgba(249,115,22,.06), transparent 40%, transparent 60%, rgba(249,115,22,.04))', pointerEvents: 'none', zIndex: 0 }} />
-                <div style={{ position: 'absolute', top: -1, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg, transparent, #F97316, transparent)', opacity: 0.3 }} />
-
-                <div style={{ padding: '16px 16px 10px', position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: 'linear-gradient(135deg, #F97316, #f59e0b)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 12 15 16 10"/>
-                      </svg>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 400, color: '#f2f4f7' }}>Factory Specifications</div>
-                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 500, color: '#F97316', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>VIN Decoded</div>
-                    </div>
-                    <div style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 7, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const,
-                      padding: '3px 8px', borderRadius: 10,
-                      background: 'rgba(249,115,22,.12)', color: '#F97316',
-                      border: '1px solid rgba(249,115,22,.2)',
-                    }}>Verified</div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
-                    {specs.map(row => (
-                      <div key={row.label}>
-                        <div style={{ fontSize: 8, color: '#586878', textTransform: 'uppercase' as const, letterSpacing: 1.5, marginBottom: 3, fontFamily: "'JetBrains Mono', monospace" }}>{row.label}</div>
-                        <div style={{ fontSize: 12, fontWeight: 500, color: '#f2f4f7', fontFamily: "'JetBrains Mono', monospace" }}>{row.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Earn Hints */}
-          {!isOwner && user && !guestMode && (
-            <div className="flex gap-2 px-4 mb-3">
-              <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer active:opacity-80" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06), var(--s1))', border: '1px solid rgba(249,115,22,0.12)' }}>
-                <Heart className="w-3 h-3 flex-shrink-0" strokeWidth={1.2} style={{ color: '#F97316' }} />
-                <span className="text-[9px]" style={{ color: 'var(--t3)' }}>Give Bumper Sticker</span>
-              </div>
-            </div>
-          )}
-
-          {/* Primary CTA moved to actions strip above */}
-
-          {/* Claim Section — unclaimed vehicles */}
-          {isUnclaimed && (
-            <div className="mb-4 border border-white/[0.06] rounded-xl p-4">
-              <p className="text-center text-sm text-secondary mb-3">Is this your car?</p>
-              {canClaim ? (
-                <button
-                  onClick={() => setShowClaimModal(true)}
-                  className="w-full py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 shadow-lg"
-                >
-                  CLAIM THIS PLATE
-                </button>
-              ) : (
-                <button
-                  onClick={() => { setGuestJoinAction('claim a plate'); setShowGuestJoinModal(true); }}
-                  className="w-full py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 shadow-lg"
-                >
-                  CLAIM THIS PLATE
-                </button>
-              )}
-              <p className="text-xs text-secondary text-center mt-2">Claiming lets you manage your vehicle profile and respond to reviews</p>
-            </div>
-          )}
-
-          {isOwner && vehicle && vehicle.verification_tier === 'standard' && (
-            <div className="mb-4">
-              <div className="bg-amber-900/20 border border-amber-800 rounded-xl p-4 mb-3">
-                <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-accent-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-accent-primary mb-1">Become a Verified Owner</p>
-                    <p className="text-sm text-accent-primary">
-                      Upload your registration document to verify ownership and unlock enhanced credibility
-                    </p>
-                  </div>
+        {/* Verify Ownership */}
+        {isOwner && vehicle && vehicle.verification_tier === 'standard' && (
+          <div style={{ padding: '0 18px 16px' }}>
+            <div style={{ background: C.accentDim, border: '1px solid rgba(249,115,22,0.22)', borderRadius: 10, padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <Shield size={18} style={{ color: C.accent, flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: C.accent, marginBottom: 4 }}>Become a Verified Owner</p>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.accent, opacity: 0.8 }}>
+                    Upload your registration document to verify ownership and unlock enhanced credibility
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowVerifyModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-900/20 hover:bg-green-900/30 border border-green-800 rounded-xl font-bold uppercase tracking-wider text-green-400 transition-all active:scale-95"
+                style={{
+                  width: '100%', marginTop: 12, padding: 12, borderRadius: 8, cursor: 'pointer',
+                  background: 'rgba(249,115,22,0.10)', border: `1px solid rgba(249,115,22,0.3)`,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
               >
-                <Shield className="w-5 h-5" />
+                <Shield size={16} />
                 Verify Ownership
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {isOwner && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(7,10,15,0.4)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>Private Vehicle</div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--dim)', marginTop: '2px' }}>Followers need your approval</div>
-              </div>
-              <button onClick={async () => { const { error } = await supabase.from('vehicles').update({ is_private: !vehicle.is_private }).eq('id', vehicleId); if (!error) loadVehicleData(); }} style={{ width: '44px', height: '24px', borderRadius: '12px', cursor: 'pointer', border: 'none', background: vehicle.is_private ? 'var(--accent)' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s' }}>
-                <div style={{ position: 'absolute', top: '3px', left: vehicle.is_private ? '22px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: 'var(--white)', transition: 'left 0.2s' }} />
-              </button>
-            </div>
-          )}
-
-          {isOwner && <VehicleFollowersPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />}
-
-          {isOwner && (
-            <>
-              <div className="card-v3 mt-6 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-accent-primary" />
-                    <h3 className="text-lg font-bold uppercase tracking-wider text-primary">Owner's Manual</h3>
-                  </div>
-                  {!vehicle?.owners_manual_url && (
-                    <button
-                      onClick={() => manualInputRef.current?.click()}
-                      disabled={uploadingManual}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-accent-primary hover:bg-accent-hover rounded-lg text-sm font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      <Upload size={16} />
-                      {uploadingManual ? 'Uploading...' : 'Upload PDF'}
-                    </button>
-                  )}
-                  <input
-                    ref={manualInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleManualUpload}
-                    className="hidden"
-                  />
-                </div>
-                {vehicle?.owners_manual_url ? (
-                  <div className="flex items-center justify-between mt-3 p-3 bg-surfacehighlight rounded-lg">
-                    <a
-                      href={vehicle.owners_manual_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-accent-primary hover:text-accent-hover font-medium"
-                    >
-                      <Download className="w-4 h-4" />
-                      View Owner's Manual
-                    </a>
-                    <button
-                      onClick={handleRemoveManual}
-                      className="text-status-danger hover:text-red-600 p-1"
-                      title="Remove manual"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-sm text-[var(--t3)] mt-2">
-                    Upload your owner's manual for easy reference (PDF only, max 10MB)
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold uppercase tracking-wider">Photo Gallery</h3>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-accent-primary hover:bg-accent-hover rounded-lg text-sm font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    <Upload size={16} />
-                    {uploading ? 'Uploading...' : 'Add Photo'}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </div>
-
-                {vehicleImages.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-3">
-                    {vehicleImages.map((img) => (
-                      <div key={img.id} className="relative group">
-                        <img
-                          src={img.image_url}
-                          alt="Vehicle"
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        {img.is_primary && (
-                          <div className="absolute top-2 left-2 bg-accent-primary text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                            <Star size={12} />
-                            Primary
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                          {!img.is_primary && (
-                            <button
-                              onClick={() => handleSetPrimary(img.id)}
-                              className="bg-accent-primary hover:bg-accent-hover text-white p-2 rounded-lg transition"
-                              title="Set as primary"
-                            >
-                              <Star size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteImage(img.id, img.image_url)}
-                            className="bg-status-danger hover:bg-red-600 text-white p-2 rounded-lg transition"
-                            title="Delete"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 bg-surface-2 rounded-lg text-[var(--t3)]">
-                    No photos yet. Add some photos to showcase your vehicle!
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-
-            {isOwner && (
-              <>
-                <div className="mt-6 flex items-center justify-between bg-[rgba(245,158,11,0.06)] border border-[rgba(245,158,11,0.25)] rounded-xl p-4 cursor-pointer transition-all active:scale-[0.98]">
-                  <div className="flex items-center gap-3 flex-1">
-                    <BookOpen className="w-5 h-5 text-orange" strokeWidth={1.5} />
-                    <div>
-                      <div className="text-[#fbbf24] font-bold text-sm">Owner's Manual</div>
-                      <div className="text-xs text-gray-400">{vehicle.year} {vehicle.make} {vehicle.model}</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
-                </div>
-
-                <div className="mt-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Wrench className="w-5 h-5 text-white" strokeWidth={1.5} />
-                      <h3 className="text-lg font-bold uppercase tracking-wider text-white">Modifications</h3>
-                    </div>
-                    <button className="text-accent-2 text-[11px] font-medium uppercase tracking-wider">
-                      Add mod
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Performance', 'Aesthetic', 'Suspension', 'Audio'].map((category) => (
-                      <button
-                        key={category}
-                        onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
-                        className="bg-surface border border-white/[0.06] rounded-[10px] p-2.5 flex items-center justify-between transition-all active:scale-95"
-                      >
-                        <span className="text-sm text-white font-medium">{category}</span>
-                        <ChevronDown className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
+        {/* ── 11. ENCOUNTER LOG ── */}
+        <div id="reviews" style={{ padding: '0 18px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>
+              Encounter Log
+            </span>
+            {reviews.length > 0 && (
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                background: C.accentDim, color: C.accent, borderRadius: 10, padding: '2px 8px',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {reviews.length}
+              </span>
             )}
-        </div>
-
-        {isOwner && (
-          <div className="mx-4 rounded-[14px] p-5 mb-4 bg-surface border border-white/[0.06]">
-            <div className="flex items-center gap-2 mb-4">
-              <Wrench className="w-4 h-4 text-tertiary" strokeWidth={1.5} />
-              <h2 className="text-[9px] font-bold text-tertiary uppercase tracking-[1.5px]">The Garage</h2>
-            </div>
-
-            <div className="mb-6 p-4 bg-gradient-to-r from-[#F97316]/20 to-[#fb923c]/20 rounded-lg border border-white/[0.06]">
-              <div className="flex justify-between items-center mb-2">
-                <div>
-                  <span className="font-bold text-lg text-accent-primary">
-                    {(() => {
-                      const totalMods = modifications.length;
-                      const thresholds = BADGE_TIER_THRESHOLDS.Modification;
-                      if (totalMods >= thresholds.Platinum) return 'Platinum Build Status';
-                      if (totalMods >= thresholds.Gold) return 'Gold Build Status';
-                      if (totalMods >= thresholds.Silver) return 'Silver Build Status';
-                      if (totalMods >= thresholds.Bronze) return 'Bronze Build Status';
-                      return 'No Mods Yet';
-                    })()}
-                  </span>
-                  <p className="text-sm text-secondary">
-                    {(() => {
-                      const totalMods = modifications.length;
-                      const thresholds = BADGE_TIER_THRESHOLDS.Modification;
-                      if (totalMods >= thresholds.Platinum) return 'Max level reached!';
-                      if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} mods to Platinum`;
-                      if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} mods to Gold`;
-                      if (totalMods >= thresholds.Bronze) return `${totalMods}/${thresholds.Silver} mods to Silver`;
-                      return `${totalMods}/${thresholds.Bronze} mods to Bronze`;
-                    })()}
-                  </p>
-                </div>
-                <div className="text-3xl font-bold text-accent-primary">
-                  {modifications.length}
-                </div>
-              </div>
-
-              {(() => {
-                const totalMods = modifications.length;
-                const thresholds = BADGE_TIER_THRESHOLDS.Modification;
-                let nextTier = thresholds.Bronze;
-                if (totalMods >= thresholds.Gold) nextTier = thresholds.Platinum;
-                else if (totalMods >= thresholds.Silver) nextTier = thresholds.Gold;
-                else if (totalMods >= thresholds.Bronze) nextTier = thresholds.Silver;
-
-                if (totalMods < thresholds.Platinum) {
-                  const progress = (totalMods / nextTier) * 100;
-                  return (
-                    <div className="w-full bg-surfacehighlight rounded-full h-4 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#F97316] to-[#fb923c] transition-all duration-500 flex items-center justify-end px-2"
-                        style={{ width: `${Math.min(progress, 100)}%` }}
-                      >
-                        <span className="text-xs text-white font-bold">
-                          {Math.round(progress)}%
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-            </div>
-
-            <div className="space-y-3">
-              <GarageSection
-                title="Powertrain"
-                icon={<Wrench size={24} />}
-                modCount={modsByCategory['Powertrain']?.length || 0}
-                defaultOpen
-              >
-                <ModList
-                  mods={modsByCategory['Powertrain'] || []}
-                  category="Powertrain"
-                  vehicleId={vehicleId}
-                  onUpdate={loadVehicleData}
-                />
-              </GarageSection>
-
-              <GarageSection
-                title="Suspension & Brakes"
-                icon={<Disc3 size={24} />}
-                modCount={modsByCategory['Suspension & Brakes']?.length || 0}
-              >
-                <ModList
-                  mods={modsByCategory['Suspension & Brakes'] || []}
-                  category="Suspension & Brakes"
-                  vehicleId={vehicleId}
-                  onUpdate={loadVehicleData}
-                />
-              </GarageSection>
-
-              <GarageSection
-                title="Wheels & Tires"
-                icon={<Disc3 size={24} />}
-                modCount={modsByCategory['Wheels & Tires']?.length || 0}
-              >
-                <ModList
-                  mods={modsByCategory['Wheels & Tires'] || []}
-                  category="Wheels & Tires"
-                  vehicleId={vehicleId}
-                  onUpdate={loadVehicleData}
-                />
-              </GarageSection>
-
-              <GarageSection
-                title="Exterior"
-                icon={<Palette size={24} />}
-                modCount={modsByCategory['Exterior']?.length || 0}
-              >
-                <ModList
-                  mods={modsByCategory['Exterior'] || []}
-                  category="Exterior"
-                  vehicleId={vehicleId}
-                  onUpdate={loadVehicleData}
-                />
-              </GarageSection>
-
-              <GarageSection
-                title="Interior"
-                icon={<Armchair size={24} />}
-                modCount={modsByCategory['Interior']?.length || 0}
-              >
-                <ModList
-                  mods={modsByCategory['Interior'] || []}
-                  category="Interior"
-                  vehicleId={vehicleId}
-                  onUpdate={loadVehicleData}
-                />
-              </GarageSection>
-
-              <GarageSection
-                title="Fluids & Consumables"
-                icon={<Droplet size={24} />}
-                modCount={modsByCategory['Fluids & Consumables']?.length || 0}
-              >
-                <ModList
-                  mods={modsByCategory['Fluids & Consumables'] || []}
-                  category="Fluids & Consumables"
-                  vehicleId={vehicleId}
-                  onUpdate={loadVehicleData}
-                />
-              </GarageSection>
-            </div>
           </div>
-        )}
 
-        {/* Stickers Section */}
-        <div className="mb-6 px-4 v3-stagger v3-stagger-4">
-          <div className="slbl">Bumper Stickers</div>
-          <div className="sticker-strip">
-            <StickerSlab vehicleId={vehicleId} />
-          </div>
-        </div>
-
-        {/* Build Timeline Section — claimed vehicles + owner only */}
-        {vehicle.is_claimed && isOwner && (
-          <div className="mb-6 px-4">
-            <div className="slbl">Build Timeline</div>
-            <div className="build-timeline">
-              {modifications.length > 0 ? modifications.map((mod, i) => (
-                <div key={mod.id} className="bt-item">
-                  <div className={i === 0 ? 'bt-dot' : 'bt-dot-steel'} />
-                  <div>
-                    <div className="text-xs text-primary">{mod.part_name}</div>
-                    <div className="text-[10px] font-mono" style={{ color: 'var(--t4)' }}>
-                      {mod.category || 'Modification'}
-                    </div>
-                  </div>
-                </div>
-              )) : (
-                <div className="bt-item">
-                  <div className="bt-dot" />
-                  <div>
-                    <div className="text-xs text-primary">Vehicle Added</div>
-                    <div className="text-[10px] font-mono" style={{ color: 'var(--t4)' }}>
-                      {vehicle?.claimed_at ? new Date(vehicle.claimed_at).toLocaleDateString() : 'Unknown'}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {!isOwner && user && (
-          <>
-            {/* Action Hints */}
-            <div className="flex gap-2 px-4 mb-3">
-              <div
-                className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer active:opacity-80"
-                style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06), var(--s1))', border: '1px solid rgba(249,115,22,0.12)' }}
-                onClick={() => onNavigate('scan')}
-              >
-                <Star className="w-3 h-3 flex-shrink-0" strokeWidth={1.2} style={{ color: 'var(--orange)' }} />
-                <span className="text-[9px] text-secondary">Spot a vehicle</span>
-              </div>
-              <div
-                className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer active:opacity-80"
-                style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06), var(--s1))', border: '1px solid rgba(249,115,22,0.12)' }}
-              >
-                <Heart className="w-3 h-3 flex-shrink-0" strokeWidth={1.2} style={{ color: 'var(--orange)' }} />
-                <span className="text-[9px] text-secondary">Give Bumper Sticker</span>
-              </div>
-            </div>
-            <div className="mb-6">
-              <VehicleStickerSelector vehicleId={vehicleId} onStickerGiven={loadVehicleData} />
-            </div>
-          </>
-        )}
-
-        <div id="reviews" className="card-v3 card-v3-lift p-6 mx-4 mb-6 v3-stagger v3-stagger-5">
-          <h3 className="text-xl font-bold mb-4 uppercase tracking-wider text-primary">Community Spots</h3>
-          {reviews.length > 0 && (
-            <p className="text-[8px] text-center mb-2" style={{ color: '#909aaa' }}>
-              Spotted by <strong style={{ color: '#F97316' }}>{reviews.length}</strong> {reviews.length === 1 ? 'spotter' : 'spotters'}
-            </p>
-          )}
           {reviews.length === 0 ? (
-            <p className="text-[var(--t3)] text-center py-8">
-              No spots yet. Spot this plate to leave the first review!
-            </p>
+            <div style={{ textAlign: 'center' as const, padding: '32px 0', background: C.carbon1, borderRadius: 10 }}>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.steel }}>
+                No encounters yet. Spot this plate to leave the first review.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {reviews.map((review) => {
                 const isPreClaim = canModerateReview(review);
-                // God Mode Rules:
-                // - Pre-claim reviews: Owner can DELETE (not hide)
-                // - Post-claim reviews: Owner can HIDE (not delete)
-                // - Authors can always delete their own reviews
                 const canDelete = review.author_id === user?.id || (isOwner && isPreClaim);
                 const canHide = isOwner && !isPreClaim;
 
                 return (
                   <div
                     key={review.id}
-                    className="border border-white/[0.06] rounded-xl p-4 bg-surface"
+                    style={{ background: C.carbon1, border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: 14 }}
                   >
+                    {/* Moderation status for own reviews */}
                     {review.author_id === user?.id && review.moderation_status !== 'approved' && (
-                      <div className="mb-3">
+                      <div style={{ marginBottom: 10 }}>
                         <ModerationStatus
                           status={review.moderation_status}
                           rejectionReason={review.rejection_reason}
@@ -1436,21 +1200,35 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         />
                       </div>
                     )}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="text-sm text-[var(--t3)] mb-2">
-                          by {review.author.handle || 'Anonymous'} · {new Date(review.created_at).toLocaleDateString()}
-                        </div>
-                        {review.comment && (
-                          <p className="text-primary">{review.comment}</p>
+
+                    {/* Review header: avatar + handle + date */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: C.carbon2, overflow: 'hidden', flexShrink: 0 }}>
+                        {review.author.avatar_url && (
+                          <img src={review.author.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                        )}
+                        {!review.author.avatar_url && (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <User size={14} color={C.steel} />
+                          </div>
                         )}
                       </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: C.accent }}>
+                          @{review.author.handle || 'Anonymous'}
+                        </span>
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.steel, marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+
+                      {/* Hide/Delete controls */}
                       {(canDelete || canHide) && (
-                        <div className="flex gap-2 ml-4">
+                        <div style={{ display: 'flex', gap: 6 }}>
                           {canHide && (
                             <button
                               onClick={() => handleToggleHidden(review)}
-                              className="text-xs px-2 py-1 bg-surface-2 hover:bg-[var(--border2)] rounded text-[var(--t3)]"
+                              style={{ fontSize: 10, padding: '4px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: C.dim, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}
                             >
                               {review.is_hidden_by_owner ? 'Unhide' : 'Hide'}
                             </button>
@@ -1458,70 +1236,76 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                           {canDelete && (
                             <button
                               onClick={() => handleDeleteReview(review.id)}
-                              className="text-xs px-2 py-1 bg-red-900/30 hover:bg-red-900/50 rounded text-status-danger flex items-center gap-1"
+                              style={{ fontSize: 10, padding: '4px 8px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
                             >
-                              <Trash2 className="w-3 h-3" />
-                              Delete
+                              <Trash2 size={10} />
                             </button>
                           )}
                         </div>
                       )}
                     </div>
-                    {/* Rating Categories */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-1">
+
+                    {/* Comment */}
+                    {review.comment && (
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.light, lineHeight: 1.5, marginBottom: 8 }}>{review.comment}</p>
+                    )}
+
+                    {/* Rating chips */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {review.rating_vehicle != null && (
-                        <div className="text-xs">
-                          <span style={{ color: 'var(--t4)' }}>Vehicle</span>{' '}
-                          <span className="font-semibold" style={{ color: 'var(--orange)' }}>{review.rating_vehicle}/5</span>
-                        </div>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
+                          {'\u2605'} Vehicle {review.rating_vehicle}/5
+                        </span>
+                      )}
+                      {review.rating_driver != null && (
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
+                          {'\u2605'} Driver {review.rating_driver}/5
+                        </span>
                       )}
                       {review.rating_driving != null && (
-                        <div className="text-xs">
-                          <span style={{ color: 'var(--t4)' }}>Driving</span>{' '}
-                          <span className="font-semibold" style={{ color: 'var(--orange)' }}>{review.rating_driving}/5</span>
-                        </div>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
+                          {'\u2605'} Driving {review.rating_driving}/5
+                        </span>
                       )}
                       {review.looks_rating != null && (
-                        <div className="text-xs">
-                          <span style={{ color: 'var(--t4)' }}>Looks</span>{' '}
-                          <span className="font-semibold" style={{ color: 'var(--orange)' }}>{review.looks_rating}/5</span>
-                        </div>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
+                          {'\u2605'} Looks {review.looks_rating}/5
+                        </span>
                       )}
                       {review.sound_rating != null && (
-                        <div className="text-xs">
-                          <span style={{ color: 'var(--t4)' }}>Sound</span>{' '}
-                          <span className="font-semibold" style={{ color: 'var(--orange)' }}>{review.sound_rating}/5</span>
-                        </div>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
+                          {'\u2605'} Sound {review.sound_rating}/5
+                        </span>
                       )}
                       {review.condition_rating != null && (
-                        <div className="text-xs">
-                          <span style={{ color: 'var(--t4)' }}>Condition</span>{' '}
-                          <span className="font-semibold" style={{ color: 'var(--orange)' }}>{review.condition_rating}/5</span>
-                        </div>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
+                          {'\u2605'} Condition {review.condition_rating}/5
+                        </span>
                       )}
                     </div>
+
+                    {/* Sentiment + spot type */}
                     {review.sentiment && (
-                      <div className="mt-1.5">
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                          review.sentiment === 'love' ? 'bg-rose-500/15 text-rose-300' :
-                          review.sentiment === 'hate' ? 'bg-red-500/15 text-red-300' :
-                          'bg-white/5 text-[var(--t4)]'
-                        }`}>
-                          {review.sentiment === 'love' ? '❤️ Love It' : review.sentiment === 'hate' ? '👎 Hate It' : review.sentiment}
+                      <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: '2px 8px', borderRadius: 10,
+                          background: review.sentiment === 'love' ? 'rgba(251,113,133,0.12)' : review.sentiment === 'hate' ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.05)',
+                          color: review.sentiment === 'love' ? '#fb7185' : review.sentiment === 'hate' ? '#f87171' : C.dim,
+                        }}>
+                          {review.sentiment === 'love' ? 'Love It' : review.sentiment === 'hate' ? 'Hate It' : review.sentiment}
                         </span>
                         {review.spot_type && (
-                          <span className="text-[10px] font-mono ml-2 px-2 py-0.5 rounded-full" style={{ background: 'var(--s2)', color: 'var(--t4)' }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', color: C.dim }}>
                             {review.spot_type === 'full' ? 'Full Spot' : 'Quick Spot'}
                           </span>
                         )}
                       </div>
                     )}
-                    {review.location_label && (
-                      <div className="text-[10px] mt-1" style={{ color: 'var(--t4)' }}>{review.location_label}</div>
-                    )}
+
+                    {/* Pre-claim indicator */}
                     {canModerateReview(review) && (
-                      <div className="mt-2 text-xs text-accent-primary flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" /> Pre-claim review (God Mode enabled)
+                      <div style={{ marginTop: 8, fontSize: 10, color: C.accent, display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em' }}>
+                        <AlertCircle size={11} /> Pre-claim review
                       </div>
                     )}
                   </div>
@@ -1531,15 +1315,196 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           )}
         </div>
 
+        {/* ── 12. OWNER GARAGE ── */}
         {isOwner && (
-          <div className="px-4 mt-6 mb-6">
-            <button className="w-full py-3 rounded-xl font-bold uppercase tracking-wider text-sm transition-all active:scale-[0.98] bg-transparent border border-[rgba(239,68,68,0.3)] text-[#fca5a5]">
-              Retire This Ride
-            </button>
+          <div style={{ padding: '0 18px 24px' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 12 }}>
+              Owner Garage
+            </div>
+
+            {/* Owner's Manual row */}
+            <div
+              onClick={() => {
+                if (vehicle.owners_manual_url) {
+                  window.open(vehicle.owners_manual_url, '_blank');
+                } else {
+                  manualInputRef.current?.click();
+                }
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: 14,
+                background: 'rgba(240,160,48,0.06)', border: '1px solid rgba(240,160,48,0.18)',
+                borderRadius: 10, cursor: 'pointer', marginBottom: 12,
+              }}
+            >
+              <BookOpen size={18} strokeWidth={1.5} color={C.gold} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: C.gold }}>Owner's Manual</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.steel }}>
+                  {vehicle.owners_manual_url ? 'Tap to view PDF' : 'Upload PDF (max 10MB)'}
+                </div>
+              </div>
+              {vehicle.owners_manual_url ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Download size={14} color={C.gold} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRemoveManual(); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                  >
+                    <X size={14} color="#fca5a5" />
+                  </button>
+                </div>
+              ) : (
+                <ChevronRight size={14} color={C.steel} />
+              )}
+            </div>
+
+            {/* Build timeline */}
+            {vehicle.is_claimed && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: C.steel, marginBottom: 8 }}>
+                  Build Timeline
+                </div>
+                {modifications.length > 0 ? modifications.map((mod, i) => (
+                  <div key={mod.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', marginTop: 4, flexShrink: 0, background: i === 0 ? C.accent : C.muted }} />
+                    <div>
+                      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.white }}>{mod.part_name}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.steel }}>{mod.category || 'Modification'}</div>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', marginTop: 4, flexShrink: 0, background: C.accent }} />
+                    <div>
+                      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.white }}>Vehicle Added</div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.steel, fontVariantNumeric: 'tabular-nums' }}>
+                        {vehicle?.claimed_at ? new Date(vehicle.claimed_at).toLocaleDateString() : 'Unknown'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Privacy toggle */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 14px', background: C.carbon1, borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.04)', marginBottom: 12,
+            }}>
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.white }}>Private Vehicle</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Followers need your approval</div>
+              </div>
+              <button
+                onClick={async () => {
+                  const { error } = await supabase.from('vehicles').update({ is_private: !vehicle.is_private }).eq('id', vehicleId);
+                  if (!error) loadVehicleData();
+                }}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, cursor: 'pointer', border: 'none',
+                  background: vehicle.is_private ? C.accent : 'rgba(255,255,255,0.1)',
+                  position: 'relative', transition: 'background 0.2s',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 3,
+                  left: vehicle.is_private ? 22 : 3,
+                  width: 18, height: 18, borderRadius: '50%', background: C.white, transition: 'left 0.2s',
+                }} />
+              </button>
+            </div>
+
+            {/* Followers panel */}
+            <VehicleFollowersPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />
+
+            {/* The Garage (Mods) */}
+            <div style={{ background: C.carbon1, borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <Wrench size={14} strokeWidth={1.5} color={C.dim} />
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>The Garage</span>
+              </div>
+
+              {/* Build status progress */}
+              <div style={{ marginBottom: 16, padding: 14, background: `linear-gradient(to right, rgba(249,115,22,0.15), rgba(251,146,60,0.15))`, borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: 16, color: C.accent }}>
+                      {(() => {
+                        const totalMods = modifications.length;
+                        const thresholds = BADGE_TIER_THRESHOLDS.Modification;
+                        if (totalMods >= thresholds.Platinum) return 'Platinum Build';
+                        if (totalMods >= thresholds.Gold) return 'Gold Build';
+                        if (totalMods >= thresholds.Silver) return 'Silver Build';
+                        if (totalMods >= thresholds.Bronze) return 'Bronze Build';
+                        return 'No Mods Yet';
+                      })()}
+                    </span>
+                    <p style={{ fontSize: 10, color: C.steel, fontFamily: "'Barlow', sans-serif" }}>
+                      {(() => {
+                        const totalMods = modifications.length;
+                        const thresholds = BADGE_TIER_THRESHOLDS.Modification;
+                        if (totalMods >= thresholds.Platinum) return 'Max level reached!';
+                        if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} mods to Platinum`;
+                        if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} mods to Gold`;
+                        if (totalMods >= thresholds.Bronze) return `${totalMods}/${thresholds.Silver} mods to Silver`;
+                        return `${totalMods}/${thresholds.Bronze} mods to Bronze`;
+                      })()}
+                    </p>
+                  </div>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, color: C.accent, fontVariantNumeric: 'tabular-nums' }}>
+                    {modifications.length}
+                  </div>
+                </div>
+                {(() => {
+                  const totalMods = modifications.length;
+                  const thresholds = BADGE_TIER_THRESHOLDS.Modification;
+                  let nextTier = thresholds.Bronze;
+                  if (totalMods >= thresholds.Gold) nextTier = thresholds.Platinum;
+                  else if (totalMods >= thresholds.Silver) nextTier = thresholds.Gold;
+                  else if (totalMods >= thresholds.Bronze) nextTier = thresholds.Silver;
+                  if (totalMods < thresholds.Platinum) {
+                    const progress = (totalMods / nextTier) * 100;
+                    return (
+                      <div style={{ width: '100%', background: 'rgba(255,255,255,0.06)', borderRadius: 999, height: 12, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: `linear-gradient(to right, ${C.accent}, #fb923c)`, width: `${Math.min(progress, 100)}%`, transition: 'width 0.5s', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6 }}>
+                          <span style={{ fontSize: 8, color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{Math.round(progress)}%</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+
+              {/* Garage sections */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <GarageSection title="Powertrain" icon={<Wrench size={24} />} modCount={modsByCategory['Powertrain']?.length || 0} defaultOpen>
+                  <ModList mods={modsByCategory['Powertrain'] || []} category="Powertrain" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                </GarageSection>
+                <GarageSection title="Suspension & Brakes" icon={<Disc3 size={24} />} modCount={modsByCategory['Suspension & Brakes']?.length || 0}>
+                  <ModList mods={modsByCategory['Suspension & Brakes'] || []} category="Suspension & Brakes" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                </GarageSection>
+                <GarageSection title="Wheels & Tires" icon={<Disc3 size={24} />} modCount={modsByCategory['Wheels & Tires']?.length || 0}>
+                  <ModList mods={modsByCategory['Wheels & Tires'] || []} category="Wheels & Tires" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                </GarageSection>
+                <GarageSection title="Exterior" icon={<Palette size={24} />} modCount={modsByCategory['Exterior']?.length || 0}>
+                  <ModList mods={modsByCategory['Exterior'] || []} category="Exterior" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                </GarageSection>
+                <GarageSection title="Interior" icon={<Armchair size={24} />} modCount={modsByCategory['Interior']?.length || 0}>
+                  <ModList mods={modsByCategory['Interior'] || []} category="Interior" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                </GarageSection>
+                <GarageSection title="Fluids & Consumables" icon={<Droplet size={24} />} modCount={modsByCategory['Fluids & Consumables']?.length || 0}>
+                  <ModList mods={modsByCategory['Fluids & Consumables'] || []} category="Fluids & Consumables" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                </GarageSection>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
+      {/* ── MODALS ── */}
       {showVerifyModal && vehicle && (
         <VerifyOwnershipModal
           vehicleId={vehicleId}
@@ -1578,13 +1543,13 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       )}
 
       {showShareModal && vehicle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative max-w-md w-full">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
+          <div style={{ position: 'relative', maxWidth: 420, width: '100%' }}>
             <button
               onClick={() => setShowShareModal(false)}
-              className="absolute -top-12 right-0 p-2 text-white hover:text-accent-primary transition-colors"
+              style={{ position: 'absolute', top: -48, right: 0, padding: 8, color: '#fff', background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              <X className="w-6 h-6" />
+              <X size={24} />
             </button>
             <ShareBuildCard
               vehicle={{
@@ -1606,13 +1571,13 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 rating_vehicle: avgCoolScore || 0
               }}
             />
-            <div className="mt-4 text-center">
-              <p className="text-sm text-secondary mb-4">
+            <div style={{ marginTop: 16, textAlign: 'center' as const }}>
+              <p style={{ fontSize: 13, color: C.steel, marginBottom: 16 }}>
                 Take a screenshot to share on social media
               </p>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="px-6 py-3 bg-surfacehighlight hover:bg-accent-primary rounded-lg font-bold uppercase tracking-wider text-sm transition-all"
+                style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.06)', borderRadius: 8, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', fontSize: 13, border: 'none', color: C.white, cursor: 'pointer' }}
               >
                 Close
               </button>
@@ -1620,21 +1585,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
       )}
-
-      {/* Driver rating removed in V3
-      {showRateDriver && vehicle && vehicle.owner && (
-        <RateDriverModal
-          driverId={vehicle.owner_id!}
-          driverHandle={vehicle.owner.handle || 'unknown'}
-          vehicleId={vehicle.id}
-          onClose={() => setShowRateDriver(false)}
-          onSuccess={() => {
-            setShowRateDriver(false);
-            loadVehicleData();
-          }}
-        />
-      )}
-      */}
 
       {guestMode && <GuestBottomNav onNavigate={onNavigate} />}
     </Layout>

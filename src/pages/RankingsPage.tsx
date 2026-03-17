@@ -4,6 +4,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { Award, Lock, ChevronRight, Zap, Crosshair, Star as StarIcon, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, CheckCircle2, Car, Tag, Trophy, Crown, Medal } from 'lucide-react';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
+import { BadgeChip } from '../components/badges/BadgeChip';
+
+function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null; }): 'prestige' | 'milestone' | 'identity' {
+  const cat = (badge.category ?? '').toLowerCase();
+  const rar = (badge.rarity ?? '').toLowerCase();
+  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
+  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
+  return 'milestone';
+}
 
 interface RankingsPageProps {
   onNavigate: OnNavigate;
@@ -90,6 +99,8 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
   const [stickers, setStickers] = useState<StickerType[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<LeaderboardPeriod>('all');
+  const [vehicleLeaderboard, setVehicleLeaderboard] = useState<any[]>([]);
+  const [vehicleScope, setVehicleScope] = useState<'city' | 'state' | 'national' | 'class'>('city');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -100,6 +111,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
   useEffect(() => {
     if (activeTab === 'leaderboard') {
       loadLeaderboard();
+      loadVehicleLeaderboard();
     }
   }, [activeTab, leaderboardPeriod]);
 
@@ -231,6 +243,42 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
       console.error('Error loading leaderboard:', error);
       setLeaderboard([]);
     }
+  }
+
+  async function loadVehicleLeaderboard() {
+    try {
+      const { data: vehicles } = await supabase
+        .from('vehicles')
+        .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url, owner_id, owner:profiles!vehicles_owner_id_fkey(reputation_score)')
+        .eq('is_claimed', true)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (!vehicles) { setVehicleLeaderboard([]); return; }
+      const ranked = vehicles.filter((v: any) => v.owner).map((v: any) => ({
+        vehicle_id: v.id, make: v.make, model: v.model, year: v.year,
+        plate_number: v.plate_number, plate_state: v.plate_state,
+        stock_image_url: v.stock_image_url, profile_image_url: v.profile_image_url,
+        owner_id: v.owner_id, reputation_score: v.owner?.reputation_score ?? 0,
+        top_badges: [] as any[], rank_delta: null as number | null,
+      })).sort((a: any, b: any) => b.reputation_score - a.reputation_score).slice(0, 20);
+
+      const top10Ids = ranked.slice(0, 10).map((v: any) => v.owner_id).filter(Boolean);
+      if (top10Ids.length > 0) {
+        const { data: badgeData } = await supabase.from('user_badges')
+          .select('user_id, badges(id, name, icon_name, category, rarity, tier)')
+          .in('user_id', top10Ids).limit(100);
+        if (badgeData) {
+          const badgeMap: Record<string, any[]> = {};
+          for (const ub of badgeData as any[]) {
+            if (!ub.badges) continue;
+            if (!badgeMap[ub.user_id]) badgeMap[ub.user_id] = [];
+            if (badgeMap[ub.user_id].length < 2) badgeMap[ub.user_id].push({ id: ub.badges.id, name: ub.badges.name, icon: ub.badges.icon_name, category: ub.badges.category, rarity: ub.badges.rarity, tier: ub.badges.tier });
+          }
+          ranked.forEach((v: any) => { if (v.owner_id && badgeMap[v.owner_id]) v.top_badges = badgeMap[v.owner_id]; });
+        }
+      }
+      setVehicleLeaderboard(ranked);
+    } catch (err) { console.error('Vehicle leaderboard error:', err); }
   }
 
   async function loadData() {
@@ -613,198 +661,110 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         {activeTab === 'leaderboard' && (
           <div className="space-y-4 px-4">
 
-            {/* Period Filter */}
+            {/* Vehicle Scope Tabs */}
             <div className="flex gap-1 p-1 rounded-[10px] bg-[var(--s1)] border border-[var(--border2)]">
-              {[
-                { id: 'all' as const, label: 'All Time' },
-                { id: 'month' as const, label: 'This Month' },
-                { id: 'week' as const, label: 'This Week' },
-              ].map(period => (
+              {([
+                { id: 'city' as const, label: 'City' },
+                { id: 'state' as const, label: 'State' },
+                { id: 'national' as const, label: 'National' },
+                { id: 'class' as const, label: 'Class' },
+              ]).map(scope => (
                 <button
-                  key={period.id}
-                  onClick={() => setLeaderboardPeriod(period.id)}
+                  key={scope.id}
+                  onClick={() => setVehicleScope(scope.id)}
                   className="flex-1 py-1.5 rounded-[8px] transition-all text-xs font-bold"
                   style={{
-                    color: leaderboardPeriod === period.id ? '#f2f4f7' : '#909aaa',
-                    background: leaderboardPeriod === period.id ? 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1))' : 'transparent',
-                    border: leaderboardPeriod === period.id ? '1px solid rgba(249,115,22,0.25)' : '1px solid transparent',
+                    color: vehicleScope === scope.id ? '#f2f4f7' : '#909aaa',
+                    background: vehicleScope === scope.id ? 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1))' : 'transparent',
+                    border: vehicleScope === scope.id ? '1px solid rgba(249,115,22,0.25)' : '1px solid transparent',
                   }}
                 >
-                  {period.label}
+                  {scope.label}
                 </button>
               ))}
             </div>
 
-            {/* Current User Rank Card */}
-            {user && leaderboard.length > 0 && (() => {
-              const userRank = leaderboard.findIndex(u => u.id === user.id) + 1;
-              const userData = leaderboard.find(u => u.id === user.id);
+            {/* Section Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+              <Trophy className="w-3.5 h-3.5 text-orange" />
+              <span style={{ fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>
+                Top Vehicles {vehicleScope === 'city' ? '· Chicago' : vehicleScope === 'state' ? '· Illinois' : vehicleScope === 'national' ? '· USA' : '· All Classes'}
+              </span>
+            </div>
 
-              if (userData) {
-                return (
-                  <div
-                    className="rounded-xl p-4 relative overflow-hidden"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(249,115,22,0.12), rgba(251,146,60,0.08))',
-                      border: '1px solid rgba(249,115,22,0.3)',
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[rgba(249,115,22,0.2)] border border-[rgba(249,115,22,0.4)] flex-shrink-0">
-                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, color: 'var(--accent)' }}>#{userRank}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '2px' }}>Your Rank</div>
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: 'var(--white)' }}>@{userData.handle}</div>
-                      </div>
-                      <div className="text-right">
-                        <div
-                          style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '24px',
-                            fontWeight: 700,
-                            fontVariantNumeric: 'tabular-nums',
-                            background: 'linear-gradient(135deg, #F97316, #fb923c)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                          }}
-                        >
-                          {userData.reputation_score.toLocaleString()}
-                        </div>
-                        <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>SCORE</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Top 3 Podium */}
-            {leaderboard.length >= 3 && (
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                {[1, 0, 2].map((idx) => {
-                  const leader = leaderboard[idx];
-                  const rank = idx + 1;
-                  const podiumColors = {
-                    1: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', icon: '#f59e0b' },
-                    2: { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', icon: '#94a3b8' },
-                    3: { bg: 'rgba(205,127,50,0.15)', border: 'rgba(205,127,50,0.4)', icon: '#cd7f32' },
-                  }[rank] || { bg: 'rgba(249,115,22,0.15)', border: 'rgba(249,115,22,0.4)', icon: '#fb923c' };
-
-                  return (
-                    <button
-                      key={leader.id}
-                      onClick={() => onNavigate('user-profile', leader.id)}
-                      className="bg-[var(--s1)] rounded-xl p-3 text-center transition-all hover:-translate-y-1"
-                      style={{
-                        border: `1px solid ${podiumColors.border}`,
-                        background: rank === 1 ? `linear-gradient(135deg, ${podiumColors.bg}, rgba(245,158,11,0.08))` : 'var(--s1)',
-                        order: idx === 1 ? -1 : idx === 0 ? 0 : 1,
-                      }}
-                    >
-                      <div className="relative mb-2 mx-auto w-fit">
-                        {leader.avatar_url ? (
-                          <img
-                            src={leader.avatar_url}
-                            alt={leader.handle}
-                            className="w-12 h-12 rounded-full object-cover border-2"
-                            style={{ borderColor: podiumColors.icon }}
-                          />
-                        ) : (
-                          <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center border-2"
-                            style={{ borderColor: podiumColors.icon, background: podiumColors.bg }}
-                          >
-                            <Users className="w-5 h-5" style={{ color: podiumColors.icon }} />
-                          </div>
-                        )}
-                        <div
-                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-[var(--bg)]"
-                          style={{ background: podiumColors.icon }}
-                        >
-                          {rank === 1 && <Crown className="w-3 h-3 text-white" />}
-                          {rank === 2 && <Medal className="w-3 h-3 text-white" />}
-                          {rank === 3 && <Medal className="w-3 h-3 text-white" />}
-                        </div>
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>@{leader.handle}</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, color: podiumColors.icon, fontVariantNumeric: 'tabular-nums' }}>
-                        {leader.reputation_score.toLocaleString()}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dim)' }}>SCORE</div>
-                    </button>
-                  );
-                })}
+            {vehicleLeaderboard.length === 0 && (
+              <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-8 text-center">
+                <Car className="w-12 h-12 text-tertiary mx-auto mb-4" />
+                <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>No Rankings Yet</h3>
+                <p className="text-sm text-secondary">Be the first to claim a vehicle and climb the ranks</p>
               </div>
             )}
 
-            {/* Leaderboard List */}
-            <div className="space-y-2">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <Trophy className="w-3.5 h-3.5 text-orange" />
-                <span style={{ fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>Top Riders</span>
-              </div>
-
-              {leaderboard.length === 0 && (
-                <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-8 text-center">
-                  <Trophy className="w-12 h-12 text-tertiary mx-auto mb-4" />
-                  <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>No Rankings Yet</h3>
-                  <p className="text-sm text-secondary">Be the first to earn reputation and climb the ranks</p>
-                </div>
-              )}
-
-              {leaderboard.slice(3).map((leader, idx) => {
-                const rank = idx + 4;
-                const isCurrentUser = leader.id === user?.id;
+            {/* Vehicle Ranked Rows */}
+            <div className="space-y-1">
+              {vehicleLeaderboard.map((v: any, idx: number) => {
+                const rank = idx + 1;
+                const imgUrl = v.profile_image_url || v.stock_image_url;
+                const vehicleName = [v.year, v.make, v.model].filter(Boolean).join(' ') || 'Unknown Vehicle';
 
                 return (
                   <div
-                    key={leader.id}
-                    onClick={() => onNavigate('user-profile', leader.id)}
+                    key={v.vehicle_id}
+                    onClick={() => onNavigate('vehicle-detail', v.vehicle_id)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px',
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px',
                       borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer',
-                      ...(isCurrentUser ? { background: 'rgba(249,115,22,0.06)' } : {}),
+                      background: rank <= 3 ? 'rgba(249,115,22,0.04)' : 'transparent',
+                      borderRadius: '8px',
                     }}
                   >
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700, color: 'var(--muted)', minWidth: '32px' }}>
+                    {/* Rank number */}
+                    <div style={{
+                      fontFamily: 'var(--font-display)', fontSize: rank <= 3 ? '22px' : '18px', fontWeight: 700,
+                      color: rank === 1 ? '#f59e0b' : rank === 2 ? '#94a3b8' : rank === 3 ? '#cd7f32' : 'var(--muted)',
+                      minWidth: '28px', textAlign: 'center',
+                    }}>
                       {rank}
                     </div>
 
-                    {leader.avatar_url ? (
+                    {/* Vehicle thumbnail */}
+                    {imgUrl ? (
                       <img
-                        src={leader.avatar_url}
-                        alt={leader.handle}
-                        style={{ width: '52px', height: '36px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }}
+                        src={imgUrl}
+                        alt={vehicleName}
+                        style={{ width: '56px', height: '38px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}
                       />
                     ) : (
-                      <div style={{ width: '52px', height: '36px', borderRadius: '4px', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Users className="w-4 h-4 text-tertiary" />
+                      <div style={{ width: '56px', height: '38px', borderRadius: '4px', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <Car className="w-4 h-4 text-tertiary" />
                       </div>
                     )}
 
+                    {/* Vehicle info + badges */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        @{leader.handle}
-                        {isCurrentUser && (
-                          <span style={{ marginLeft: '6px', fontSize: '10px', fontWeight: 400, color: 'var(--accent)' }}>(You)</span>
-                        )}
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {vehicleName}
                       </div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
-                        <span>{leader.follower_count} followers</span>
-                        <span>{leader.badge_count} badges</span>
-                        {leader.driver_rating_count > 0 && (
-                          <span>{leader.avg_driver_rating.toFixed(1)} rating</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
+                        {v.plate_number && (
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.08em' }}>
+                            {v.plate_state ? `${v.plate_state} ` : ''}{v.plate_number}
+                          </span>
                         )}
+                        {v.top_badges.map((badge: any) => (
+                          <BadgeChip key={badge.id} name={badge.name} icon={badge.icon} type={getBadgeType(badge)} size="sm" />
+                        ))}
                       </div>
                     </div>
 
+                    {/* RP + delta */}
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 600, color: 'var(--white)', fontVariantNumeric: 'tabular-nums' }}>
-                        {leader.reputation_score.toLocaleString()}
+                        {v.reputation_score.toLocaleString()}
                       </div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>SCORE</div>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                        {v.rank_delta !== null ? (v.rank_delta > 0 ? `+${v.rank_delta}` : `${v.rank_delta}`) : 'RP'}
+                      </div>
                     </div>
                   </div>
                 );

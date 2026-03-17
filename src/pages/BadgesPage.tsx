@@ -85,6 +85,14 @@ function getCountForBadge(badge: Badge, activityCounts: ActivityCounts): number 
   }
 }
 
+function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
+  const cat = (badge.category ?? '').toLowerCase();
+  const rar = (badge.rarity ?? '').toLowerCase();
+  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
+  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
+  return 'milestone';
+}
+
 function getRarityColor(rarity: string): string {
   switch (rarity?.toLowerCase()) {
     case 'common':    return 'var(--silver)';
@@ -349,136 +357,47 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
           ))}
         </div>
 
-        {/* BADGE SHELF — horizontal scroll */}
-        {activeSection === 'earned' && (
-          <div style={{ padding: '0 20px 16px' }}>
-            {earned.length > 0 ? (
-              <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '8px' }}>
-                {earned.map(badge => {
-                  const IconComp = getBadgeIcon(badge.icon);
-                  const tier = badge.tier?.toLowerCase() || 'bronze';
-                  const rarityColor = getRarityColor(badge.rarity);
-                  const imgPath = getBadgeImagePath(badge);
-                  return (
-                    <div key={badge.id}
-                      onClick={() => { setCelebBadge(badge); sounds.badge(); haptics.medium(); }}
-                      style={{ width: '72px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                      <div style={{
-                        width: '52px', height: '52px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: getTierBackground(tier),
-                      }}>
-                        {imgPath ? (
-                          <img
-                            src={imgPath}
-                            alt={badge.name}
-                            style={{ width: '38px', height: '38px', objectFit: 'contain', borderRadius: '50%' }}
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        ) : (
-                          <IconComp style={{ width: '22px', height: '22px', color: 'rgba(0,0,0,0.5)' }} />
-                        )}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--white)', textAlign: 'center', lineHeight: 1.2 }}>{badge.name}</div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: rarityColor }}>{badge.rarity}</div>
-                      {badge.tier_threshold && (
-                        <div style={{ width: '52px', height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1, marginTop: 3 }}>
-                          <div style={{ height: 2, width: '100%', background: getTierBarColor(badge.tier), borderRadius: 1 }} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="card-v3 p-10 text-center">
-                <Award className="w-10 h-10 text-quaternary mx-auto mb-3" />
-                <p className="text-sm font-bold text-tertiary">No badges earned yet</p>
-                <p className="text-[11px] text-quaternary mt-1">Spot vehicles, leave reviews, and engage to earn your first badge</p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 5-column coin vault */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, padding: '0 16px 20px' }}>
+          {currentBadges.map((badge) => {
+            const isEarned = earnedBadgeIds.has(badge.id);
+            const isInProgressBadge = !isEarned && inProgress.find(ip => ip.id === badge.id);
+            const isLocked = !isEarned && !isInProgressBadge;
+            const badgeType = getBadgeType(badge);
+            const labelColor = isLocked ? '#445566' : badgeType === 'prestige' ? '#f0a030' : badgeType === 'milestone' ? '#F97316' : '#7a8e9e';
+            const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
 
-        {activeSection === 'progress' && (
-          <div style={{ padding: '0 20px 16px' }}>
-            {inProgress.length > 0 ? (
-              <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '8px' }}>
-                {inProgress.map(badge => {
-                  const IconComp = getBadgeIcon(badge.icon);
-                  const tier = badge.tier?.toLowerCase() || 'bronze';
-                  const cur = getCountForBadge(badge, activityCounts);
-                  const tgt = badge.tier_threshold || 1;
-                  const rarityColor = getRarityColor(badge.rarity);
-                  const imgPath = getBadgeImagePath(badge);
-                  return (
-                    <div key={badge.id} style={{ width: '72px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <div style={{
-                        width: '52px', height: '52px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: getTierBackground(tier),
-                      }}>
-                        {imgPath ? (
-                          <img
-                            src={imgPath}
-                            alt={badge.name}
-                            style={{ width: '38px', height: '38px', objectFit: 'contain', borderRadius: '50%' }}
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        ) : (
-                          <IconComp style={{ width: '22px', height: '22px', color: 'rgba(0,0,0,0.5)' }} />
-                        )}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--white)', textAlign: 'center', lineHeight: 1.2 }}>{badge.name}</div>
-                      {badge.tier_threshold && (
-                        <>
-                          <div style={{ width: '52px', height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1, marginTop: 3 }}>
-                            <div style={{
-                              height: 2,
-                              width: `${Math.min((cur / tgt) * 100, 100)}%`,
-                              background: getTierBarColor(badge.tier),
-                              borderRadius: 1,
-                              transition: 'width 0.3s ease',
-                            }} />
-                          </div>
-                          <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--accent)', marginTop: 2 }}>
-                            {cur} / {tgt}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
+            return (
+              <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: isEarned ? 'pointer' : 'default' }}
+                onClick={() => { if (isEarned) { setCelebBadge(badge); try { sounds.badge(); haptics.medium(); } catch {} } }}>
+                <div style={{ position: 'relative', filter: isLocked ? 'grayscale(1)' : 'none', opacity: isLocked ? 0.4 : 1, transition: 'opacity 0.2s' }}>
+                  <BadgeCoin tier={tier} name={isLocked ? '???' : badge.name} locked={isLocked} size="sm" />
+                  {/* Progress ring for in-progress badges */}
+                  {isInProgressBadge && badge.tier_threshold && (() => {
+                    const count = getCountForBadge(badge, activityCounts);
+                    const pct = Math.min(100, Math.round((count / (badge.tier_threshold || 1)) * 100));
+                    return (
+                      <div style={{ position: 'absolute', inset: -3, borderRadius: '50%', background: `conic-gradient(rgba(249,115,22,0.55) ${pct}%, transparent ${pct}%)`, zIndex: -1 }} />
+                    );
+                  })()}
+                </div>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: labelColor, textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {isLocked ? 'Locked' : badge.name}
+                </span>
               </div>
-            ) : (
-              <div className="card-v3 p-10 text-center">
-                <TrendingUp className="w-10 h-10 text-quaternary mx-auto mb-3" />
-                <p className="text-sm font-bold text-tertiary">No badges in progress</p>
-                <p className="text-[11px] text-quaternary mt-1">Start spotting and posting to begin earning</p>
-              </div>
-            )}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {activeSection === 'locked' && (
-          <div style={{ padding: '0 20px 16px' }}>
-            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '8px' }}>
-              {locked.map(badge => {
-                return (
-                  <div key={badge.id} style={{ width: '72px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div style={{
-                      width: '52px', height: '52px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: 'var(--carbon-3)', border: '1px solid rgba(255,255,255,0.06)',
-                    }}>
-                      <Lock style={{ width: '22px', height: '22px', color: 'rgba(255,255,255,0.15)' }} />
-                    </div>
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--dim)', textAlign: 'center', lineHeight: 1.2 }}>???</div>
-                    <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>Locked</div>
-                    {badge.tier_threshold && (
-                      <div style={{ width: '52px', height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1, marginTop: 3 }} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        {/* Empty states */}
+        {currentBadges.length === 0 && (
+          <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8' }}>
+              {activeSection === 'earned' ? 'No badges earned yet' : activeSection === 'progress' ? 'No badges in progress' : 'All badges unlocked!'}
+            </p>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', marginTop: 4 }}>
+              {activeSection === 'earned' ? 'Spot vehicles and engage to earn badges' : activeSection === 'progress' ? 'Start spotting to begin earning' : ''}
+            </p>
           </div>
         )}
       </div>

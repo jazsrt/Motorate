@@ -29,6 +29,14 @@ interface UserProfilePageProps {
   onBack: () => void;
 }
 
+function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
+  const cat = (badge.category ?? '').toLowerCase();
+  const rar = (badge.rarity ?? '').toLowerCase();
+  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
+  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
+  return 'milestone';
+}
+
 export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: UserProfilePageProps) {
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
@@ -54,6 +62,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const [allPhotos, setAllPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lockedBadges, setLockedBadges] = useState<any[]>([]);
 
   const isOwnProfile = currentUser?.id === userId;
   const isPrivate = profile?.is_private === true;
@@ -136,17 +145,30 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   };
 
   const loadBadges = async () => {
-    const { data } = await supabase
+    const { data: earnedData } = await supabase
       .from('user_badges')
       .select(`
         id,
         earned_at,
         tier,
-        badge:badges(id, name, icon_name, category, description)
+        badge_id,
+        badge:badges(id, name, icon_name, category, rarity, description)
       `)
       .eq('user_id', userId);
 
-    if (data) setBadges(data);
+    if (earnedData) setBadges(earnedData);
+
+    const { data: allBadgeData } = await supabase
+      .from('badges')
+      .select('id, name, icon_name, category, rarity, tier, tier_threshold')
+      .order('tier_threshold', { ascending: true })
+      .limit(60);
+
+    if (allBadgeData && earnedData) {
+      const earnedIds = new Set(earnedData.map((ub: any) => ub.badge_id));
+      const locked = allBadgeData.filter((b: any) => !earnedIds.has(b.id)).slice(0, 5);
+      setLockedBadges(locked);
+    }
   };
 
   const loadAllPhotos = async () => {
@@ -373,37 +395,38 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                   </div>
                 </div>
 
-                {canViewContent && badges.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-cond)' }}>Trophy Case</p>
-                    <div className="flex items-center gap-1.5">
-                      {badges
-                        .sort((a, b) => new Date(a.earned_at).getTime() - new Date(b.earned_at).getTime())
-                        .slice(0, 5)
-                        .map((item) => (
-                          <div
-                            key={item.id}
-                            className="relative group"
-                            title={item.badge.name}
-                          >
-                            <BadgeCoin
-                              iconName={item.badge.icon_name}
-                              category={item.badge.category}
-                              size="sm"
-                            />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface border border-surfacehighlight rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
-                              {item.badge.name}
-                            </div>
-                          </div>
-                        ))}
-                      {badges.length > 5 && (
-                        <button
-                          onClick={() => setActiveTab('badges')}
-                          className="text-xs text-accent-primary hover:text-accent-hover font-bold ml-2"
-                        >
-                          +{badges.length - 5}
-                        </button>
+                {/* Achievements section — replaces Trophy Case */}
+                {canViewContent && (badges.length > 0 || lockedBadges.length > 0) && (
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#7a8e9e' }}>Achievements</span>
+                      {(badges.length + lockedBadges.length) > 10 && (
+                        <button onClick={() => setActiveTab('badges')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#F97316', background: 'none', border: 'none', cursor: 'pointer' }}>See all</button>
                       )}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                      {/* Earned badges */}
+                      {badges.slice(0, 7).map((item: any) => {
+                        const badge = item.badge || item.badges || item;
+                        const badgeType = getBadgeType(badge);
+                        const labelColor = badgeType === 'prestige' ? '#f0a030' : badgeType === 'milestone' ? '#F97316' : '#7a8e9e';
+                        const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
+                        return (
+                          <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                            <BadgeCoin tier={tier} name={badge.name} size="sm" />
+                            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: labelColor, textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{badge.name}</span>
+                          </div>
+                        );
+                      })}
+                      {/* Locked upcoming badges with real names */}
+                      {lockedBadges.slice(0, 10 - Math.min(badges.length, 7)).map((badge: any) => (
+                        <div key={`locked-${badge.id}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(10,13,20,0.9)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'grayscale(1)', opacity: 0.4 }}>
+                            <span style={{ fontSize: 14 }}>🔒</span>
+                          </div>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#445566', textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{badge.name}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
