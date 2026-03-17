@@ -497,7 +497,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
               <div className="text-[22px] font-bold text-accent-2" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                 {followerCount.toLocaleString()}
               </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Followers</div>
+              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Friends</div>
             </div>
             <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
               <div className="text-[22px] font-bold text-positive" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>

@@ -61,6 +61,13 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
 
     setLoading(true);
 
+    if (followStatus === 'accepted') {
+      if (!window.confirm('Unfriend this user?')) {
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       if (followStatus === 'accepted' || followStatus === 'pending') {
         const { error } = await supabase
@@ -70,11 +77,18 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
           .eq('following_id', targetUserId);
 
         if (!error) {
+          // Also delete reverse follow for mutual unfriending
+          await supabase
+            .from('follows')
+            .delete()
+            .eq('follower_id', targetUserId)
+            .eq('following_id', user.id);
+
           setFollowStatus('none');
           onFollowChange?.(false);
         }
       } else {
-        const newStatus = targetUserPrivate ? 'pending' : 'accepted';
+        const newStatus = 'pending';  // ALL friend requests require acceptance
 
         const { error } = await supabase
           .from('follows')
@@ -88,14 +102,12 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
           setFollowStatus(newStatus);
           onFollowChange?.(newStatus === 'accepted');
 
-          // Send notification to followed user (only if accepted, not pending)
-          if (newStatus === 'accepted') {
+          // Send notification for friend request
+          if (newStatus === 'pending') {
             try {
-              const { notifyNewFollower } = await import('../lib/notifications');
-              await notifyNewFollower(targetUserId, user.id);
-            } catch (notifError) {
-              console.error('Failed to send follow notification:', notifError);
-            }
+              const { notifyFriendRequest } = await import('../lib/notifications');
+              await notifyFriendRequest(targetUserId, user.id);
+            } catch {}
           }
 
           // AUTO-AWARD: Check for tiered follower badges (follower_id = the user who followed)
@@ -126,7 +138,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
       case 'accepted':
         return {
           icon: <UserCheck className={iconSize} />,
-          text: 'Following',
+          text: 'Friends',
           isFollowing: true
         };
       case 'pending':
@@ -138,7 +150,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
       default:
         return {
           icon: <UserPlus className={iconSize} />,
-          text: 'Follow',
+          text: 'Add Friend',
           isFollowing: false
         };
     }

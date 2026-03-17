@@ -13,6 +13,11 @@ export const NotificationTypes = {
   POST_SHARE: 'share',
   STOLEN_SIGHTING: 'stolen_sighting',
   CHALLENGE_COMPLETE: 'challenge_complete',
+  FRIEND_REQUEST: 'friend_request',
+  FRIEND_ACCEPTED: 'friend_accepted',
+  VEHICLE_FOLLOW: 'vehicle_follow',
+  VEHICLE_FOLLOW_REQUEST: 'vehicle_follow_request',
+  VEHICLE_FOLLOW_APPROVED: 'vehicle_follow_approved',
 } as const;
 
 export type NotificationType = typeof NotificationTypes[keyof typeof NotificationTypes];
@@ -442,3 +447,73 @@ export async function notifyPostShare(
 
 export const notifyPostLiked = notifyPostLike;
 export const notifyFollowed = notifyNewFollower;
+
+// ============================================================
+// FRIEND NOTIFICATIONS
+// ============================================================
+
+export async function notifyFriendRequest(toUserId: string, fromUserId: string): Promise<void> {
+  try {
+    const { data: sender } = await supabase.from('profiles').select('handle').eq('id', fromUserId).maybeSingle();
+    if (!sender) return;
+    const handle = sender.handle || 'Someone';
+    const message = `@${handle} sent you a friend request`;
+    await createNotification(toUserId, 'friend_request', 'Friend Request', message, 'profile', fromUserId);
+    await sendPushNotification(toUserId, 'Friend Request', message, { type: 'friend_request', fromUserId, url: `/profile/${fromUserId}` });
+  } catch (error) { console.error('Error sending friend request notification:', error); }
+}
+
+export async function notifyFriendAccepted(toUserId: string, fromUserId: string): Promise<void> {
+  try {
+    const { data: accepter } = await supabase.from('profiles').select('handle').eq('id', fromUserId).maybeSingle();
+    if (!accepter) return;
+    const handle = accepter.handle || 'Someone';
+    const message = `@${handle} accepted your friend request`;
+    await createNotification(toUserId, 'friend_accepted', 'Friend Request Accepted', message, 'profile', fromUserId);
+    await sendPushNotification(toUserId, 'Friend Request Accepted', message, { type: 'friend_accepted', fromUserId, url: `/profile/${fromUserId}` });
+  } catch (error) { console.error('Error sending friend accepted notification:', error); }
+}
+
+// ============================================================
+// VEHICLE FOLLOW NOTIFICATIONS
+// ============================================================
+
+export async function notifyVehicleFollow(vehicleId: string, followerUserId: string): Promise<void> {
+  try {
+    const { data: vehicle } = await supabase.from('vehicles').select('owner_id, make, model, year').eq('id', vehicleId).maybeSingle();
+    if (!vehicle?.owner_id) return;
+    if (vehicle.owner_id === followerUserId) return;
+    const { data: follower } = await supabase.from('profiles').select('handle').eq('id', followerUserId).maybeSingle();
+    const followerHandle = follower?.handle || 'Someone';
+    const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
+    const message = `@${followerHandle} is now following your ${vehicleName}`;
+    await createNotification(vehicle.owner_id, 'vehicle_follow', 'New Vehicle Follower', message, 'vehicle', vehicleId);
+    await sendPushNotification(vehicle.owner_id, 'New Vehicle Follower', message, { type: 'vehicle_follow', vehicleId, followerUserId, url: `/vehicle/${vehicleId}` });
+  } catch (error) { console.error('Error sending vehicle follow notification:', error); }
+}
+
+export async function notifyVehicleFollowRequest(vehicleId: string, requesterUserId: string): Promise<void> {
+  try {
+    const { data: vehicle } = await supabase.from('vehicles').select('owner_id, make, model, year').eq('id', vehicleId).maybeSingle();
+    if (!vehicle?.owner_id) return;
+    const { data: requester } = await supabase.from('profiles').select('handle').eq('id', requesterUserId).maybeSingle();
+    const requesterHandle = requester?.handle || 'Someone';
+    const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
+    const message = `@${requesterHandle} wants to follow your ${vehicleName}`;
+    await createNotification(vehicle.owner_id, 'vehicle_follow_request', 'Vehicle Follow Request', message, 'vehicle', vehicleId);
+    await sendPushNotification(vehicle.owner_id, 'Vehicle Follow Request', message, { type: 'vehicle_follow_request', vehicleId, requesterUserId, url: `/vehicle/${vehicleId}` });
+  } catch (error) { console.error('Error sending vehicle follow request notification:', error); }
+}
+
+export async function notifyVehicleFollowApproved(followerUserId: string, vehicleId: string): Promise<void> {
+  try {
+    const { data: vehicle } = await supabase.from('vehicles').select('make, model, year, owner_id').eq('id', vehicleId).maybeSingle();
+    if (!vehicle) return;
+    const { data: owner } = await supabase.from('profiles').select('handle').eq('id', vehicle.owner_id).maybeSingle();
+    const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
+    const ownerHandle = owner?.handle || 'The owner';
+    const message = `${ownerHandle} approved your follow request for their ${vehicleName}`;
+    await createNotification(followerUserId, 'vehicle_follow_approved', 'Follow Request Approved', message, 'vehicle', vehicleId);
+    await sendPushNotification(followerUserId, 'Follow Request Approved', message, { type: 'vehicle_follow_approved', vehicleId, url: `/vehicle/${vehicleId}` });
+  } catch (error) { console.error('Error sending vehicle follow approved notification:', error); }
+}

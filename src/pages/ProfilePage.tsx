@@ -730,7 +730,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         {(() => {
           const stats = [
             { label: 'Spots Given', value: spotCount, onClick: async () => { await loadSpotsGiven(); setShowSpotsGivenModal(true); } },
-            { label: 'Followers', value: followerCount, onClick: async () => { await loadFollowersList(); setShowFollowersModal(true); } },
+            { label: 'Friends', value: followerCount, onClick: async () => { await loadFollowersList(); setShowFollowersModal(true); } },
             { label: 'Vehicles', value: vehicles.length, onClick: () => {} },
             { label: 'Badges', value: userBadges.length, onClick: () => setShowBadgesModal(true) },
           ];
@@ -757,7 +757,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           <div className="card-v3 overflow-hidden">
             {[
               { icon: <Crosshair className="w-4 h-4" strokeWidth={1.2} />, label: 'Spots Given', value: weeklySpots, change: weeklySpots },
-              { icon: <Users className="w-4 h-4" strokeWidth={1.2} />, label: 'New Followers', value: followerCount, change: 0 },
+              { icon: <Users className="w-4 h-4" strokeWidth={1.2} />, label: 'New Friends', value: followerCount, change: 0 },
               { icon: <Car className="w-4 h-4" strokeWidth={1.2} />, label: 'Vehicles Active', value: vehicles.length, change: 0 },
             ].map((row, i) => (
               <div
@@ -1222,14 +1222,14 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFollowersModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Followers ({followerCount})</h3>
+              <h3 className="text-lg font-heading font-bold text-primary">Friends ({followerCount})</h3>
               <button onClick={() => setShowFollowersModal(false)} className="text-secondary hover:text-primary btn-press">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </button>
             </div>
             <div className="p-4 space-y-2">
               {followers.length === 0 ? (
-                <p className="text-sm text-secondary text-center py-8">No followers yet</p>
+                <p className="text-sm text-secondary text-center py-8">No friends yet</p>
               ) : (
                 followers.map((follower: any) => (
                   <button
@@ -1249,7 +1249,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     </div>
                     <div className="flex-1 text-left">
                       <div className="text-sm font-semibold text-primary">@{follower.handle}</div>
-                      <div className="text-xs text-tertiary">Follower</div>
+                      <div className="text-xs text-tertiary">Friend</div>
                     </div>
                   </button>
                 ))
@@ -1263,7 +1263,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFollowingModal(false)}>
           <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Following ({followingCount})</h3>
+              <h3 className="text-lg font-heading font-bold text-primary">Friends ({followingCount})</h3>
               <button onClick={() => setShowFollowingModal(false)} className="text-secondary hover:text-primary btn-press">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </button>
@@ -1290,7 +1290,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     </div>
                     <div className="flex-1 text-left">
                       <div className="text-sm font-semibold text-primary">@{followed.handle}</div>
-                      <div className="text-xs text-tertiary">Following</div>
+                      <div className="text-xs text-tertiary">Friend</div>
                     </div>
                   </button>
                 ))

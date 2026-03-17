@@ -25,6 +25,7 @@ import { StickerSlab } from '../components/StickerSlab';
 import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
 import { BADGE_TIER_THRESHOLDS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
+import { VehicleFollowButton } from '../components/VehicleFollowButton';
 
 interface VehicleDetailPageProps {
   vehicleId: string;
@@ -90,6 +91,7 @@ interface Vehicle {
   vin_doors?: string | null;
   vin_plant_country?: string | null;
   vin_decoded_at?: string | null;
+  is_private?: boolean;
   owner?: {
     id: string;
     handle: string | null;
@@ -110,6 +112,69 @@ interface VehicleImage {
   is_primary: boolean;
   uploaded_by: string | null;
   created_at: string;
+}
+
+function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: string; onFollowerUpdated: () => void }) {
+  const [follows, setFollows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => { loadFollows(); }, [vehicleId]);
+
+  const loadFollows = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('vehicle_follows')
+      .select('id, status, created_at, follower:profiles!vehicle_follows_follower_id_fkey(id, handle, avatar_url)')
+      .eq('vehicle_id', vehicleId)
+      .order('created_at', { ascending: false });
+    setFollows(data || []);
+    setLoading(false);
+  };
+
+  const pending = follows.filter(f => f.status === 'pending');
+  const accepted = follows.filter(f => f.status === 'accepted');
+
+  const handleApprove = async (followId: string, followerId: string) => {
+    await supabase.from('vehicle_follows').update({ status: 'accepted' }).eq('id', followId);
+    try { const { notifyVehicleFollowApproved } = await import('../lib/notifications'); await notifyVehicleFollowApproved(followerId, vehicleId); } catch {}
+    loadFollows(); onFollowerUpdated();
+  };
+
+  const handleRemove = async (followId: string) => {
+    await supabase.from('vehicle_follows').delete().eq('id', followId);
+    loadFollows(); onFollowerUpdated();
+  };
+
+  if (follows.length === 0 && !loading) return null;
+
+  return (
+    <div style={{ margin: '0 16px 16px' }}>
+      <button onClick={() => setExpanded(!expanded)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--muted)', cursor: 'pointer' }}>
+        <span>Followers · {accepted.length}</span>
+        {pending.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--black)', borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700 }}>{pending.length} pending</span>}
+      </button>
+      {expanded && (
+        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {pending.map(f => (
+            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.2)' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--carbon-3)', overflow: 'hidden', flexShrink: 0 }}>{f.follower?.avatar_url && <img src={f.follower.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}</div>
+              <div style={{ flex: 1, fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, color: 'var(--light)' }}>@{f.follower?.handle || 'Unknown'}<div style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '1px' }}>Pending</div></div>
+              <button onClick={() => handleApprove(f.id, f.follower?.id)} style={{ padding: '5px 12px', borderRadius: '6px', background: 'var(--accent)', color: 'var(--black)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, border: 'none', cursor: 'pointer' }}>Approve</button>
+              <button onClick={() => handleRemove(f.id)} style={{ padding: '5px 12px', borderRadius: '6px', background: 'transparent', color: 'var(--dim)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>Decline</button>
+            </div>
+          ))}
+          {accepted.map(f => (
+            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '8px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--carbon-3)', overflow: 'hidden', flexShrink: 0 }}>{f.follower?.avatar_url && <img src={f.follower.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}</div>
+              <div style={{ flex: 1, fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, color: 'var(--light)' }}>@{f.follower?.handle || 'Unknown'}</div>
+              <button onClick={() => handleRemove(f.id)} style={{ padding: '5px 12px', borderRadius: '6px', background: 'transparent', color: 'var(--dim)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>Remove</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSheet, guestMode = false, scrollTo, openReviewModal }: VehicleDetailPageProps) {
@@ -188,6 +253,13 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       .eq('vehicle_id', vehicleId);
 
     if (count !== null) setSpotCount(count);
+
+    const { count: vFollowerCount } = await supabase
+      .from('vehicle_follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('vehicle_id', vehicleId)
+      .eq('status', 'accepted');
+    if (vFollowerCount !== null) setFollowerCount(vFollowerCount);
 
     // Fetch reviews from reviews table
     const { data: reviewsData } = await supabase
@@ -736,11 +808,12 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           >
             Log Spot
           </button>
-          <button
-            style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--light)', cursor: 'pointer' }}
-          >
-            Follow
-          </button>
+          <VehicleFollowButton
+            vehicleId={vehicleId}
+            vehicleOwnerId={vehicle?.owner_id}
+            isPrivateVehicle={vehicle?.is_private || false}
+            onFollowChange={() => loadVehicleData()}
+          />
         </div>
 
         {/* Rating Breakdown + Sentiment */}
@@ -942,6 +1015,20 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               </button>
             </div>
           )}
+
+          {isOwner && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(7,10,15,0.4)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>Private Vehicle</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--dim)', marginTop: '2px' }}>Followers need your approval</div>
+              </div>
+              <button onClick={async () => { const { error } = await supabase.from('vehicles').update({ is_private: !vehicle.is_private }).eq('id', vehicleId); if (!error) loadVehicleData(); }} style={{ width: '44px', height: '24px', borderRadius: '12px', cursor: 'pointer', border: 'none', background: vehicle.is_private ? 'var(--accent)' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s' }}>
+                <div style={{ position: 'absolute', top: '3px', left: vehicle.is_private ? '22px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: 'var(--white)', transition: 'left 0.2s' }} />
+              </button>
+            </div>
+          )}
+
+          {isOwner && <VehicleFollowersPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />}
 
           {isOwner && (
             <>

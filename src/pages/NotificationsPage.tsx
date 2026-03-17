@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, Check, Trash2, Award, Heart, MessageCircle, UserPlus, Shield, Car, Star, Tag, Eye, X, MapPin } from 'lucide-react';
+import { Bell, Check, Trash2, Award, Heart, MessageCircle, UserPlus, Users, Shield, Car, Star, Tag, Eye, X, MapPin } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ import { type Badge } from '../lib/badges';
 
 interface Notification {
   id: string;
-  type: 'review' | 'badge_received' | 'badge_unlocked' | 'badge_awarded' | 'comment' | 'like' | 'follow' | 'spot' | 'message' | 'admin_action';
+  type: 'review' | 'badge_received' | 'badge_unlocked' | 'badge_awarded' | 'comment' | 'like' | 'follow' | 'spot' | 'message' | 'admin_action' | 'friend_request' | 'friend_accepted' | 'vehicle_follow' | 'vehicle_follow_request' | 'vehicle_follow_approved';
   title: string;
   message: string;
   is_read: boolean;
@@ -46,6 +46,11 @@ function getIcon(type: Notification['type']) {
       return { Icon: MapPin, color: 'var(--accent)' };
     case 'admin_action':
       return { Icon: Shield, color: 'var(--orange)' };
+    case 'friend_request': return { Icon: UserPlus, color: 'var(--accent)' };
+    case 'friend_accepted': return { Icon: Users, color: 'var(--green)' };
+    case 'vehicle_follow': return { Icon: Heart, color: 'var(--accent)' };
+    case 'vehicle_follow_request': return { Icon: Car, color: 'var(--gold)' };
+    case 'vehicle_follow_approved': return { Icon: Car, color: 'var(--green)' };
     default:
       return { Icon: Bell, color: 'var(--t4)' };
   }
@@ -106,6 +111,11 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
             case 'badge_received': case 'badge_unlocked': case 'badge_awarded': return '3px solid var(--gold)';
             case 'follow': return '3px solid var(--steel)';
             case 'comment': return '3px solid var(--blue)';
+            case 'friend_request': return '3px solid var(--accent)';
+            case 'friend_accepted': return '3px solid var(--green)';
+            case 'vehicle_follow': return '3px solid var(--accent)';
+            case 'vehicle_follow_request': return '3px solid var(--gold)';
+            case 'vehicle_follow_approved': return '3px solid var(--green)';
             default: return '3px solid transparent';
           }
         })(),
@@ -126,6 +136,11 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
               case 'badge_received': case 'badge_unlocked': case 'badge_awarded': return 'rgba(240,160,48,0.12)';
               case 'follow': return 'rgba(255,255,255,0.06)';
               case 'comment': return 'rgba(56,136,238,0.1)';
+              case 'friend_request': return 'rgba(249,115,22,0.12)';
+              case 'friend_accepted': return 'rgba(32,192,96,0.12)';
+              case 'vehicle_follow': return 'rgba(249,115,22,0.12)';
+              case 'vehicle_follow_request': return 'rgba(240,160,48,0.12)';
+              case 'vehicle_follow_approved': return 'rgba(32,192,96,0.12)';
               default: return 'rgba(255,255,255,0.06)';
             }
           })(),
@@ -295,6 +310,8 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   const getCategory = (type: Notification['type']): NotificationFilter => {
     if (['badge_received', 'badge_unlocked', 'badge_awarded'].includes(type)) return 'badges';
     if (['like', 'comment', 'follow'].includes(type)) return 'social';
+    if (['friend_request', 'friend_accepted'].includes(type)) return 'social';
+    if (['vehicle_follow', 'vehicle_follow_request', 'vehicle_follow_approved'].includes(type)) return 'vehicles';
     if (type === 'review' || type === 'spot') return 'vehicles';
     return 'all';
   };

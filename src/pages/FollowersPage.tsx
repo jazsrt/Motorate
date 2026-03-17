@@ -3,7 +3,7 @@ import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { Users, User, Star, VolumeX, Ban, MoreVertical, Clock, Check, X } from 'lucide-react';
+import { Users, User, Star, VolumeX, Ban, Clock, Check, X } from 'lucide-react';
 import { FollowButton } from '../components/FollowButton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -32,13 +32,12 @@ interface UserData {
   isBlocked?: boolean;
 }
 
-type TabType = 'followers' | 'following' | 'pending';
+type TabType = 'friends' | 'pending';
 
 export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('followers');
+  const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [followers, setFollowers] = useState<UserData[]>([]);
-  const [following, setFollowing] = useState<UserData[]>([]);
   const [pendingRequests, setPendingRequests] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
@@ -60,10 +59,8 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
 
     setLoading(true);
 
-    if (activeTab === 'followers') {
+    if (activeTab === 'friends') {
       await loadFollowers();
-    } else if (activeTab === 'following') {
-      await loadFollowing();
     } else {
       await loadPendingRequests();
     }
@@ -128,69 +125,6 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     setFollowers(enrichedProfiles);
   };
 
-  const loadFollowing = async () => {
-    if (!targetUserId) return;
-
-    const { data: followData } = await supabase
-      .from('follows')
-      .select('following_id, muted, favorite')
-      .eq('follower_id', targetUserId)
-      .eq('status', 'accepted');
-
-    if (!followData || followData.length === 0) {
-      setFollowing([]);
-      return;
-    }
-
-    const followingIds = followData.map((f) => f.following_id);
-
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('id', followingIds);
-
-    if (!profiles) {
-      setFollowing([]);
-      return;
-    }
-
-    const enrichedProfiles = await Promise.all(
-      profiles.map(async (profile) => {
-        const { data: vehicle } = await supabase
-          .from('vehicles')
-          .select('year, make, model')
-          .eq('owner_id', profile.id)
-          .eq('is_claimed', true)
-          .maybeSingle();
-
-        const followInfo = followData.find((f) => f.following_id === profile.id);
-
-        let isBlocked = false;
-        if (user) {
-          const { data: blockData } = await supabase
-            .from('blocks')
-            .select('id')
-            .or(`blocker_id.eq.${user.id},blocker_id.eq.${profile.id}`)
-            .or(`blocked_id.eq.${profile.id},blocked_id.eq.${user.id}`)
-            .maybeSingle();
-          isBlocked = !!blockData;
-        }
-
-        return {
-          ...profile,
-          vehicle: vehicle || undefined,
-          followData: {
-            muted: followInfo?.muted || false,
-            favorite: followInfo?.favorite || false,
-          },
-          isBlocked,
-        };
-      })
-    );
-
-    setFollowing(enrichedProfiles);
-  };
-
   const loadPendingRequests = async () => {
     if (!targetUserId) return;
 
@@ -246,6 +180,10 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
       .eq('following_id', user.id);
 
     if (!error) {
+      try {
+        const { notifyFriendAccepted } = await import('../lib/notifications');
+        await notifyFriendAccepted(userId, user.id);
+      } catch {}
       await loadData();
     }
   };
@@ -391,50 +329,11 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
               </button>
             ) : (
               <>
-                {activeTab === 'followers' && isOwnProfile && (
+                {activeTab === 'friends' && isOwnProfile && (
                   <FollowButton
                     targetUserId={userData.id}
                     onFollowChange={() => loadData()}
                   />
-                )}
-
-                {activeTab === 'following' && isOwnProfile && (
-                  <div className="relative">
-                    <button
-                      onClick={() =>
-                        setShowMenuFor(showMenuFor === userData.id ? null : userData.id)
-                      }
-                      className="p-2 hover:bg-surfacehighlight rounded-lg transition-colors"
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-
-                    {showMenuFor === userData.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-surface border border-surfacehighlight rounded-lg shadow-lg overflow-hidden z-10 min-w-[180px]">
-                        <button
-                          onClick={() => handleMuteToggle(userData.id, isMuted)}
-                          className="w-full px-4 py-2 text-left hover:bg-surfacehighlight transition flex items-center gap-2 text-sm"
-                        >
-                          <VolumeX className="w-4 h-4" />
-                          {isMuted ? 'Unmute' : 'Mute'}
-                        </button>
-                        <button
-                          onClick={() => handleFavoriteToggle(userData.id, isFavorite)}
-                          className="w-full px-4 py-2 text-left hover:bg-surfacehighlight transition flex items-center gap-2 text-sm"
-                        >
-                          <Star className="w-4 h-4" />
-                          {isFavorite ? 'Unfavorite' : 'Favorite'}
-                        </button>
-                        <button
-                          onClick={() => handleBlock(userData.id)}
-                          className="w-full px-4 py-2 text-left hover:bg-surfacehighlight transition flex items-center gap-2 text-sm text-red-500"
-                        >
-                          <Ban className="w-4 h-4" />
-                          Block User
-                        </button>
-                      </div>
-                    )}
-                  </div>
                 )}
               </>
             )}
@@ -509,50 +408,34 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     );
   };
 
-  const currentList = activeTab === 'followers' ? followers : activeTab === 'following' ? following : pendingRequests;
+  const currentList = activeTab === 'friends' ? followers : pendingRequests;
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">
-            {isOwnProfile ? 'Your Connections' : 'Connections'}
+            {isOwnProfile ? 'Friends' : 'Friends'}
           </h2>
-          <p className="text-secondary">Manage who you follow and who follows you</p>
+          <p className="text-secondary">Manage your friends and friend requests</p>
         </div>
 
         <div className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
           <div className="flex border-b border-surfacehighlight">
             <button
-              onClick={() => setActiveTab('followers')}
+              onClick={() => setActiveTab('friends')}
               className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 ${
-                activeTab === 'followers'
+                activeTab === 'friends'
                   ? 'bg-accent-primary text-white'
                   : 'bg-surface text-secondary hover:bg-surfacehighlight'
               }`}
             >
               <Users className="w-4 h-4" />
-              Followers
+              Friends
               <span className={`px-2 py-0.5 rounded-full text-xs ${
-                activeTab === 'followers' ? 'bg-white/20' : 'bg-surfacehighlight'
+                activeTab === 'friends' ? 'bg-white/20' : 'bg-surfacehighlight'
               }`}>
                 {followers.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('following')}
-              className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 ${
-                activeTab === 'following'
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surface text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <User className="w-4 h-4" />
-              Following
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                activeTab === 'following' ? 'bg-white/20' : 'bg-surfacehighlight'
-              }`}>
-                {following.length}
               </span>
             </button>
             {isOwnProfile && (
@@ -583,17 +466,15 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
         ) : currentList.length === 0 ? (
           <div className="bg-surface border border-surfacehighlight rounded-xl">
             <EmptyState
-              icon={activeTab === 'followers' ? Users : (activeTab === 'following' ? User : Clock)}
-              title={activeTab === 'followers' ? 'No Followers Yet' : (activeTab === 'following' ? 'Not Following Anyone' : 'No Pending Requests')}
+              icon={activeTab === 'friends' ? Users : Clock}
+              title={activeTab === 'friends' ? 'No Friends Yet' : 'No Pending Requests'}
               description={
-                activeTab === 'followers'
-                  ? 'Share great content and engage with the community to build your following.'
-                  : activeTab === 'following'
-                  ? 'Discover amazing car enthusiasts to follow and connect with.'
-                  : 'No pending follow requests at the moment.'
+                activeTab === 'friends'
+                  ? 'No friends yet — find car enthusiasts to connect with'
+                  : 'No pending friend requests'
               }
-              actionLabel={activeTab === 'following' && isOwnProfile ? 'Find Users' : undefined}
-              onAction={activeTab === 'following' && isOwnProfile ? () => onNavigate('search') : undefined}
+              actionLabel={activeTab === 'friends' && isOwnProfile ? 'Find Users' : undefined}
+              onAction={activeTab === 'friends' && isOwnProfile ? () => onNavigate('search') : undefined}
             />
           </div>
         ) : (

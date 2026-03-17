@@ -199,7 +199,7 @@ function VehicleCard({
             <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--accent)', fontWeight: 700, fontSize: '14px' }}>{spotCount}</span> Spots
           </span>
           <span style={{ fontSize: '10px', color: 'var(--dim)', fontFamily: 'var(--font-cond)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--bright)', fontWeight: 600 }}>{(vehicle as any).follower_count ?? 0}</span> Followers
+            <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--bright)', fontWeight: 600 }}>{(vehicle as any)._vehicleFollowerCount ?? 0}</span> Following
           </span>
         </div>
         <button
@@ -373,6 +373,24 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       }
     }
     setVehicles(allVehicles);
+
+    // Load vehicle follow counts
+    const vehicleIds = allVehicles.map((v: any) => v.id);
+    if (vehicleIds.length > 0) {
+      const { data: followCounts } = await supabase
+        .from('vehicle_follows')
+        .select('vehicle_id')
+        .in('vehicle_id', vehicleIds)
+        .eq('status', 'accepted');
+      const countMap: Record<string, number> = {};
+      (followCounts || []).forEach((f: any) => {
+        countMap[f.vehicle_id] = (countMap[f.vehicle_id] || 0) + 1;
+      });
+      allVehicles.forEach((v: any) => {
+        v._vehicleFollowerCount = countMap[v.id] || 0;
+      });
+    }
+
     return allVehicles;
   };
 
@@ -537,7 +555,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
             {[
               { label: 'Vehicles', value: fleetStats.vehicleCount },
               { label: 'Spots', value: fleetStats.totalSpots },
-              { label: 'Followers', value: '—' },
+              { label: 'Friends', value: '—' },
               { label: 'Badges', value: '—' },
             ].map(stat => (
               <div key={stat.label} style={{ flex: 1, textAlign: 'center', padding: '14px 0' }}>
@@ -569,7 +587,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                     <div style={{ padding: '8px 10px' }}>
                       <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--accent)' }}>{vehicle.make}</div>
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, color: 'var(--white)' }}>{vehicle.model || vehicle.make}</div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)', marginTop: '2px' }}>{spotCount} Spots &middot; {(vehicle as any).follower_count ?? 0} Followers</div>
+                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)', marginTop: '2px' }}>{spotCount} Spots &middot; {(vehicle as any)._vehicleFollowerCount ?? 0} Following</div>
                     </div>
                   </div>
                 );

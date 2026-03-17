@@ -321,7 +321,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         <div style={{ display: 'flex', background: 'rgba(7,10,15,0.5)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {[
             { label: 'SPOTS', value: (post.vehicles as any)?.spot_count || 0, accent: true },
-            { label: 'FOLLOWERS', value: (post.vehicles as any)?.follower_count || 0, accent: false },
+            { label: 'FOLLOWERS', value: (post.vehicles as any)?.vehicle_follower_count || (post.vehicles as any)?.follower_count || 0, accent: false },
             { label: 'VIEWS', value: viewCount, accent: false },
           ].map((stat, i) => (
             <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : undefined }}>

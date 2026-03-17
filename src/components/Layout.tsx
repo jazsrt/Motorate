@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect, useRef } from 'react';
-import { Home, Shield, User, Search, MessageCircle, Settings, Car, Award, Camera, Crown, Menu, X, AlertOctagon } from 'lucide-react';
+import { Home, Shield, User, Search, MessageCircle, Settings, Car, Award, Camera, Crown, Menu, X, AlertOctagon, LayoutGrid, Activity } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from './Logo';
 import { NotificationBell } from './NotificationBell';
@@ -106,12 +106,13 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     setShowDropdown(false);
   };
 
-  const navItems = [
-    { id: 'feed' as const, icon: Home, label: 'Feed' },
-    { id: 'rankings' as const, icon: Award, label: 'Rankings' },
-    { id: 'scan' as const, icon: Camera, label: 'Spot', isCenter: true },
-    { id: 'my-garage' as const, icon: Car, label: 'Garage' },
-    { id: 'profile' as const, icon: User, label: 'Profile' },
+  const navLeft = [
+    { id: 'feed' as const, icon: LayoutGrid, label: 'Feed' },
+    { id: 'rankings' as const, icon: Activity, label: 'Rank' },
+  ];
+  const navRight = [
+    { id: 'my-garage' as const, icon: Home, label: 'Garage' },
+    { id: 'badges' as const, icon: Award, label: 'Badges' },
   ];
 
   const hasSearchResults = searchResults.users.length > 0 || searchResults.vehicles.length > 0;
@@ -153,45 +154,37 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
       {/* ── Bottom Nav ── */}
       <nav className="bot-nav">
-        <div className="flex items-center w-full">
-          {navItems.map((item) => {
+        <div className="flex items-center w-full relative">
+          {/* Left items */}
+          {navLeft.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
-            if ((item as any).isCenter) {
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
-                  className="flex-1 flex flex-col items-center -mt-6 relative"
-                >
-                  <div
-                    style={{
-                      width: '52px',
-                      height: '52px',
-                      background: 'var(--accent)',
-                      borderRadius: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 0 30px rgba(249,115,22,0.5), 0 4px 16px rgba(0,0,0,0.6)',
-                    }}
-                  >
-                    <Icon size={24} strokeWidth={2} style={{ color: 'var(--black)' }} />
-                  </div>
-                  <span style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)', marginTop: '2px' }}>
-                    {item.label}
-                  </span>
-                </button>
-              );
-            }
             return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={`bot-nav-item ${isActive ? 'active' : ''}`}
-              >
+              <button key={item.id} onClick={() => onNavigate(item.id)} className={`bot-nav-item ${isActive ? 'active' : ''}`}>
                 <Icon size={22} strokeWidth={1.5} />
                 <span>{item.label}</span>
+                <span style={{ display: 'block', width: 3, height: 3, borderRadius: '50%', background: isActive ? 'var(--accent, #F97316)' : 'transparent', margin: '1px auto 0' }} />
+              </button>
+            );
+          })}
+
+          {/* Center — floating Spot button */}
+          <div className="flex-1 flex justify-center" style={{ position: 'relative' }}>
+            <button onClick={() => onNavigate('scan')} aria-label="Spot a vehicle"
+              style={{ position: 'absolute', top: '-28px', width: '52px', height: '52px', borderRadius: '14px', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 28px rgba(249,115,22,0.5), 0 4px 14px rgba(0,0,0,0.6)', cursor: 'pointer', zIndex: 10 }}>
+              <Camera size={24} strokeWidth={2} color="#fff" />
+            </button>
+          </div>
+
+          {/* Right items */}
+          {navRight.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPage === item.id;
+            return (
+              <button key={item.id} onClick={() => onNavigate(item.id)} className={`bot-nav-item ${isActive ? 'active' : ''}`}>
+                <Icon size={22} strokeWidth={1.5} />
+                <span>{item.label}</span>
+                <span style={{ display: 'block', width: 3, height: 3, borderRadius: '50%', background: isActive ? 'var(--accent, #F97316)' : 'transparent', margin: '1px auto 0' }} />
               </button>
             );
           })}
