@@ -62,7 +62,7 @@ export function VinClaimModal({
 
     setClaiming(true);
     try {
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('vehicles')
         .update({
           owner_id: user.id,
@@ -86,9 +86,12 @@ export function VinClaimModal({
           vin_decoded_at: new Date().toISOString(),
           vin_raw_data: vinResult.rawData,
         })
-        .eq('id', vehicleId);
+        .eq('id', vehicleId)
+        .is('owner_id', null)
+        .select('id');
 
       if (updateError) throw updateError;
+      if (!updated || updated.length === 0) throw new Error('Could not claim vehicle. It may already be claimed by someone else.');
 
       showToast('Your ride is now verified!', 'success');
       setStep('done');

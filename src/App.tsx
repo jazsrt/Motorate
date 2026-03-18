@@ -39,7 +39,7 @@ const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicy').then(m => (
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfService').then(m => ({ default: m.TermsOfServicePage })));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const InitAdminPage = lazy(() => import('./pages/InitAdminPage'));
-const ShadowProfilePage = lazy(() => import('./pages/ShadowProfilePage'));
+const ShadowProfilePage = lazy(() => import('./pages/UnclaimedProfilePage'));
 const UserProfilePage = lazy(() => import('./pages/UserProfilePage').then(m => ({ default: m.UserProfilePage })));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
