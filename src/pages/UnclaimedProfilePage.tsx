@@ -38,12 +38,12 @@ interface BumperSticker {
   isPositive: boolean;
 }
 
-interface ShadowProfilePageProps {
+interface UnclaimedProfilePageProps {
   plateNumber: string;
   onNavigate: (page: any, vehicleId?: string) => void;
 }
 
-export default function ShadowProfilePage({ plateNumber, onNavigate }: ShadowProfilePageProps) {
+export default function UnclaimedProfilePage({ plateNumber, onNavigate }: UnclaimedProfilePageProps) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
