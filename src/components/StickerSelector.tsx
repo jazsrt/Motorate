@@ -2,21 +2,6 @@ import { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown, Lightbulb } from 'lucide-react';
 import { getStickerDefinitions, type StickerDefinition } from '../lib/stickers';
 
-// Map Lucide icon names to emojis for sticker display
-const STICKER_EMOJI_MAP: Record<string, string> = {
-  // Positive
-  Sparkles: '✨', Gauge: '🏎️', Heart: '😇', Zap: '⚡', Target: '🅿️',
-  // Negative
-  AlertTriangle: '🦶', AlertCircle: '🐷', ArrowDown: '🚗💨', X: '🚫', Ban: '🅿️❌',
-  // Fun
-  Star: '💪', Music: '🔊', Cloud: '💨', Sticker: '🏷️', Wrench: '🔧',
-  // Community
-  Users: '🤝', Flag: '🏁', Gift: '💚', Crown: '👑', GraduationCap: '🎓',
-};
-
-function getStickerEmoji(iconName: string): string {
-  return STICKER_EMOJI_MAP[iconName] || '🏷️';
-}
 
 interface StickerSelectorProps {
   selectedStickers: string[];
@@ -150,7 +135,19 @@ export function StickerSelector({ selectedStickers, onToggleSticker, maxPositive
                 ${!canSelect && !isSelected ? 'opacity-30 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
               `}
             >
-              <span className="text-2xl">{getStickerEmoji(sticker.icon_name)}</span>
+              <div style={{
+                width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                background: isPositiveSticker ? 'rgba(32,192,96,0.15)' : 'rgba(239,68,68,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke={isPositiveSticker ? '#20c060' : '#ef4444'} strokeWidth="2">
+                  {isPositiveSticker
+                    ? <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    : <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>
+                  }
+                </svg>
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-xs truncate">{sticker.name}</div>
                 <div className="text-xs text-secondary/70 truncate">{sticker.description}</div>
@@ -159,7 +156,7 @@ export function StickerSelector({ selectedStickers, onToggleSticker, maxPositive
                 <div className={`absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center ${
                   showPositive ? 'bg-green-500' : 'bg-red-500'
                 }`}>
-                  <span className="text-white text-xs">✓</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
               )}
             </button>

@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { calculateAndAwardReputation } from './reputation';
-import { awardBadge } from './reputation';
 
 interface GiveStickerResult {
   success: boolean;
@@ -35,11 +34,24 @@ export async function giveSticker(
     };
   }
 
-  const { data: sticker } = await supabase
-    .from('bumper_stickers')
+  // Try sticker_catalog first, fall back to bumper_stickers
+  let sticker: any = null;
+  const { data: catalogSticker } = await supabase
+    .from('sticker_catalog')
     .select('*')
     .eq('id', stickerId)
-    .single();
+    .maybeSingle();
+
+  if (catalogSticker) {
+    sticker = catalogSticker;
+  } else {
+    const { data: fallbackSticker } = await supabase
+      .from('bumper_stickers')
+      .select('*')
+      .eq('id', stickerId)
+      .maybeSingle();
+    sticker = fallbackSticker;
+  }
 
   if (!sticker) {
     return { success: false, message: 'Sticker not found' };
@@ -108,6 +120,35 @@ export async function giveSticker(
     return { success: false, message: 'Database error' };
   }
 
+  // Upsert vehicle_sticker_counts
+  try {
+    const { data: existingCount } = await supabase
+      .from('vehicle_sticker_counts')
+      .select('count')
+      .eq('vehicle_id', vehicleId)
+      .eq('tag_name', sticker.name)
+      .maybeSingle();
+
+    if (existingCount) {
+      await supabase
+        .from('vehicle_sticker_counts')
+        .update({ count: (existingCount.count || 0) + 1 })
+        .eq('vehicle_id', vehicleId)
+        .eq('tag_name', sticker.name);
+    } else {
+      await supabase
+        .from('vehicle_sticker_counts')
+        .insert({
+          vehicle_id: vehicleId,
+          tag_name: sticker.name,
+          tag_sentiment: sticker.category === 'Positive' ? 'positive' : 'negative',
+          count: 1,
+        });
+    }
+  } catch (countErr) {
+    console.error('Failed to update sticker counts:', countErr);
+  }
+
   const action = sticker.category === 'Positive'
     ? 'POSITIVE_STICKER_RECEIVED'
     : 'NEGATIVE_STICKER_RECEIVED';
@@ -130,43 +171,93 @@ export async function giveSticker(
 }
 
 /**
- * Count UNIQUE users who gave this sticker type
- * Award badge if threshold reached
+ * Count UNIQUE users who gave this sticker type to this vehicle.
+ * Award/upgrade vehicle badge in vehicle_badges table if threshold reached.
  */
 async function checkStickerBadge(
   vehicleId: string,
   stickerId: string,
   ownerId: string
 ) {
-  const { data: uniqueUsers } = await supabase
+  const { data: stickerDef } = await supabase
+    .from('sticker_catalog')
+    .select('name')
+    .eq('id', stickerId)
+    .maybeSingle();
+
+  let stickerName = stickerDef?.name;
+  if (!stickerName) {
+    const { data: fallback } = await supabase
+      .from('bumper_stickers')
+      .select('name')
+      .eq('id', stickerId)
+      .maybeSingle();
+    stickerName = fallback?.name;
+  }
+
+  if (!stickerName) return;
+
+  // Count unique users who gave this specific sticker to this vehicle
+  const { data: givers } = await supabase
     .from('vehicle_stickers')
     .select('given_by')
     .eq('vehicle_id', vehicleId)
     .eq('sticker_id', stickerId);
 
-  if (!uniqueUsers) return;
+  if (!givers) return;
+  const uniqueCount = new Set(givers.map(g => g.given_by)).size;
 
-  const uniqueCount = new Set(uniqueUsers.map(u => u.given_by)).size;
+  // Determine tier
+  let tier: string | null = null;
+  if (uniqueCount >= 20) tier = 'Platinum';
+  else if (uniqueCount >= 10) tier = 'Gold';
+  else if (uniqueCount >= 5) tier = 'Silver';
+  else if (uniqueCount >= 1) tier = 'Bronze';
 
+  if (!tier) return;
 
-  const thresholds = [
-    { count: 1, tier: 'Bronze' },
-    { count: 5, tier: 'Silver' },
-    { count: 10, tier: 'Gold' },
-    { count: 20, tier: 'Platinum' }
-  ];
+  const tierOrder: Record<string, number> = { Bronze: 1, Silver: 2, Gold: 3, Platinum: 4 };
 
-  const { data: stickerDef } = await supabase
-    .from('bumper_stickers')
-    .select('name')
-    .eq('id', stickerId)
-    .single();
+  // Check if vehicle already has this badge at this tier or higher
+  const { data: existing } = await supabase
+    .from('vehicle_badges')
+    .select('tier')
+    .eq('vehicle_id', vehicleId)
+    .eq('badge_id', stickerName)
+    .maybeSingle();
 
-  for (const { count, tier } of thresholds) {
-    if (uniqueCount === count) {
-      const badgeSlug = `${stickerDef?.name.toLowerCase().replace(/\s+/g, '-')}-${tier.toLowerCase()}`;
+  const existingOrder = existing ? (tierOrder[existing.tier] || 0) : 0;
+  const newOrder = tierOrder[tier] || 0;
 
-      await awardBadge(ownerId, badgeSlug);
+  if (existingOrder >= newOrder) return;
+
+  // Upsert vehicle badge
+  await supabase
+    .from('vehicle_badges')
+    .upsert({
+      vehicle_id: vehicleId,
+      badge_id: stickerName,
+      tier,
+      sticker_count: uniqueCount,
+      earned_at: new Date().toISOString(),
+    }, { onConflict: 'vehicle_id,badge_id' });
+
+  // Award vehicle RP on tier upgrade
+  const tierRP: Record<string, number> = { Bronze: 15, Silver: 30, Gold: 60, Platinum: 100 };
+  const rpGain = tierRP[tier];
+
+  if (rpGain) {
+    const { data: vehicle } = await supabase
+      .from('vehicles')
+      .select('reputation_score')
+      .eq('id', vehicleId)
+      .single();
+
+    if (vehicle) {
+      await supabase
+        .from('vehicles')
+        .update({ reputation_score: (vehicle.reputation_score || 0) + rpGain })
+        .eq('id', vehicleId);
     }
   }
 }

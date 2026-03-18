@@ -445,23 +445,12 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
         {/* Info below photo */}
         <div style={{ padding: '8px 10px 10px' }}>
-          <div style={{ display: 'flex', gap: 10 }}>
-            {[
-              { v: formatRP((vehicle as any).reputation_score), l: 'RP', hi: true },
-              { v: String(spotCount), l: 'Spots', hi: false },
-              { v: String((vehicle as any)._vehicleFollowerCount ?? 0), l: 'Fans', hi: false },
-            ].map(({ v, l, hi }) => (
-              <div key={l} style={{ display: 'flex', flexDirection: 'column' as const, gap: 1 }}>
-                <div style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600,
-                  color: hi ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums',
-                }}>{v}</div>
-                <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 6, fontWeight: 700,
-                  letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#445566',
-                }}>{l}</div>
-              </div>
-            ))}
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600,
+            letterSpacing: '0.04em', color: '#7a8e9e',
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {spotCount} Spots · {(vehicle as any)._vehicleFollowerCount ?? 0} Followers · {(vehicle as any).reputation_score > 0 ? `${((vehicle as any).reputation_score).toLocaleString()} RP` : 'No RP yet'}
           </div>
         </div>
 
@@ -655,7 +644,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   {totalRP.toLocaleString()}
                 </div>
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#445566' }}>
-                  Total RP
+                  Fleet RP
                 </div>
               </div>
             )}

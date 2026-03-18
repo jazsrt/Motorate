@@ -31,7 +31,7 @@ export interface VehicleStickerWithCount {
 
 export async function getStickerDefinitions(): Promise<StickerDefinition[]> {
   const { data, error } = await supabase
-    .from('bumper_stickers')
+    .from('sticker_catalog')
     .select('*')
     .order('category', { ascending: true })
     .order('name', { ascending: true });
@@ -96,32 +96,15 @@ export async function getVehicleStickers(vehicleId: string, userId?: string): Pr
   return Array.from(stickerMap.values()).sort((a, b) => b.count - a.count);
 }
 
+// Delegates to canonical stickerService to ensure rate limiting, badges, and RP are applied
 export async function giveSticker(
   vehicleId: string,
   stickerId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { error } = await supabase
-      .from('vehicle_stickers')
-      .insert({
-        vehicle_id: vehicleId,
-        sticker_id: stickerId,
-        given_by: userId
-      });
-
-    if (error) {
-      if (error.code === '23505') {
-        return { success: false, error: 'You already gave this sticker to this vehicle' };
-      }
-      throw error;
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error giving sticker:', error);
-    return { success: false, error: error.message };
-  }
+  const { giveSticker: canonicalGiveSticker } = await import('./stickerService');
+  const result = await canonicalGiveSticker(vehicleId, stickerId, userId);
+  return { success: result.success, error: result.message };
 }
 
 export async function removeSticker(

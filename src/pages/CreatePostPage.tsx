@@ -37,6 +37,16 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [showSpectatorModal, setShowSpectatorModal] = useState(false);
   const [upgradereRequested, setUpgradeRequested] = useState(false);
+  const [ownerVehicles, setOwnerVehicles] = useState<Array<{
+    id: string;
+    make: string | null;
+    model: string | null;
+    year: number | null;
+    plate_number: string | null;
+    plate_state: string | null;
+    stock_image_url: string | null;
+  }>>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,6 +55,18 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
       setShowSpectatorModal(true);
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('vehicles')
+      .select('id, make, model, year, plate_number, plate_state, stock_image_url')
+      .eq('owner_id', user.id)
+      .eq('is_claimed', true)
+      .then(({ data }) => {
+        if (data) setOwnerVehicles(data);
+      });
+  }, [user]);
 
   const handleCancel = () => {
     const hasUnsavedChanges = caption.trim() !== '' || image !== null;
@@ -233,7 +255,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         .from('posts')
         .insert({
           author_id: user.id,
-          vehicle_id: null,
+          vehicle_id: selectedVehicleId,
           post_type: 'photo',
           image_url: contentType === 'video' ? null : finalImageUrl,
           video_url: contentType === 'video' ? finalImageUrl : null,
@@ -533,6 +555,87 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
                   <AlertCircle style={{ width: 16, height: 16, color: '#ef4444', flexShrink: 0, marginTop: 2 }} />
                   <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#fca5a5', margin: 0, lineHeight: 1.45 }}>{error}</p>
+                </div>
+              )}
+
+              {/* Vehicle Tag */}
+              {ownerVehicles.length > 0 && (
+                <div style={{ marginBottom: 18 }}>
+                  <label style={labelStyle}>Tag Your Vehicle <span style={{ fontWeight: 400, letterSpacing: '0.04em', textTransform: 'none' }}>(Optional)</span></label>
+                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' as const, paddingBottom: 4 }}>
+                    {/* None option */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedVehicleId(null)}
+                      style={{
+                        flexShrink: 0, padding: '8px 14px',
+                        background: selectedVehicleId === null ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: selectedVehicleId === null ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: 8, cursor: 'pointer',
+                        fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+                        color: selectedVehicleId === null ? '#F97316' : '#7a8e9e',
+                      }}
+                    >
+                      No Tag
+                    </button>
+
+                    {ownerVehicles.map(v => {
+                      const isSelected = selectedVehicleId === v.id;
+                      const label = [v.year, v.make, v.model].filter(Boolean).join(' ');
+                      const plate = [v.plate_state, v.plate_number].filter(Boolean).join(' \u00B7 ');
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVehicleId(v.id)}
+                          style={{
+                            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '6px 12px 6px 6px',
+                            background: isSelected ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
+                            border: isSelected ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                            borderRadius: 8, cursor: 'pointer',
+                          }}
+                        >
+                          <div style={{
+                            width: 36, height: 26, borderRadius: 5, overflow: 'hidden',
+                            background: '#0e1320', flexShrink: 0,
+                          }}>
+                            {v.stock_image_url && (
+                              <img src={v.stock_image_url} alt={label}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'left' as const }}>
+                            <div style={{
+                              fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700,
+                              color: isSelected ? '#F97316' : '#eef4f8', lineHeight: 1,
+                            }}>
+                              {v.model || v.make || 'Vehicle'}
+                            </div>
+                            {plate && (
+                              <div style={{
+                                fontFamily: "'JetBrains Mono', monospace", fontSize: 8,
+                                color: '#5a6e7e', marginTop: 2, letterSpacing: '0.08em',
+                                fontVariantNumeric: 'tabular-nums',
+                              }}>
+                                {plate}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedVehicleId && (
+                    <div style={{
+                      marginTop: 6, fontFamily: "'Barlow Condensed', sans-serif",
+                      fontSize: 9, fontWeight: 700, letterSpacing: '0.14em',
+                      textTransform: 'uppercase' as const, color: '#F97316',
+                    }}>
+                      Reactions on this post will earn RP for the tagged vehicle
+                    </div>
+                  )}
                 </div>
               )}
 

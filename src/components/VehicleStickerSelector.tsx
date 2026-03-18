@@ -38,7 +38,7 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
 
   async function loadStickerDefinitions() {
     const { data } = await supabase
-      .from('bumper_stickers')
+      .from('sticker_catalog')
       .select('*')
       .order('category', { ascending: false });
 
@@ -93,7 +93,7 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
       // Add fly-in animation to the sticker container
       stickerContainerRef.current?.classList.add('sticker-flying');
       setTimeout(() => stickerContainerRef.current?.classList.remove('sticker-flying'), 500);
-      showToast(`${sticker.icon_name} ${sticker.name} sticker given! ${isPositive ? '+2 rep' : '-3 rep'} to owner`, 'success');
+      showToast(`${sticker.name} sticker given! ${isPositive ? '+2 rep' : '-3 rep'} to owner`, 'success');
       if (isPositive) setPositiveCount(prev => prev + 1);
       else setNegativeCount(prev => prev + 1);
       onStickerGiven?.();
@@ -178,7 +178,19 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
                       ${isGiving ? 'scale-95 opacity-70' : ''}
                     `}
                   >
-                    <span className="text-3xl leading-none">{sticker.icon_name}</span>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: sticker.category === 'Positive' ? 'rgba(32,192,96,0.12)' : 'rgba(239,68,68,0.12)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke={sticker.category === 'Positive' ? '#20c060' : '#ef4444'} strokeWidth="2">
+                        {sticker.category === 'Positive'
+                          ? <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                          : <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>
+                        }
+                      </svg>
+                    </div>
                     <span className="text-[11px] font-bold leading-tight text-primary">{sticker.name}</span>
                     <span className="text-[10px] font-semibold text-green-400">+2 rep</span>
                   </button>
@@ -216,7 +228,19 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
                       ${isGiving ? 'scale-95 opacity-70' : ''}
                     `}
                   >
-                    <span className="text-3xl leading-none">{sticker.icon_name}</span>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: sticker.category === 'Positive' ? 'rgba(32,192,96,0.12)' : 'rgba(239,68,68,0.12)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke={sticker.category === 'Positive' ? '#20c060' : '#ef4444'} strokeWidth="2">
+                        {sticker.category === 'Positive'
+                          ? <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                          : <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>
+                        }
+                      </svg>
+                    </div>
                     <span className="text-[11px] font-bold leading-tight text-primary">{sticker.name}</span>
                     <span className="text-[10px] font-semibold text-red-400">-3 rep</span>
                   </button>

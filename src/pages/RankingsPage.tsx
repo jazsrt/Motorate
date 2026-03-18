@@ -249,18 +249,18 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
     try {
       const { data: vehicles } = await supabase
         .from('vehicles')
-        .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url, owner_id, owner:profiles!vehicles_owner_id_fkey(reputation_score)')
+        .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url, owner_id, reputation_score')
         .eq('is_claimed', true)
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .order('reputation_score', { ascending: false })
+        .limit(20);
       if (!vehicles) { setVehicleLeaderboard([]); return; }
-      const ranked = vehicles.filter((v: any) => v.owner).map((v: any) => ({
+      const ranked = vehicles.map((v: any) => ({
         vehicle_id: v.id, make: v.make, model: v.model, year: v.year,
         plate_number: v.plate_number, plate_state: v.plate_state,
         stock_image_url: v.stock_image_url, profile_image_url: v.profile_image_url,
-        owner_id: v.owner_id, reputation_score: v.owner?.reputation_score ?? 0,
+        owner_id: v.owner_id, reputation_score: v.reputation_score ?? 0,
         top_badges: [] as any[], rank_delta: null as number | null,
-      })).sort((a: any, b: any) => b.reputation_score - a.reputation_score).slice(0, 20);
+      }));
 
       const top10Ids = ranked.slice(0, 10).map((v: any) => v.owner_id).filter(Boolean);
       if (top10Ids.length > 0) {
