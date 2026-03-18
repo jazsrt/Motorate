@@ -49,4 +49,5 @@ export const BADGE_TIER_THRESHOLDS: Record<string, { Bronze: number; Silver: num
   'builder':         { Bronze: 1,   Silver: 5,   Gold: 20,  Platinum: 50   },
   'spotter':         { Bronze: 1,   Silver: 10,  Gold: 50,  Platinum: 200  },
   'reviewer':        { Bronze: 1,   Silver: 10,  Gold: 50,  Platinum: 200  },
+  'Modification':    { Bronze: 1,   Silver: 5,   Gold: 20,  Platinum: 50   },
 };
