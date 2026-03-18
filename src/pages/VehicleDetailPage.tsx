@@ -29,6 +29,13 @@ import { VehicleFollowButton } from '../components/VehicleFollowButton';
 import { FollowButton } from '../components/FollowButton';
 import { BadgeChip } from '../components/badges/BadgeChip';
 
+const TIER_COLORS = {
+  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
+  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
+  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
+  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
+};
+
 function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null; }): 'prestige' | 'milestone' | 'identity' {
   const cat = (badge.category ?? '').toLowerCase();
   const rar = (badge.rarity ?? '').toLowerCase();
@@ -226,6 +233,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
   const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);
+  const [vBadges, setVBadges] = useState<any[]>([]);
   const isOwner = user && vehicle?.owner_id === user.id;
   const isUnclaimed = vehicle && !vehicle.is_claimed;
   const canClaim = user && isUnclaimed && !vehicle?.owner_id;
@@ -390,17 +398,29 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
     if (imagesData) setVehicleImages(imagesData);
 
-    if (vehicleData?.owner_id) {
+    // Fetch vehicle badges
+    const { data: vBadgeData } = await supabase
+      .from('vehicle_badges')
+      .select('badge_id, tier, sticker_count, earned_at')
+      .eq('vehicle_id', vehicleId)
+      .order('sticker_count', { ascending: false });
+    if (vBadgeData) setVBadges(vBadgeData);
+
+    {
       const { data: badgeData } = await supabase
-        .from('user_badges')
-        .select('badge_id, badges(id, name, icon_name, category, rarity, tier)')
-        .eq('user_id', vehicleData.owner_id)
-        .limit(20);
+        .from('vehicle_badges')
+        .select('badge_id, tier, sticker_count, earned_at')
+        .eq('vehicle_id', vehicleId)
+        .order('sticker_count', { ascending: false });
+
       if (badgeData) {
         setVehicleBadges(
-          badgeData.filter((ub: any) => ub.badges).map((ub: any) => ({
-            id: ub.badges.id, name: ub.badges.name, icon: ub.badges.icon_name,
-            category: ub.badges.category, rarity: ub.badges.rarity, tier: ub.badges.tier,
+          badgeData.map((vb: any) => ({
+            id: vb.badge_id,
+            name: vb.badge_id,
+            tier: vb.tier,
+            sticker_count: vb.sticker_count,
+            earned_at: vb.earned_at,
           }))
         );
       }
@@ -906,6 +926,48 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
 
+        {/* ── VEHICLE BADGE RACK ── */}
+        {vBadges.length > 0 && (
+          <div style={{ padding: '12px 18px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{
+              fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
+              letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 10,
+            }}>
+              Earned Badges
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+              {[...vBadges]
+                .sort((a, b) => {
+                  const order: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
+                  return (order[b.tier] || 0) - (order[a.tier] || 0);
+                })
+                .map(badge => {
+                  const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
+                  return (
+                    <div key={badge.badge_id} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      background: colors.bg, border: `1px solid ${colors.border}`,
+                      borderRadius: 5, padding: '4px 9px',
+                    }}>
+                      <span style={{
+                        fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
+                        letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
+                      }}>
+                        {badge.badge_id}
+                      </span>
+                      <span style={{
+                        fontFamily: 'JetBrains Mono, monospace', fontSize: 7,
+                        color: colors.text, opacity: 0.7, fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        x{badge.sticker_count}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
         {/* ── 3. OWNER STRIP ── */}
         {vehicle.is_claimed && vehicle.owner && (
           <div
@@ -954,13 +1016,35 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Badges Earned</span>
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: C.steel, fontVariantNumeric: 'tabular-nums' }}>{vehicleBadges.length}</span>
             </div>
-            <div style={{ padding: '0 18px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div style={{ padding: '0 18px 14px', display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
               {[...vehicleBadges].sort((a, b) => {
-                const order = { prestige: 0, milestone: 1, identity: 2 } as Record<string, number>;
-                return (order[getBadgeType(a)] ?? 1) - (order[getBadgeType(b)] ?? 1);
-              }).map(badge => (
-                <BadgeChip key={badge.id} name={badge.name} icon={badge.icon} type={getBadgeType(badge)} size="md" />
-              ))}
+                const order: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
+                return (order[b.tier] || 0) - (order[a.tier] || 0);
+              }).map(badge => {
+                const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
+                return (
+                  <div key={badge.id} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: colors.bg, border: `1px solid ${colors.border}`,
+                    borderRadius: 5, padding: '4px 9px',
+                  }}>
+                    <span style={{
+                      fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
+                      letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
+                    }}>
+                      {badge.name}
+                    </span>
+                    {badge.sticker_count && (
+                      <span style={{
+                        fontFamily: 'JetBrains Mono, monospace', fontSize: 7,
+                        color: colors.text, opacity: 0.7, fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        x{badge.sticker_count}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

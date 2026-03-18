@@ -29,6 +29,13 @@ import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
 
+const TIER_COLORS = {
+  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
+  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
+  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
+  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
+};
+
 function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
   const cat = (badge.category ?? '').toLowerCase();
   const rar = (badge.rarity ?? '').toLowerCase();
@@ -242,6 +249,28 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       allVehicles.forEach((v: any) => {
         v._vehicleFollowerCount = countMap[v.id] || 0;
       });
+
+      // Load vehicle badges for fleet tiles
+      const { data: vehicleBadgeData } = await supabase
+        .from('vehicle_badges')
+        .select('vehicle_id, badge_id, tier, sticker_count')
+        .in('vehicle_id', vehicleIds);
+
+      if (vehicleBadgeData) {
+        const tierOrder: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
+        const badgeMap: Record<string, { badge_id: string; tier: string }> = {};
+        (vehicleBadgeData as any[]).forEach(vb => {
+          const existing = badgeMap[vb.vehicle_id];
+          const newOrder = tierOrder[vb.tier] || 0;
+          const existingOrder = existing ? (tierOrder[existing.tier] || 0) : 0;
+          if (!existing || newOrder > existingOrder) {
+            badgeMap[vb.vehicle_id] = { badge_id: vb.badge_id, tier: vb.tier };
+          }
+        });
+        allVehicles.forEach((v: any) => {
+          v.topBadge = badgeMap[v.id] || null;
+        });
+      }
     }
 
     return allVehicles;
@@ -424,6 +453,27 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               {statusLabel}
             </span>
           </div>
+
+          {/* Top badge overlay */}
+          {(vehicle as any).topBadge && (() => {
+            const tb = (vehicle as any).topBadge;
+            const colors = TIER_COLORS[tb.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
+            return (
+              <div style={{
+                position: 'absolute', bottom: 44, left: 8, zIndex: 4,
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: colors.bg, border: `1px solid ${colors.border}`,
+                borderRadius: 5, padding: '3px 7px',
+              }}>
+                <span style={{
+                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 8, fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: colors.text,
+                }}>
+                  {tb.badge_id}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Text overlay at bottom of photo */}
           <div style={{ position: 'absolute', bottom: 6, left: 8, right: 8, zIndex: 4 }}>

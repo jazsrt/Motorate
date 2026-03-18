@@ -16,6 +16,13 @@ import { BadgeCoin } from '../components/BadgeCoin';
 import { getTierFromScore } from '../lib/tierConfig';
 import { getBadgeImagePath } from '../lib/badgeUtils';
 
+const TIER_COLORS = {
+  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
+  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
+  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
+  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
+};
+
 interface ProfilePageProps {
   onNavigate: OnNavigate;
   onViewVehicle: (vehicleId: string) => void;
@@ -96,6 +103,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [weeklySpots, setWeeklySpots] = useState(0);
   const [weeklyReviews, setWeeklyReviews] = useState(0);
   const [weeklyStickers, setWeeklyStickers] = useState(0);
+  const [fleetBadges, setFleetBadges] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -143,7 +151,19 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       .eq('owner_id', user!.id)
       .order('created_at', { ascending: false });
 
-    if (data) setVehicles(data);
+    if (data) {
+      setVehicles(data);
+      // Load fleet badges from vehicle_badges
+      if (data.length > 0) {
+        const vehicleIds = data.map(v => v.id);
+        const { data: vBadges } = await supabase
+          .from('vehicle_badges')
+          .select('vehicle_id, badge_id, tier, sticker_count')
+          .in('vehicle_id', vehicleIds)
+          .order('sticker_count', { ascending: false });
+        if (vBadges) setFleetBadges(vBadges);
+      }
+    }
   };
 
   const loadUserBadges = async () => {
@@ -874,6 +894,52 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             </div>
           )}
         </div>
+
+        {/* ═══ Fleet Badges ═══ */}
+        {fleetBadges.length > 0 && (
+          <div style={{ margin: '0 20px 16px' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10,
+            }}>
+              <span style={{
+                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#7a8e9e',
+              }}>Fleet Badges</span>
+              <span style={{
+                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, color: '#445566',
+              }}>{fleetBadges.length} earned</span>
+            </div>
+            <div style={{
+              padding: 14, background: '#0a0d14',
+              border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8,
+              display: 'flex', flexWrap: 'wrap' as const, gap: 6,
+            }}>
+              {fleetBadges.slice(0, 12).map(badge => {
+                const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
+                return (
+                  <div key={`${badge.vehicle_id}-${badge.badge_id}`} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: colors.bg, border: `1px solid ${colors.border}`,
+                    borderRadius: 5, padding: '4px 9px',
+                  }}>
+                    <span style={{
+                      fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
+                      letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
+                    }}>
+                      {badge.badge_id}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{
+              marginTop: 6, fontFamily: 'Barlow, sans-serif', fontSize: 10,
+              color: '#445566', fontStyle: 'italic' as const,
+            }}>
+              Badges earned by your vehicles from community bumper stickers
+            </div>
+          </div>
+        )}
 
         {/* ═══ My Garage ═══ */}
         <div className="px-4 mt-4 v3-stagger v3-stagger-6">

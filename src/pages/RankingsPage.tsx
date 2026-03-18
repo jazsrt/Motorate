@@ -6,6 +6,13 @@ import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
 import { BadgeChip } from '../components/badges/BadgeChip';
 
+const TIER_COLORS = {
+  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
+  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
+  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
+  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
+};
+
 function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null; }): 'prestige' | 'milestone' | 'identity' {
   const cat = (badge.category ?? '').toLowerCase();
   const rar = (badge.rarity ?? '').toLowerCase();
@@ -262,19 +269,24 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         top_badges: [] as any[], rank_delta: null as number | null,
       }));
 
-      const top10Ids = ranked.slice(0, 10).map((v: any) => v.owner_id).filter(Boolean);
-      if (top10Ids.length > 0) {
-        const { data: badgeData } = await supabase.from('user_badges')
-          .select('user_id, badges(id, name, icon_name, category, rarity, tier)')
-          .in('user_id', top10Ids).limit(100);
-        if (badgeData) {
-          const badgeMap: Record<string, any[]> = {};
-          for (const ub of badgeData as any[]) {
-            if (!ub.badges) continue;
-            if (!badgeMap[ub.user_id]) badgeMap[ub.user_id] = [];
-            if (badgeMap[ub.user_id].length < 2) badgeMap[ub.user_id].push({ id: ub.badges.id, name: ub.badges.name, icon: ub.badges.icon_name, category: ub.badges.category, rarity: ub.badges.rarity, tier: ub.badges.tier });
-          }
-          ranked.forEach((v: any) => { if (v.owner_id && badgeMap[v.owner_id]) v.top_badges = badgeMap[v.owner_id]; });
+      // Fetch vehicle badges (Gold/Platinum only) for top 10
+      const top10VehicleIds = ranked.slice(0, 10).map((v: any) => v.vehicle_id);
+      if (top10VehicleIds.length > 0) {
+        const { data: vehicleBadgeData } = await supabase
+          .from('vehicle_badges')
+          .select('vehicle_id, badge_id, tier')
+          .in('vehicle_id', top10VehicleIds)
+          .in('tier', ['Platinum', 'Gold']);
+
+        if (vehicleBadgeData) {
+          const map: Record<string, { badge_id: string; tier: string }[]> = {};
+          (vehicleBadgeData as any[]).forEach(vb => {
+            if (!map[vb.vehicle_id]) map[vb.vehicle_id] = [];
+            map[vb.vehicle_id].push({ badge_id: vb.badge_id, tier: vb.tier });
+          });
+          ranked.forEach((v: any) => {
+            v.top_badges = (map[v.vehicle_id] || []).slice(0, 2);
+          });
         }
       }
       setVehicleLeaderboard(ranked);
@@ -751,9 +763,23 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                             {v.plate_state ? `${v.plate_state} ` : ''}{v.plate_number}
                           </span>
                         )}
-                        {v.top_badges.map((badge: any) => (
-                          <BadgeChip key={badge.id} name={badge.name} icon={badge.icon} type={getBadgeType(badge)} size="sm" />
-                        ))}
+                        {v.top_badges.map((badge: any) => {
+                          const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Gold;
+                          return (
+                            <div key={badge.badge_id} style={{
+                              display: 'inline-flex', alignItems: 'center',
+                              background: colors.bg, border: `1px solid ${colors.border}`,
+                              borderRadius: 4, padding: '2px 6px',
+                            }}>
+                              <span style={{
+                                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 7, fontWeight: 700,
+                                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
+                              }}>
+                                {badge.badge_id}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
