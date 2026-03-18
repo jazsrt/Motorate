@@ -1,813 +1,240 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Award, Lock, ChevronRight, Zap, Crosshair, Star as StarIcon, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, CheckCircle2, Car, Tag, Trophy, Crown, Medal } from 'lucide-react';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
-import { BadgeChip } from '../components/badges/BadgeChip';
 
-const TIER_COLORS = {
-  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
-  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
-  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
-  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
+const C = {
+  black:    '#030508',
+  carbon0:  '#070a0f',
+  carbon1:  '#0a0d14',
+  carbon2:  '#0e1320',
+  muted:    '#445566',
+  dim:      '#5a6e7e',
+  sub:      '#7a8e9e',
+  light:    '#a8bcc8',
+  white:    '#eef4f8',
+  accent:   '#F97316',
+  accentDim:'rgba(249,115,22,0.11)',
+  gold:     '#f0a030',
+  green:    '#20c060',
 };
-
-function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null; }): 'prestige' | 'milestone' | 'identity' {
-  const cat = (badge.category ?? '').toLowerCase();
-  const rar = (badge.rarity ?? '').toLowerCase();
-  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
-  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
-  return 'milestone';
-}
 
 interface RankingsPageProps {
   onNavigate: OnNavigate;
 }
 
-interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  tier: string;
-  tier_threshold: number;
-  category: string;
-  tracks: string;
-  rarity: string;
-}
-
-interface UserBadge {
-  id: string;
-  badge_id: string;
-  earned_at: string;
-}
-
-interface StickerType {
-  sticker_type: string;
-  total_count: number;
-  vehicle_count: number;
-}
-
-interface LeaderboardUser {
-  id: string;
-  handle: string;
-  avatar_url: string | null;
-  reputation_score: number;
-  avg_driver_rating: number;
-  driver_rating_count: number;
-  follower_count: number;
-  badge_count: number;
-}
-
-type TabType = 'badges' | 'leaderboard' | 'quests';
-type LeaderboardPeriod = 'all' | 'week' | 'month';
-
-const iconMap: Record<string, React.ElementType> = {
-  'Crosshair': Crosshair,
-  'Star': StarIcon,
-  'Users': Users,
-  'Heart': Heart,
-  'Camera': Camera,
-  'FileText': FileText,
-  'MessageCircle': MessageCircle,
-  'TrendingUp': TrendingUp,
-  'Wrench': Wrench,
-  'ThumbsUp': ThumbsUp,
-  'MapPin': MapPin,
-  'UserPlus': UserPlus,
-  'CheckCircle': CheckCircle2,
-  'Car': Car,
-  'Tag': Tag,
-  'Zap': Zap,
-};
-
-function getIcon(iconName: string): React.ElementType {
-  return iconMap[iconName] || Award;
-}
-
-const rarityColor = (rarity: string) => {
-  switch (rarity?.toLowerCase()) {
-    case 'common': return { bg: 'bg-[rgba(100,116,139,0.15)]', text: 'text-[#94a3b8]', border: 'rgba(100,116,139,0.3)' };
-    case 'uncommon': return { bg: 'bg-[rgba(16,185,129,0.15)]', text: 'text-positive', border: 'rgba(16,185,129,0.35)' };
-    case 'rare': return { bg: 'bg-[rgba(249,115,22,0.15)]', text: 'text-accent-2', border: 'rgba(249,115,22,0.35)' };
-    case 'epic': return { bg: 'bg-[rgba(251,146,60,0.15)]', text: 'text-accent-2', border: 'rgba(251,146,60,0.35)' };
-    case 'legendary': return { bg: 'bg-[rgba(245,158,11,0.15)]', text: 'text-orange', border: 'rgba(245,158,11,0.4)' };
-    default: return { bg: 'bg-[rgba(100,116,139,0.15)]', text: 'text-[#94a3b8]', border: 'rgba(100,116,139,0.3)' };
-  }
-};
-
 export function RankingsPage({ onNavigate }: RankingsPageProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('badges');
-  const [allBadges, setAllBadges] = useState<Badge[]>([]);
-  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
-  const [activityCounts, setActivityCounts] = useState<Record<string, number>>({});
-  const [stickers, setStickers] = useState<StickerType[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState<LeaderboardPeriod>('all');
-  const [vehicleLeaderboard, setVehicleLeaderboard] = useState<any[]>([]);
-  const [vehicleScope, setVehicleScope] = useState<'city' | 'state' | 'national' | 'class'>('city');
+  const [ranked, setRanked] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scope, setScope] = useState<'city' | 'state' | 'national' | 'class'>('city');
 
   useEffect(() => {
-    if (!user) return;
-    loadData();
-  }, [user]);
+    loadRankings();
+  }, []);
 
-  useEffect(() => {
-    if (activeTab === 'leaderboard') {
-      loadLeaderboard();
-      loadVehicleLeaderboard();
-    }
-  }, [activeTab, leaderboardPeriod]);
-
-  async function loadActivityCounts() {
-    if (!user) return {};
-
-    const [
-      { count: postCount },
-      { count: commentCount },
-      { count: likesGiven },
-      { count: followersCount },
-      { count: spotCount },
-      { count: reviewCount },
-      { count: photoCount }
-    ] = await Promise.all([
-      supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('post_comments').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('reactions').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
-      supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('spotter_id', user.id),
-      supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', user.id).not('image_url', 'is', null)
-    ]);
-
-    return {
-      posts: postCount || 0,
-      comments: commentCount || 0,
-      likes_given: likesGiven || 0,
-      followers: followersCount || 0,
-      spots: spotCount || 0,
-      reviews: reviewCount || 0,
-      photos: photoCount || 0,
-      mods: 0,
-      likes_received: 0,
-      comment_likes: 0,
-      locations: 0
-    };
-  }
-
-  async function loadStickers() {
-    if (!user) return;
-    try {
-      // Get user's vehicle IDs first
-      const { data: userVehicles } = await supabase
-        .from('vehicles')
-        .select('id')
-        .eq('owner_id', user.id);
-      if (!userVehicles || userVehicles.length === 0) return;
-
-      const vehicleIds = userVehicles.map(v => v.id);
-
-      // Get stickers on user's vehicles
-      const { data } = await supabase
-        .from('vehicle_stickers')
-        .select(`
-          vehicle_id,
-          bumper_stickers!vehicle_stickers_sticker_id_fkey(name)
-        `)
-        .in('vehicle_id', vehicleIds);
-
-      if (!data) return;
-      const map: Record<string, { total: number; vehicles: Set<string> }> = {};
-      for (const row of data as any[]) {
-        const name = row.bumper_stickers?.name || 'Unknown';
-        if (!map[name]) map[name] = { total: 0, vehicles: new Set() };
-        map[name].total++;
-        map[name].vehicles.add(row.vehicle_id);
-      }
-      const result: StickerType[] = Object.entries(map).map(([type, val]) => ({
-        sticker_type: type,
-        total_count: val.total,
-        vehicle_count: val.vehicles.size,
-      }));
-      setStickers(result.sort((a, b) => b.total_count - a.total_count).slice(0, 10));
-    } catch {
-      return;
-    }
-  }
-
-  async function loadLeaderboard() {
-    try {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, handle, avatar_url, reputation_score, avg_driver_rating, driver_rating_count')
-        .order('reputation_score', { ascending: false })
-        .limit(50);
-
-      if (!profiles) {
-        setLeaderboard([]);
-        return;
-      }
-
-      const userIds = profiles.map(p => p.id);
-
-      const [followersResult, badgesResult] = await Promise.all([
-        supabase
-          .from('follows')
-          .select('following_id')
-          .in('following_id', userIds),
-        supabase
-          .from('user_badges')
-          .select('user_id')
-          .in('user_id', userIds)
-      ]);
-
-      const followerCounts = (followersResult.data || []).reduce((acc, row) => {
-        acc[row.following_id] = (acc[row.following_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const badgeCounts = (badgesResult.data || []).reduce((acc, row) => {
-        acc[row.user_id] = (acc[row.user_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const leaderboardData: LeaderboardUser[] = profiles.map(p => ({
-        id: p.id,
-        handle: p.handle || 'Anonymous',
-        avatar_url: p.avatar_url,
-        reputation_score: p.reputation_score || 0,
-        avg_driver_rating: p.avg_driver_rating || 0,
-        driver_rating_count: p.driver_rating_count || 0,
-        follower_count: followerCounts[p.id] || 0,
-        badge_count: badgeCounts[p.id] || 0,
-      }));
-
-      setLeaderboard(leaderboardData);
-    } catch (error) {
-      console.error('Error loading leaderboard:', error);
-      setLeaderboard([]);
-    }
-  }
-
-  async function loadVehicleLeaderboard() {
-    try {
-      const { data: vehicles } = await supabase
-        .from('vehicles')
-        .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url, owner_id, reputation_score')
-        .eq('is_claimed', true)
-        .order('reputation_score', { ascending: false })
-        .limit(20);
-      if (!vehicles) { setVehicleLeaderboard([]); return; }
-      const ranked = vehicles.map((v: any) => ({
-        vehicle_id: v.id, make: v.make, model: v.model, year: v.year,
-        plate_number: v.plate_number, plate_state: v.plate_state,
-        stock_image_url: v.stock_image_url, profile_image_url: v.profile_image_url,
-        owner_id: v.owner_id, reputation_score: v.reputation_score ?? 0,
-        top_badges: [] as any[], rank_delta: null as number | null,
-      }));
-
-      // Fetch vehicle badges (Gold/Platinum only) for top 10
-      const top10VehicleIds = ranked.slice(0, 10).map((v: any) => v.vehicle_id);
-      if (top10VehicleIds.length > 0) {
-        const { data: vehicleBadgeData } = await supabase
-          .from('vehicle_badges')
-          .select('vehicle_id, badge_id, tier')
-          .in('vehicle_id', top10VehicleIds)
-          .in('tier', ['Platinum', 'Gold']);
-
-        if (vehicleBadgeData) {
-          const map: Record<string, { badge_id: string; tier: string }[]> = {};
-          (vehicleBadgeData as any[]).forEach(vb => {
-            if (!map[vb.vehicle_id]) map[vb.vehicle_id] = [];
-            map[vb.vehicle_id].push({ badge_id: vb.badge_id, tier: vb.tier });
-          });
-          ranked.forEach((v: any) => {
-            v.top_badges = (map[v.vehicle_id] || []).slice(0, 2);
-          });
-        }
-      }
-      setVehicleLeaderboard(ranked);
-    } catch (err) { console.error('Vehicle leaderboard error:', err); }
-  }
-
-  async function loadData() {
-    if (!user) return;
+  const loadRankings = async () => {
     setLoading(true);
-
-    try {
-      const [badgesResult, userBadgesResult, counts] = await Promise.all([
-        supabase
-          .from('badges')
-          .select('*')
-          .in('earning_method', ['one_off', 'tiered_activity'])
-          .order('badge_group', { ascending: true })
-          .order('tier_threshold', { ascending: true }),
-        supabase
-          .from('user_badges')
-          .select('*')
-          .eq('user_id', user.id),
-        loadActivityCounts()
-      ]);
-
-      setAllBadges(badgesResult.data || []);
-      setUserBadges(userBadgesResult.data || []);
-      setActivityCounts(counts);
-
-      await loadStickers();
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function getCountForBadge(badge: Badge): number {
-    if (!badge.tracks) return 0;
-    return activityCounts[badge.tracks] || 0;
-  }
-
-  const earnedBadgeIds = new Set(userBadges.map(ub => ub.badge_id));
-  const earnedBadgesList = allBadges.filter(b => earnedBadgeIds.has(b.id));
-
-  const inProgressBadges = allBadges.filter(b => {
-    if (earnedBadgeIds.has(b.id)) return false;
-    if (!b.tracks) return false;
-    const count = getCountForBadge(b);
-    return count > 0 && count < (b.tier_threshold || 999);
-  }).sort((a, b) => {
-    const aPct = getCountForBadge(a) / (a.tier_threshold || 1);
-    const bPct = getCountForBadge(b) / (b.tier_threshold || 1);
-    return bPct - aPct;
-  });
-
-  const lockedBadgesList = allBadges.filter(b => {
-    if (earnedBadgeIds.has(b.id)) return false;
-    const count = getCountForBadge(b);
-    return count === 0;
-  });
-
-  const TABS: { id: TabType; label: string }[] = [
-    { id: 'badges', label: 'Badges' },
-    { id: 'leaderboard', label: 'Leaderboard' },
-    { id: 'quests', label: 'Quests' },
-  ];
-
-  if (loading) {
-    return (
-      <Layout currentPage="rankings" onNavigate={onNavigate}>
-        <div className="px-3.5 py-4">
-          <div className="animate-pulse space-y-3">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-20 bg-[var(--s1)] rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+    const { data } = await supabase
+      .from('vehicles')
+      .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url, owner_id, reputation_score, spots_count')
+      .order('reputation_score', { ascending: false })
+      .limit(20);
+    if (data) setRanked(data);
+    setLoading(false);
+  };
 
   return (
     <Layout currentPage="rankings" onNavigate={onNavigate}>
-      <div className="pb-20">
+      <div style={{ background: C.black, minHeight: '100vh', paddingBottom: 88 }}>
 
-        {/* Page Header */}
-        <div style={{ padding: '56px 20px 16px', background: 'linear-gradient(to bottom, var(--carbon-0), transparent)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--white)' }}>
-            RANK<em style={{ fontStyle: 'normal', color: 'var(--accent)' }}>INGS</em>
+        {/* ── HEADER ── */}
+        <div style={{ padding: '52px 18px 8px', background: `linear-gradient(to bottom, ${C.carbon0} 60%, transparent)` }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.26em', textTransform: 'uppercase' as const, color: C.muted, marginBottom: 3 }}>
+            Chicago Metro
           </div>
-          <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-            Chicago · Illinois
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: C.white, lineHeight: 1 }}>
+            Top <em style={{ fontStyle: 'normal', color: C.accent }}>Vehicles</em>
           </div>
         </div>
 
-        {/* Tab Bar */}
-        <div style={{ display: 'flex', margin: '0 20px 20px', background: 'rgba(10,13,20,0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden' }}>
-          {TABS.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              style={{ flex: 1, padding: '8px 0', fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', borderRight: '1px solid rgba(255,255,255,0.05)', color: activeTab === tab.id ? 'var(--accent)' : 'var(--dim)', background: activeTab === tab.id ? 'rgba(249,115,22,0.12)' : 'transparent' }}>
-              {tab.label}
-            </button>
-          ))}
+        {/* ── SCOPE TABS ── */}
+        <div style={{ display: 'flex', borderBottom: `1px solid rgba(255,255,255,0.06)`, background: C.carbon0 }}>
+          {(['City', 'State', 'National', 'Class'] as const).map((label) => {
+            const key = label.toLowerCase() as typeof scope;
+            const isOn = scope === key;
+            return (
+              <button key={label} onClick={() => setScope(key)}
+                style={{
+                  flex: 1, padding: '10px 0', textAlign: 'center' as const,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                  color: isOn ? C.accent : C.dim,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  borderBottom: isOn ? `2px solid ${C.accent}` : '2px solid transparent',
+                }}>
+                {label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Badges Tab */}
-        {activeTab === 'badges' && (
-          <div className="space-y-4 px-4">
-
-            {/* Page Header with Progress */}
-            <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h3 className="font-heading text-xl font-bold text-primary" style={{ fontFamily: 'var(--font-display)' }}>Badge Collection</h3>
-                  <p className="text-xs text-tertiary mt-0.5">
-                    {earnedBadgesList.length} of {allBadges.length} earned
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div
-                    className="font-heading text-3xl font-bold"
-                    style={{
-                      background: 'linear-gradient(135deg, #f97316, #f59e0b)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    {allBadges.length > 0 ? Math.round((earnedBadgesList.length / allBadges.length) * 100) : 0}%
-                  </div>
-                  <div className="text-[10px] text-tertiary">
-                    {earnedBadgesList.length} / {allBadges.length}
-                  </div>
-                </div>
-              </div>
-              <div className="h-1.5 bg-surface-4 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${allBadges.length > 0 ? (earnedBadgesList.length / allBadges.length) * 100 : 0}%`,
-                    background: 'linear-gradient(90deg, #f97316, #f59e0b)',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Next Badge Hero */}
-            {inProgressBadges.length > 0 && (() => {
-              const nextBadge = inProgressBadges[0];
-              const IconComp = getIcon(nextBadge.icon);
-              const current = getCountForBadge(nextBadge);
-              const target = nextBadge.tier_threshold || 1;
-              const remaining = target - current;
-              const pct = Math.min((current / target) * 100, 100);
-
+        {/* ── PODIUM ── */}
+        {!loading && ranked.length >= 3 && (
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, padding: '20px 18px 16px', background: C.carbon1 }}>
+            {[ranked[1], ranked[0], ranked[2]].map((v, i) => {
+              const rank = [2, 1, 3][i];
+              const isFirst = rank === 1;
+              const photoUrl = v.profile_image_url || v.stock_image_url;
               return (
-                <div
-                  className="rounded-2xl p-3.5 transition-all"
+                <div key={v.id}
+                  onClick={() => onNavigate('vehicle-detail', v.id)}
                   style={{
-                    background: 'linear-gradient(135deg, rgba(249,115,22,0.08), rgba(245,158,11,0.06))',
-                    border: '1px solid rgba(249,115,22,0.3)',
-                  }}
-                >
-                  <div className="text-[9px] font-bold tracking-[1.5px] uppercase text-accent-2 mb-2 flex items-center gap-1">
-                    <Crosshair className="w-3 h-3" />
-                    NEXT UP — {remaining} away
+                    flex: isFirst ? '0 0 38%' : '0 0 28%',
+                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
+                    cursor: 'pointer',
+                  }}>
+                  {/* Photo circle */}
+                  <div style={{
+                    width: isFirst ? 80 : 60, height: isFirst ? 80 : 60,
+                    borderRadius: '50%', overflow: 'hidden',
+                    border: `2px solid ${rank === 1 ? C.gold : rank === 2 ? C.sub : C.muted}`,
+                    background: C.carbon2, marginBottom: 8, flexShrink: 0,
+                  }}>
+                    {photoUrl ? (
+                      <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1.5"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="13" rx="2"/></svg>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: 'linear-gradient(135deg, #f97316, #f59e0b)',
-                        boxShadow: '0 3px 12px rgba(249,115,22,0.3)',
-                      }}
-                    >
-                      <IconComp className="w-6 h-6 text-white/80" />
+
+                  {/* Vehicle name */}
+                  <div style={{ textAlign: 'center' as const, marginBottom: 4 }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 1 }}>
+                      {v.make ?? '\u2014'}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-heading text-lg font-bold text-primary truncate">
-                        {nextBadge.name}
-                        {nextBadge.tier && (
-                          <span className="text-secondary text-sm font-normal ml-1.5">
-                            ({nextBadge.tier.charAt(0).toUpperCase() + nextBadge.tier.slice(1)})
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-secondary mb-1.5">{nextBadge.description}</div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-surface-4 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${pct}%`,
-                              background: 'linear-gradient(90deg, #f97316, #f59e0b)',
-                            }}
-                          />
-                        </div>
-                        <span className="text-[11px] font-bold text-accent-2 whitespace-nowrap">
-                          {current} / {target}
-                        </span>
-                      </div>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: isFirst ? 16 : 13, fontWeight: 700, color: C.white, lineHeight: 1 }}>
+                      {v.model ?? '\u2014'}
                     </div>
+                  </div>
+
+                  {/* RP */}
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: isFirst ? 13 : 11, fontWeight: 600, color: C.accent, fontVariantNumeric: 'tabular-nums' }}>
+                    {(v.reputation_score ?? 0).toLocaleString()} RP
+                  </div>
+
+                  {/* Rank block */}
+                  <div style={{
+                    marginTop: 8,
+                    width: isFirst ? 44 : 36, height: isFirst ? 44 : 36,
+                    background: rank === 1 ? C.gold : rank === 2 ? C.sub : C.muted,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: 4,
+                  }}>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: isFirst ? 22 : 18, fontWeight: 700, color: C.black }}>
+                      {rank}
+                    </span>
                   </div>
                 </div>
               );
-            })()}
+            })}
+          </div>
+        )}
 
-            {/* Sticker Rep Section */}
-            {stickers.length > 0 && (
-              <div className="bg-[var(--s1)] border border-[rgba(249,115,22,0.2)] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-accent-2" strokeWidth={1.5} />
-                    <span className="text-xs font-bold text-primary">Sticker Rep</span>
+        {/* ── FULL RANKINGS HEADER ── */}
+        {!loading && ranked.length > 3 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px 8px', borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.white }}>
+              Full Rankings
+            </span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim }}>
+              Chicago
+            </span>
+          </div>
+        )}
+
+        {/* ── RANK ROWS ── */}
+        {!loading && ranked.slice(3).map((v, i) => {
+          const rank = i + 4;
+          const photoUrl = v.profile_image_url || v.stock_image_url;
+          return (
+            <div key={v.id}
+              onClick={() => onNavigate('vehicle-detail', v.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 18px',
+                borderBottom: `1px solid rgba(255,255,255,0.03)`,
+                cursor: 'pointer',
+              }}>
+              {/* Rank number */}
+              <div style={{
+                width: 28, textAlign: 'center' as const, flexShrink: 0,
+                fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700,
+                color: rank <= 5 ? C.accent : C.dim,
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {rank}
+              </div>
+
+              {/* Thumbnail */}
+              <div style={{ width: 44, height: 34, borderRadius: 5, overflow: 'hidden', background: C.carbon2, flexShrink: 0 }}>
+                {photoUrl ? (
+                  <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1.5"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="13" rx="2"/></svg>
                   </div>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[rgba(249,115,22,0.1)] text-accent-2">{stickers.length} types</span>
-                </div>
-                <div className="grid grid-cols-5 gap-3">
-                  {stickers.map((s) => (
-                    <div key={s.sticker_type} className="flex flex-col items-center gap-1">
-                      <div className="w-10 h-10 rounded-[8px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(245,158,11,0.1))', border: '1px solid rgba(249,115,22,0.25)' }}>
-                        <Zap className="w-5 h-5 text-accent-2" strokeWidth={1.5} />
-                      </div>
-                      <div className="text-sm font-bold text-primary">{s.total_count}</div>
-                      <div className="text-center truncate w-full text-[10px] text-tertiary">
-                        {s.sticker_type.replace(/_/g, ' ')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Earned Badges */}
-            {earnedBadgesList.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-positive" />
-                  <span className="text-xs font-bold text-primary">Earned</span>
-                  <span className="text-[10px] px-1.5 rounded-full bg-[rgba(16,185,129,0.1)] text-positive">
-                    {earnedBadgesList.length}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {earnedBadgesList.map((badge) => {
-                    const IconComp = getIcon(badge.icon);
-                    const rc = rarityColor(badge.rarity);
-                    const isLegendary = badge.rarity?.toLowerCase() === 'legendary';
-                    return (
-                      <div
-                        key={badge.id}
-                        className="bg-[var(--s1)] border rounded-xl p-2.5 text-center relative transition-all hover:-translate-y-0.5"
-                        style={{
-                          borderColor: isLegendary ? 'rgba(245,158,11,0.4)' : 'rgba(16,185,129,0.35)',
-                          background: isLegendary ? 'linear-gradient(135deg, var(--s1), rgba(245,158,11,0.04))' : 'var(--s1)',
-                        }}
-                      >
-                        <div
-                          className="w-11 h-11 rounded-[11px] mx-auto mb-1.5 flex items-center justify-center relative"
-                          style={{
-                            background: isLegendary
-                              ? 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,146,60,0.15))'
-                              : 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(249,115,22,0.15))',
-                          }}
-                        >
-                          <IconComp className="w-5 h-5 text-white/70" />
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#5aaa7a] rounded-full flex items-center justify-center border-[1.5px] border-[var(--bg)]">
-                            <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-                          </div>
-                        </div>
-                        <div className="text-[11px] font-bold leading-tight mb-0.5 text-primary">{badge.name}</div>
-                        <span className={`text-[9px] font-bold px-1.5 py-px rounded-full ${rc.bg} ${rc.text}`}>
-                          {badge.rarity}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* In Progress Badges */}
-            {inProgressBadges.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <TrendingUp className="w-3.5 h-3.5 text-accent-2" />
-                  <span className="text-xs font-bold text-primary">In Progress</span>
-                  <span className="text-[10px] px-1.5 rounded-full bg-[rgba(249,115,22,0.1)] text-accent-2">
-                    {inProgressBadges.length}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {inProgressBadges.map((badge) => {
-                    const IconComp = getIcon(badge.icon);
-                    const current = getCountForBadge(badge);
-                    const target = badge.tier_threshold || 1;
-                    const pct = Math.min((current / target) * 100, 100);
-                    return (
-                      <div
-                        key={badge.id}
-                        className="bg-[var(--s1)] rounded-xl p-2.5 text-center relative transition-all hover:-translate-y-0.5"
-                        style={{ border: '1px solid rgba(249,115,22,0.25)' }}
-                      >
-                        <div
-                          className="w-11 h-11 rounded-[11px] mx-auto mb-1.5 flex items-center justify-center"
-                          style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1))' }}
-                        >
-                          <IconComp className="w-5 h-5 text-white/60" />
-                        </div>
-                        <div className="text-[11px] font-bold leading-tight mb-1 text-primary">{badge.name}</div>
-                        <div className="h-1 bg-surface-4 rounded-full overflow-hidden mx-1 mb-1">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #F97316, #fb923c)' }}
-                          />
-                        </div>
-                        <div className="text-[9px] text-accent-2 font-bold">{current}/{target}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Locked Badges */}
-            {lockedBadgesList.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Lock className="w-3.5 h-3.5 text-tertiary" />
-                  <span className="text-xs font-bold text-primary">Locked</span>
-                  <span className="text-[10px] px-1.5 rounded-full bg-[rgba(61,96,128,0.1)] text-tertiary">
-                    {lockedBadgesList.length}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {lockedBadgesList.slice(0, 12).map((badge) => {
-                    const IconComp = getIcon(badge.icon);
-                    return (
-                      <div
-                        key={badge.id}
-                        className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-2.5 text-center opacity-40"
-                      >
-                        <div className="w-11 h-11 rounded-[11px] mx-auto mb-1.5 flex items-center justify-center bg-surface-4 relative">
-                          <IconComp className="w-5 h-5 text-tertiary" />
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-surface-4 rounded-full flex items-center justify-center border border-[var(--border2)]">
-                            <Lock className="w-2.5 h-2.5 text-tertiary" />
-                          </div>
-                        </div>
-                        <div className="text-[11px] font-bold leading-tight mb-0.5 text-tertiary">{badge.name}</div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Mystery badge */}
-                  <div className="border border-dashed border-[var(--border2)] rounded-xl p-2.5 text-center opacity-[0.15]">
-                    <div className="w-11 h-11 rounded-[11px] mx-auto mb-1.5 flex items-center justify-center bg-surface-4">
-                      <span className="text-lg font-bold text-tertiary">?</span>
-                    </div>
-                    <div className="text-[11px] font-bold leading-tight text-tertiary">Mystery</div>
-                  </div>
-                </div>
-
-                {lockedBadgesList.length > 12 && (
-                  <button className="w-full mt-2 py-2 text-[11px] font-bold text-accent-2 bg-[rgba(249,115,22,0.05)] border border-[rgba(249,115,22,0.15)] rounded-lg hover:bg-[rgba(249,115,22,0.1)] transition-colors">
-                    Show All {lockedBadgesList.length} Locked Badges
-                  </button>
                 )}
               </div>
-            )}
 
-            {/* Empty State */}
-            {allBadges.length === 0 && (
-              <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-2xl p-12 text-center">
-                <Award className="w-12 h-12 text-tertiary mx-auto mb-4" />
-                <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>No Badges Found</h3>
-                <p className="text-sm text-secondary">Badge data may still be loading. Try refreshing.</p>
+              {/* Vehicle info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: C.white, lineHeight: 1, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {[v.make, v.model].filter(Boolean).join(' ') || '\u2014'}
+                </div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim, marginTop: 2 }}>
+                  {[v.year, v.plate_state, v.plate_number].filter(Boolean).join(' \u00B7 ')}
+                </div>
               </div>
-            )}
 
+              {/* Score */}
+              <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: C.white, fontVariantNumeric: 'tabular-nums' }}>
+                  {(v.reputation_score ?? 0).toLocaleString()}
+                </div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: C.dim, marginTop: 1 }}>
+                  RP
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* ── LOADING ── */}
+        {loading && (
+          <div>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 18px', borderBottom: `1px solid rgba(255,255,255,0.03)`, alignItems: 'center' }}>
+                <div style={{ width: 28, height: 18, background: C.carbon2, borderRadius: 3 }} />
+                <div style={{ width: 44, height: 34, background: C.carbon2, borderRadius: 5 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ width: '60%', height: 14, background: C.carbon2, borderRadius: 3, marginBottom: 6 }} />
+                  <div style={{ width: '40%', height: 10, background: C.carbon2, borderRadius: 3 }} />
+                </div>
+                <div style={{ width: 48, height: 22, background: C.carbon2, borderRadius: 3 }} />
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Leaderboard Tab */}
-        {activeTab === 'leaderboard' && (
-          <div className="space-y-4 px-4">
-
-            {/* Vehicle Scope Tabs */}
-            <div className="flex gap-1 p-1 rounded-[10px] bg-[var(--s1)] border border-[var(--border2)]">
-              {([
-                { id: 'city' as const, label: 'City' },
-                { id: 'state' as const, label: 'State' },
-                { id: 'national' as const, label: 'National' },
-                { id: 'class' as const, label: 'Class' },
-              ]).map(scope => (
-                <button
-                  key={scope.id}
-                  onClick={() => setVehicleScope(scope.id)}
-                  className="flex-1 py-1.5 rounded-[8px] transition-all text-xs font-bold"
-                  style={{
-                    color: vehicleScope === scope.id ? '#f2f4f7' : '#909aaa',
-                    background: vehicleScope === scope.id ? 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1))' : 'transparent',
-                    border: vehicleScope === scope.id ? '1px solid rgba(249,115,22,0.25)' : '1px solid transparent',
-                  }}
-                >
-                  {scope.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Section Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-              <Trophy className="w-3.5 h-3.5 text-orange" />
-              <span style={{ fontFamily: 'var(--font-cond)', fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>
-                Top Vehicles {vehicleScope === 'city' ? '· Chicago' : vehicleScope === 'state' ? '· Illinois' : vehicleScope === 'national' ? '· USA' : '· All Classes'}
-              </span>
-            </div>
-
-            {vehicleLeaderboard.length === 0 && (
-              <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-8 text-center">
-                <Car className="w-12 h-12 text-tertiary mx-auto mb-4" />
-                <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>No Rankings Yet</h3>
-                <p className="text-sm text-secondary">Be the first to claim a vehicle and climb the ranks</p>
-              </div>
-            )}
-
-            {/* Vehicle Ranked Rows */}
-            <div className="space-y-1">
-              {vehicleLeaderboard.map((v: any, idx: number) => {
-                const rank = idx + 1;
-                const imgUrl = v.profile_image_url || v.stock_image_url;
-                const vehicleName = [v.year, v.make, v.model].filter(Boolean).join(' ') || 'Unknown Vehicle';
-
-                return (
-                  <div
-                    key={v.vehicle_id}
-                    onClick={() => onNavigate('vehicle-detail', v.vehicle_id)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px',
-                      borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer',
-                      background: rank <= 3 ? 'rgba(249,115,22,0.04)' : 'transparent',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    {/* Rank number */}
-                    <div style={{
-                      fontFamily: 'var(--font-display)', fontSize: rank <= 3 ? '22px' : '18px', fontWeight: 700,
-                      color: rank === 1 ? '#f59e0b' : rank === 2 ? '#94a3b8' : rank === 3 ? '#cd7f32' : 'var(--muted)',
-                      minWidth: '28px', textAlign: 'center',
-                    }}>
-                      {rank}
-                    </div>
-
-                    {/* Vehicle thumbnail */}
-                    {imgUrl ? (
-                      <img
-                        src={imgUrl}
-                        alt={vehicleName}
-                        style={{ width: '56px', height: '38px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}
-                      />
-                    ) : (
-                      <div style={{ width: '56px', height: '38px', borderRadius: '4px', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <Car className="w-4 h-4 text-tertiary" />
-                      </div>
-                    )}
-
-                    {/* Vehicle info + badges */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {vehicleName}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
-                        {v.plate_number && (
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.08em' }}>
-                            {v.plate_state ? `${v.plate_state} ` : ''}{v.plate_number}
-                          </span>
-                        )}
-                        {v.top_badges.map((badge: any) => {
-                          const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Gold;
-                          return (
-                            <div key={badge.badge_id} style={{
-                              display: 'inline-flex', alignItems: 'center',
-                              background: colors.bg, border: `1px solid ${colors.border}`,
-                              borderRadius: 4, padding: '2px 6px',
-                            }}>
-                              <span style={{
-                                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 7, fontWeight: 700,
-                                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
-                              }}>
-                                {badge.badge_id}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* RP + delta */}
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 600, color: 'var(--white)', fontVariantNumeric: 'tabular-nums' }}>
-                        {v.reputation_score.toLocaleString()}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 600, color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                        {v.rank_delta !== null ? (v.rank_delta > 0 ? `+${v.rank_delta}` : `${v.rank_delta}`) : 'RP'}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-          </div>
-        )}
-
-        {/* Quests Tab */}
-        {activeTab === 'quests' && (
-          <div className="px-4">
-            <div className="bg-[var(--s1)] border border-[var(--border2)] rounded-xl p-8 text-center">
-              <Zap className="w-12 h-12 text-tertiary mx-auto mb-4" />
-              <h3 className="font-heading text-xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>Quests Coming Soon</h3>
-              <p className="text-sm text-secondary">Complete challenges to earn exclusive rewards</p>
-            </div>
+        {/* ── EMPTY STATE ── */}
+        {!loading && ranked.length === 0 && (
+          <div style={{ padding: '64px 24px', textAlign: 'center' as const }}>
+            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: C.white, marginBottom: 8 }}>No Vehicles Ranked Yet</p>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.dim }}>Spot vehicles to start building the leaderboard.</p>
           </div>
         )}
 

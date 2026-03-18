@@ -17,6 +17,7 @@ interface VinClaimModalProps {
   };
   onClose: () => void;
   onSuccess: () => void;
+  onViewVehicle?: (vehicleId: string) => void;
 }
 
 type Step = 'enter' | 'review' | 'done';
@@ -26,6 +27,7 @@ export function VinClaimModal({
   vehicleInfo,
   onClose,
   onSuccess,
+  onViewVehicle,
 }: VinClaimModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -95,9 +97,7 @@ export function VinClaimModal({
 
       showToast('Your ride is now verified!', 'success');
       setStep('done');
-      setTimeout(() => {
-        onSuccess();
-      }, 2200);
+      onSuccess();
     } catch (err: any) {
       showToast(err.message || 'Claim failed', 'error');
     } finally {
@@ -312,6 +312,16 @@ export function VinClaimModal({
                   Your plate is now VIN-verified. Factory specs have been saved.
                 </p>
               </div>
+
+              {onViewVehicle && (
+                <button
+                  onClick={() => { onClose(); onViewVehicle(vehicleId); }}
+                  className="w-full py-3.5 rounded-xl text-[11px] font-semibold uppercase tracking-[2px] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  style={{ background: 'var(--orange)', color: '#fff', marginTop: 8 }}
+                >
+                  View Vehicle Profile
+                </button>
+              )}
             </div>
           </div>
         )}

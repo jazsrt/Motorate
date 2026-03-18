@@ -743,6 +743,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           onLeaveReview={handleSpotAndReview}
           onBack={handleBack}
           onViewOwnerProfile={(userId) => onNavigate('user-profile', userId)}
+          onViewVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
         />
       )}
 

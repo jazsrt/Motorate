@@ -51,6 +51,7 @@ interface PlateFoundClaimedProps {
   onLeaveReview: () => void;
   onBack: () => void;
   onViewOwnerProfile?: (userId: string) => void;
+  onViewVehicle?: (vehicleId: string) => void;
 }
 
 export function PlateFoundClaimed({
@@ -60,6 +61,7 @@ export function PlateFoundClaimed({
   onLeaveReview,
   onBack,
   onViewOwnerProfile,
+  onViewVehicle,
 }: PlateFoundClaimedProps) {
   const [ratings, setRatings] = useState<FullRatings | null>(null);
   const [topStickers, setTopStickers] = useState<TopSticker[]>([]);
@@ -264,20 +266,31 @@ export function PlateFoundClaimed({
               </div>
             )}
 
-            <div className={`grid grid-cols-2 gap-3 transition-all duration-500 ${revealStep >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-              <button
-                onClick={onBack}
-                className="py-3.5 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95"
-              >
-                Back
-              </button>
-              <button
-                onClick={onLeaveReview}
-                className="py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 text-white"
-                style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
-              >
-                Spot This Plate
-              </button>
+            <div className={`space-y-3 transition-all duration-500 ${revealStep >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+              {onViewVehicle && (
+                <button
+                  onClick={() => onViewVehicle(vehicle.id)}
+                  className="w-full py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 text-white"
+                  style={{ background: '#F97316' }}
+                >
+                  View Vehicle Profile
+                </button>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={onBack}
+                  className="py-3.5 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={onLeaveReview}
+                  className="py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 text-white"
+                  style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+                >
+                  Spot This Plate
+                </button>
+              </div>
             </div>
 
             {ratings && ratings.spot_count > 0 && (

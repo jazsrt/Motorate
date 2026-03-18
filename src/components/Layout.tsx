@@ -10,7 +10,7 @@ import { LiveStatsBar } from './LiveStatsBar';
 
 interface LayoutProps {
   children: ReactNode;
-  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications';
+  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications' | 'search' | 'badges';
   onNavigate: (page: string, data?: any) => void;
 }
 
@@ -111,8 +111,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'rankings' as const, icon: Activity, label: 'Rank' },
   ];
   const navRight = [
+    { id: 'search' as const, icon: Search, label: 'Search' },
     { id: 'my-garage' as const, icon: Home, label: 'Garage' },
-    { id: 'badges' as const, icon: Award, label: 'Badges' },
   ];
 
   const hasSearchResults = searchResults.users.length > 0 || searchResults.vehicles.length > 0;

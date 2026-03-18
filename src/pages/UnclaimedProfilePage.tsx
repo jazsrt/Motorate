@@ -851,6 +851,10 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
             setShowClaimModal(false);
             loadPlateData();
           }}
+          onViewVehicle={(vid) => {
+            setShowClaimModal(false);
+            onNavigate('vehicle-detail', vid);
+          }}
         />
       )}
 

@@ -98,8 +98,8 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('handle, full_name, avatar_url, reputation_tier').eq('id', user.id).maybeSingle()
-      .then(({ data }) => { if (data) setUserProfile(data); });
+    supabase.from('profiles').select('handle, full_name, avatar_url, tier').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data) setUserProfile({ ...data, reputation_tier: data.tier }); });
     supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', user.id).eq('status', 'accepted')
       .then(({ count }) => { if (count !== null) setFollowerCount(count); });
     supabase.from('user_badges').select('id', { count: 'exact', head: true }).eq('user_id', user.id)

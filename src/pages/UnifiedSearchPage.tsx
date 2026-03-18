@@ -50,6 +50,7 @@ interface SearchPageProps {
   onNavigate: (page: any, data?: any) => void;
   onViewVehicle?: (vehicleId: string) => void;
   initialQuery?: string;
+  onClose?: () => void;
 }
 
 const US_STATES = [
@@ -84,7 +85,7 @@ const US_STATES = [
 type SearchMode = 'general' | 'plate';
 type PlateViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading';
 
-export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQuery = '' }: SearchPageProps) {
+export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQuery = '', onClose }: SearchPageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [searchMode, setSearchMode] = useState<SearchMode>('general');
