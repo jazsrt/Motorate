@@ -54,20 +54,10 @@ export async function unhideReview(reviewId: string): Promise<HideReviewResult> 
 
 /**
  * Get moderation history for a vehicle
+ * review_moderation_log table removed — returns empty array until reimplemented
  */
-export async function getModerationHistory(vehicleId: string) {
-  const { data, error } = await supabase
-    .from('review_moderation_log')
-    .select(`
-      *,
-      review:reviews(id, review_text),
-      moderator:profiles(handle)
-    `)
-    .eq('vehicle_id', vehicleId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+export async function getModerationHistory(_vehicleId: string) {
+  return [];
 }
 
 /**

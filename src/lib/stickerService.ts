@@ -103,9 +103,7 @@ export async function giveSticker(
     .eq('id', vehicleId)
     .single();
 
-  if (!vehicle?.owner_id) {
-    return { success: false, message: 'Vehicle has no owner' };
-  }
+  // owner_id may be null for unclaimed vehicles — stickers still flow
 
   const { error } = await supabase
     .from('vehicle_stickers')
@@ -155,14 +153,17 @@ export async function giveSticker(
 
   const points = sticker.category === 'Positive' ? 2 : -3;
 
-  await calculateAndAwardReputation({
-    userId: vehicle.owner_id,
-    action,
-    referenceType: 'sticker',
-    referenceId: vehicleId
-  });
-
-  await checkStickerBadge(vehicleId, stickerId, vehicle.owner_id);
+  if (vehicle?.owner_id) {
+    await calculateAndAwardReputation({
+      userId: vehicle.owner_id,
+      action,
+      referenceType: 'sticker',
+      referenceId: vehicleId
+    });
+    await checkStickerBadge(vehicleId, stickerId, vehicle.owner_id);
+  } else {
+    await checkStickerBadge(vehicleId, stickerId, '');
+  }
 
   return {
     success: true,

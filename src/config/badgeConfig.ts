@@ -19,19 +19,19 @@ export const BADGE_TIER_COLORS = {
     gradient: 'from-gray-300 to-gray-500'
   },
   Gold: {
-    hex: '#FFD700',
-    border: '#FFD700',
-    bg: 'rgba(255, 215, 0, 0.1)',
-    text: '#FFD700',
-    glow: '0 0 10px rgba(255, 215, 0, 0.5)',
+    hex: '#f0a030',
+    border: '#f0a030',
+    bg: 'rgba(240, 160, 48, 0.12)',
+    text: '#f0a030',
+    glow: '0 0 10px rgba(240, 160, 48, 0.4)',
     gradient: 'from-yellow-400 to-yellow-600'
   },
   Platinum: {
-    hex: '#E5E4E2',
-    border: '#E5E4E2',
-    bg: 'rgba(229, 228, 226, 0.1)',
-    text: '#E5E4E2',
-    glow: '0 0 20px rgba(229, 228, 226, 0.8)',
+    hex: '#f5cc55',
+    border: '#f5cc55',
+    bg: 'rgba(240, 160, 48, 0.18)',
+    text: '#f5cc55',
+    glow: '0 0 20px rgba(245, 204, 85, 0.6)',
     gradient: 'from-slate-200 to-slate-400'
   }
 } as const;
