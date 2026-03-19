@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
+import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { ArrowLeft, Car, Award, Star, Instagram, Music, Eye, MessageCircle, Calendar, Lock, Flag, Image, ImageIcon, MapPin } from 'lucide-react';
@@ -131,9 +132,10 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const loadVehicles = async () => {
     setLoadingVehicles(true);
     try {
+      // PLATE: hidden — public surface
       const { data } = await supabase
         .from('vehicles')
-        .select('id, plate_hash, city, state, year, make, model, trim, color, stock_image_url, profile_image_url, reputation_score, spot_count, spots_count, is_claimed, is_private, verification_tier, owner_id, created_at, updated_at')
+        .select(VEHICLE_PUBLIC_COLUMNS)
         .eq('owner_id', userId)
         .order('created_at', { ascending: false });
 

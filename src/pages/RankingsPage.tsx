@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
 
@@ -36,9 +37,10 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
   const loadRankings = async () => {
     setLoading(true);
+    // PLATE: hidden — public surface
     const { data } = await supabase
       .from('vehicles')
-      .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url, owner_id, reputation_score, spots_count')
+      .select(VEHICLE_PUBLIC_COLUMNS)
       .order('reputation_score', { ascending: false })
       .limit(20);
     if (data) setRanked(data);
@@ -196,7 +198,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   {[v.make, v.model].filter(Boolean).join(' ') || '\u2014'}
                 </div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim, marginTop: 2 }}>
-                  {[v.year, v.plate_state, v.plate_number].filter(Boolean).join(' \u00B7 ')}
+                  {[v.year, v.state].filter(Boolean).join(' \u00B7 ')}
                 </div>
               </div>
 

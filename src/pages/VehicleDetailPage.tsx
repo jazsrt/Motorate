@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
+import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { ModerationStatus } from '../components/ModerationStatus';
@@ -253,7 +254,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const loadVehicleData = async () => {
     const { data: vehicleData } = await supabase
       .from('vehicles')
-      .select('id, plate_hash, plate_number, plate_state, city, state, year, make, model, trim, color, stock_image_url, profile_image_url, reputation_score, spot_count, spots_count, is_claimed, is_private, verification_tier, owner_id, owner_proof_url, owners_manual_url, claimed_at, created_at, updated_at, profiles!owner_id(id, handle, avatar_url)')
+      // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
+      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', owner_proof_url, owners_manual_url, claimed_at, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 
@@ -1497,7 +1499,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: 16, color: C.accent }}>
                       {(() => {
                         const totalMods = modifications.length;
-                        const thresholds = BADGE_TIER_THRESHOLDS.Modification;
+                        const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
                         if (totalMods >= thresholds.Platinum) return 'Platinum Build';
                         if (totalMods >= thresholds.Gold) return 'Gold Build';
                         if (totalMods >= thresholds.Silver) return 'Silver Build';
@@ -1508,7 +1510,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                     <p style={{ fontSize: 10, color: C.steel, fontFamily: "'Barlow', sans-serif" }}>
                       {(() => {
                         const totalMods = modifications.length;
-                        const thresholds = BADGE_TIER_THRESHOLDS.Modification;
+                        const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
                         if (totalMods >= thresholds.Platinum) return 'Max level reached!';
                         if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} mods to Platinum`;
                         if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} mods to Gold`;
@@ -1523,7 +1525,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 </div>
                 {(() => {
                   const totalMods = modifications.length;
-                  const thresholds = BADGE_TIER_THRESHOLDS.Modification;
+                  const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
                   let nextTier = thresholds.Bronze;
                   if (totalMods >= thresholds.Gold) nextTier = thresholds.Platinum;
                   else if (totalMods >= thresholds.Silver) nextTier = thresholds.Gold;

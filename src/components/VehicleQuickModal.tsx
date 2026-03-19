@@ -50,11 +50,12 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
 
   async function loadVehicle() {
     try {
+      // PLATE: hidden — public surface
       const { data } = await supabase
         .from('vehicles')
         .select(`
           id, make, model, year, color, stock_image_url,
-          plate_number, plate_state, owner_id, is_claimed, verification_tier,
+          owner_id, is_claimed, verification_tier,
           owner:profiles!owner_id(handle, avatar_url)
         `)
         .eq('id', vehicleId)

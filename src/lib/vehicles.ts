@@ -27,6 +27,32 @@ export const VEHICLE_PUBLIC_COLUMNS = `
   updated_at
 `.replace(/\s+/g, ' ').trim();
 
+/** Plate-visible columns — for surfaces where plate display is intentional (search confirmation, spot flow, vehicle detail) */
+export const VEHICLE_PLATE_VISIBLE_COLUMNS = `
+  id,
+  plate_hash,
+  plate_number,
+  plate_state,
+  city,
+  state,
+  year,
+  make,
+  model,
+  trim,
+  color,
+  stock_image_url,
+  profile_image_url,
+  reputation_score,
+  spot_count,
+  spots_count,
+  is_claimed,
+  is_private,
+  verification_tier,
+  owner_id,
+  created_at,
+  updated_at
+`.replace(/\s+/g, ' ').trim();
+
 /** Owner-only columns — includes plate info but never VIN */
 export const VEHICLE_OWNER_COLUMNS = `
   id,

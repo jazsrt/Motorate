@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { VEHICLE_PUBLIC_COLUMNS, VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { Search, User, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { FollowButton } from '../components/FollowButton';
@@ -188,9 +189,10 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       // Convert spaces to & for AND search (e.g., "dodge charger" becomes "dodge & charger")
       const ftsQuery = searchTerm.replace(/\s+/g, ' & ');
 
+      // PLATE: hidden — public surface
       const vehiclesResult = await supabase
         .from('vehicles')
-        .select('id, make, model, year, color, trim, stock_image_url, owner_id, is_claimed, verification_tier, plate_hash, plate_state, plate_number')
+        .select(VEHICLE_PUBLIC_COLUMNS)
         .textSearch('fts', ftsQuery)
         .limit(10);
 
@@ -224,15 +226,10 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       const hash = await hashPlate(code, searchPlate.trim().toUpperCase());
       setPlateHash(hash);
 
+      // PLATE: visible — plate search confirmation
       const { data: vehicleData, error: vehicleError } = await supabase
         .from('vehicles')
-        .select(`
-          id, make, model, year, color, trim, stock_image_url,
-          is_claimed, verification_tier, owner_id, plate_state, plate_number,
-          created_by_user_id,
-          owner:profiles!vehicles_owner_id_fkey(handle, avatar_url),
-          creator:profiles!vehicles_created_by_user_id_fkey(handle, avatar_url)
-        `)
+        .select(VEHICLE_PLATE_VISIBLE_COLUMNS + `, created_by_user_id, owner:profiles!vehicles_owner_id_fkey(handle, avatar_url), creator:profiles!vehicles_created_by_user_id_fkey(handle, avatar_url)`)
         .eq('plate_hash', hash)
         .maybeSingle();
 

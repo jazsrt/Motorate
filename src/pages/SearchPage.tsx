@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
 import { Search, User, Car, Camera, Target, Upload, X, Info, Award, Star, Hash } from 'lucide-react';
 import { Layout } from '../components/Layout';
@@ -208,9 +209,10 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
 
     try {
       const plateHash = await hashPlate(plateState, searchTerm);
+      // PLATE: visible — search result confirmation
       const { data: vehicle, error } = await supabase
         .from('vehicles')
-        .select('id, plate_hash, year, make, model, trim, color, stock_image_url, profile_image_url, reputation_score, is_claimed, verification_tier, owner_id, plate_state, plate_number')
+        .select(VEHICLE_PLATE_VISIBLE_COLUMNS)
         .eq('plate_hash', plateHash)
         .maybeSingle();
 

@@ -80,6 +80,7 @@ export function PlateSearch({ onSearch, onCameraScan, onNavigateToVehicle, initi
 
   async function loadRecentSpots() {
     try {
+      // PLATE: visible — plate search autocomplete
       const { data } = await supabase
         .from('vehicles')
         .select('id, year, make, model, plate_number, plate_state')

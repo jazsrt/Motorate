@@ -48,7 +48,8 @@ export function PublicProfileModal({ userId, onClose, onNavigate }: PublicProfil
       const [profileRes, badgesRes, vehiclesRes, followersRes, spotsRes, reviewsRes] = await Promise.all([
         supabase.from('profiles').select('id, handle, avatar_url, bio, location, reputation_score').eq('id', userId).maybeSingle(),
         supabase.from('user_badges').select('*, badge:badges(id, name, icon_name, category)').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
-        supabase.from('vehicles').select('id, make, model, year, plate_number, plate_state, verification_tier').eq('owner_id', userId).order('created_at', { ascending: false }).limit(3),
+        // PLATE: hidden — public surface
+        supabase.from('vehicles').select('id, make, model, year, verification_tier').eq('owner_id', userId).order('created_at', { ascending: false }).limit(3),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId).eq('status', 'accepted'),
         supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('post_type', 'spot'),
         supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('post_type', 'review'),

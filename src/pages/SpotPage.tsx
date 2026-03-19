@@ -7,6 +7,7 @@ import { ArrowLeft, Camera, Upload, Keyboard, Car, Zap } from 'lucide-react';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { supabase } from '../lib/supabase';
+import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
 import { type VerificationTier } from '../components/TierBadge';
 import { PlateSearch } from '../components/PlateSearch';
@@ -250,15 +251,10 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       const hash = await hashPlate(code, searchPlate.trim().toUpperCase());
       setPlateHash(hash);
 
+      // PLATE: visible — spot flow confirmation
       const { data: vehicleData, error: vehicleError } = await supabase
         .from('vehicles')
-        .select(`
-          id, make, model, year, color, trim, stock_image_url,
-          is_claimed, verification_tier, owner_id, plate_state, plate_number,
-          created_by_user_id,
-          owner:profiles!vehicles_owner_id_fkey(handle, avatar_url),
-          creator:profiles!vehicles_created_by_user_id_fkey(handle, avatar_url)
-        `)
+        .select(VEHICLE_PLATE_VISIBLE_COLUMNS + `, created_by_user_id, owner:profiles!vehicles_owner_id_fkey(handle, avatar_url), creator:profiles!vehicles_created_by_user_id_fkey(handle, avatar_url)`)
         .eq('plate_hash', hash)
         .maybeSingle();
 
