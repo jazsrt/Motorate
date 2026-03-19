@@ -14,6 +14,7 @@ import { PlateFoundClaimed } from '../components/PlateFoundClaimed';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { CameraModal } from '../components/spot/CameraModal';
 import type { SpotWizardData } from '../types/spot';
+import { lookupPlate } from '../lib/plateToVinApi';
 import { type VerificationTier } from '../components/TierBadge';
 
 interface Profile {
@@ -243,7 +244,26 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
         setPlateVehicle(vehicleData as Vehicle);
         setPlateViewState(vehicleData.is_claimed ? 'claimed' : 'unclaimed');
       } else {
-        setPlateViewState('not-found');
+        // Not in DB — try Auto.dev plate lookup
+        const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code);
+
+        if (apiResult && apiResult.make && apiResult.model) {
+          // Auto.dev returned vehicle data — navigate to spot review with pre-filled data
+          const wizardData: SpotWizardData = {
+            plateState: code,
+            plateNumber: searchPlate.trim().toUpperCase(),
+            plateHash: hash,
+            make: apiResult.make,
+            model: apiResult.model,
+            color: apiResult.color || '',
+            year: apiResult.year || undefined,
+            trim: apiResult.trim || undefined,
+          };
+          onNavigate('quick-spot-review', { wizardData });
+        } else {
+          // Auto.dev returned nothing — show not-found for manual entry
+          setPlateViewState('not-found');
+        }
       }
     } catch (err: any) {
       showToast('Failed to search. Please try again.', 'error');
