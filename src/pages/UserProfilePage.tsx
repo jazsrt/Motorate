@@ -133,7 +133,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     try {
       const { data } = await supabase
         .from('vehicles')
-        .select('*')
+        .select('id, plate_hash, city, state, year, make, model, trim, color, stock_image_url, profile_image_url, reputation_score, spot_count, spots_count, is_claimed, is_private, verification_tier, owner_id, created_at, updated_at')
         .eq('owner_id', userId)
         .order('created_at', { ascending: false });
 

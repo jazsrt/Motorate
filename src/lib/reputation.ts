@@ -360,7 +360,7 @@ async function getUserActionCounts(userId: string) {
       .eq('author_id', userId),
     supabase
       .from('vehicles')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('owner_id', userId),
     supabase
       .from('post_comments')
@@ -565,12 +565,17 @@ export function getReputationLevel(score: number): {
   progress: number;
 } {
   const levels = [
-    { level: 'Rookie', min: 0, max: 99 },
-    { level: 'Regular', min: 100, max: 249 },
-    { level: 'Enthusiast', min: 250, max: 499 },
-    { level: 'Expert', min: 500, max: 999 },
-    { level: 'Master', min: 1000, max: 2499 },
-    { level: 'Legend', min: 2500, max: Infinity }
+    { level: 'Permit',        min: 0,     max: 24 },
+    { level: 'Learner',       min: 25,    max: 99 },
+    { level: 'Licensed',      min: 100,   max: 249 },
+    { level: 'Registered',    min: 250,   max: 499 },
+    { level: 'Certified',     min: 500,   max: 999 },
+    { level: 'Endorsed',      min: 1000,  max: 2499 },
+    { level: 'Authority',     min: 2500,  max: 4999 },
+    { level: 'Distinguished', min: 5000,  max: 9999 },
+    { level: 'Elite',         min: 10000, max: 24999 },
+    { level: 'Sovereign',     min: 25000, max: 49999 },
+    { level: 'Iconic',        min: 50000, max: Infinity },
   ];
 
   const currentLevel = levels.find(l => score >= l.min && score <= l.max) || levels[0];

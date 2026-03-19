@@ -3,9 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Reputation: Missing Supabase environment variables!');
+  console.error('❌ Missing Supabase environment variables!');
   throw new Error('Missing Supabase environment variables');
 }
 
@@ -17,23 +16,42 @@ export type Database = {
       profiles: {
         Row: {
           id: string;
-          username: string | null;
+          handle: string | null;
+          full_name: string | null;
           avatar_url: string | null;
+          bio: string | null;
           reputation_score: number;
+          tier: string | null;
+          role: string | null;
+          onboarding_completed: boolean;
+          is_private: boolean;
+          notification_preferences: Record<string, any> | null;
           created_at: string;
         };
         Insert: {
           id: string;
-          username?: string | null;
+          handle?: string | null;
+          full_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
           reputation_score?: number;
+          tier?: string | null;
+          role?: string | null;
+          onboarding_completed?: boolean;
+          is_private?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
-          username?: string | null;
+          handle?: string | null;
+          full_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
           reputation_score?: number;
+          tier?: string | null;
+          role?: string | null;
+          onboarding_completed?: boolean;
+          is_private?: boolean;
           created_at?: string;
         };
       };
@@ -42,59 +60,51 @@ export type Database = {
           id: string;
           owner_id: string | null;
           plate_hash: string;
+          plate_number: string | null;
+          plate_state: string | null;
           make: string | null;
           model: string | null;
           year: number | null;
           color: string | null;
+          trim: string | null;
           stock_image_url: string | null;
+          profile_image_url: string | null;
           is_claimed: boolean;
           claimed_at: string | null;
-          created_at: string;
+          verification_tier: string | null;
+          reputation_score: number;
+          spots_count: number;
           vin: string | null;
+          vin_raw_data: Record<string, any> | null;
           vin_year: number | null;
           vin_make: string | null;
           vin_model: string | null;
           vin_trim: string | null;
           vin_body_class: string | null;
-          vin_drive_type: string | null;
           vin_fuel_type: string | null;
           vin_engine_cylinders: string | null;
-          vin_engine_displacement: string | null;
-          vin_horsepower: string | null;
-          vin_transmission: string | null;
-          vin_doors: string | null;
-          vin_plant_country: string | null;
           vin_decoded_at: string | null;
-          vin_raw_data: Record<string, any> | null;
+          created_at: string;
         };
         Insert: {
           id?: string;
           owner_id?: string | null;
           plate_hash: string;
+          plate_number?: string | null;
+          plate_state?: string | null;
           make?: string | null;
           model?: string | null;
           year?: number | null;
           color?: string | null;
           stock_image_url?: string | null;
+          profile_image_url?: string | null;
           is_claimed?: boolean;
           claimed_at?: string | null;
-          created_at?: string;
+          verification_tier?: string | null;
+          reputation_score?: number;
+          spots_count?: number;
           vin?: string | null;
-          vin_year?: number | null;
-          vin_make?: string | null;
-          vin_model?: string | null;
-          vin_trim?: string | null;
-          vin_body_class?: string | null;
-          vin_drive_type?: string | null;
-          vin_fuel_type?: string | null;
-          vin_engine_cylinders?: string | null;
-          vin_engine_displacement?: string | null;
-          vin_horsepower?: string | null;
-          vin_transmission?: string | null;
-          vin_doors?: string | null;
-          vin_plant_country?: string | null;
-          vin_decoded_at?: string | null;
-          vin_raw_data?: Record<string, any> | null;
+          created_at?: string;
         };
         Update: {
           id?: string;
@@ -105,120 +115,227 @@ export type Database = {
           year?: number | null;
           color?: string | null;
           stock_image_url?: string | null;
+          profile_image_url?: string | null;
           is_claimed?: boolean;
           claimed_at?: string | null;
-          created_at?: string;
+          verification_tier?: string | null;
+          reputation_score?: number;
+          spots_count?: number;
           vin?: string | null;
-          vin_year?: number | null;
-          vin_make?: string | null;
-          vin_model?: string | null;
-          vin_trim?: string | null;
-          vin_body_class?: string | null;
-          vin_drive_type?: string | null;
-          vin_fuel_type?: string | null;
-          vin_engine_cylinders?: string | null;
-          vin_engine_displacement?: string | null;
-          vin_horsepower?: string | null;
-          vin_transmission?: string | null;
-          vin_doors?: string | null;
-          vin_plant_country?: string | null;
-          vin_decoded_at?: string | null;
-          vin_raw_data?: Record<string, any> | null;
+          created_at?: string;
         };
       };
-      reviews: {
+      posts: {
+        Row: {
+          id: string;
+          author_id: string;
+          vehicle_id: string | null;
+          post_type: string | null;
+          spot_type: string | null;
+          sentiment: string | null;
+          caption: string | null;
+          image_url: string | null;
+          video_url: string | null;
+          content_type: string | null;
+          location_label: string | null;
+          privacy_level: string;
+          moderation_status: string;
+          rating_look: number | null;
+          rating_sound: number | null;
+          rating_condition: number | null;
+          rating_driver: number | null;
+          rating_driving: number | null;
+          rating_vehicle: number | null;
+          view_count: number;
+          comment_count: number;
+          heat_score: number | null;
+          created_at: string;
+          published_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          author_id: string;
+          vehicle_id?: string | null;
+          post_type?: string | null;
+          caption?: string | null;
+          image_url?: string | null;
+          video_url?: string | null;
+          location_label?: string | null;
+          privacy_level?: string;
+          moderation_status?: string;
+          created_at?: string;
+        };
+        Update: {
+          caption?: string | null;
+          moderation_status?: string;
+          privacy_level?: string;
+          vehicle_id?: string | null;
+        };
+      };
+      vehicle_badges: {
+        Row: {
+          vehicle_id: string;
+          badge_id: string;
+          tier: string;
+          sticker_count: number;
+          earned_at: string;
+        };
+        Insert: {
+          vehicle_id: string;
+          badge_id: string;
+          tier: string;
+          sticker_count?: number;
+          earned_at?: string;
+        };
+        Update: {
+          tier?: string;
+          sticker_count?: number;
+        };
+      };
+      vehicle_stickers: {
         Row: {
           id: string;
           vehicle_id: string;
-          author_id: string;
-          text: string | null;
-          location_label: string | null;
-          image_url: string | null;
-          is_hidden_by_owner: boolean;
+          sticker_id: string;
+          given_by: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           vehicle_id: string;
-          author_id: string;
-          text?: string | null;
-          location_label?: string | null;
-          image_url?: string | null;
-          is_hidden_by_owner?: boolean;
-          created_at?: string;
+          sticker_id: string;
+          given_by: string;
         };
-        Update: {
-          id?: string;
-          vehicle_id?: string;
-          author_id?: string;
-          text?: string | null;
-          location_label?: string | null;
-          image_url?: string | null;
-          is_hidden_by_owner?: boolean;
-          created_at?: string;
-        };
+        Update: Record<string, never>;
       };
-      badges: {
+      sticker_catalog: {
         Row: {
           id: string;
           name: string;
-          icon: string;
-          type: 'good' | 'bad' | 'landmark' | null;
-          monthly_limit: number;
+          icon_name: string | null;
+          sentiment: string;
           created_at: string;
         };
+        Insert: {
+          id?: string;
+          name: string;
+          icon_name?: string | null;
+          sentiment: string;
+        };
+        Update: {
+          name?: string;
+          sentiment?: string;
+        };
       };
-      user_inventory: {
+      follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          status: string;
+          muted: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          status?: string;
+          muted?: boolean;
+        };
+        Update: {
+          status?: string;
+          muted?: boolean;
+        };
+      };
+      vehicle_follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          vehicle_id: string;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          follower_id: string;
+          vehicle_id: string;
+          status?: string;
+        };
+        Update: {
+          status?: string;
+        };
+      };
+      notifications: {
         Row: {
           id: string;
           user_id: string;
-          badge_id: string;
-          count_remaining: number;
-          last_reset: string | null;
+          type: string;
+          title: string;
+          message: string;
+          link_type: string | null;
+          link_id: string | null;
+          is_read: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          badge_id: string;
-          count_remaining?: number;
-          last_reset?: string | null;
-          created_at?: string;
+          type: string;
+          title: string;
+          message: string;
+          link_type?: string | null;
+          link_id?: string | null;
+          is_read?: boolean;
         };
         Update: {
-          id?: string;
-          user_id?: string;
-          badge_id?: string;
-          count_remaining?: number;
-          last_reset?: string | null;
-          created_at?: string;
+          is_read?: boolean;
         };
       };
-      modifications: {
+      reputation_scores: {
         Row: {
           id: string;
-          vehicle_id: string;
-          category: string | null;
-          part_name: string;
-          is_verified: boolean;
+          user_id: string;
+          total_score: number;
+          level: number;
+          rank: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          total_score?: number;
+          level?: number;
+        };
+        Update: {
+          total_score?: number;
+          level?: number;
+          rank?: number | null;
+          updated_at?: string;
+        };
+      };
+      reputation_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          points: number;
+          reference_type: string | null;
+          reference_id: string | null;
+          description: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          vehicle_id: string;
-          category?: string | null;
-          part_name: string;
-          is_verified?: boolean;
-          created_at?: string;
+          user_id: string;
+          action: string;
+          points: number;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          description?: string | null;
         };
-        Update: {
-          id?: string;
-          vehicle_id?: string;
-          category?: string | null;
-          part_name?: string;
-          is_verified?: boolean;
-          created_at?: string;
-        };
+        Update: Record<string, never>;
       };
     };
   };

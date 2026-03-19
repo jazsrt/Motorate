@@ -171,7 +171,7 @@ export async function loadFeedCursor(
       vehicles:vehicle_id(id, year, make, model, color, stock_image_url, profile_image_url)
     `)
     .order('created_at', { ascending: false })
-    .limit(limit + 100);
+    .limit(limit + 20);
 
   if (cursor?.timestamp) {
     query = query.lt('created_at', cursor.timestamp);
@@ -191,14 +191,10 @@ export async function loadFeedCursor(
   const mutedUserIds = await getMutedUserIds(userId);
 
   const filteredPosts = allPosts.filter((post: any) => {
-    const isOwnPost = post.author_id === userId;
-    const isApproved = post.moderation_status === 'approved';
     const isPublished = !post.published_at || post.published_at <= now;
     const isNotBlocked = !blockedUserIds.has(post.author_id);
     const isNotMuted = !mutedUserIds.has(post.author_id);
-
-    // Show if: (approved AND published) OR own post (regardless of status), AND not blocked/muted
-    return ((isApproved && isPublished) || isOwnPost) && isNotBlocked && isNotMuted;
+    return isPublished && isNotBlocked && isNotMuted;
   });
 
 

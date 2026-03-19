@@ -13,7 +13,7 @@ import { PushNotificationPrompt } from './components/PushNotificationPrompt';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingScreen } from './components/ui/LoadingScreen';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
-import { OnboardingFlow } from './components/OnboardingFlow';
+
 import { CompletedReviewModal } from './components/CompletedReviewModal';
 import { supabase } from './lib/supabase';
 import { useBadgeChecker } from './hooks/useBadgeChecker';
@@ -108,7 +108,7 @@ function AppContent() {
   const { user, loading, profile } = useAuth();
   const { unlockedBadge, dismissBadge } = useBadges();
   useBadgeChecker();
-  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const [currentPage, setCurrentPage] = useState<Page>('feed');
   const [authView, setAuthView] = useState<AuthView>('login');
   const [claimingVehicleId, setClaimingVehicleId] = useState<string | undefined>(undefined);
@@ -173,23 +173,7 @@ function AppContent() {
     };
   }, [user]);
 
-  useEffect(() => {
-    async function checkOnboarding() {
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .maybeSingle();
 
-        if (data && !data.onboarding_completed) {
-          setShowOnboarding(true);
-        }
-      }
-    }
-
-    checkOnboarding();
-  }, [user]);
 
 
   const handleViewVehicle = (vehicleId: string) => {
@@ -359,21 +343,7 @@ function AppContent() {
     );
   }
 
-  // Check if onboarding should be shown
-  if (showOnboarding && user) {
-    return (
-      <OnboardingFlow
-        onComplete={async () => {
-          setShowOnboarding(false);
-          await supabase
-            .from('profiles')
-            .update({ onboarding_completed: true })
-            .eq('id', user.id);
-          window.location.hash = 'scan';
-        }}
-      />
-    );
-  }
+
 
   let pageContent;
 

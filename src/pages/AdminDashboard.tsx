@@ -787,11 +787,11 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     // Feature Usage
     const { count: totalVehicles } = await supabase
       .from('vehicles')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
 
     const { count: vehicles7d } = await supabase
       .from('vehicles')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo);
 
     const { count: totalBadgesEarned } = await supabase

@@ -58,12 +58,13 @@ export async function giveSticker(
   }
 
   // Check sticker limits: 5 positive, 3 negative per vehicle
+  // Join against sticker_catalog (sentiment) since that's the live table
   const { data: userStickers } = await supabase
     .from('vehicle_stickers')
     .select(`
       sticker_id,
-      bumper_stickers (
-        category
+      sticker_catalog (
+        sentiment
       )
     `)
     .eq('vehicle_id', vehicleId)
@@ -74,15 +75,15 @@ export async function giveSticker(
     let negativeCount = 0;
 
     userStickers.forEach((item: any) => {
-      const category = item.bumper_stickers?.category;
-      if (category === 'Positive') {
+      const sentiment = item.sticker_catalog?.sentiment;
+      if (sentiment === 'positive' || sentiment === 'Positive') {
         positiveCount++;
-      } else if (category === 'Negative') {
+      } else if (sentiment === 'negative' || sentiment === 'Negative') {
         negativeCount++;
       }
     });
 
-    const isPositive = sticker.category === 'Positive';
+    const isPositive = sticker.sentiment === 'positive' || sticker.category === 'Positive';
     if (isPositive && positiveCount >= 5) {
       return {
         success: false,
@@ -186,16 +187,7 @@ async function checkStickerBadge(
     .eq('id', stickerId)
     .maybeSingle();
 
-  let stickerName = stickerDef?.name;
-  if (!stickerName) {
-    const { data: fallback } = await supabase
-      .from('bumper_stickers')
-      .select('name')
-      .eq('id', stickerId)
-      .maybeSingle();
-    stickerName = fallback?.name;
-  }
-
+  const stickerName = stickerDef?.name;
   if (!stickerName) return;
 
   // Count unique users who gave this specific sticker to this vehicle
@@ -273,11 +265,11 @@ export async function getVehicleStickers(vehicleId: string) {
       id,
       sticker_id,
       given_by,
-      bumper_stickers (
+      sticker_catalog (
         id,
         name,
         icon_name,
-        category
+        sentiment
       )
     `)
     .eq('vehicle_id', vehicleId);
@@ -288,14 +280,15 @@ export async function getVehicleStickers(vehicleId: string) {
 
   data.forEach((item: any) => {
     const stickerId = item.sticker_id;
-    const def = item.bumper_stickers;
+    const def = item.sticker_catalog;
+    if (!def) return;
 
     if (!stickerMap.has(stickerId)) {
       stickerMap.set(stickerId, {
         sticker_id: stickerId,
         name: def.name,
         icon: def.icon_name,
-        category: def.category,
+        sentiment: def.sentiment,
         uniqueUsers: new Set(),
         tier: null
       });
@@ -317,7 +310,7 @@ export async function getVehicleStickers(vehicleId: string) {
       sticker_id: sticker.sticker_id,
       name: sticker.name,
       icon: sticker.icon,
-      category: sticker.category,
+      sentiment: sticker.sentiment,
       count,
       tier
     };

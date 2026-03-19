@@ -20,6 +20,28 @@ export async function deleteAccount(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  // Delete uploaded storage files for this user
+  try {
+    const folders = [
+      `${user.id}/profiles`,
+      `${user.id}/vehicles`,
+      `${user.id}/posts`,
+      `${user.id}/reviews`,
+    ];
+    for (const folder of folders) {
+      const { data: files } = await supabase.storage
+        .from('motorate-images')
+        .list(folder);
+      if (files && files.length > 0) {
+        const paths = files.map((f: any) => `${folder}/${f.name}`);
+        await supabase.storage.from('motorate-images').remove(paths);
+      }
+    }
+  } catch (storageErr) {
+    console.error('Failed to clean up storage files:', storageErr);
+    // Non-fatal — proceed with DB deletion
+  }
+
   // Delete all user data via database function
   const { error: dbError } = await supabase.rpc('delete_user_account', {
     p_user_id: user.id,

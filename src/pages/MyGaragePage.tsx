@@ -132,7 +132,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     const vehicleIds = vehicles.map(v => v.id);
     supabase
       .from('vehicle_sticker_counts')
-      .select('vehicle_id, sticker_name, count')
+      .select('vehicle_id, tag_name, count')
       .in('vehicle_id', vehicleIds)
       .order('count', { ascending: false })
       .then(({ data }) => {
@@ -140,7 +140,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         const grouped: Record<string, { name: string; count: number }[]> = {};
         data.forEach((row: any) => {
           if (!grouped[row.vehicle_id]) grouped[row.vehicle_id] = [];
-          grouped[row.vehicle_id].push({ name: row.sticker_name, count: row.count });
+          grouped[row.vehicle_id].push({ name: row.tag_name, count: row.count });
         });
         setVehicleStickerCounts(grouped);
       });

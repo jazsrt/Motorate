@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.from('profiles').upsert({
           id: userId,
           handle: baseHandle,
-          onboarding_completed: true,
+          onboarding_completed: false,
           reputation_score: 0,
         }, { onConflict: 'id', ignoreDuplicates: true });
 
@@ -56,13 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', userId)
           .maybeSingle();
 
-        setProfile(newData ? { ...newData, onboarding_completed: true, reputation_score: newData.reputation_score ?? 0 } : null);
+        setProfile(newData ? { ...newData, reputation_score: newData.reputation_score ?? 0 } : null);
         return;
       }
 
       setProfile({
         ...data,
-        onboarding_completed: true,
+        onboarding_completed: data.onboarding_completed ?? false,
         reputation_score: data.reputation_score ?? 0,
       });
     } catch (err) {

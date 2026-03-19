@@ -97,8 +97,8 @@ export async function checkRateLimitServer(
     });
 
     if (error) {
-      console.error('Server rate limit check failed:', error);
-      return { allowed: checkRateLimitClient(userId, action, limit, windowMs), remaining: 0 };
+      console.error('Server rate limit check failed — denying by default:', error);
+      return { allowed: false, remaining: 0 };
     }
 
     return {
@@ -107,8 +107,8 @@ export async function checkRateLimitServer(
       resetAt: data.reset_at ? new Date(data.reset_at) : undefined
     };
   } catch (error) {
-    console.error('Rate limit error:', error);
-    return { allowed: checkRateLimitClient(userId, action, limit, windowMs), remaining: 0 };
+    console.error('Rate limit error — denying by default:', error);
+    return { allowed: false, remaining: 0 };
   }
 }
 

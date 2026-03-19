@@ -25,12 +25,17 @@ export const LOCATION_PRIVACY = {
 // ============================================================================
 
 export const REPUTATION_TIERS = {
-  BRONZE: { min: 0, name: 'Bronze' },
-  SILVER: { min: 500, name: 'Silver' },
-  GOLD: { min: 1000, name: 'Gold' },
-  TITANIUM: { min: 2500, name: 'Titanium' },
-  ELITE: { min: 5000, name: 'Elite' },
-  LEGENDARY: { min: 10000, name: 'Legendary' },
+  PERMIT:       { min: 0,     name: 'Permit' },
+  LEARNER:      { min: 25,    name: 'Learner' },
+  LICENSED:     { min: 100,   name: 'Licensed' },
+  REGISTERED:   { min: 250,   name: 'Registered' },
+  CERTIFIED:    { min: 500,   name: 'Certified' },
+  ENDORSED:     { min: 1000,  name: 'Endorsed' },
+  AUTHORITY:    { min: 2500,  name: 'Authority' },
+  DISTINGUISHED:{ min: 5000,  name: 'Distinguished' },
+  ELITE:        { min: 10000, name: 'Elite' },
+  SOVEREIGN:    { min: 25000, name: 'Sovereign' },
+  ICONIC:       { min: 50000, name: 'Iconic' },
 } as const;
 
 export const REPUTATION_POINTS = {

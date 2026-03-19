@@ -3,6 +3,58 @@ import { calculateAndAwardReputation } from './reputation';
 
 export type VerificationTier = 'shadow' | 'conditional' | 'standard' | 'verified' | 'vin_verified';
 
+/** Safe columns for public-facing vehicle queries (feed, rankings, search, public profiles) */
+export const VEHICLE_PUBLIC_COLUMNS = `
+  id,
+  plate_hash,
+  city,
+  state,
+  year,
+  make,
+  model,
+  trim,
+  color,
+  stock_image_url,
+  profile_image_url,
+  reputation_score,
+  spot_count,
+  spots_count,
+  is_claimed,
+  is_private,
+  verification_tier,
+  owner_id,
+  created_at,
+  updated_at
+`.replace(/\s+/g, ' ').trim();
+
+/** Owner-only columns — includes plate info but never VIN */
+export const VEHICLE_OWNER_COLUMNS = `
+  id,
+  plate_hash,
+  plate_number,
+  plate_state,
+  city,
+  state,
+  year,
+  make,
+  model,
+  trim,
+  color,
+  stock_image_url,
+  profile_image_url,
+  reputation_score,
+  spot_count,
+  spots_count,
+  is_claimed,
+  is_private,
+  verification_tier,
+  verification_status,
+  owner_id,
+  claimed_at,
+  created_at,
+  updated_at
+`.replace(/\s+/g, ' ').trim();
+
 export interface Vehicle {
   id: string;
   plate_hash: string;
@@ -24,14 +76,14 @@ export interface Vehicle {
 export async function claimVehicleStandard(vehicleId: string, userId: string) {
   const { data: vehicle, error: fetchError } = await supabase
     .from('vehicles')
-    .select('verification_tier, owner_id')
+    .select('is_claimed, owner_id')
     .eq('id', vehicleId)
     .maybeSingle();
 
   if (fetchError) throw fetchError;
   if (!vehicle) throw new Error('Vehicle not found');
 
-  if (vehicle.verification_tier !== 'shadow') {
+  if (vehicle.owner_id && vehicle.is_claimed) {
     throw new Error('Vehicle already claimed');
   }
 
@@ -62,7 +114,7 @@ export async function claimVehicleStandard(vehicleId: string, userId: string) {
   try {
     const { count: vehicleCount } = await supabase
       .from('vehicles')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('owner_id', userId)
       .eq('is_claimed', true);
 

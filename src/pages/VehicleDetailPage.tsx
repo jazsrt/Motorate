@@ -87,27 +87,12 @@ interface Vehicle {
   is_claimed: boolean;
   claimed_at: string | null;
   verification_tier: VerificationTier;
-  vin: string | null;
   owner_proof_url: string | null;
   owners_manual_url: string | null;
   stock_image_url?: string | null;
   profile_image_url?: string | null;
   state?: string | null;
   plate_number?: string | null;
-  vin_year?: number | null;
-  vin_make?: string | null;
-  vin_model?: string | null;
-  vin_trim?: string | null;
-  vin_body_class?: string | null;
-  vin_drive_type?: string | null;
-  vin_fuel_type?: string | null;
-  vin_engine_cylinders?: string | null;
-  vin_engine_displacement?: string | null;
-  vin_horsepower?: string | null;
-  vin_transmission?: string | null;
-  vin_doors?: string | null;
-  vin_plant_country?: string | null;
-  vin_decoded_at?: string | null;
   is_private?: boolean;
   owner?: {
     id: string;
@@ -268,7 +253,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const loadVehicleData = async () => {
     const { data: vehicleData } = await supabase
       .from('vehicles')
-      .select('*, profiles!owner_id(id, handle, avatar_url)')
+      .select('id, plate_hash, plate_number, plate_state, city, state, year, make, model, trim, color, stock_image_url, profile_image_url, reputation_score, spot_count, spots_count, is_claimed, is_private, verification_tier, owner_id, owner_proof_url, owners_manual_url, claimed_at, created_at, updated_at, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 
@@ -687,18 +672,13 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     ? Math.round(ratingCategories.reduce((s, c) => s + c.avg, 0) * 10)
     : 0;
 
-  // VIN specs for specs grid
+  // Specs grid — no VIN data, use basic fields only
   const vinSpecs = vehicle ? [
-    { label: 'Engine', value: vehicle.vin_engine_displacement ? `${vehicle.vin_engine_displacement}${vehicle.vin_engine_cylinders ? ` ${vehicle.vin_engine_cylinders}-cyl` : ''}` : null },
-    { label: 'Power', value: vehicle.vin_horsepower ? `${vehicle.vin_horsepower} hp` : null },
-    { label: '0-60', value: null },
     { label: 'Color', value: vehicle.color },
-    { label: 'Trans.', value: vehicle.vin_transmission },
-    { label: 'Drive', value: vehicle.vin_drive_type },
   ].filter(s => s.value) : [];
 
-  // Powertrain string
-  const powertrain = [vehicle?.vin_fuel_type, vehicle?.vin_drive_type].filter(Boolean).join(' / ');
+  // Powertrain string — no VIN data
+  const powertrain = '';
 
   // Verification badge color
   const verBadgeColor = vehicle?.verification_tier === 'vin_verified' ? C.green : vehicle?.is_claimed ? C.green : C.dim;
@@ -840,7 +820,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             </div>
             {/* Year + powertrain */}
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 600, color: C.light, marginBottom: 10 }}>
-              {[vehicle.year, vehicle.vin_trim, powertrain].filter(Boolean).join(' / ')}
+              {[vehicle.year, vehicle.trim].filter(Boolean).join(' / ')}
             </div>
 
             {/* RP score + City Rank row */}

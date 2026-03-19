@@ -210,7 +210,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
       const plateHash = await hashPlate(plateState, searchTerm);
       const { data: vehicle, error } = await supabase
         .from('vehicles')
-        .select('*')
+        .select('id, plate_hash, year, make, model, trim, color, stock_image_url, profile_image_url, reputation_score, is_claimed, verification_tier, owner_id, plate_state, plate_number')
         .eq('plate_hash', plateHash)
         .maybeSingle();
 
