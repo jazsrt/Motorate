@@ -255,7 +255,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     const { data: vehicleData } = await supabase
       .from('vehicles')
       // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
-      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', owner_proof_url, owners_manual_url, claimed_at, profiles!owner_id(id, handle, avatar_url)')
+      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', owners_manual_url, claimed_at, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 

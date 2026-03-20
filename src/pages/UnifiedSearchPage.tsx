@@ -230,7 +230,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       // PLATE: visible — plate search confirmation
       const { data: vehicleData, error: vehicleError } = await supabase
         .from('vehicles')
-        .select(VEHICLE_PLATE_VISIBLE_COLUMNS + `, created_by_user_id, owner:profiles!vehicles_owner_id_fkey(handle, avatar_url), creator:profiles!vehicles_created_by_user_id_fkey(handle, avatar_url)`)
+        .select(VEHICLE_PLATE_VISIBLE_COLUMNS + `, owner:profiles!vehicles_owner_id_fkey(handle, avatar_url)`)
         .eq('plate_hash', hash)
         .maybeSingle();
 
