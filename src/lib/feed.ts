@@ -199,56 +199,41 @@ export async function loadFeedCursor(
 
 
 
-  const enrichedPosts = await Promise.all(
-    filteredPosts.slice(0, limit).map(async (post: any) => {
+  const visiblePosts = filteredPosts.slice(0, limit);
+  const postIds = visiblePosts.map((p: any) => p.id);
+
+  // Batch: count likes per post
+  const { data: allReactions } = await supabase
+    .from('reactions')
+    .select('post_id, user_id')
+    .in('post_id', postIds);
+
+  const likeCounts: Record<string, number> = {};
+  const userLiked: Record<string, boolean> = {};
+  (allReactions || []).forEach((r: any) => {
+    likeCounts[r.post_id] = (likeCounts[r.post_id] || 0) + 1;
+    if (r.user_id === userId) userLiked[r.post_id] = true;
+  });
+
+  // Batch: count comments for posts missing comment_count
+  const postsNeedingCommentCount = visiblePosts.filter((p: any) => p.comment_count == null).map((p: any) => p.id);
+  const commentCounts: Record<string, number> = {};
+  if (postsNeedingCommentCount.length > 0) {
+    const { data: allComments } = await supabase
+      .from('post_comments')
+      .select('post_id')
+      .in('post_id', postsNeedingCommentCount);
+    (allComments || []).forEach((c: any) => {
+      commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1;
+    });
+  }
+
+  const enrichedPosts = visiblePosts.map((post: any) => {
       try {
-
-        const { count: likeCount } = await supabase
-          .from('reactions')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', post.id);
-
-        // Use comment_count from database if available, otherwise count manually
-        let commentCount = post.comment_count;
-        if (commentCount === undefined || commentCount === null) {
-          const { count } = await supabase
-            .from('post_comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
-          commentCount = count;
-        }
-
-        const { data: userLike } = await supabase
-          .from('reactions')
-          .select('*')
-          .eq('post_id', post.id)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        const { data: authorBadges, error: badgesError } = await supabase
-          .from('user_inventory')
-          .select(`
-            badge_id,
-            badges!inner(id, name, icon, type)
-          `)
-          .eq('user_id', post.author_id)
-          .eq('badges.type', 'status');
-
-        if (badgesError) {
-          // Only log schema-related errors once per session
-          const errorCode = badgesError.code || 'unknown';
-          if (!sessionStorage.getItem(`badge_error_${errorCode}`)) {
-            console.error('Badge loading error:', badgesError.message);
-            sessionStorage.setItem(`badge_error_${errorCode}`, 'logged');
-          }
-        }
-
-        const statusBadges: AuthorBadge[] = (authorBadges || []).map((item: any) => ({
-          id: item.badges.id,
-          name: item.badges.name,
-          icon: item.badges.icon,
-          type: item.badges.type
-        }));
+        const likeCount = likeCounts[post.id] || 0;
+        const commentCount = post.comment_count ?? commentCounts[post.id] ?? 0;
+        const userLike = userLiked[post.id] ? { id: 'exists' } : null;
+        const statusBadges: AuthorBadge[] = [];
 
         return {
           post_id: post.id,
@@ -332,8 +317,7 @@ export async function loadFeedCursor(
           vehicles: post.vehicles || null
         };
       }
-    })
-  );
+    });
 
   const lastPost = enrichedPosts[enrichedPosts.length - 1];
   const nextCursor = lastPost ? {
