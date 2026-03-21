@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Lock, Unlock, Upload, MapPin, FileText } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { uploadImage } from '../lib/storage';
+import { ModalShell, modalButtonPrimary, modalButtonGhost, modalInput, modalLabel } from './ui/ModalShell';
 
 interface EditProfileModalProps {
   profile: {
@@ -35,13 +36,11 @@ export function EditProfileModal({ profile, onClose, onSave }: EditProfileModalP
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       showToast('Please select an image file', 'error');
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       showToast('Image must be less than 5MB', 'error');
       return;
@@ -59,8 +58,7 @@ export function EditProfileModal({ profile, onClose, onSave }: EditProfileModalP
     }
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSave() {
     setSaving(true);
     setError('');
 
@@ -84,7 +82,7 @@ export function EditProfileModal({ profile, onClose, onSave }: EditProfileModalP
       onClose();
     } catch (err: any) {
       console.error('Profile update error:', err);
-      const errorMsg = err.message || err.details || err.hint || 'Failed to update profile';
+      const errorMsg = err.message || 'Failed to update profile';
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -93,165 +91,140 @@ export function EditProfileModal({ profile, onClose, onSave }: EditProfileModalP
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col">
-        <div className="sticky top-0 z-10 bg-surface border-b border-surfacehighlight px-6 py-4 flex items-center justify-between rounded-t-xl">
-          <h2 className="font-heading font-bold text-2xl uppercase tracking-tight">Edit User Profile</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-surfacehighlight rounded-xl transition-all active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
-          >
-            <X size={20} strokeWidth={1.5} />
+    <ModalShell
+      isOpen={true}
+      onClose={onClose}
+      eyebrow="Your Profile"
+      title="Edit Profile"
+      footer={
+        <>
+          <button onClick={onClose} style={modalButtonGhost}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{ ...modalButtonPrimary, opacity: saving ? 0.5 : 1 }}>
+            {saving ? 'Saving...' : 'Save Profile'}
           </button>
+        </>
+      }
+    >
+      {error && (
+        <div style={{
+          marginBottom: 14, padding: '10px 12px', borderRadius: 8,
+          background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+          fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#ef4444',
+        }}>
+          {error}
         </div>
+      )}
 
-        <div className="overflow-y-auto p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-status-danger/20 border border-status-danger rounded-xl text-sm text-status-danger">
-              {error}
-            </div>
+      {/* Avatar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+        <div style={{
+          width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+          background: '#131920', border: '2px solid rgba(255,255,255,0.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'relative' as const,
+        }}>
+          {photoPreview ? (
+            <img src={photoPreview} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <Upload style={{ width: 24, height: 24, color: '#445566' }} />
           )}
-
-          <form onSubmit={handleSave} className="space-y-6">
-          {/* Profile Photo */}
-          <div>
-            <label className="block text-sm font-heading font-bold uppercase tracking-tight text-secondary mb-2">
-              Profile Photo
-            </label>
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-surfacehighlight flex items-center justify-center overflow-hidden">
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <Upload className="w-8 h-8 text-secondary" />
-                )}
-              </div>
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  id="photo-upload"
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <label
-                  htmlFor="photo-upload"
-                  className={`btn-secondary inline-block cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <Upload className="w-4 h-4 inline mr-2" />
-                  {uploading ? 'Uploading...' : 'Upload Photo'}
-                </label>
-                <p className="text-xs text-secondary mt-2">Max 5MB, JPG or PNG</p>
-              </div>
-            </div>
+        </div>
+        <div>
+          <input type="file" accept="image/*" onChange={handlePhotoUpload} id="photo-upload" style={{ display: 'none' }} disabled={uploading} />
+          <label htmlFor="photo-upload" style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+            color: '#F97316', cursor: uploading ? 'not-allowed' : 'pointer',
+            opacity: uploading ? 0.5 : 1,
+          }}>
+            {uploading ? 'Uploading...' : 'Change photo'}
+          </label>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#445566', marginTop: 4 }}>
+            Max 5MB, JPG or PNG
           </div>
-
-          <div>
-            <label className="block text-sm font-heading font-bold uppercase tracking-tight text-secondary mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              value={handle}
-              onChange={(e) => setHandle(e.target.value)}
-              placeholder="Enter your username"
-              autoComplete="username"
-              className="w-full px-4 py-3 rounded-xl border border-border bg-surface-2 text-primary placeholder-secondary focus:outline-none focus:border-accent-primary transition-colors"
-            />
-            <p className="text-xs text-secondary mt-1">
-              Your username will be displayed as @{handle || 'anonymous'}
-            </p>
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label className="block text-sm font-heading font-bold uppercase tracking-tight text-secondary mb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Bio
-            </label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us about yourself and your rides..."
-              maxLength={160}
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl border border-border bg-surface-2 text-primary placeholder-secondary focus:outline-none focus:border-accent-primary transition-colors resize-none"
-            />
-            <p className="text-xs text-secondary mt-1">
-              {bio.length}/160 characters
-            </p>
-          </div>
-
-          {/* Location */}
-          <div>
-            <label className="block text-sm font-heading font-bold uppercase tracking-tight text-secondary mb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              Location
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="City, State"
-              className="w-full px-4 py-3 rounded-xl border border-border bg-surface-2 text-primary placeholder-secondary focus:outline-none focus:border-accent-primary transition-colors"
-            />
-          </div>
-
-          <div className="border-t border-surfacehighlight pt-4">
-            <div className="flex items-start gap-3">
-              <button
-                type="button"
-                onClick={() => setIsPrivate(!isPrivate)}
-                className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-colors ${
-                  isPrivate ? 'bg-accent-primary' : 'bg-surfacehighlight'
-                }`}
-              >
-                <div
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                    isPrivate ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  {isPrivate ? (
-                    <Lock size={16} className="text-accent-primary" strokeWidth={1.5} />
-                  ) : (
-                    <Unlock size={16} className="text-secondary" strokeWidth={1.5} />
-                  )}
-                  <label className="text-sm font-heading font-bold uppercase tracking-tight text-primary">
-                    Private Account
-                  </label>
-                </div>
-                <p className="text-xs text-secondary">
-                  {isPrivate
-                    ? 'Only your followers can see your photos, vehicles, and activity'
-                    : 'Anyone can see your profile content'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-secondary flex-1 min-h-[44px]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        </form>
         </div>
       </div>
-    </div>
+
+      {/* Handle */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={modalLabel}>Username</label>
+        <input
+          type="text"
+          value={handle}
+          onChange={e => setHandle(e.target.value)}
+          placeholder="Enter your username"
+          autoComplete="username"
+          style={modalInput}
+        />
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#445566', marginTop: 4 }}>
+          Displayed as @{handle || 'anonymous'}
+        </div>
+      </div>
+
+      {/* Bio */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={modalLabel}>Bio</label>
+        <textarea
+          value={bio}
+          onChange={e => setBio(e.target.value)}
+          placeholder="Tell us about yourself and your rides..."
+          maxLength={160}
+          rows={3}
+          style={{ ...modalInput, resize: 'none' as const, lineHeight: 1.55 }}
+        />
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+          color: '#445566', textAlign: 'right' as const, marginTop: 4, fontVariantNumeric: 'tabular-nums',
+        }}>
+          {bio.length}/160
+        </div>
+      </div>
+
+      {/* Location */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={modalLabel}>Location</label>
+        <input
+          type="text"
+          value={location}
+          onChange={e => setLocation(e.target.value)}
+          placeholder="City, State"
+          style={modalInput}
+        />
+      </div>
+
+      {/* Privacy toggle */}
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', gap: 12,
+        padding: '14px 0', borderTop: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <button
+          type="button"
+          onClick={() => setIsPrivate(!isPrivate)}
+          style={{
+            width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+            background: isPrivate ? '#F97316' : 'rgba(255,255,255,0.08)',
+            border: 'none', cursor: 'pointer', position: 'relative' as const,
+            transition: 'background 0.2s',
+          }}
+        >
+          <div style={{
+            width: 18, height: 18, borderRadius: '50%', background: '#eef4f8',
+            position: 'absolute' as const, top: 3,
+            left: isPrivate ? 23 : 3, transition: 'left 0.2s',
+          }} />
+        </button>
+        <div>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+            color: '#eef4f8', letterSpacing: '0.06em',
+          }}>
+            Private Account
+          </div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>
+            {isPrivate ? 'Only followers can see your content' : 'Anyone can see your profile'}
+          </div>
+        </div>
+      </div>
+    </ModalShell>
   );
 }
