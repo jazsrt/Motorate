@@ -5,23 +5,23 @@ export type VerificationTier = 'shadow' | 'conditional' | 'standard' | 'verified
 
 /** Safe columns for public-facing vehicle queries (feed, rankings, search, public profiles) */
 export const VEHICLE_PUBLIC_COLUMNS = `
-  id, plate_hash, year, make, model, trim, color,
+  id, plate_hash, state, year, make, model, trim, color,
   stock_image_url, profile_image_url, reputation_score, spots_count,
-  is_claimed, verification_tier, owner_id, created_at
+  is_claimed, is_private, verification_tier, owner_id, created_at
 `.replace(/\s+/g, ' ').trim();
 
 /** Plate-visible columns — for surfaces where plate display is intentional (search confirmation, spot flow, vehicle detail) */
 export const VEHICLE_PLATE_VISIBLE_COLUMNS = `
-  id, plate_hash, plate_number, plate_state, year, make, model, trim, color,
+  id, plate_hash, plate_number, plate_state, state, year, make, model, trim, color,
   stock_image_url, profile_image_url, reputation_score, spots_count,
-  is_claimed, verification_tier, owner_id, created_at
+  is_claimed, is_private, verification_tier, owner_id, created_at
 `.replace(/\s+/g, ' ').trim();
 
 /** Owner-only columns — includes plate info but never VIN */
 export const VEHICLE_OWNER_COLUMNS = `
-  id, plate_hash, plate_number, plate_state, year, make, model, trim, color,
+  id, plate_hash, plate_number, plate_state, state, year, make, model, trim, color,
   stock_image_url, profile_image_url, reputation_score, spots_count,
-  is_claimed, verification_tier, owner_id, claimed_at, created_at
+  is_claimed, is_private, verification_tier, owner_id, claimed_at, created_at
 `.replace(/\s+/g, ' ').trim();
 
 export interface Vehicle {

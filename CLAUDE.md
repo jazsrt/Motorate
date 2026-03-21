@@ -67,6 +67,12 @@ Font mono:       JetBrains Mono, monospace
 - `updated_at` — does not exist
 - `owner_proof_url` — does not exist
 
+### Columns Confirmed To Exist (DO NOT REMOVE)
+
+Verified via `information_schema.columns` query on 2026-03-20:
+- `state` — exists in live DB
+- `is_private` — exists in live DB (added via migration)
+
 ### Vehicle Column Constants (`src/lib/vehicles.ts`)
 
 Three named exports control what gets selected. Every vehicle query MUST use one of these (never inline columns, never SELECT *):
