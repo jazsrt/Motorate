@@ -28,21 +28,8 @@ import { uploadImage } from '../lib/storage';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
-
-const TIER_COLORS = {
-  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
-  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
-  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
-  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
-};
-
-function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
-  const cat = (badge.category ?? '').toLowerCase();
-  const rar = (badge.rarity ?? '').toLowerCase();
-  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
-  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
-  return 'milestone';
-}
+import { TIER_COLORS } from '../config/badgeConfig';
+import { getBadgeType } from '../lib/badgeUtils';
 
 function getTopBadge(badges: any[]): { name: string; icon?: string; type: 'prestige' | 'milestone' | 'identity' } | null {
   if (!badges || badges.length === 0) return null;

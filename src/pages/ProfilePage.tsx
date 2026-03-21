@@ -16,13 +16,7 @@ import { CreditCard as Edit } from 'lucide-react';
 import { BadgeCoin } from '../components/BadgeCoin';
 import { getTierFromScore } from '../lib/tierConfig';
 import { getBadgeImagePath } from '../lib/badgeUtils';
-
-const TIER_COLORS = {
-  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
-  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
-  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
-  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
-};
+import { TIER_COLORS } from '../config/badgeConfig';
 
 interface ProfilePageProps {
   onNavigate: OnNavigate;

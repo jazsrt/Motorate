@@ -17,6 +17,7 @@ import { getUserBadges, getUserDriverRating, type Badge } from '../lib/badges';
 import { VehicleQuickModal } from './VehicleQuickModal';
 import { UserQuickModal } from './UserQuickModal';
 import type { OnNavigate } from '../types/navigation';
+import { formatTimeAgo } from '../lib/formatting';
 
 interface Comment {
   id: string;
@@ -199,20 +200,6 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
   };
 
   const handleCommentClick = () => setShowComments(true);
-
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const postDate = new Date(dateString);
-    const diffMs = now.getTime() - postDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return postDate.toLocaleDateString();
-  };
 
   const hasRatings = (post as any).rating_vehicle || (post as any).rating_driver || (post as any).rating_driving;
   const hasDetailRatings = (post as any).spot_type === 'full' && (

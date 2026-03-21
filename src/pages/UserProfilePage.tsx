@@ -22,20 +22,13 @@ import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { getTierFromScore } from '../lib/tierConfig';
+import { getBadgeType } from '../lib/badgeUtils';
 
 interface UserProfilePageProps {
   userId: string;
   onNavigate: OnNavigate;
   onViewVehicle: (vehicleId: string) => void;
   onBack: () => void;
-}
-
-function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
-  const cat = (badge.category ?? '').toLowerCase();
-  const rar = (badge.rarity ?? '').toLowerCase();
-  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
-  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
-  return 'milestone';
 }
 
 export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: UserProfilePageProps) {

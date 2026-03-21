@@ -9,6 +9,7 @@ import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { useSwipe } from '../hooks/useSwipe';
 import { BadgeUnlockModal } from '../components/BadgeUnlockModal';
 import { type Badge } from '../lib/badges';
+import { formatTimeAgo } from '../lib/formatting';
 
 interface Notification {
   id: string;
@@ -64,20 +65,6 @@ function getDateGroup(dateString: string): 'today' | 'yesterday' | 'this_week' |
   if (diffDays < 2) return 'yesterday';
   if (diffDays < 7) return 'this_week';
   return 'older';
-}
-
-function formatTimeAgo(dateString: string): string {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
 }
 
 interface NotificationItemProps {

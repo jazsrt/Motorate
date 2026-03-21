@@ -38,6 +38,14 @@ export const BADGE_TIER_COLORS = {
 
 export type BadgeTier = keyof typeof BADGE_TIER_COLORS;
 
+/** Compact tier colors for inline badge chips (vehicle badges, rankings, fleet tiles) */
+export const TIER_COLORS = {
+  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
+  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
+  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
+  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
+};
+
 export const BADGE_TIER_THRESHOLDS: Record<string, { Bronze: number; Silver: number; Gold: number; Platinum: number }> = {
   'content-creator': { Bronze: 1,   Silver: 10,  Gold: 50,  Platinum: 150  },
   'commenter':       { Bronze: 1,   Silver: 25,  Gold: 100, Platinum: 500  },

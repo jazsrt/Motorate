@@ -24,26 +24,12 @@ import { GarageSection } from '../components/GarageSection';
 import { ModList } from '../components/ModList';
 import { StickerSlab } from '../components/StickerSlab';
 import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
-import { BADGE_TIER_THRESHOLDS } from '../config/badgeConfig';
+import { BADGE_TIER_THRESHOLDS, TIER_COLORS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
 import { VehicleFollowButton } from '../components/VehicleFollowButton';
 import { FollowButton } from '../components/FollowButton';
 import { BadgeChip } from '../components/badges/BadgeChip';
-
-const TIER_COLORS = {
-  Platinum: { bg: 'rgba(240,160,48,0.18)', border: 'rgba(240,160,48,0.55)', text: '#f5cc55' },
-  Gold:     { bg: 'rgba(240,160,48,0.12)', border: 'rgba(240,160,48,0.4)',  text: '#f0a030' },
-  Silver:   { bg: 'rgba(154,176,192,0.1)',  border: 'rgba(154,176,192,0.3)', text: '#9ab0c0' },
-  Bronze:   { bg: 'rgba(192,120,64,0.1)',   border: 'rgba(192,120,64,0.3)',  text: '#c07840' },
-};
-
-function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null; }): 'prestige' | 'milestone' | 'identity' {
-  const cat = (badge.category ?? '').toLowerCase();
-  const rar = (badge.rarity ?? '').toLowerCase();
-  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
-  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
-  return 'milestone';
-}
+import { getBadgeType } from '../lib/badgeUtils';
 
 interface VehicleDetailPageProps {
   vehicleId: string;

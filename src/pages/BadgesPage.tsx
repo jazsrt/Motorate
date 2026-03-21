@@ -7,7 +7,7 @@ import { type OnNavigate } from '../types/navigation';
 import { BadgeCoin } from '../components/BadgeCoin';
 import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
-import { getBadgeImagePath } from '../lib/badgeUtils';
+import { getBadgeImagePath, getBadgeType } from '../lib/badgeUtils';
 
 interface BadgesPageProps {
   onNavigate: OnNavigate;
@@ -83,14 +83,6 @@ function getCountForBadge(badge: Badge, activityCounts: ActivityCounts): number 
     case 'comment_likes': return activityCounts.commentLikes;
     default: return 0;
   }
-}
-
-function getBadgeType(badge: { category?: string | null; rarity?: string | null; }): 'prestige' | 'milestone' | 'identity' {
-  const cat = (badge.category ?? '').toLowerCase();
-  const rar = (badge.rarity ?? '').toLowerCase();
-  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
-  if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
-  return 'milestone';
 }
 
 function getRarityColor(rarity: string): string {

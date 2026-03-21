@@ -11,6 +11,7 @@ import { BadgeList } from './badges/BadgeList';
 import { getUserBadges, getUserDriverRating, type Badge, type UserBadge } from '../lib/badges';
 import { type OnNavigate } from '../types/navigation';
 import { calculateAndAwardReputation } from '../lib/reputation';
+import { formatTimeAgo } from '../lib/formatting';
 
 interface Comment {
   id: string;
@@ -383,20 +384,6 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
       console.error('Error updating comment:', error);
       throw error;
     }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const commentDate = new Date(dateString);
-    const diffMs = now.getTime() - commentDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    return `${diffDays}d`;
   };
 
   return (
