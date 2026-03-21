@@ -72,6 +72,7 @@ Font mono:       JetBrains Mono, monospace
 Verified via `information_schema.columns` query on 2026-03-20:
 - `state` — exists in live DB
 - `is_private` — exists in live DB (added via migration)
+- `owners_manual_url` — exists in live DB (added via migration, used in VehicleDetailPage)
 
 ### Vehicle Column Constants (`src/lib/vehicles.ts`)
 
