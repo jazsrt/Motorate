@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ReactionButton } from '../ReactionButton';
 import { CommentsModal } from '../CommentsModal';
+import { LicensePlate } from '../LicensePlate';
 
 interface FeedPostCardProps {
   post: {
@@ -115,12 +116,11 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
               backgroundImage: 'linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px)',
               backgroundSize: '28px 28px',
               display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 6 }}>Plate Spot</div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.18em' }}>
-                  {vehicles?.plate_state ? `${vehicles.plate_state} · ` : ''}{vehicles?.plate_number || '—'}
-                </div>
-              </div>
+              <LicensePlate
+                plateNumber={vehicles?.plate_number || ''}
+                plateState={vehicles?.plate_state || ''}
+                size="lg"
+              />
             </div>
           )}
 

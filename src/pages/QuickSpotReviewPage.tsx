@@ -9,7 +9,7 @@ import { calculateAndAwardReputation } from '../lib/reputation';
 import { uploadImage } from '../lib/storage';
 import { type OnNavigate } from '../types/navigation';
 import type { SpotWizardData } from '../types/spot';
-import { LicensePlateDisplay } from '../components/LicensePlateDisplay';
+import { LicensePlate } from '../components/LicensePlate';
 import { StickerSelector } from '../components/StickerSelector';
 import { giveSticker } from '../lib/stickerService';
 
@@ -355,11 +355,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         {/* Vehicle Identity Card */}
         <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <LicensePlateDisplay
-              stateCode={wizardData.plateState}
-              plateNumber={wizardData.plateNumber}
-              className="scale-75 origin-left"
-            />
+            <LicensePlate plateNumber={wizardData.plateNumber} plateState={wizardData.plateState} size="md" />
             <div style={{ minWidth: 0 }}>
               <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {vehicleName || 'Unknown Vehicle'}

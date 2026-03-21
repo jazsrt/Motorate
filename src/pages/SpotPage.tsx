@@ -9,6 +9,8 @@ import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
+import { US_STATES } from '../lib/constants';
+import { LicensePlate } from '../components/LicensePlate';
 import { type VerificationTier } from '../components/TierBadge';
 import { PlateSearch } from '../components/PlateSearch';
 import { PlateNotFound, type CreateVehicleData } from '../components/PlateNotFound';
@@ -47,34 +49,6 @@ interface VehicleResult {
   };
 }
 
-const US_STATES = [
-  { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' },
-  { code: 'AZ', name: 'Arizona' }, { code: 'AR', name: 'Arkansas' },
-  { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
-  { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' },
-  { code: 'FL', name: 'Florida' }, { code: 'GA', name: 'Georgia' },
-  { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
-  { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' },
-  { code: 'IA', name: 'Iowa' }, { code: 'KS', name: 'Kansas' },
-  { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
-  { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' },
-  { code: 'MA', name: 'Massachusetts' }, { code: 'MI', name: 'Michigan' },
-  { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
-  { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' },
-  { code: 'NE', name: 'Nebraska' }, { code: 'NV', name: 'Nevada' },
-  { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
-  { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' },
-  { code: 'NC', name: 'North Carolina' }, { code: 'ND', name: 'North Dakota' },
-  { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
-  { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' },
-  { code: 'RI', name: 'Rhode Island' }, { code: 'SC', name: 'South Carolina' },
-  { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
-  { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' },
-  { code: 'VT', name: 'Vermont' }, { code: 'VA', name: 'Virginia' },
-  { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
-  { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' },
-  { code: 'DC', name: 'District of Columbia' },
-];
 
 const cardStyle: React.CSSProperties = {
   background: '#0a0d14',
@@ -238,6 +212,16 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
   const handleSearch = async (searchState: string, searchPlate: string) => {
     if (!searchPlate.trim()) return;
+
+    const normalizedPlate = searchPlate.trim().toUpperCase().replace(/[\s-]/g, '');
+    if (normalizedPlate.length < 2 || normalizedPlate.length > 8) {
+      showToast('Please enter a valid plate number (2-8 characters)', 'error');
+      return;
+    }
+    if (!/^[A-Z0-9]+$/.test(normalizedPlate)) {
+      showToast('Plate numbers can only contain letters and numbers', 'error');
+      return;
+    }
 
     setState(searchState);
     setPlateNumber(searchPlate);
@@ -635,26 +619,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
               transition: 'all 0.5s cubic-bezier(.25,.46,.45,.94)',
             }}
           >
-            <div style={{
-              position: 'relative',
-              background: 'white',
-              borderRadius: 8,
-              padding: '16px 32px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-              border: '4px solid #1f2937',
-            }}>
-              <div style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, color: '#4b5563', fontWeight: 700 }}>{stateCode}</div>
-              <div style={{
-                fontSize: 30,
-                fontFamily: 'monospace',
-                fontWeight: 800,
-                color: '#000',
-                letterSpacing: '0.15em',
-                textAlign: 'center',
-              }}>
-                {plateNumber.toUpperCase()}
-              </div>
-            </div>
+            <LicensePlate plateNumber={plateNumber} plateState={stateCode} size="lg" />
           </div>
 
           {/* Phase 2: Scanning line */}
