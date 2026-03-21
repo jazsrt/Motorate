@@ -1,5 +1,5 @@
-// Auto.dev Plate-to-VIN API
-// Docs: https://docs.auto.dev/v2/products/plate-to-vin
+// Auto.dev Plate-to-VIN via Supabase Edge Function (server-side proxy)
+// Edge function: supabase/functions/lookup-plate
 // Free tier: 1,000 calls/month
 
 export interface VehicleLookupResult {
@@ -17,46 +17,39 @@ export interface VehicleLookupResult {
   fullName: string;
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 export async function lookupPlate(
   plate: string,
   state: string
 ): Promise<VehicleLookupResult | null> {
-  const apiKey = import.meta.env.VITE_AUTO_DEV_API_KEY;
-
-  if (!apiKey) {
-    console.warn('Auto.dev API key not configured (VITE_AUTO_DEV_API_KEY) — falling back to manual entry');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn('Supabase not configured — falling back to manual entry');
     return null;
   }
 
-  const cleanPlate = plate.replace(/\s/g, '').toUpperCase();
-  const cleanState = state.toUpperCase();
-
   try {
     const response = await fetch(
-      `https://api.auto.dev/plate/${cleanState}/${cleanPlate}`,
+      `${SUPABASE_URL}/functions/v1/lookup-plate`,
       {
-        method: 'GET',
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ plate, state }),
       }
     );
 
-    if (response.status === 404) {
-      // Plate not found — not an error, just no match
-      return null;
-    }
-
     if (!response.ok) {
-      console.error('Auto.dev plate lookup error:', response.status);
+      console.error('Plate lookup edge function error:', response.status);
       return null;
     }
 
     const data = await response.json();
 
-    // Auto.dev returns: { vin, year, make, model, trim, drivetrain, engine, transmission }
-    if (!data.make || !data.model) {
+    if (!data.found || !data.make || !data.model) {
       return null;
     }
 
@@ -66,7 +59,7 @@ export async function lookupPlate(
       make: data.make ?? '',
       model: data.model ?? '',
       trim: data.trim ?? '',
-      color: '',                          // Auto.dev does not return color on plate lookup
+      color: '',
       engine: data.engine ?? '',
       bodyStyle: data.style ?? '',
       transmission: data.transmission ?? '',
@@ -75,7 +68,7 @@ export async function lookupPlate(
       fullName: `${data.year ?? ''} ${data.make ?? ''} ${data.model ?? ''}`.trim(),
     };
   } catch (error) {
-    console.error('Auto.dev plate lookup failed:', error);
+    console.error('Plate lookup failed:', error);
     return null;
   }
 }
