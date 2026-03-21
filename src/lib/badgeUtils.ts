@@ -13,6 +13,7 @@ export function getBadgeImagePath(badge: {
   tier?: string | null;
 }): string | undefined {
   if (!badge.badge_group || !badge.tier) return undefined;
+  const group = badge.badge_group.toLowerCase().replace(/_/g, '-');
   const t = badge.tier.toLowerCase() === 'plat' ? 'platinum' : badge.tier.toLowerCase();
-  return `/badges/${badge.badge_group}-${t}.png`;
+  return `/badges/${group}-${t}.png`;
 }

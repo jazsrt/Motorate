@@ -363,7 +363,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
               <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: isEarned ? 'pointer' : 'default' }}
                 onClick={() => { if (isEarned) { setCelebBadge(badge); try { sounds.badge(); haptics.medium(); } catch {} } }}>
                 <div style={{ position: 'relative', filter: isLocked ? 'grayscale(1)' : 'none', opacity: isLocked ? 0.4 : 1, transition: 'opacity 0.2s' }}>
-                  <BadgeCoin tier={tier} name={isLocked ? '???' : badge.name} locked={isLocked} size="sm" />
+                  <BadgeCoin tier={tier} name={isLocked ? '???' : badge.name} icon_path={getBadgeImagePath(badge)} locked={isLocked} size="sm" />
                   {/* Progress ring for in-progress badges */}
                   {isInProgressBadge && badge.tier_threshold && (() => {
                     const count = getCountForBadge(badge, activityCounts);
