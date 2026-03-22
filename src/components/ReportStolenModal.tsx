@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { X, AlertOctagon } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { ModalShell, modalButtonGhost, modalButtonDanger, modalInput, modalLabel } from './ui/ModalShell';
 
 interface ReportStolenModalProps {
   onClose: () => void;
@@ -27,26 +28,19 @@ export function ReportStolenModal({ onClose, onSuccess }: ReportStolenModalProps
 
   const loadUserVehicles = async () => {
     if (!user) return;
-
     const { data } = await supabase
       .from('vehicles')
       .select('id, make, model, year')
       .eq('owner_id', user.id)
       .eq('is_claimed', true);
-
-    if (data) {
-      setUserVehicles(data);
-    }
+    if (data) setUserVehicles(data);
     setLoadingVehicles(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!user || !vehicleId) return;
-
     setLoading(true);
     setError('');
-
     try {
       const { error: insertError } = await supabase
         .from('stolen_vehicles')
@@ -56,9 +50,7 @@ export function ReportStolenModal({ onClose, onSuccess }: ReportStolenModalProps
           police_report_number: policeReportNumber,
           description: description || null,
         });
-
       if (insertError) throw insertError;
-
       showToast('Vehicle reported as stolen. The community will be notified.', 'success');
       onSuccess();
     } catch (err: any) {
@@ -69,115 +61,78 @@ export function ReportStolenModal({ onClose, onSuccess }: ReportStolenModalProps
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-      <div className="bg-surface border border-surfacehighlight rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-status-danger/20 rounded-xl">
-              <AlertOctagon className="w-6 h-6 text-status-danger" />
-            </div>
-            <h3 className="text-xl font-bold">Report Stolen Vehicle</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-surfacehighlight rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
+    <ModalShell isOpen={true} onClose={onClose} eyebrow="Vehicle Alert" title="Report Stolen"
+      footer={
+        <>
+          <button onClick={onClose} style={modalButtonGhost}>Cancel</button>
+          <button onClick={handleSubmit}
+            disabled={loading || !vehicleId || !policeReportNumber || userVehicles.length === 0}
+            style={{ ...modalButtonDanger, opacity: (loading || !vehicleId || !policeReportNumber) ? 0.5 : 1 }}>
+            {loading ? 'Submitting...' : 'Submit Report'}
           </button>
+        </>
+      }
+    >
+      {/* Red warning */}
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', gap: 10,
+        padding: '10px 12px', borderRadius: 8, marginBottom: 16,
+        background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)',
+      }}>
+        <AlertTriangle style={{ width: 16, height: 16, color: '#ef4444', flexShrink: 0, marginTop: 1 }} />
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#ef4444', lineHeight: 1.45 }}>
+          <strong style={{ display: 'block', marginBottom: 2 }}>Make sure you've filed a police report first.</strong>
+          Once reported, your vehicle will be flagged and you'll be notified if anyone spots it.
         </div>
-
-        <div className="bg-amber-900/20 border border-amber-800 rounded-xl p-4 mb-6">
-          <p className="text-sm text-accent-primary">
-            <span className="font-bold">Important:</span> Make sure you've filed a police report first.
-            Once reported, your vehicle will be flagged in the system and you'll be notified if anyone spots it.
-          </p>
-        </div>
-
-        {error && (
-          <div className="bg-status-danger/20 border border-status-danger rounded-xl p-4 mb-6">
-            <p className="text-sm text-status-danger">{error}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="vehicle" className="block text-sm font-medium mb-2">
-              Select Vehicle *
-            </label>
-            {loadingVehicles ? (
-              <div className="text-sm text-secondary">Loading your vehicles...</div>
-            ) : userVehicles.length === 0 ? (
-              <div className="text-sm text-secondary">
-                You don't have any claimed plates. Claim a plate first to report it as stolen.
-              </div>
-            ) : (
-              <select
-                id="vehicle"
-                value={vehicleId}
-                onChange={(e) => setVehicleId(e.target.value)}
-                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                required
-              >
-                <option value="">Select a vehicle</option>
-                {userVehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="policeReport" className="block text-sm font-medium mb-2">
-              Police Report Number *
-            </label>
-            <input
-              type="text"
-              id="policeReport"
-              value={policeReportNumber}
-              onChange={(e) => setPoliceReportNumber(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              placeholder="e.g., 2024-123456"
-              required
-            />
-            <p className="text-xs text-secondary mt-1">
-              This helps verify the report with law enforcement
-            </p>
-          </div>
-
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-2">
-              Additional Details (Optional)
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              rows={4}
-              placeholder="When and where was it stolen? Any other details that might help..."
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-neutral-800 hover:bg-neutral-700 rounded-lg px-4 py-3 font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !vehicleId || !policeReportNumber || userVehicles.length === 0}
-              className="flex-1 bg-status-danger hover:bg-red-600 rounded-lg px-4 py-3 font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Submitting...' : 'Submit Report'}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+
+      {error && (
+        <div style={{
+          marginBottom: 14, padding: '10px 12px', borderRadius: 8,
+          background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+          fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#ef4444',
+        }}>
+          {error}
+        </div>
+      )}
+
+      {/* Vehicle select */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={modalLabel}>Select Vehicle <span style={{ color: '#ef4444' }}>*</span></label>
+        {loadingVehicles ? (
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e' }}>Loading your vehicles...</div>
+        ) : userVehicles.length === 0 ? (
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e' }}>
+            You don't have any claimed vehicles. Claim a vehicle first.
+          </div>
+        ) : (
+          <select value={vehicleId} onChange={e => setVehicleId(e.target.value)}
+            style={{ ...modalInput, cursor: 'pointer' }} required>
+            <option value="">Select a vehicle</option>
+            {userVehicles.map(v => (
+              <option key={v.id} value={v.id}>{v.year} {v.make} {v.model}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Police report number */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={modalLabel}>Police Report Number <span style={{ color: '#ef4444' }}>*</span></label>
+        <input type="text" value={policeReportNumber} onChange={e => setPoliceReportNumber(e.target.value)}
+          placeholder="e.g., 2024-123456" style={modalInput} required />
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#445566', marginTop: 4 }}>
+          This helps verify the report with law enforcement
+        </div>
+      </div>
+
+      {/* Details */}
+      <div>
+        <label style={modalLabel}>Additional Details <span style={{ fontWeight: 400, textTransform: 'none' as const, letterSpacing: 'normal' }}>(Optional)</span></label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)}
+          placeholder="When and where was it stolen? Any details that might help..."
+          rows={4} style={{ ...modalInput, resize: 'none' as const, lineHeight: 1.55 }} />
+      </div>
+    </ModalShell>
   );
 }

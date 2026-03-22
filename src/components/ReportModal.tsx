@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { createReport, ReportContentType } from '../lib/reports';
 import { useAuth } from '../contexts/AuthContext';
-import { X, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { ModalShell, modalButtonGhost, modalButtonDanger, modalInput, modalLabel } from './ui/ModalShell';
 
 interface ReportModalProps {
   contentType: 'post' | 'review' | 'comment' | 'profile';
@@ -40,37 +41,24 @@ const REPORT_REASONS: Record<string, { value: string; label: string }[]> = {
 
 export function ReportModal({ contentType, contentId, onClose }: ReportModalProps) {
   const { user } = useAuth();
-  const [reason, setReason] = useState<'spam' | 'harassment' | 'inappropriate' | 'misinformation' | 'other' | ''>('');
+  const [reason, setReason] = useState<string>('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     if (!user || !reason) return;
-
     setSubmitting(true);
     setError('');
-
     try {
       const mappedContentType: ReportContentType =
         contentType === 'review' ? 'post' : contentType as ReportContentType;
-
-      const reportReason = description.trim()
-        ? `${reason}: ${description}`
-        : reason;
-
+      const reportReason = description.trim() ? `${reason}: ${description}` : reason;
       const result = await createReport(mappedContentType, contentId, reportReason);
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to submit report');
-      }
-
+      if (!result.success) throw new Error(result.error || 'Failed to submit report');
       setSubmitted(true);
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      setTimeout(() => onClose(), 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to submit report');
     } finally {
@@ -80,93 +68,72 @@ export function ReportModal({ contentType, contentId, onClose }: ReportModalProp
 
   if (submitted) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6 text-center">
-          <div className="w-16 h-16 bg-status-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="w-8 h-8 text-status-success" />
+      <ModalShell isOpen={true} onClose={onClose} title="Report Submitted"
+        footer={<button onClick={onClose} style={{ ...modalButtonGhost, width: '100%' }}>Close</button>}
+      >
+        <div style={{ textAlign: 'center' as const, padding: '24px 0' }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%', margin: '0 auto 16px',
+            background: 'rgba(32,192,96,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <CheckCircle style={{ width: 28, height: 28, color: '#20c060' }} />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Report Submitted</h2>
-          <p className="text-secondary">
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#a8bcc8', lineHeight: 1.5 }}>
             Thank you for helping keep our community safe. We'll review your report shortly.
           </p>
         </div>
-      </div>
+      </ModalShell>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-status-danger/20 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-status-danger" />
-            </div>
-            <h2 className="text-2xl font-bold uppercase tracking-wider">Report {contentType}</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-surfacehighlight rounded-lg transition"
-          >
-            <X size={20} />
+    <ModalShell isOpen={true} onClose={onClose} eyebrow={contentType} title={`Report ${contentType}`}
+      footer={
+        <>
+          <button onClick={onClose} style={modalButtonGhost}>Cancel</button>
+          <button onClick={handleSubmit} disabled={!reason || submitting}
+            style={{ ...modalButtonDanger, opacity: (!reason || submitting) ? 0.5 : 1 }}>
+            {submitting ? 'Submitting...' : 'Submit Report'}
           </button>
+        </>
+      }
+    >
+      {error && (
+        <div style={{
+          marginBottom: 14, padding: '10px 12px', borderRadius: 8,
+          background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+          fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#ef4444',
+        }}>
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div className="mb-4 p-3 bg-status-danger/20 border border-status-danger rounded-lg text-sm text-status-danger">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-              Reason *
-            </label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value as any)}
-              required
-              className="w-full bg-surfacehighlight border border-surfacehighlight rounded-lg px-4 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-            >
-              <option value="">Select a reason</option>
-              {REPORT_REASONS[contentType].map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-              Additional Details
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide any additional context..."
-              rows={4}
-              className="w-full bg-surfacehighlight border border-surfacehighlight rounded-lg px-4 py-2 text-primary placeholder-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 bg-surfacehighlight hover:bg-surface rounded-lg font-bold uppercase tracking-wider transition"
-            >
-              Cancel
+      {/* Reason grid */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={modalLabel}>Reason <span style={{ color: '#ef4444' }}>*</span></label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+          {REPORT_REASONS[contentType].map(r => (
+            <button key={r.value} onClick={() => setReason(r.value)} style={{
+              padding: '10px 12px', borderRadius: 8, textAlign: 'left' as const,
+              background: reason === r.value ? 'rgba(239,68,68,0.12)' : '#131920',
+              border: reason === r.value ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.06)',
+              fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 600,
+              color: reason === r.value ? '#ef4444' : '#a8bcc8',
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}>
+              {r.label}
             </button>
-            <button
-              type="submit"
-              disabled={!reason || submitting}
-              className="flex-1 px-4 py-2 bg-status-danger hover:bg-red-600 rounded-lg font-bold uppercase tracking-wider transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Submitting...' : 'Submit Report'}
-            </button>
-          </div>
-        </form>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Details */}
+      <div>
+        <label style={modalLabel}>Additional Details</label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)}
+          placeholder="Provide any additional context..." rows={4}
+          style={{ ...modalInput, resize: 'none' as const, lineHeight: 1.55 }} />
+      </div>
+    </ModalShell>
   );
 }
