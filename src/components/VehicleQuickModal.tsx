@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, ExternalLink, Car, Crosshair } from 'lucide-react';
+import { Car, Crosshair } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { StickerSlab } from './StickerSlab';
 import { useAuth } from '../contexts/AuthContext';
 import type { OnNavigate } from '../types/navigation';
+import { ModalShell, modalButtonPrimary, modalButtonGhost } from './ui/ModalShell';
 
 interface VehicleQuickModalProps {
   vehicleId: string;
@@ -19,8 +20,6 @@ interface VehicleData {
   year: number | null;
   color: string | null;
   stock_image_url: string | null;
-  plate_number: string | null;
-  plate_state: string | null;
   owner_id: string | null;
   is_claimed: boolean;
   verification_tier: 'shadow' | 'standard' | 'verified';
@@ -84,170 +83,151 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
     }
   };
 
+  const imgUrl = vehicle?.stock_image_url || carImageryUrl;
+
   return (
-    <div
-      className="fixed inset-0 z-[80] flex items-end"
-      style={{ background: 'rgba(20,28,38,0.92)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div
-        className="w-full animate-sheet-up"
-        style={{
-          background: 'var(--surface)',
-          borderRadius: '14px 14px 0 0',
-          borderTop: '1px solid var(--border-2)',
-          maxHeight: '85vh',
-          overflowY: 'auto',
-        }}
-      >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="rounded-full" style={{ width: 28, height: 2, background: 'rgba(255,255,255,0.08)' }} />
-        </div>
-
-        <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-[15px] font-normal" style={{ color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
-            Plate Profile
-          </h2>
-          <button
-            onClick={onClose}
-            className="w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', color: 'var(--text-tertiary)' }}
-          >
-            <X className="w-2.5 h-2.5" strokeWidth={1.5} />
-          </button>
-        </div>
-
-        <div className="px-5 py-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: 'var(--accent)' }} />
-            </div>
-          ) : !vehicle ? (
-            <div className="py-10 text-center">
-              <Car className="w-10 h-10 mx-auto mb-3" strokeWidth={1} style={{ color: 'var(--text-quaternary)' }} />
-              <p className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>Vehicle not found</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {(() => {
-                const imgUrl = vehicle.stock_image_url || carImageryUrl;
-                return imgUrl ? (
-                  <div className="w-full overflow-hidden rounded-xl" style={{ background: 'var(--surface-2)' }}>
-                    <img
-                      src={imgUrl}
-                      alt={vehicleName}
-                      className="w-full object-cover"
-                      style={{ maxHeight: 200 }}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full flex items-center justify-center py-8 rounded-xl" style={{ background: 'var(--surface-2)' }}>
-                    <Car className="w-16 h-16" strokeWidth={1} style={{ color: 'var(--text-quaternary)' }} />
-                  </div>
-                );
-              })()}
-
-              <div>
-                <p className="text-[18px] font-bold" style={{ color: 'var(--text-primary)' }}>{vehicleName || 'Unknown Vehicle'}</p>
-                {vehicle.color && (
-                  <p className="text-[13px] capitalize mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{vehicle.color}</p>
-                )}
-              </div>
-
-              {(vehicle.plate_number || vehicle.plate_state) && (
-                <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border-2)' }}
-                >
-                  <span className="font-mono text-[13px] font-bold tracking-widest" style={{ color: 'var(--text-primary)' }}>
-                    {vehicle.plate_state ? `${vehicle.plate_state} · ` : ''}{vehicle.plate_number}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3">
-                <div
-                  className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
-                  style={
-                    vehicle.is_claimed
-                      ? { background: 'rgba(16,185,129,0.12)', color: '#5aaa7a', border: '1px solid rgba(16,185,129,0.25)' }
-                      : { background: 'rgba(122,142,168,0.12)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }
-                  }
-                >
-                  {vehicle.is_claimed ? 'Claimed' : 'Unclaimed'}
-                </div>
-                {vehicle.verification_tier === 'verified' && (
-                  <div
-                    className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
-                    style={{ background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.25)' }}
-                  >
-                    Verified
-                  </div>
-                )}
-              </div>
-
-              {vehicle.owner && vehicle.is_claimed && (
-                <div
-                  className="flex items-center gap-3 p-3 rounded-xl"
-                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
-                >
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
-                    style={{ background: 'var(--accent)', color: 'var(--bg)' }}
-                  >
-                    {vehicle.owner.handle?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-semibold" style={{ color: 'var(--accent)' }}>@{vehicle.owner.handle}</p>
-                    <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>Owner</p>
-                  </div>
-                </div>
-              )}
-
-              <StickerSlab vehicleId={vehicle.id} />
-            </div>
-          )}
-        </div>
-
-        {vehicle && onNavigate && (
-          <div
-            className="px-5 py-4 space-y-2"
-            style={{ borderTop: '1px solid var(--border)', paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-          >
-            <button
-              onClick={() => {
-                onNavigate('vehicle-detail', { vehicleId: vehicle.id, openReviewModal: true });
-                onClose();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[12px] font-bold uppercase transition-all active:scale-[0.98]"
-              style={{ background: 'var(--accent)', color: 'var(--bg)', letterSpacing: '0.8px' }}
-            >
-              <Crosshair className="w-3.5 h-3.5" strokeWidth={2} />
+    <ModalShell
+      isOpen={true}
+      onClose={onClose}
+      eyebrow="Vehicle"
+      title={vehicleName || 'Loading...'}
+      footer={vehicle && onNavigate ? (
+        <>
+          <button onClick={handleViewFull} style={modalButtonGhost}>View Profile</button>
+          <button onClick={() => {
+            onNavigate('vehicle-detail', { vehicleId: vehicle.id, openReviewModal: true });
+            onClose();
+          }} style={modalButtonPrimary}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Crosshair style={{ width: 13, height: 13 }} strokeWidth={2} />
               Spot This Plate
-            </button>
-            <button
-              onClick={handleViewFull}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[12px] font-bold uppercase transition-all active:scale-[0.98]"
-              style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-2)', letterSpacing: '0.8px' }}
-            >
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
-              View Plate Profile
-            </button>
-            {!vehicle.is_claimed && user && (
-              <button
-                onClick={() => {
-                  onNavigate('vehicle-detail', { vehicleId: vehicle.id, scrollTo: 'claim-section' });
-                  onClose();
-                }}
-                className="w-full py-2 text-[11px] transition-colors"
-                style={{ color: 'var(--text-tertiary)' }}
-              >
-                Is this your plate? Claim it &rarr;
-              </button>
+            </span>
+          </button>
+        </>
+      ) : undefined}
+    >
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: '50%',
+            border: '2px solid rgba(255,255,255,0.1)',
+            borderTopColor: '#F97316',
+            animation: 'spin 0.7s linear infinite',
+          }} />
+        </div>
+      ) : !vehicle ? (
+        <div style={{ padding: '40px 0', textAlign: 'center' as const }}>
+          <Car style={{ width: 40, height: 40, color: '#445566', margin: '0 auto 12px', display: 'block' }} strokeWidth={1} />
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e' }}>Vehicle not found</p>
+        </div>
+      ) : (
+        <>
+          {/* Hero image */}
+          <div style={{
+            width: '100%', height: 160, borderRadius: 10, overflow: 'hidden',
+            background: '#131920', marginBottom: 14, position: 'relative' as const,
+          }}>
+            {imgUrl ? (
+              <img src={imgUrl} alt={vehicleName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Car style={{ width: 48, height: 48, color: '#445566' }} strokeWidth={1} />
+              </div>
+            )}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to top, rgba(13,17,23,0.9) 0%, transparent 50%)',
+            }} />
+            <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 2 }}>
+              <div style={{
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316',
+              }}>
+                {vehicle.make} {vehicle.color ? `\u00B7 ${vehicle.color}` : ''}
+              </div>
+              <div style={{
+                fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700,
+                color: '#eef4f8', lineHeight: 1,
+              }}>
+                {vehicle.model || vehicle.make}
+              </div>
+            </div>
+          </div>
+
+          {/* Status badges */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+            <div style={{
+              padding: '3px 10px', borderRadius: 4,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+              letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+              ...(vehicle.is_claimed
+                ? { background: 'rgba(32,192,96,0.1)', border: '1px solid rgba(32,192,96,0.25)', color: '#20c060' }
+                : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#7a8e9e' }
+              ),
+            }}>
+              {vehicle.is_claimed ? 'Claimed' : 'Unclaimed'}
+            </div>
+            {vehicle.verification_tier === 'verified' && (
+              <div style={{
+                padding: '3px 10px', borderRadius: 4,
+                background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
+              }}>
+                Verified
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </div>
+
+          {/* Owner */}
+          {vehicle.owner && vehicle.is_claimed && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: 10, borderRadius: 8,
+              background: '#131920', border: '1px solid rgba(255,255,255,0.06)',
+              marginBottom: 14,
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                background: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#030508',
+              }}>
+                {vehicle.owner.handle?.[0]?.toUpperCase() || '?'}
+              </div>
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#F97316' }}>
+                  @{vehicle.owner.handle}
+                </div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#445566' }}>Owner</div>
+              </div>
+            </div>
+          )}
+
+          {/* Stickers */}
+          <StickerSlab vehicleId={vehicle.id} />
+
+          {/* Claim hint */}
+          {!vehicle.is_claimed && user && onNavigate && (
+            <button
+              onClick={() => {
+                onNavigate('vehicle-detail', { vehicleId: vehicle.id, scrollTo: 'claim-section' });
+                onClose();
+              }}
+              style={{
+                width: '100%', padding: '8px', marginTop: 10,
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e',
+              }}
+            >
+              Is this your vehicle? Claim it →
+            </button>
+          )}
+        </>
+      )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+    </ModalShell>
   );
 }

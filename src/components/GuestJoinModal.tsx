@@ -1,4 +1,5 @@
-import { X, Lock, Car } from 'lucide-react';
+import { ModalShell, modalButtonPrimary, modalButtonGhost } from './ui/ModalShell';
+import { Car, MapPin, Heart } from 'lucide-react';
 
 interface GuestJoinModalProps {
   onClose: () => void;
@@ -11,50 +12,70 @@ export function GuestJoinModal({ onClose, action }: GuestJoinModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full">
-        <div className="p-6 text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-accent-primary/20 rounded-full flex items-center justify-center">
-              <Car className="w-8 h-8 text-accent-primary" />
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Join the Garage</h2>
-            <p className="text-secondary">
-              {action} requires an account. Join MotoRate to interact with the community, rate vehicles, and share your rides.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <button
-              onClick={handleJoin}
-              className="w-full py-3 bg-accent-primary text-white font-bold rounded-xl hover:bg-accent-primary/90 transition-colors"
-            >
-              Sign Up Free
-            </button>
-            <button
-              onClick={onClose}
-              className="w-full py-3 bg-surfacehighlight text-primary font-medium rounded-xl hover:bg-surfacehighlight/80 transition-colors"
-            >
-              Continue Browsing
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-secondary justify-center">
-            <Lock className="w-3 h-3" />
-            <span>Free forever. No credit card required.</span>
-          </div>
+    <ModalShell
+      isOpen={true}
+      onClose={onClose}
+      title=""
+      footer={
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, width: '100%' }}>
+          <button onClick={handleJoin} style={{ ...modalButtonPrimary, flex: 'none', width: '100%' }}>
+            Create Account
+          </button>
+          <button onClick={onClose} style={{ ...modalButtonGhost, flex: 'none', width: '100%' }}>
+            Sign In
+          </button>
+        </div>
+      }
+    >
+      <div style={{ textAlign: 'center' as const, padding: '8px 0 16px' }}>
+        {/* Logo */}
+        <div style={{
+          fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700,
+          color: '#eef4f8', marginBottom: 6,
+        }}>
+          MOTO<span style={{ color: '#F97316' }}>R</span>ATE
+        </div>
+        <div style={{
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+          letterSpacing: '0.24em', textTransform: 'uppercase' as const,
+          color: '#7a8e9e', marginBottom: 24,
+        }}>
+          The car community, rated
         </div>
 
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-surfacehighlight rounded-lg transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div style={{
+          fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#a8bcc8',
+          lineHeight: 1.5, marginBottom: 24,
+        }}>
+          To {action}, you need an account.
+        </div>
+
+        {/* Feature rows */}
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12, textAlign: 'left' as const }}>
+          {[
+            { icon: <Car style={{ width: 16, height: 16 }} />, text: 'Track and rate vehicles you spot in the wild' },
+            { icon: <Heart style={{ width: 16, height: 16 }} />, text: 'Follow vehicles and owners to see their activity' },
+            { icon: <MapPin style={{ width: 16, height: 16 }} />, text: 'Claim your own vehicle and build its reputation' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#F97316',
+              }}>
+                {item.icon}
+              </div>
+              <div style={{
+                fontFamily: "'Barlow', sans-serif", fontSize: 12,
+                color: '#a8bcc8', lineHeight: 1.45, paddingTop: 6,
+              }}>
+                {item.text}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </ModalShell>
   );
 }

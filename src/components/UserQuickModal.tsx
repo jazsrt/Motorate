@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, ExternalLink, Star, Users, Eye, Award } from 'lucide-react';
+import { Users, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FollowButton } from './FollowButton';
 import { UserAvatar } from './UserAvatar';
 import type { OnNavigate } from '../types/navigation';
+import { ModalShell, modalButtonPrimary } from './ui/ModalShell';
 
 interface UserQuickModalProps {
   userId: string;
@@ -104,140 +105,128 @@ export function UserQuickModal({ userId, onClose, onNavigate }: UserQuickModalPr
   const showFullProfile = !profile?.is_private || canViewPrivate || isOwnProfile;
 
   return (
-    <div
-      className="fixed inset-0 z-[80] flex items-end"
-      style={{ background: 'rgba(20,28,38,0.92)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    <ModalShell
+      isOpen={true}
+      onClose={onClose}
+      eyebrow="Driver"
+      title={profile ? `@${profile.handle}` : 'Loading...'}
+      footer={profile && onNavigate ? (
+        <button onClick={handleViewFull} style={{ ...modalButtonPrimary, width: '100%' }}>
+          View Full Profile
+        </button>
+      ) : undefined}
     >
-      <div
-        className="w-full animate-sheet-up"
-        style={{
-          background: 'var(--surface)',
-          borderRadius: '14px 14px 0 0',
-          borderTop: '1px solid var(--border-2)',
-          maxHeight: '85vh',
-          overflowY: 'auto',
-        }}
-      >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="rounded-full" style={{ width: 28, height: 2, background: 'rgba(255,255,255,0.08)' }} />
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: '50%',
+            border: '2px solid rgba(255,255,255,0.1)',
+            borderTopColor: '#F97316',
+            animation: 'spin 0.7s linear infinite',
+          }} />
         </div>
-
-        <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-[15px] font-normal" style={{ color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
-            Profile
-          </h2>
-          <button
-            onClick={onClose}
-            className="w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', color: 'var(--text-tertiary)' }}
-          >
-            <X className="w-2.5 h-2.5" strokeWidth={1.5} />
-          </button>
+      ) : !profile ? (
+        <div style={{ padding: '40px 0', textAlign: 'center' as const }}>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e' }}>User not found</p>
         </div>
-
-        <div className="px-5 py-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: 'var(--accent)' }} />
-            </div>
-          ) : !profile ? (
-            <div className="py-10 text-center">
-              <p className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>User not found</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <UserAvatar avatarUrl={profile.avatar_url} handle={profile.handle} size="lg" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[16px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-                    @{profile.handle}
-                  </p>
-                  {profile.is_private && !showFullProfile && (
-                    <p className="text-[11px] mt-0.5 font-medium uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                      Private Profile
-                    </p>
-                  )}
-                </div>
-                {!isOwnProfile && (
-                  <FollowButton targetUserId={userId} size="sm" />
-                )}
+      ) : (
+        <>
+          {/* Avatar + handle + follow */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            <UserAvatar avatarUrl={profile.avatar_url} handle={profile.handle} size="lg" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontFamily: "'Rajdhani', sans-serif", fontSize: 17, fontWeight: 700,
+                color: '#eef4f8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+              }}>
+                @{profile.handle}
               </div>
-
-              {showFullProfile ? (
-                <>
-                  {profile.bio && (
-                    <p className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-secondary)' }}>
-                      {profile.bio}
-                    </p>
-                  )}
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { label: 'Followers', value: profile.follower_count, icon: <Users className="w-3.5 h-3.5" /> },
-                      { label: 'Following', value: profile.following_count, icon: <Users className="w-3.5 h-3.5" /> },
-                      { label: 'Spots', value: profile.spots_count, icon: <Eye className="w-3.5 h-3.5" /> },
-                      { label: 'Badges', value: profile.badges_count, icon: <Award className="w-3.5 h-3.5" /> },
-                    ].map(stat => (
-                      <div
-                        key={stat.label}
-                        className="flex flex-col items-center gap-1 py-3 rounded-xl"
-                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
-                      >
-                        <span style={{ color: 'var(--text-tertiary)' }}>{stat.icon}</span>
-                        <span className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>{stat.value}</span>
-                        <span className="text-[9px] uppercase tracking-wider font-medium" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {profile.avg_driver_rating > 0 && (
-                    <div
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                      style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
-                    >
-                      <Star className="w-4 h-4 flex-shrink-0" style={{ color: '#f59e0b', fill: '#f59e0b' }} />
-                      <div>
-                        <span className="text-[14px] font-bold" style={{ color: '#f59e0b' }}>
-                          {profile.avg_driver_rating.toFixed(1)}
-                        </span>
-                        <span className="text-[11px] ml-1.5" style={{ color: 'var(--text-tertiary)' }}>
-                          Driver Rating ({profile.driver_rating_count} {profile.driver_rating_count === 1 ? 'review' : 'reviews'})
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div
-                  className="py-8 text-center rounded-xl"
-                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
-                >
-                  <Users className="w-8 h-8 mx-auto mb-2" strokeWidth={1} style={{ color: 'var(--text-quaternary)' }} />
-                  <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>This profile is private</p>
-                  <p className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>Follow to see their content</p>
+              {profile.bio && (
+                <div style={{
+                  fontFamily: "'Barlow', sans-serif", fontSize: 12,
+                  color: '#7a8e9e', marginTop: 2, lineHeight: 1.4,
+                }}>
+                  {profile.bio}
                 </div>
               )}
             </div>
-          )}
-        </div>
-
-        {profile && onNavigate && (
-          <div
-            className="px-5 py-4"
-            style={{ borderTop: '1px solid var(--border)', paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-          >
-            <button
-              onClick={handleViewFull}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[12px] font-bold uppercase transition-all active:scale-[0.98]"
-              style={{ background: 'var(--accent)', color: 'var(--bg)', letterSpacing: '0.8px' }}
-            >
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
-              View Full Profile
-            </button>
+            {!isOwnProfile && (
+              <FollowButton targetUserId={userId} size="sm" />
+            )}
           </div>
-        )}
-      </div>
-    </div>
+
+          {showFullProfile ? (
+            <>
+              {/* Stats row */}
+              <div style={{
+                display: 'flex', borderRadius: 8, overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.06)',
+                marginBottom: 14,
+              }}>
+                {[
+                  { label: 'Followers', value: profile.follower_count },
+                  { label: 'Spots', value: profile.spots_count },
+                  { label: 'Badges', value: profile.badges_count },
+                ].map((stat, i, arr) => (
+                  <div key={stat.label} style={{
+                    flex: 1, padding: '12px 0', textAlign: 'center' as const,
+                    background: '#131920',
+                    borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  }}>
+                    <div style={{
+                      fontFamily: "'Rajdhani', sans-serif", fontSize: 17, fontWeight: 700,
+                      color: '#eef4f8', lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {stat.value}
+                    </div>
+                    <div style={{
+                      fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+                      letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#445566',
+                      marginTop: 3,
+                    }}>
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Driver rating */}
+              {profile.avg_driver_rating > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px', borderRadius: 8,
+                  background: '#131920', border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <Star style={{ width: 16, height: 16, color: '#f0a030', fill: '#f0a030', flexShrink: 0 }} />
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600,
+                    color: '#f0a030', fontVariantNumeric: 'tabular-nums',
+                  }}>
+                    {profile.avg_driver_rating.toFixed(1)}
+                  </span>
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e' }}>
+                    Driver Rating ({profile.driver_rating_count} {profile.driver_rating_count === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{
+              padding: '32px 0', textAlign: 'center' as const,
+              background: '#131920', borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <Users style={{ width: 28, height: 28, color: '#445566', margin: '0 auto 8px', display: 'block' }} strokeWidth={1} />
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 600, color: '#a8bcc8' }}>This profile is private</p>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 4 }}>Follow to see their content</p>
+            </div>
+          )}
+        </>
+      )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+    </ModalShell>
   );
 }

@@ -387,21 +387,82 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        {/* Header - Fixed */}
-        <div className="flex-shrink-0 bg-surface p-4 border-b border-surfacehighlight flex items-center justify-between rounded-t-xl">
-          <h3 className="text-lg font-bold">Comments</h3>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.75)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          background: '#0d1117',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 16,
+          width: '100%',
+          maxWidth: 480,
+          maxHeight: '85vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            flexShrink: 0,
+            padding: 16,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <h3
+            style={{
+              fontFamily: 'Rajdhani, sans-serif',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#eef4f8',
+              margin: 0,
+            }}
+          >
+            Comments
+          </h3>
           <button
             onClick={onClose}
-            className="p-2.5 hover:bg-surfacehighlight rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#7a8e9e',
+              cursor: 'pointer',
+              padding: 8,
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 44,
+              minWidth: 44,
+            }}
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Comments List */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: 16,
+          }}
+        >
           {loading ? (
             <LoadingSpinner size="md" label="Loading comments..." />
           ) : comments.length === 0 ? (
@@ -412,13 +473,19 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
             />
           ) : (
             <>
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    {/* Avatar - Clickable */}
+                  <div key={comment.id} style={{ display: 'flex', gap: 12 }}>
+                    {/* Avatar */}
                     <button
                       onClick={() => onNavigate?.('user-profile', { userId: comment.author_id })}
-                      className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                      style={{
+                        flexShrink: 0,
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                      }}
                     >
                       <UserAvatar
                         avatarUrl={comment.author.avatar_url}
@@ -428,14 +495,48 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                     </button>
 
                     {/* Comment Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="bg-surfacehighlight rounded-lg p-3">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          background: 'rgba(255,255,255,0.03)',
+                          borderRadius: 10,
+                          padding: 12,
+                          border: '1px solid rgba(255,255,255,0.06)',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                            marginBottom: 8,
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                marginBottom: 4,
+                                flexWrap: 'wrap',
+                              }}
+                            >
                               <button
                                 onClick={() => onNavigate?.('user-profile', { userId: comment.author_id })}
-                                className="font-bold text-sm hover:underline"
+                                style={{
+                                  fontFamily: 'Barlow Condensed, sans-serif',
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  color: '#F97316',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  padding: 0,
+                                  cursor: 'pointer',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em',
+                                }}
                               >
                                 @{comment.author.handle}
                               </button>
@@ -443,39 +544,107 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                                 <BadgeList badges={comment.authorBadges} maxDisplay={2} size="xs" />
                               )}
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                flexWrap: 'wrap',
+                              }}
+                            >
                               {comment.driverRating && comment.driverRating.avg_driver_rating > 0 && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
-                                  <Star className="w-2.5 h-2.5 fill-yellow-500 text-yellow-500" />
-                                  <span className="text-[10px] font-bold text-yellow-600">
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 3,
+                                    padding: '2px 6px',
+                                    background: 'rgba(234,179,8,0.1)',
+                                    border: '1px solid rgba(234,179,8,0.3)',
+                                    borderRadius: 999,
+                                  }}
+                                >
+                                  <Star
+                                    style={{ width: 10, height: 10, fill: '#eab308', color: '#eab308' }}
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      color: '#ca8a04',
+                                      fontFamily: 'Barlow Condensed, sans-serif',
+                                    }}
+                                  >
                                     {comment.driverRating.avg_driver_rating.toFixed(1)}
                                   </span>
                                 </div>
                               )}
-                              <span className="text-xs text-secondary">
+                              <span
+                                style={{
+                                  fontFamily: 'JetBrains Mono, monospace',
+                                  fontSize: 9,
+                                  color: '#445566',
+                                }}
+                              >
                                 {formatTimeAgo(comment.created_at)}
                               </span>
                               {comment.updated_at && comment.updated_at !== comment.created_at && (
-                                <span className="text-xs text-secondary italic">(edited)</span>
+                                <span
+                                  style={{
+                                    fontFamily: 'JetBrains Mono, monospace',
+                                    fontSize: 9,
+                                    color: '#445566',
+                                    fontStyle: 'italic',
+                                  }}
+                                >
+                                  (edited)
+                                </span>
                               )}
                             </div>
                           </div>
                         </div>
-                        <p className="text-sm break-words">{comment.text}</p>
+                        <p
+                          style={{
+                            fontFamily: 'Barlow, sans-serif',
+                            fontSize: 13,
+                            color: '#a8bcc8',
+                            margin: 0,
+                            wordBreak: 'break-word',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {comment.text}
+                        </p>
                       </div>
 
                       {/* Comment Actions */}
-                      <div className="flex items-center gap-3 mt-1 ml-2">
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          marginTop: 4,
+                          marginLeft: 8,
+                        }}
+                      >
                         <button
                           onClick={() => handleLikeComment(comment.id, comment.user_liked || false)}
-                          className={`flex items-center gap-1 text-xs transition-colors ${
-                            comment.user_liked
-                              ? 'text-red-500 font-semibold'
-                              : 'text-secondary hover:text-red-500'
-                          }`}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            fontSize: 12,
+                            fontFamily: 'Barlow, sans-serif',
+                            color: comment.user_liked ? '#ef4444' : '#7a8e9e',
+                            fontWeight: comment.user_liked ? 600 : 400,
+                            background: 'transparent',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                          }}
                         >
                           <Heart
-                            className="w-3 h-3"
+                            style={{ width: 12, height: 12 }}
                             fill={comment.user_liked ? 'currentColor' : 'none'}
                           />
                           {comment.like_count && comment.like_count > 0 && <span>{comment.like_count}</span>}
@@ -485,16 +654,38 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                           <>
                             <button
                               onClick={() => handleEditComment(comment)}
-                              className="flex items-center gap-1 text-xs text-secondary hover:text-orange-500 transition-colors"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                fontSize: 12,
+                                fontFamily: 'Barlow, sans-serif',
+                                color: '#7a8e9e',
+                                background: 'transparent',
+                                border: 'none',
+                                padding: 0,
+                                cursor: 'pointer',
+                              }}
                             >
-                              <Edit2 className="w-3 h-3" />
+                              <Edit2 style={{ width: 12, height: 12 }} />
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteComment(comment.id)}
-                              className="flex items-center gap-1 text-xs text-secondary hover:text-red-500 transition-colors"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                fontSize: 12,
+                                fontFamily: 'Barlow, sans-serif',
+                                color: '#7a8e9e',
+                                background: 'transparent',
+                                border: 'none',
+                                padding: 0,
+                                cursor: 'pointer',
+                              }}
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 style={{ width: 12, height: 12 }} />
                               Delete
                             </button>
                           </>
@@ -510,10 +701,24 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                 <button
                   onClick={loadMoreComments}
                   disabled={loadingMore}
-                  className="w-full py-3 mt-4 text-sm text-secondary hover:text-primary hover:bg-surfacehighlight rounded-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    width: '100%',
+                    padding: '12px 0',
+                    marginTop: 16,
+                    fontSize: 13,
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    color: '#7a8e9e',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 10,
+                    cursor: loadingMore ? 'not-allowed' : 'pointer',
+                    opacity: loadingMore ? 0.5 : 1,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}
                 >
                   {loadingMore ? (
-                    <div className="flex items-center justify-center gap-2">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                       <LoadingSpinner size="sm" />
                       <span>Loading more...</span>
                     </div>
@@ -525,7 +730,15 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
 
               {/* End of comments message */}
               {!hasMore && comments.length > 0 && (
-                <p className="text-center text-sm text-secondary mt-4">
+                <p
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 12,
+                    fontFamily: 'Barlow, sans-serif',
+                    color: '#7a8e9e',
+                    marginTop: 16,
+                  }}
+                >
                   No more comments
                 </p>
               )}
@@ -534,8 +747,15 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
         </div>
 
         {/* Comment Input - Fixed Footer */}
-        <form onSubmit={handleSubmit} className="flex-shrink-0 p-4 border-t border-surfacehighlight">
-          <div className="flex gap-3">
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            flexShrink: 0,
+            padding: 16,
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <div style={{ display: 'flex', gap: 12 }}>
             {user && (
               <>
                 <textarea
@@ -543,7 +763,18 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment..."
-                  className="flex-1 bg-surfacehighlight border border-surfacehighlight rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
+                  style={{
+                    flex: 1,
+                    background: '#070a0f',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    fontFamily: 'Barlow, sans-serif',
+                    fontSize: 13,
+                    color: '#eef4f8',
+                    resize: 'none',
+                    outline: 'none',
+                  }}
                   rows={2}
                   disabled={submitting}
                   maxLength={500}
@@ -551,9 +782,26 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
                 <button
                   type="submit"
                   disabled={!newComment.trim() || submitting}
-                  className="px-4 py-2 bg-accent-primary hover:bg-accent-hover rounded-lg font-bold text-sm uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px]"
+                  style={{
+                    padding: '10px 18px',
+                    background: '#F97316',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    color: '#fff',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    cursor: (!newComment.trim() || submitting) ? 'not-allowed' : 'pointer',
+                    opacity: (!newComment.trim() || submitting) ? 0.5 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    minHeight: 44,
+                  }}
                 >
-                  <Send className="w-4 h-4" />
+                  <Send style={{ width: 16, height: 16 }} />
                   {submitting ? 'Posting...' : 'Post'}
                 </button>
               </>
