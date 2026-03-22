@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { X, Star, User } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 import { awardReputationPoints } from '../lib/reputation';
+import { ModalShell, modalButtonPrimary, modalButtonGhost, modalInput, modalLabel } from './ui/ModalShell';
 
 interface RateDriverModalProps {
   driverId: string;
@@ -96,7 +97,6 @@ export function RateDriverModal({
 
           await awardReputationPoints(user.id, 'COMMENT_LEFT', 'review', review.id);
 
-          // AUTO-AWARD: Check for tiered spot badges
           try {
             await supabase.rpc('check_and_award_badges', {
               p_user_id: user.id,
@@ -122,137 +122,108 @@ export function RateDriverModal({
   const displayVehicle = hoverVehicle || vehicleRating;
   const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 
-  function StarRow({
-    label,
-    display,
-    value,
-    onHover,
-    onChange,
-    onLeave,
-  }: {
-    label: string;
-    display: number;
-    value: number;
-    onHover: (v: number) => void;
-    onChange: (v: number) => void;
-    onLeave: () => void;
+  function StarRow({ label, display, value, onHover, onChange, onLeave }: {
+    label: string; display: number; value: number;
+    onHover: (v: number) => void; onChange: (v: number) => void; onLeave: () => void;
   }) {
     return (
-      <div>
-        <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-3">
+      <div style={{ marginBottom: 20 }}>
+        <div style={{
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+          letterSpacing: '0.18em', textTransform: 'uppercase' as const,
+          color: '#7a8e9e', marginBottom: 10,
+        }}>
           {label}
-        </label>
-        <div className="flex items-center justify-center gap-2">
-          {[1, 2, 3, 4, 5].map((star) => (
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {[1, 2, 3, 4, 5].map(star => (
             <button
               key={star}
+              type="button"
               onClick={() => onChange(star)}
               onMouseEnter={() => onHover(star)}
               onMouseLeave={onLeave}
-              className="transition-transform hover:scale-110 active:scale-95"
-              type="button"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
             >
               <Star
-                className={`w-10 h-10 transition-colors ${
-                  star <= display
-                    ? 'fill-[#F97316] text-[#F97316]'
-                    : 'text-neutral-600'
-                }`}
+                style={{
+                  width: 32, height: 32,
+                  color: star <= display ? '#F97316' : '#445566',
+                  fill: star <= display ? '#F97316' : 'transparent',
+                  transition: 'color 0.15s, fill 0.15s',
+                }}
               />
             </button>
           ))}
         </div>
-        <p className="text-center mt-2 text-base font-bold text-secondary">
+        <div style={{
+          textAlign: 'center' as const, marginTop: 6,
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+          color: display > 0 ? '#eef4f8' : '#445566',
+        }}>
           {display === 0 ? 'Select a rating' : ratingLabels[display]}
-        </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full animate-in fade-in zoom-in-95 duration-300">
-        <div className="p-6 border-b border-surfacehighlight flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <User className="w-6 h-6 text-orange-400" />
-              Rate Driver
-            </h2>
-            <p className="text-secondary mt-1 text-sm">@{driverHandle}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-surfacehighlight rounded-lg transition-colors"
-            disabled={submitting}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <StarRow
-            label="How would you rate this driver?"
-            display={displayDriver}
-            value={driverRating}
-            onHover={setHoverDriver}
-            onChange={setDriverRating}
-            onLeave={() => setHoverDriver(0)}
-          />
-
-          <StarRow
-            label="How would you rate this vehicle?"
-            display={displayVehicle}
-            value={vehicleRating}
-            onHover={setHoverVehicle}
-            onChange={setVehicleRating}
-            onLeave={() => setHoverVehicle(0)}
-          />
-
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-              Comment <span className="text-secondary/60 text-xs normal-case">(Optional)</span>
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your experience with this driver..."
-              className="w-full px-4 py-3 bg-surfacehighlight border border-surfacehighlight rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
-              rows={3}
-              maxLength={500}
-            />
-            <p className="text-xs text-secondary mt-1">
-              {comment.length}/500 characters
-            </p>
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-surfacehighlight flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-6 py-3 bg-surfacehighlight border border-surfacehighlight rounded-xl font-bold uppercase tracking-wider hover:bg-surfacehighlight/80 transition-all active:scale-95"
-            disabled={submitting}
-          >
-            Cancel
-          </button>
+    <ModalShell
+      isOpen={true}
+      onClose={onClose}
+      eyebrow={`@${driverHandle}`}
+      title="Rate the Driver"
+      footer={
+        <>
+          <button onClick={onClose} disabled={submitting} style={{ ...modalButtonGhost, opacity: submitting ? 0.5 : 1 }}>Cancel</button>
           <button
             onClick={handleSubmit}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-xl font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             disabled={driverRating === 0 || submitting}
+            style={{ ...modalButtonPrimary, opacity: (driverRating === 0 || submitting) ? 0.5 : 1 }}
           >
-            {submitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Submitting...</span>
-              </>
-            ) : (
-              <>
-                <Star className="w-5 h-5" />
-                <span>Submit Rating</span>
-              </>
-            )}
+            {submitting ? 'Submitting...' : 'Submit Rating'}
           </button>
+        </>
+      }
+    >
+      {/* Info banner */}
+      <div style={{
+        padding: '10px 12px', borderRadius: 8, marginBottom: 18,
+        background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)',
+        fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#F97316', lineHeight: 1.45,
+      }}>
+        Your rating is anonymous and helps the community know what to expect.
+      </div>
+
+      <StarRow
+        label="How would you rate this driver?"
+        display={displayDriver} value={driverRating}
+        onHover={setHoverDriver} onChange={setDriverRating} onLeave={() => setHoverDriver(0)}
+      />
+
+      <StarRow
+        label="How would you rate this vehicle?"
+        display={displayVehicle} value={vehicleRating}
+        onHover={setHoverVehicle} onChange={setVehicleRating} onLeave={() => setHoverVehicle(0)}
+      />
+
+      <div>
+        <label style={modalLabel}>Notes <span style={{ fontWeight: 400, textTransform: 'none' as const, letterSpacing: 'normal' }}>(Optional)</span></label>
+        <textarea
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          placeholder="Share your experience..."
+          rows={3}
+          maxLength={500}
+          style={{ ...modalInput, resize: 'none' as const, lineHeight: 1.55 }}
+        />
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+          color: '#445566', textAlign: 'right' as const, marginTop: 4, fontVariantNumeric: 'tabular-nums',
+        }}>
+          {comment.length}/500
         </div>
       </div>
-    </div>
+    </ModalShell>
   );
 }

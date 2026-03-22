@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Share2, Users, Lock, CheckCircle } from 'lucide-react';
+import { Share2, Users, Lock, CheckCircle } from 'lucide-react';
 import { Confetti } from './Confetti';
 import { Badge, shareBadgeUnlock } from '../lib/badges';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,22 +13,22 @@ interface BadgeUnlockModalProps {
   onClose: () => void;
 }
 
-function getCoinClass(levelName?: string): string {
-  const tier = levelName?.toLowerCase() || '';
-  if (tier === 'platinum') return 'coin-plat';
-  if (tier === 'gold') return 'coin-gold';
-  if (tier === 'silver') return 'coin-silver';
-  if (tier === 'bronze') return 'coin-bronze';
-  return 'coin-silver';
-}
-
 function getTierColor(levelName?: string): string {
   const tier = levelName?.toLowerCase() || '';
-  if (tier === 'platinum') return 'var(--plat-h)';
-  if (tier === 'gold') return 'var(--gold-h)';
-  if (tier === 'silver') return 'var(--silver-h)';
-  if (tier === 'bronze') return 'var(--bronze-h)';
-  return 'var(--accent)';
+  if (tier === 'platinum') return '#f5cc55';
+  if (tier === 'gold') return '#f0a030';
+  if (tier === 'silver') return '#9ab0c0';
+  if (tier === 'bronze') return '#c07840';
+  return '#F97316';
+}
+
+function getTierBg(levelName?: string): string {
+  const tier = levelName?.toLowerCase() || '';
+  if (tier === 'platinum') return 'linear-gradient(135deg, rgba(245,204,85,0.2), rgba(240,160,48,0.15))';
+  if (tier === 'gold') return 'linear-gradient(135deg, rgba(240,160,48,0.2), rgba(240,160,48,0.1))';
+  if (tier === 'silver') return 'linear-gradient(135deg, rgba(154,176,192,0.2), rgba(154,176,192,0.1))';
+  if (tier === 'bronze') return 'linear-gradient(135deg, rgba(192,120,64,0.2), rgba(192,120,64,0.1))';
+  return 'linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.1))';
 }
 
 function getTierMessage(levelName?: string): string {
@@ -50,9 +50,7 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
   const isTiered = ['bronze', 'silver', 'gold', 'platinum'].includes(tierName);
   const isNegativeBadge = badge.rarity === 'Common' && badge.category === 'negative';
   const tierColor = getTierColor(badge.level_name);
-  const coinClass = getCoinClass(badge.level_name);
 
-  // Sound + Haptic feedback on mount
   useEffect(() => {
     if (!isNegativeBadge) {
       sounds.badge();
@@ -60,7 +58,6 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
     }
   }, []);
 
-  // Prevent background scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
@@ -84,68 +81,81 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
     <>
       {!isNegativeBadge && <Confetti duration={3000} />}
 
-      {/* Full-screen overlay */}
       <div
-        className="modal-overlay p-6"
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', flexDirection: 'column' as const,
+          alignItems: 'center', justifyContent: 'center',
+          padding: 24,
+        }}
       >
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-2)' }}
           disabled={sharing}
+          style={{
+            position: 'absolute', top: 20, right: 20,
+            width: 32, height: 32, borderRadius: 8,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+          }}
         >
-          <X className="w-4 h-4" strokeWidth={1.5} style={{ color: 'var(--text-tertiary)' }} />
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 1l12 12M13 1L1 13" stroke="#7a8e9e" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </button>
 
-        <div className="flex flex-col items-center text-center space-y-6 max-w-xs w-full">
+        <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const, maxWidth: 320, width: '100%', gap: 20 }}>
+
           {/* Tier label */}
-          <div
-            className="text-[10px] font-medium uppercase"
-            style={{ color: isNegativeBadge ? 'var(--negative)' : tierColor, letterSpacing: '3px' }}
-          >
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+            color: isNegativeBadge ? '#ef4444' : tierColor,
+          }}>
             {isNegativeBadge ? 'Warning Issued' : getTierMessage(badge.level_name)}
           </div>
 
-          {/* Coin */}
-          <div
-            className={`coin w-28 h-28 animate-coin-in ${isNegativeBadge ? '' : coinClass}`}
-            style={isNegativeBadge ? { background: 'var(--negative)', opacity: 0.8 } : {}}
-          >
-            <div className="w-full h-full flex items-center justify-center p-3">
-              <BadgeIcon iconPath={badge.icon_path} size={80} alt={badge.name} />
-            </div>
+          {/* Badge coin */}
+          <div style={{
+            width: 112, height: 112, borderRadius: '50%',
+            background: isNegativeBadge ? 'rgba(239,68,68,0.2)' : getTierBg(badge.level_name),
+            border: `2px solid ${isNegativeBadge ? 'rgba(239,68,68,0.4)' : tierColor}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: isNegativeBadge ? 'none' : `0 0 40px ${tierColor}33`,
+          }}>
+            <BadgeIcon iconPath={badge.icon_path} size={72} alt={badge.name} />
           </div>
 
           {/* Badge info */}
           <div>
-            <h2
-              className="text-[18px] font-medium"
-              style={{ color: 'var(--text-white)', letterSpacing: '0.5px' }}
-            >
+            <div style={{
+              fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700,
+              color: '#eef4f8', lineHeight: 1, marginBottom: 8,
+            }}>
               {isTiered && `${badge.level_name} `}{badge.name}
-            </h2>
-            <p
-              className="text-[13px] mt-2 leading-[1.65]"
-              style={{ color: 'var(--text-secondary)' }}
-            >
+            </div>
+            <p style={{
+              fontFamily: "'Barlow', sans-serif", fontSize: 13,
+              color: '#a8bcc8', lineHeight: 1.65,
+            }}>
               {badge.description}
             </p>
           </div>
 
-          {/* Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          {/* Tier pills */}
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             {[badge.category, isTiered ? badge.level_name : null, badge.rarity].filter(Boolean).map(label => (
-              <span
-                key={label}
-                className="text-[10px] px-2.5 py-1 rounded-full font-medium uppercase"
-                style={{
-                  border: '1px solid var(--border-2)',
-                  color: 'var(--text-tertiary)',
-                  letterSpacing: '1px',
-                }}
-              >
+              <span key={label} style={{
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                padding: '3px 10px', borderRadius: 4,
+                border: '1px solid rgba(255,255,255,0.10)', color: '#7a8e9e',
+              }}>
                 {label}
               </span>
             ))}
@@ -153,57 +163,52 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
 
           {/* Share actions */}
           {!shared ? (
-            <div className="w-full space-y-2 pt-2">
-              <p className="label-micro mb-3">Share your achievement</p>
-
-              <button
-                onClick={() => handleShare('public')}
-                disabled={sharing}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[11px] font-semibold uppercase transition-all active:scale-95 disabled:opacity-40"
-                style={{
-                  background: 'var(--text-secondary)',
-                  color: 'var(--bg)',
-                  letterSpacing: '0.8px',
-                }}
-              >
-                <Share2 className="w-3.5 h-3.5" strokeWidth={2} />
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column' as const, gap: 8, paddingTop: 8 }}>
+              <div style={{
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#445566',
+                marginBottom: 4,
+              }}>
+                Share your achievement
+              </div>
+              <button onClick={() => handleShare('public')} disabled={sharing} style={{
+                width: '100%', padding: 12, borderRadius: 8,
+                background: '#F97316', border: 'none',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508',
+                cursor: 'pointer', opacity: sharing ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <Share2 style={{ width: 14, height: 14 }} strokeWidth={2} />
                 Share Publicly
               </button>
-
-              <button
-                onClick={() => handleShare('friends')}
-                disabled={sharing}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[11px] font-semibold uppercase transition-all active:scale-95 disabled:opacity-40"
-                style={{
-                  background: 'transparent',
-                  border: '1px solid var(--border-2)',
-                  color: 'var(--text-tertiary)',
-                  letterSpacing: '0.8px',
-                }}
-              >
-                <Users className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <button onClick={() => handleShare('friends')} disabled={sharing} style={{
+                width: '100%', padding: 12, borderRadius: 8,
+                background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#7a8e9e',
+                cursor: 'pointer', opacity: sharing ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <Users style={{ width: 14, height: 14 }} strokeWidth={1.5} />
                 Friends Only
               </button>
-
-              <button
-                onClick={() => handleShare('private')}
-                disabled={sharing}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[11px] font-semibold uppercase transition-all active:scale-95 disabled:opacity-40"
-                style={{
-                  background: 'transparent',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-quaternary)',
-                  letterSpacing: '0.8px',
-                }}
-              >
-                <Lock className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <button onClick={() => handleShare('private')} disabled={sharing} style={{
+                width: '100%', padding: 12, borderRadius: 8,
+                background: 'transparent', border: '1px solid rgba(255,255,255,0.06)',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#445566',
+                cursor: 'pointer', opacity: sharing ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <Lock style={{ width: 14, height: 14 }} strokeWidth={1.5} />
                 Keep Private
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 pt-2">
-              <CheckCircle className="w-5 h-5" style={{ color: 'var(--positive)' }} />
-              <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>Badge saved</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8 }}>
+              <CheckCircle style={{ width: 20, height: 20, color: '#20c060' }} />
+              <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#a8bcc8' }}>Badge saved</span>
             </div>
           )}
         </div>

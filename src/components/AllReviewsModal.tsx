@@ -54,21 +54,51 @@ interface AllReviewsModalProps {
 
 function StarLine({ label, value, count }: { label: string; value: number; count?: number }) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs font-bold uppercase tracking-wider text-secondary w-20">{label}</span>
-      <div className="flex items-center gap-0.5 flex-1">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <span style={{
+        fontFamily: 'Barlow Condensed, sans-serif',
+        fontSize: 9,
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.18em',
+        color: '#7a8e9e',
+        width: 80,
+      }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
         {[1, 2, 3, 4, 5].map(s => (
-          <div key={s} className="flex-1 h-1.5 rounded-full overflow-hidden bg-neutral-700">
-            <div
-              className="h-full bg-yellow-400 rounded-full transition-all"
-              style={{ width: `${Math.min(100, (value / 5) * 100)}%` }}
-            />
+          <div key={s} style={{
+            flex: 1,
+            height: 6,
+            borderRadius: 9999,
+            overflow: 'hidden',
+            background: '#445566',
+          }}>
+            <div style={{
+              height: '100%',
+              background: '#f0a030',
+              borderRadius: 9999,
+              transition: 'all 0.3s',
+              width: `${Math.min(100, (value / 5) * 100)}%`,
+            }} />
           </div>
         ))}
       </div>
-      <span className="text-sm font-bold text-primary w-8 text-right">{value.toFixed(1)}</span>
+      <span style={{
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 14,
+        fontWeight: 700,
+        color: '#eef4f8',
+        width: 32,
+        textAlign: 'right',
+      }}>{value.toFixed(1)}</span>
       {count !== undefined && (
-        <span className="text-xs text-secondary w-12 text-right">({count})</span>
+        <span style={{
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: 12,
+          color: '#7a8e9e',
+          width: 48,
+          textAlign: 'right',
+        }}>({count})</span>
       )}
     </div>
   );
@@ -76,9 +106,17 @@ function StarLine({ label, value, count }: { label: string; value: number; count
 
 function MiniStars({ value }: { value: number }) {
   return (
-    <div className="flex items-center gap-0.5">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center' }}>
       {[1, 2, 3, 4, 5].map(s => (
-        <Star key={s} className={`w-3 h-3 ${s <= value ? 'fill-[#F97316] text-[#F97316]' : 'fill-neutral-700 text-neutral-700'}`} />
+        <Star
+          key={s}
+          style={{
+            width: 12,
+            height: 12,
+            fill: s <= value ? '#F97316' : '#445566',
+            color: s <= value ? '#F97316' : '#445566',
+          }}
+        />
       ))}
     </div>
   );
@@ -240,236 +278,593 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-950">
-      <div className="flex items-center justify-between px-4 py-4 border-b border-surfacehighlight bg-surface flex-shrink-0">
-        <div>
-          <h2 className="text-lg font-heading font-black uppercase tracking-tight text-primary">All Spots</h2>
-          <p className="text-xs text-secondary">{vehicleName}</p>
-        </div>
-        <button onClick={onClose} className="p-2 rounded-xl hover:bg-surfacehighlight transition-colors">
-          <X className="w-5 h-5 text-secondary" />
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 50,
+      background: 'rgba(0,0,0,0.75)',
+      backdropFilter: 'blur(4px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+    }}>
+      <div style={{
+        background: '#0d1117',
+        border: '1px solid rgba(255,255,255,0.10)',
+        borderRadius: 16,
+        width: '100%',
+        maxWidth: 500,
+        maxHeight: '85vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '16px 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <div>
+            <p style={{
+              fontFamily: 'Barlow Condensed, sans-serif',
+              fontSize: 9,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+              color: '#F97316',
+              marginBottom: 2,
+            }}>Reviews</p>
+            <h2 style={{
+              fontFamily: 'Rajdhani, sans-serif',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#eef4f8',
+              lineHeight: 1.1,
+              margin: 0,
+            }}>Community Reviews</h2>
+            <p style={{
+              fontFamily: 'Barlow, sans-serif',
+              fontSize: 13,
+              color: '#7a8e9e',
+              marginTop: 2,
+            }}>{vehicleName}</p>
           </div>
-        ) : (
-          <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-            {ratings && ratings.spot_count > 0 && (
-              <div className="bg-surface border border-surfacehighlight rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-heading font-bold uppercase tracking-tight text-sm">Rating Summary</h3>
-                  <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" />
-                    <span className="text-lg font-black text-primary">{ratings.overall_avg.toFixed(1)}</span>
-                    <span className="text-secondary text-xs">/ 5</span>
-                  </div>
-                </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 8,
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <X style={{ width: 20, height: 20, color: '#7a8e9e' }} />
+          </button>
+        </div>
 
-                <div className="space-y-2">
-                  <StarLine label="Driver" value={ratings.driver_avg} count={ratings.spot_count} />
-                  <StarLine label="Driving" value={ratings.driving_avg} count={ratings.spot_count} />
-                  <StarLine label="Vehicle" value={ratings.vehicle_avg} count={ratings.spot_count} />
-                  {ratings.looks_avg != null && <StarLine label="Looks" value={ratings.looks_avg} count={ratings.full_review_count} />}
-                  {ratings.sound_avg != null && <StarLine label="Sound" value={ratings.sound_avg} count={ratings.full_review_count} />}
-                  {ratings.condition_avg != null && <StarLine label="Condition" value={ratings.condition_avg} count={ratings.full_review_count} />}
-                </div>
-
-                {(ratings.love_count > 0 || ratings.hate_count > 0) && (
-                  <div className="pt-3 border-t border-surfacehighlight">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5 text-rose-400">
-                        <Heart className="w-4 h-4 fill-current" />
-                        <span className="text-sm font-bold">{ratings.love_count} Love It</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-neutral-400">
-                        <ThumbsDown className="w-4 h-4" />
-                        <span className="text-sm font-bold">{ratings.hate_count} Hate It</span>
-                      </div>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '20px 20px',
+        }}>
+          {loading ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '80px 0',
+            }}>
+              <div style={{
+                width: 32,
+                height: 32,
+                border: '2px solid #F97316',
+                borderTopColor: 'transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+              }} />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Rating Summary */}
+              {ratings && ratings.spot_count > 0 && (
+                <div style={{
+                  background: '#131920',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 12,
+                  padding: 20,
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 16,
+                  }}>
+                    <span style={{
+                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.18em',
+                      color: '#7a8e9e',
+                    }}>Rating Summary</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Star style={{ width: 16, height: 16, fill: '#F97316', color: '#F97316' }} />
+                      <span style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: '#eef4f8',
+                      }}>{ratings.overall_avg.toFixed(1)}</span>
+                      <span style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 12,
+                        color: '#7a8e9e',
+                      }}>/ 5</span>
                     </div>
-                    <div className="h-2 bg-neutral-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full transition-all"
-                        style={{
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <StarLine label="Driver" value={ratings.driver_avg} count={ratings.spot_count} />
+                    <StarLine label="Driving" value={ratings.driving_avg} count={ratings.spot_count} />
+                    <StarLine label="Vehicle" value={ratings.vehicle_avg} count={ratings.spot_count} />
+                    {ratings.looks_avg != null && <StarLine label="Looks" value={ratings.looks_avg} count={ratings.full_review_count} />}
+                    {ratings.sound_avg != null && <StarLine label="Sound" value={ratings.sound_avg} count={ratings.full_review_count} />}
+                    {ratings.condition_avg != null && <StarLine label="Condition" value={ratings.condition_avg} count={ratings.full_review_count} />}
+                  </div>
+
+                  {/* Love/Hate bar */}
+                  {(ratings.love_count > 0 || ratings.hate_count > 0) && (
+                    <div style={{
+                      paddingTop: 12,
+                      marginTop: 12,
+                      borderTop: '1px solid rgba(255,255,255,0.06)',
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 8,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444' }}>
+                          <Heart style={{ width: 16, height: 16, fill: 'currentColor' }} />
+                          <span style={{
+                            fontFamily: 'Barlow, sans-serif',
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}>{ratings.love_count} Love It</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#7a8e9e' }}>
+                          <ThumbsDown style={{ width: 16, height: 16 }} />
+                          <span style={{
+                            fontFamily: 'Barlow, sans-serif',
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}>{ratings.hate_count} Hate It</span>
+                        </div>
+                      </div>
+                      <div style={{
+                        height: 8,
+                        background: '#445566',
+                        borderRadius: 9999,
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          background: 'linear-gradient(to right, #ef4444, #f87171)',
+                          borderRadius: 9999,
+                          transition: 'all 0.3s',
                           width: `${ratings.love_count + ratings.hate_count > 0
                             ? (ratings.love_count / (ratings.love_count + ratings.hate_count)) * 100
-                            : 0}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {topStickers.length > 0 && (
-                  <div className="pt-3 border-t border-surfacehighlight">
-                    <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-2">Top Stickers</p>
-                    <div className="flex flex-wrap gap-2">
-                      {topStickers.map(s => (
-                        <span
-                          key={s.tag_name}
-                          className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium ${
-                            s.tag_sentiment === 'positive'
-                              ? 'bg-rose-500/15 text-rose-300'
-                              : 'bg-neutral-700/60 text-neutral-400'
-                          }`}
-                        >
-                          {s.tag_name}
-                          <span className="opacity-70">×{s.count}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-surfacehighlight">
-                  <div className="text-center">
-                    <p className="text-xl font-black text-primary">{ratings.spot_count}</p>
-                    <p className="text-xs text-secondary">Total Spots</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-black text-primary">{ratings.quick_spot_count}</p>
-                    <p className="text-xs text-secondary">Quick Spots</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-black text-primary">{ratings.full_review_count}</p>
-                    <p className="text-xs text-secondary">Full Spots</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {reviews.length === 0 && unlinkedSpots.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-surfacehighlight rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Car className="w-8 h-8 text-secondary" />
-                </div>
-                <p className="text-secondary">No spots yet</p>
-                <p className="text-sm text-neutral-600 mt-1">Be the first to spot this plate</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <h3 className="font-heading font-bold uppercase tracking-tight text-sm text-secondary">
-                  Spots ({reviews.length + unlinkedSpots.length}{hasMore ? '+' : ''})
-                </h3>
-                {[...reviews, ...unlinkedSpots]
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                  .map(review => (
-                  <div key={review.id} className="bg-surface border border-surfacehighlight rounded-2xl p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar
-                          src={review.author?.avatar_url || null}
-                          alt={review.author?.handle || 'User'}
-                          size="sm"
-                        />
-                        <div>
-                          <p className="font-bold text-sm">@{review.author?.handle || 'Anonymous'}</p>
-                          <p className="text-xs text-secondary">{timeAgo(review.created_at)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg font-medium ${
-                          review.sentiment === 'love'
-                            ? 'bg-rose-500/20 text-rose-400'
-                            : review.sentiment === 'hate'
-                            ? 'bg-neutral-700/50 text-neutral-400'
-                            : 'bg-surfacehighlight text-secondary'
-                        }`}>
-                          {review.sentiment === 'love' ? <Heart className="w-3 h-3 fill-current" /> : review.sentiment === 'hate' ? <ThumbsDown className="w-3 h-3" /> : null}
-                          {review.sentiment === 'love' ? 'Love It' : review.sentiment === 'hate' ? 'Hate It' : ''}
-                        </div>
-                        {user && (
-                          <button
-                            onClick={() => {
-                              setDisputeReviewId(review.id);
-                              setDisputeComment(review.comment);
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-orange-500/20 text-neutral-600 hover:text-orange-400 transition-colors"
-                            title="Dispute this review"
-                          >
-                            <Flag className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                            : 0}%`,
+                        }} />
                       </div>
                     </div>
+                  )}
 
-                    {review.rating_driver > 0 || review.rating_driving > 0 || review.rating_vehicle > 0 ? (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        {[
-                          { l: 'Driver', v: review.rating_driver },
-                          { l: 'Driving', v: review.rating_driving },
-                          { l: 'Vehicle', v: review.rating_vehicle },
-                          ...(review.looks_rating ? [{ l: 'Looks', v: review.looks_rating }] : []),
-                          ...(review.sound_rating ? [{ l: 'Sound', v: review.sound_rating }] : []),
-                          ...(review.condition_rating ? [{ l: 'Condition', v: review.condition_rating }] : []),
-                        ].map(item => (
-                          <div key={item.l} className="text-center">
-                            <p className="text-xs text-secondary mb-1">{item.l}</p>
-                            <MiniStars value={item.v} />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mb-3 text-xs text-secondary bg-surfacehighlight rounded-lg px-3 py-2">
-                        Spotted — no rating left
-                      </div>
-                    )}
-
-                    {review.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {review.tags.map(tag => (
+                  {/* Top Stickers */}
+                  {topStickers.length > 0 && (
+                    <div style={{
+                      paddingTop: 12,
+                      marginTop: 12,
+                      borderTop: '1px solid rgba(255,255,255,0.06)',
+                    }}>
+                      <p style={{
+                        fontFamily: 'Barlow Condensed, sans-serif',
+                        fontSize: 9,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.18em',
+                        color: '#7a8e9e',
+                        marginBottom: 8,
+                      }}>Top Stickers</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {topStickers.map(s => (
                           <span
-                            key={tag.tag_name}
-                            className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-                              tag.tag_sentiment === 'positive'
-                                ? 'bg-rose-500/15 text-rose-300'
-                                : 'bg-neutral-700/50 text-neutral-400'
-                            }`}
+                            key={s.tag_name}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              fontFamily: 'Barlow, sans-serif',
+                              fontSize: 12,
+                              padding: '4px 10px',
+                              borderRadius: 8,
+                              fontWeight: 500,
+                              background: s.tag_sentiment === 'positive'
+                                ? 'rgba(239,68,68,0.15)'
+                                : 'rgba(68,85,102,0.6)',
+                              color: s.tag_sentiment === 'positive'
+                                ? '#fca5a5'
+                                : '#7a8e9e',
+                            }}
                           >
-                            {tag.tag_name}
+                            {s.tag_name}
+                            <span style={{ opacity: 0.7 }}>{'\u00d7'}{s.count}</span>
                           </span>
                         ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {review.comment && (
-                      <p className="text-sm text-secondary italic">"{review.comment}"</p>
-                    )}
+                  {/* Stats row */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: 12,
+                    paddingTop: 12,
+                    marginTop: 12,
+                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 20,
+                        fontWeight: 700,
+                        color: '#eef4f8',
+                        margin: 0,
+                      }}>{ratings.spot_count}</p>
+                      <p style={{
+                        fontFamily: 'Barlow, sans-serif',
+                        fontSize: 12,
+                        color: '#7a8e9e',
+                        margin: 0,
+                      }}>Total Spots</p>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 20,
+                        fontWeight: 700,
+                        color: '#eef4f8',
+                        margin: 0,
+                      }}>{ratings.quick_spot_count}</p>
+                      <p style={{
+                        fontFamily: 'Barlow, sans-serif',
+                        fontSize: 12,
+                        color: '#7a8e9e',
+                        margin: 0,
+                      }}>Quick Spots</p>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 20,
+                        fontWeight: 700,
+                        color: '#eef4f8',
+                        margin: 0,
+                      }}>{ratings.full_review_count}</p>
+                      <p style={{
+                        fontFamily: 'Barlow, sans-serif',
+                        fontSize: 12,
+                        color: '#7a8e9e',
+                        margin: 0,
+                      }}>Full Spots</p>
+                    </div>
                   </div>
-                ))}
+                </div>
+              )}
 
-                {hasMore && (
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={loadingMore}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl text-sm text-secondary font-medium transition-all"
-                  >
-                    {loadingMore ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <ChevronDown className="w-4 h-4" />
-                        Load More
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              {/* Reviews List */}
+              {reviews.length === 0 && unlinkedSpots.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '64px 0' }}>
+                  <div style={{
+                    width: 64,
+                    height: 64,
+                    background: '#131920',
+                    borderRadius: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                  }}>
+                    <Car style={{ width: 32, height: 32, color: '#7a8e9e' }} />
+                  </div>
+                  <p style={{
+                    fontFamily: 'Barlow, sans-serif',
+                    fontSize: 13,
+                    color: '#7a8e9e',
+                    margin: 0,
+                  }}>No spots yet</p>
+                  <p style={{
+                    fontFamily: 'Barlow, sans-serif',
+                    fontSize: 13,
+                    color: '#445566',
+                    marginTop: 4,
+                  }}>Be the first to spot this plate</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <span style={{
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.18em',
+                    color: '#7a8e9e',
+                  }}>
+                    Spots ({reviews.length + unlinkedSpots.length}{hasMore ? '+' : ''})
+                  </span>
 
-      <div className="flex-shrink-0 p-4 border-t border-surfacehighlight bg-surface">
-        <button
-          onClick={onLeaveReview}
-          className="w-full py-3.5 bg-accent-primary hover:bg-accent-primary/90 rounded-xl font-heading font-bold uppercase tracking-tight transition-all active:scale-95"
-        >
-          Spot This Plate
-        </button>
+                  {[...reviews, ...unlinkedSpots]
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .map(review => (
+                    <div key={review.id} style={{
+                      background: '#131920',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: 12,
+                      padding: 16,
+                    }}>
+                      {/* Review header: avatar, handle, sentiment, dispute */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        marginBottom: 12,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <UserAvatar
+                            src={review.author?.avatar_url || null}
+                            alt={review.author?.handle || 'User'}
+                            size="sm"
+                          />
+                          <div>
+                            <p style={{
+                              fontFamily: 'Barlow, sans-serif',
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: '#F97316',
+                              margin: 0,
+                            }}>@{review.author?.handle || 'Anonymous'}</p>
+                            <p style={{
+                              fontFamily: 'JetBrains Mono, monospace',
+                              fontSize: 11,
+                              color: '#5a6e7e',
+                              margin: 0,
+                              marginTop: 2,
+                            }}>{timeAgo(review.created_at)}</p>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {review.sentiment && (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              fontFamily: 'Barlow, sans-serif',
+                              fontSize: 12,
+                              padding: '4px 8px',
+                              borderRadius: 8,
+                              fontWeight: 500,
+                              background: review.sentiment === 'love'
+                                ? 'rgba(239,68,68,0.20)'
+                                : 'rgba(68,85,102,0.50)',
+                              color: review.sentiment === 'love'
+                                ? '#f87171'
+                                : '#7a8e9e',
+                            }}>
+                              {review.sentiment === 'love'
+                                ? <Heart style={{ width: 12, height: 12, fill: 'currentColor' }} />
+                                : <ThumbsDown style={{ width: 12, height: 12 }} />}
+                              {review.sentiment === 'love' ? 'Love It' : 'Hate It'}
+                            </div>
+                          )}
+                          {user && (
+                            <button
+                              onClick={() => {
+                                setDisputeReviewId(review.id);
+                                setDisputeComment(review.comment);
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 6,
+                                borderRadius: 8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#445566',
+                              }}
+                              title="Dispute this review"
+                            >
+                              <Flag style={{ width: 14, height: 14 }} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Star ratings grid */}
+                      {review.rating_driver > 0 || review.rating_driving > 0 || review.rating_vehicle > 0 ? (
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: 8,
+                          marginBottom: 12,
+                        }}>
+                          {[
+                            { l: 'Driver', v: review.rating_driver },
+                            { l: 'Driving', v: review.rating_driving },
+                            { l: 'Vehicle', v: review.rating_vehicle },
+                            ...(review.looks_rating ? [{ l: 'Looks', v: review.looks_rating }] : []),
+                            ...(review.sound_rating ? [{ l: 'Sound', v: review.sound_rating }] : []),
+                            ...(review.condition_rating ? [{ l: 'Condition', v: review.condition_rating }] : []),
+                          ].map(item => (
+                            <div key={item.l} style={{ textAlign: 'center' }}>
+                              <p style={{
+                                fontFamily: 'Barlow Condensed, sans-serif',
+                                fontSize: 9,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.18em',
+                                color: '#7a8e9e',
+                                marginBottom: 4,
+                                margin: 0,
+                                paddingBottom: 4,
+                              }}>{item.l}</p>
+                              <MiniStars value={item.v} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{
+                          marginBottom: 12,
+                          fontFamily: 'Barlow, sans-serif',
+                          fontSize: 12,
+                          color: '#7a8e9e',
+                          background: 'rgba(255,255,255,0.04)',
+                          borderRadius: 8,
+                          padding: '8px 12px',
+                        }}>
+                          Spotted — no rating left
+                        </div>
+                      )}
+
+                      {/* Tags */}
+                      {review.tags.length > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 6,
+                          marginBottom: 12,
+                        }}>
+                          {review.tags.map(tag => (
+                            <span
+                              key={tag.tag_name}
+                              style={{
+                                fontFamily: 'Barlow, sans-serif',
+                                fontSize: 12,
+                                padding: '2px 8px',
+                                borderRadius: 6,
+                                fontWeight: 500,
+                                background: tag.tag_sentiment === 'positive'
+                                  ? 'rgba(239,68,68,0.15)'
+                                  : 'rgba(68,85,102,0.50)',
+                                color: tag.tag_sentiment === 'positive'
+                                  ? '#fca5a5'
+                                  : '#7a8e9e',
+                              }}
+                            >
+                              {tag.tag_name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Comment */}
+                      {review.comment && (
+                        <p style={{
+                          fontFamily: 'Barlow, sans-serif',
+                          fontSize: 13,
+                          color: '#a8bcc8',
+                          fontStyle: 'italic',
+                          margin: 0,
+                        }}>"{review.comment}"</p>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Load More */}
+                  {hasMore && (
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        padding: '12px 0',
+                        background: '#131920',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        borderRadius: 12,
+                        fontFamily: 'Barlow, sans-serif',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: '#7a8e9e',
+                        cursor: loadingMore ? 'default' : 'pointer',
+                        opacity: loadingMore ? 0.6 : 1,
+                      }}
+                    >
+                      {loadingMore ? (
+                        <div style={{
+                          width: 16,
+                          height: 16,
+                          border: '2px solid currentColor',
+                          borderTopColor: 'transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                        }} />
+                      ) : (
+                        <>
+                          <ChevronDown style={{ width: 16, height: 16 }} />
+                          Load More
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom CTA */}
+        <div style={{
+          flexShrink: 0,
+          padding: 16,
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <button
+            onClick={onLeaveReview}
+            style={{
+              width: '100%',
+              padding: '14px 0',
+              background: '#F97316',
+              border: 'none',
+              borderRadius: 12,
+              fontFamily: 'Rajdhani, sans-serif',
+              fontSize: 16,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
+              color: '#eef4f8',
+              cursor: 'pointer',
+            }}
+          >
+            Spot This Plate
+          </button>
+        </div>
       </div>
 
       {disputeReviewId && (

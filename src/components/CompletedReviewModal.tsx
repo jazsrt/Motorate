@@ -32,45 +32,23 @@ interface CompletedReviewModalProps {
 
 function StarDisplay({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs font-bold uppercase tracking-wider text-secondary">{label}</span>
-      <div className="flex items-center gap-0.5">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         {[1, 2, 3, 4, 5].map(star => (
-          <Star
-            key={star}
-            className={`w-3.5 h-3.5 ${star <= value ? 'fill-[#F97316] text-[#F97316]' : 'fill-neutral-700 text-neutral-700'}`}
-          />
+          <Star key={star} style={{ width: 14, height: 14, color: star <= value ? '#F97316' : '#445566', fill: star <= value ? '#F97316' : 'transparent' }} />
         ))}
       </div>
-      <span className="text-sm font-bold text-primary w-6 text-right">{value}</span>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', width: 24, textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   );
 }
 
 export function CompletedReviewModal({
-  vehicleId,
-  spotType,
-  wizardData,
-  driverRating,
-  drivingRating,
-  vehicleRating,
-  looksRating,
-  soundRating,
-  conditionRating,
-  sentiment,
-  comment,
-  selectedTags = [],
-  reputationEarned,
-  isFirstSpot,
-  newRank,
-  rankChange,
-  nextBadgeName,
-  nextBadgeRemaining,
-  onDone,
-  onViewVehicle,
-  onUpgradeToFull,
-  userId,
-  userHandle,
+  vehicleId, spotType, wizardData, driverRating, drivingRating, vehicleRating,
+  looksRating, soundRating, conditionRating, sentiment, comment, selectedTags = [],
+  reputationEarned, isFirstSpot, newRank, rankChange, nextBadgeName, nextBadgeRemaining,
+  onDone, onViewVehicle, onUpgradeToFull, userId, userHandle,
 }: CompletedReviewModalProps) {
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
   const pointsRef = useRef<HTMLDivElement>(null);
@@ -87,76 +65,96 @@ export function CompletedReviewModal({
   }, []);
 
   return (
-    <div className="modal-overlay p-4">
-      <div ref={pointsRef} className="modal-content rounded-2xl w-full max-w-md overflow-hidden">
-        <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-b border-surfacehighlight p-6 text-center relative">
-          <button
-            onClick={onDone}
-            className="absolute top-4 right-4 p-2 rounded-xl bg-surface/50 hover:bg-surface/80 transition-colors z-10"
-          >
-            <X className="w-4 h-4 text-secondary" />
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+    }}>
+      <div ref={pointsRef} style={{
+        background: '#0d1117', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 16,
+        width: '100%', maxWidth: 420, maxHeight: '85vh', overflow: 'hidden',
+        display: 'flex', flexDirection: 'column' as const,
+      }}>
+        {/* Hero header */}
+        <div style={{
+          padding: '24px 20px', textAlign: 'center' as const, position: 'relative' as const,
+          background: 'linear-gradient(135deg, rgba(249,115,22,0.12) 0%, rgba(240,160,48,0.08) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <button onClick={onDone} style={{
+            position: 'absolute', top: 14, right: 14,
+            width: 32, height: 32, borderRadius: 8,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>
+            <X style={{ width: 14, height: 14, color: '#7a8e9e' }} />
           </button>
 
-          {/* Stock image or fallback icon */}
-          {stockImageUrl ? (
-            <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 border border-surfacehighlight" style={{ animation: 'coin-in 0.7s cubic-bezier(.25,.46,.45,.94) forwards' }}>
-              <img src={stockImageUrl} alt={vehicleName} className="w-full h-full object-cover" />
-            </div>
-          ) : (
-            <div className="w-16 h-16 bg-orange/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Car className="w-8 h-8 text-accent-primary" />
-            </div>
-          )}
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+            letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 12,
+          }}>
+            Spot Logged
+          </div>
 
-          <h2 className="text-2xl font-heading font-black uppercase tracking-tight text-primary mb-1">
-            {spotType === 'full' ? 'Full Spot' : 'Quick Spot'} Submitted!
-          </h2>
-          <p className="text-secondary text-sm">{vehicleName}</p>
+          {/* RP earned */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Zap style={{ width: 20, height: 20, color: '#F97316' }} />
+            <span style={{
+              fontFamily: "'Rajdhani', sans-serif", fontSize: 48, fontWeight: 700,
+              color: '#F97316', lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+            }}>
+              +{reputationEarned}
+            </span>
+          </div>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#7a8e9e',
+          }}>
+            Reputation Points
+          </div>
 
-          <div className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-orange/20 rounded-xl border border-orange/40">
-            <Zap className="w-5 h-5 text-accent-primary" />
-            <span className="text-2xl font-black text-accent-primary">+{reputationEarned}</span>
-            <span className="text-sm font-bold text-accent-primary">Points Earned</span>
+          {/* Vehicle name */}
+          <div style={{
+            fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700,
+            color: '#eef4f8', marginTop: 10,
+          }}>
+            {vehicleName}
           </div>
         </div>
 
-        <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
-          {/* First Spot Celebration */}
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: 'auto' as const, padding: '16px 20px' }}>
+          {/* First spot */}
           {isFirstSpot && (
-            <div
-              className="rounded-xl p-4 border text-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(245,158,11,0.08))',
-                borderColor: 'rgba(249,115,22,0.3)',
-                animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) 0.3s both',
-              }}
-            >
-              <div className="text-lg font-heading font-black uppercase tracking-tight text-accent-primary mb-1">
-                First Spot!
-              </div>
-              <p className="text-xs text-secondary">
+            <div style={{
+              padding: '12px 14px', borderRadius: 8, marginBottom: 14, textAlign: 'center' as const,
+              background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)',
+            }}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#F97316' }}>First Spot!</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>
                 You're the first to spot this {wizardData.make} {wizardData.model}
-              </p>
+              </div>
             </div>
           )}
 
-          {/* Competitive Context */}
+          {/* Rank + badge progress */}
           {(newRank || nextBadgeName) && (
-            <div className="flex gap-3" style={{ animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) 0.5s both' }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
               {newRank && (
-                <div className="flex-1 bg-surfacehighlight rounded-xl p-3 text-center">
-                  <TrendingUp className="w-4 h-4 text-accent-primary mx-auto mb-1" />
-                  <div className="text-lg font-black text-primary">#{newRank}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-wider">
+                <div style={{ flex: 1, padding: '12px', borderRadius: 8, background: '#131920', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' as const }}>
+                  <TrendingUp style={{ width: 16, height: 16, color: '#F97316', margin: '0 auto 4px', display: 'block' }} />
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8' }}>#{newRank}</div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#445566' }}>
                     {rankChange && rankChange > 0 ? `Up ${rankChange}` : 'Your Rank'}
                   </div>
                 </div>
               )}
               {nextBadgeName && nextBadgeRemaining != null && (
-                <div className="flex-1 bg-surfacehighlight rounded-xl p-3 text-center">
-                  <Award className="w-4 h-4 text-accent-primary mx-auto mb-1" />
-                  <div className="text-lg font-black text-primary">{nextBadgeRemaining}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-wider">
+                <div style={{ flex: 1, padding: '12px', borderRadius: 8, background: '#131920', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' as const }}>
+                  <Award style={{ width: 16, height: 16, color: '#F97316', margin: '0 auto 4px', display: 'block' }} />
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8' }}>{nextBadgeRemaining}</div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#445566' }}>
                     to {nextBadgeName}
                   </div>
                 </div>
@@ -164,39 +162,40 @@ export function CompletedReviewModal({
             </div>
           )}
 
-          <div className="bg-surfacehighlight rounded-xl p-4 space-y-2">
+          {/* Ratings */}
+          <div style={{ padding: '12px 14px', borderRadius: 8, background: '#131920', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 14 }}>
             <StarDisplay label="Driver" value={driverRating} />
             <StarDisplay label="Driving" value={drivingRating} />
             <StarDisplay label="Vehicle" value={vehicleRating} />
-            {looksRating && <StarDisplay label="Looks" value={looksRating} />}
-            {soundRating && <StarDisplay label="Sound" value={soundRating} />}
-            {conditionRating && <StarDisplay label="Condition" value={conditionRating} />}
+            {looksRating ? <StarDisplay label="Looks" value={looksRating} /> : null}
+            {soundRating ? <StarDisplay label="Sound" value={soundRating} /> : null}
+            {conditionRating ? <StarDisplay label="Condition" value={conditionRating} /> : null}
           </div>
 
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${
-            sentiment === 'love'
-              ? 'bg-rose-500/20 text-rose-400'
-              : 'bg-neutral-700/50 text-neutral-300'
-          }`}>
-            {sentiment === 'love'
-              ? <><Heart className="w-4 h-4 fill-current" /> Love It</>
-              : <><ThumbsDown className="w-4 h-4" /> Hate It</>
-            }
+          {/* Sentiment */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 14px', borderRadius: 8, marginBottom: 14,
+            background: sentiment === 'love' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.04)',
+            color: sentiment === 'love' ? '#ef4444' : '#a8bcc8',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em',
+          }}>
+            {sentiment === 'love' ? <Heart style={{ width: 14, height: 14, fill: 'currentColor' }} /> : <ThumbsDown style={{ width: 14, height: 14 }} />}
+            {sentiment === 'love' ? 'Love It' : 'Hate It'}
           </div>
 
+          {/* Tags */}
           {selectedTags.length > 0 && (
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-2">Bumper Stickers</p>
-              <div className="flex flex-wrap gap-1.5">
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#445566', marginBottom: 6 }}>Bumper Stickers</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4 }}>
                 {selectedTags.map(tag => (
-                  <span
-                    key={tag}
-                    className={`text-xs px-2.5 py-1 rounded-lg font-medium ${
-                      sentiment === 'love'
-                        ? 'bg-rose-500/15 text-rose-300'
-                        : 'bg-neutral-700/50 text-neutral-400'
-                    }`}
-                  >
+                  <span key={tag} style={{
+                    padding: '3px 10px', borderRadius: 6, fontSize: 11,
+                    fontFamily: "'Barlow', sans-serif", fontWeight: 600,
+                    background: 'rgba(249,115,22,0.08)', color: '#F97316',
+                    border: '1px solid rgba(249,115,22,0.2)',
+                  }}>
                     {tag}
                   </span>
                 ))}
@@ -204,90 +203,81 @@ export function CompletedReviewModal({
             </div>
           )}
 
+          {/* Comment */}
           {comment && (
-            <div className="bg-surfacehighlight rounded-xl p-3">
-              <p className="text-sm text-secondary">{comment}</p>
+            <div style={{ padding: '10px 12px', borderRadius: 8, background: '#131920', marginBottom: 14, fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#a8bcc8', lineHeight: 1.5 }}>
+              {comment}
             </div>
           )}
 
+          {/* Upgrade CTA */}
           {spotType === 'quick' && onUpgradeToFull && (
-            <div className="rounded-xl p-4 border" style={{
-              background: 'rgba(249, 115, 22, 0.08)',
-              borderColor: 'rgba(249, 115, 22, 0.25)'
+            <div style={{
+              padding: '14px', borderRadius: 8, marginBottom: 14,
+              background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)',
             }}>
-              <div className="flex items-start gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
-                  <Zap className="w-5 h-5 text-white" />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Zap style={{ width: 18, height: 18, color: '#fff' }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-primary mb-1">
-                    Earn +20 More Points
-                  </h3>
-                  <p className="text-xs text-secondary leading-relaxed">
-                    Complete the full spot review for 35 total points
-                  </p>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8' }}>Earn +20 More Points</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>Complete the full spot review for 35 total points</div>
                 </div>
               </div>
-              <button
-                onClick={onUpgradeToFull}
-                className="w-full py-3 rounded-xl font-heading font-bold uppercase tracking-tight bg-gradient-to-r from-[#F97316] to-orange-500 hover:from-[#F97316] hover:to-[#fb923c] transition-all active:scale-95 shadow-lg"
-              >
+              <button onClick={onUpgradeToFull} style={{
+                width: '100%', padding: 12, borderRadius: 8, background: '#F97316', border: 'none',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer',
+              }}>
                 Complete Full Spot
               </button>
             </div>
           )}
 
-          {/* Share Prompt */}
-          <div
-            className="rounded-xl p-4 border border-surfacehighlight text-center"
-            style={{ animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) 0.7s both' }}
-          >
-            <p className="text-xs text-secondary mb-3">Share your spot with friends</p>
-            <button
-              onClick={() => {
-                shareToSocial({
-                  type: 'spot',
-                  title: `Spotted: ${vehicleName}`,
-                  subtitle: `${sentiment === 'love' ? 'Loved' : 'Reviewed'} this ride on MotoRate`,
-                  imageUrl: stockImageUrl || undefined,
-                  userHandle: userHandle || '',
-                  userRep: reputationEarned,
-                  deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicleId}`,
-                }, userId);
-              }}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm text-white transition-all active:scale-95"
-              style={{ background: '#F97316' }}
-            >
-              <Share2 className="w-4 h-4" />
+          {/* Share */}
+          <div style={{ textAlign: 'center' as const, padding: '8px 0' }}>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#445566', marginBottom: 10 }}>Share your spot with friends</div>
+            <button onClick={() => {
+              shareToSocial({
+                type: 'spot', title: `Spotted: ${vehicleName}`,
+                subtitle: `${sentiment === 'love' ? 'Loved' : 'Reviewed'} this ride on MotoRate`,
+                imageUrl: stockImageUrl || undefined, userHandle: userHandle || '',
+                userRep: reputationEarned, deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicleId}`,
+              }, userId);
+            }} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '10px 20px', borderRadius: 8, background: '#F97316', border: 'none',
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer',
+            }}>
+              <Share2 style={{ width: 14, height: 14 }} />
               Share Spot
             </button>
           </div>
         </div>
 
-        <div className="p-4 border-t border-surfacehighlight grid grid-cols-2 gap-3">
-          <button
-            onClick={onDone}
-            className="py-3 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95"
-          >
+        {/* Footer */}
+        <div style={{
+          padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', gap: 10,
+        }}>
+          <button onClick={onDone} style={{
+            flex: 1, padding: 12, borderRadius: 8,
+            background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+            letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer',
+          }}>
             Done
           </button>
-          <button
-            onClick={() => onViewVehicle(vehicleId)}
-            className="py-3 rounded-xl font-bold text-center bg-surface-2 border border-white/[0.06] text-primary transition-all hover:border-orange text-sm uppercase tracking-tight active:scale-95"
-          >
+          <button onClick={() => onViewVehicle(vehicleId)} style={{
+            flex: 1, padding: 12, borderRadius: 8,
+            background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+            letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#eef4f8', cursor: 'pointer',
+          }}>
             View Vehicle
           </button>
-        </div>
-
-        <div className="px-4 pb-4 pt-0">
-          <div className="pt-3 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-            <p className="text-[10px] font-mono" style={{ color: 'var(--t3)' }}>
-              Keep spotting to earn badges and climb the ranks!
-            </p>
-            <button className="spot-btn mt-3 px-6 text-[11px]" onClick={onDone}>
-              Spot Another →
-            </button>
-          </div>
         </div>
       </div>
     </div>
