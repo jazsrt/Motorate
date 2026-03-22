@@ -128,46 +128,117 @@ export function VinClaimModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'var(--modal-overlay)', backdropFilter: `blur(var(--modal-blur))` }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        background: 'rgba(0,0,0,0.75)',
+        backdropFilter: 'blur(4px)',
+      }}
       onClick={onClose}
     >
       <div
-        className="card-v3 w-full max-w-md overflow-hidden"
-        style={{ boxShadow: '0 0 40px rgba(249,115,22,0.08)' }}
+        style={{
+          background: '#0d1117',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 16,
+          width: '100%',
+          maxWidth: 440,
+          overflow: 'hidden',
+          boxShadow: '0 0 40px rgba(249,115,22,0.08)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border-2)' }}>
-          <div className="flex items-center gap-2.5">
-            <Shield className="w-5 h-5" style={{ color: 'var(--orange)' }} strokeWidth={1.5} />
-            <h3 className="text-[15px] font-semibold" style={{ color: 'var(--t1)' }}>
-              {step === 'done' ? 'Verified!' : 'Claim via VIN'}
-            </h3>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: 20,
+          borderBottom: '1px solid rgba(255,255,255,0.10)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Shield style={{ width: 20, height: 20, color: '#F97316' }} strokeWidth={1.5} />
+            <div>
+              <div style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 9,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.18em',
+                color: '#F97316',
+                marginBottom: 2,
+              }}>
+                Ownership Verification
+              </div>
+              <h3 style={{
+                fontFamily: "'Rajdhani', sans-serif",
+                fontSize: 22,
+                fontWeight: 700,
+                color: '#eef4f8',
+                margin: 0,
+                lineHeight: 1,
+              }}>
+                {step === 'done' ? 'Verified!' : 'Claim via VIN'}
+              </h3>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-            style={{ background: 'var(--s2)' }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255,255,255,0.06)',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            <X className="w-4 h-4" style={{ color: 'var(--t3)' }} />
+            <X style={{ width: 16, height: 16, color: '#7a8e9e' }} />
           </button>
         </div>
 
         {/* STEP 1: Enter VIN */}
         {step === 'enter' && (
-          <div className="p-5 space-y-4">
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
             <div>
-              <p className="text-[13px] mb-1" style={{ color: 'var(--t2)', fontWeight: 300 }}>
-                Claiming <span style={{ color: 'var(--t1)', fontWeight: 500 }}>{vehicleName}</span>
+              <p style={{
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: 13,
+                color: '#a8bcc8',
+                fontWeight: 300,
+                margin: '0 0 4px 0',
+              }}>
+                Claiming <span style={{ color: '#eef4f8', fontWeight: 500 }}>{vehicleName}</span>
               </p>
-              <p className="text-[11px]" style={{ color: 'var(--t4)' }}>
+              <p style={{
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: 11,
+                color: '#5a6e7e',
+                margin: 0,
+              }}>
                 Enter your 17-character VIN to instantly verify ownership.
               </p>
             </div>
 
             <div>
-              <label className="block text-[9px] font-medium uppercase tracking-[2px] mb-2" style={{ color: 'var(--t3)' }}>
+              <label style={{
+                display: 'block',
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 9,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.18em',
+                color: '#7a8e9e',
+                marginBottom: 8,
+              }}>
                 Vehicle Identification Number
               </label>
               <input
@@ -179,19 +250,40 @@ export function VinClaimModal({
                 }}
                 placeholder="1HGCM82633A004352"
                 maxLength={17}
-                className="w-full px-4 py-3 rounded-xl text-[14px] font-mono tracking-[2px] focus:outline-none transition-colors"
                 style={{
-                  background: 'var(--s2)',
-                  border: `1px solid ${error ? 'var(--red)' : 'var(--border-2)'}`,
-                  color: 'var(--t1)',
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: 8,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 14,
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase' as const,
+                  background: '#070a0f',
+                  border: `1px solid ${error ? '#ef4444' : 'rgba(255,255,255,0.08)'}`,
+                  color: '#eef4f8',
+                  outline: 'none',
+                  boxSizing: 'border-box' as const,
                 }}
                 autoFocus
               />
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-[10px]" style={{ color: error ? 'var(--red)' : 'var(--t4)' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 6,
+              }}>
+                <span style={{
+                  fontFamily: "'Barlow', sans-serif",
+                  fontSize: 10,
+                  color: error ? '#ef4444' : '#5a6e7e',
+                }}>
                   {error || 'Found on driver-side door jamb or dashboard'}
                 </span>
-                <span className="text-[10px] font-mono" style={{ color: vin.length === 17 ? 'var(--green)' : 'var(--t4)' }}>
+                <span style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 10,
+                  color: vin.length === 17 ? '#20c060' : '#5a6e7e',
+                }}>
                   {vin.length}/17
                 </span>
               </div>
@@ -200,16 +292,30 @@ export function VinClaimModal({
             <button
               onClick={handleDecode}
               disabled={vin.length !== 17 || decoding}
-              className="w-full py-3.5 rounded-xl text-[11px] font-semibold uppercase tracking-[2px] transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               style={{
-                background: vin.length === 17 ? 'var(--orange)' : 'var(--s3)',
-                color: vin.length === 17 ? '#fff' : 'var(--t4)',
+                width: '100%',
+                padding: '14px 0',
+                borderRadius: 8,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.18em',
+                background: vin.length === 17 ? '#F97316' : 'rgba(255,255,255,0.06)',
+                color: vin.length === 17 ? '#030508' : '#5a6e7e',
+                border: 'none',
+                cursor: vin.length !== 17 || decoding ? 'not-allowed' : 'pointer',
+                opacity: vin.length !== 17 || decoding ? 0.4 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
               }}
             >
               {decoding ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Decoding…
+                  <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
+                  Decoding...
                 </>
               ) : (
                 'Decode & Verify'
@@ -220,50 +326,110 @@ export function VinClaimModal({
 
         {/* STEP 2: Review specs */}
         {step === 'review' && vinResult && (
-          <div className="p-5 space-y-4">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(90,170,122,0.1)', border: '1px solid rgba(90,170,122,0.2)' }}>
-              <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--green)' }} />
-              <span className="text-[12px] font-medium" style={{ color: 'var(--green)' }}>VIN decoded successfully</span>
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              borderRadius: 8,
+              background: 'rgba(249,115,22,0.06)',
+              border: '1px solid rgba(249,115,22,0.18)',
+            }}>
+              <Check style={{ width: 16, height: 16, flexShrink: 0, color: '#20c060' }} />
+              <span style={{
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+                color: '#F97316',
+              }}>VIN decoded successfully</span>
             </div>
 
-            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-2)' }}>
+            <div style={{
+              borderRadius: 12,
+              overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
               {specRows.map((row, i) => (
                 <div
                   key={row.label}
-                  className="flex items-center justify-between px-4 py-2.5"
                   style={{
-                    background: i % 2 === 0 ? 'var(--s1)' : 'var(--s2)',
-                    borderBottom: i < specRows.length - 1 ? '1px solid var(--border)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 16px',
+                    background: i % 2 === 0 ? '#0a0d14' : '#0e1320',
+                    borderBottom: i < specRows.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                   }}
                 >
-                  <span className="text-[10px] font-medium uppercase tracking-[1.5px]" style={{ color: 'var(--t3)' }}>
+                  <span style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    textTransform: 'uppercase' as const,
+                    letterSpacing: '0.18em',
+                    color: '#7a8e9e',
+                  }}>
                     {row.label}
                   </span>
-                  <span className="text-[12px] font-medium" style={{ color: 'var(--t1)' }}>
+                  <span style={{
+                    fontFamily: "'Barlow', sans-serif",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: '#eef4f8',
+                  }}>
                     {row.value}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="flex gap-3">
+            <div style={{ display: 'flex', gap: 12 }}>
               <button
                 onClick={() => { setStep('enter'); setVinResult(null); setVin(''); }}
-                className="flex-1 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-[2px] transition-all active:scale-[0.98]"
-                style={{ background: 'var(--s2)', color: 'var(--t3)', border: '1px solid var(--border-2)' }}
+                style={{
+                  flex: 1,
+                  padding: '12px 0',
+                  borderRadius: 8,
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.18em',
+                  background: 'transparent',
+                  color: '#7a8e9e',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  cursor: 'pointer',
+                }}
               >
                 Re-enter
               </button>
               <button
                 onClick={handleClaim}
                 disabled={claiming}
-                className="flex-[2] py-3 rounded-xl text-[11px] font-semibold uppercase tracking-[2px] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                style={{ background: 'var(--orange)', color: '#fff' }}
+                style={{
+                  flex: 2,
+                  padding: '12px 0',
+                  borderRadius: 8,
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.18em',
+                  background: '#F97316',
+                  color: '#030508',
+                  border: 'none',
+                  cursor: claiming ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
               >
                 {claiming ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Claiming…
+                    <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
+                    Claiming...
                   </>
                 ) : (
                   'Claim & Verify'
@@ -275,12 +441,12 @@ export function VinClaimModal({
 
         {/* STEP 3: Done */}
         {step === 'done' && (
-          <div className="p-8 text-center" style={{ position: 'relative', overflow: 'hidden', minHeight: 220 }}>
+          <div style={{ padding: 32, textAlign: 'center' as const, position: 'relative', overflow: 'hidden', minHeight: 220 }}>
             {/* Expanding rings */}
             {[0, 1, 2].map(i => (
               <div key={i} style={{
                 position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                border: '2px solid #5aaa7a', borderRadius: '50%',
+                border: '2px solid #20c060', borderRadius: '50%',
                 animation: `c-ring 0.7s cubic-bezier(.25,.46,.45,.94) forwards`,
                 animationDelay: `${i * 0.12}s`,
                 width: 0, height: 0, opacity: 0,
@@ -288,27 +454,41 @@ export function VinClaimModal({
               }} />
             ))}
 
-            <div style={{ position: 'relative', zIndex: 1 }} className="space-y-4">
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 16 }}>
               {/* Seal */}
               <div
-                className="mx-auto flex flex-col items-center justify-center"
                 style={{
-                  width: 100, height: 100, border: '3px solid #5aaa7a', borderRadius: '50%',
+                  display: 'flex',
+                  flexDirection: 'column' as const,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 100, height: 100, border: '3px solid #20c060', borderRadius: '50%',
                   animation: 'stamp-slam 0.5s cubic-bezier(.25,.46,.45,.94) forwards',
                   animationDelay: '0.15s', opacity: 0,
                 }}
               >
-                <Check size={32} color="#5aaa7a" strokeWidth={2.5} />
+                <Check size={32} color="#20c060" strokeWidth={2.5} />
                 <span style={{
                   fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 8, fontWeight: 600, letterSpacing: 3,
-                  textTransform: 'uppercase', color: '#5aaa7a', marginTop: 6,
+                  textTransform: 'uppercase' as const, color: '#20c060', marginTop: 6,
                 }}>Verified</span>
               </div>
 
               <div>
-                <p className="text-[16px] font-semibold" style={{ color: 'var(--t1)' }}>Vehicle Verified!</p>
-                <p className="text-[12px] mt-1" style={{ color: 'var(--t3)' }}>
+                <p style={{
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: '#eef4f8',
+                  margin: 0,
+                }}>Vehicle Verified!</p>
+                <p style={{
+                  fontFamily: "'Barlow', sans-serif",
+                  fontSize: 12,
+                  color: '#7a8e9e',
+                  margin: '4px 0 0 0',
+                }}>
                   Your plate is now VIN-verified. Factory specs have been saved.
                 </p>
               </div>
@@ -316,8 +496,25 @@ export function VinClaimModal({
               {onViewVehicle && (
                 <button
                   onClick={() => { onClose(); onViewVehicle(vehicleId); }}
-                  className="w-full py-3.5 rounded-xl text-[11px] font-semibold uppercase tracking-[2px] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                  style={{ background: 'var(--orange)', color: '#fff', marginTop: 8 }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 0',
+                    borderRadius: 8,
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase' as const,
+                    letterSpacing: '0.18em',
+                    background: '#F97316',
+                    color: '#030508',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    marginTop: 8,
+                  }}
                 >
                   View Vehicle Profile
                 </button>
