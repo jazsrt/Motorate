@@ -90,6 +90,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [showBadgesModal, setShowBadgesModal] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'fleet' | 'spots' | 'badges' | 'activity'>('fleet');
+  const [spotsLoaded, setSpotsLoaded] = useState(false);
   const [spotsGiven, setSpotsGiven] = useState<any[]>([]);
   const [spotsReceived, setSpotsReceived] = useState<any[]>([]);
   const [followers, setFollowers] = useState<any[]>([]);
@@ -762,6 +764,26 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           );
         })()}
 
+        {/* ═══ Tab Bar ═══ */}
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.04)', marginBottom: 0 }}>
+          {(['Fleet', 'Spots', 'Badges', 'Activity'] as const).map(label => {
+            const key = label.toLowerCase() as typeof activeTab;
+            const isOn = activeTab === key;
+            return (
+              <button key={label} onClick={() => { setActiveTab(key); if (key === 'spots' && !spotsLoaded) { loadSpotsGiven(); setSpotsLoaded(true); } }} style={{
+                flex: 1, padding: '10px 0', textAlign: 'center',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: isOn ? '#F97316' : '#445566',
+                background: 'none', border: 'none', cursor: 'pointer',
+                borderBottom: isOn ? '2px solid #F97316' : '2px solid transparent',
+              }}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* ═══ Weekly Pulse ═══ */}
         <div className="px-4 mt-4 v3-stagger v3-stagger-2">
           <div className="flex items-center gap-1.5 mb-3">
@@ -841,6 +863,38 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           </div>
         )}
 
+        {activeTab === 'spots' && (
+          <div style={{ padding: '16px 16px' }}>
+            {spotsGiven.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No Spots Yet</p>
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Spot your first vehicle to see it here.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {spotsGiven.map((spot: any) => {
+                  const v = spot.vehicle;
+                  if (!v) return null;
+                  return (
+                    <button key={spot.id} onClick={() => onViewVehicle(v.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8' }}>{v.year} {v.make} {v.model}</div>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginTop: 2 }}>
+                          {new Date(spot.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: '#F97316' }}>
+                        +{spot.reputation_earned || 10} RP
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'badges' && (<>
         {/* ═══ Badges Preview ═══ */}
         <div className="px-4 mt-4 v3-stagger v3-stagger-5">
           <div className="flex items-center justify-between mb-3">
@@ -891,6 +945,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           )}
         </div>
 
+        </>)}
+
+        {activeTab === 'fleet' && (<>
         {/* ═══ Fleet Badges ═══ */}
         {fleetBadges.length > 0 && (
           <div style={{ margin: '0 20px 16px' }}>
@@ -982,6 +1039,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           )}
         </div>
 
+        </>)}
+
+        {activeTab === 'activity' && (<>
         {/* ═══ Activity ═══ */}
         <div className="px-4 mt-4 v3-stagger v3-stagger-7">
           <div className="flex items-center justify-between mb-3">
@@ -1124,6 +1184,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             </div>
           </div>
         )}
+
+        </>)}
 
         {/* ═══ Footer Links ═══ */}
         <div className="px-4 pt-4 pb-2 flex gap-3 flex-wrap">

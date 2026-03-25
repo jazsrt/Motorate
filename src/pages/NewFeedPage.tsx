@@ -6,6 +6,7 @@ import { Layout } from '../components/Layout';
 import { useFeed } from '../hooks/useFeed';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
+import { StoryRail } from '../components/feed/StoryRail';
 import { VehicleStoryRail } from '../components/feed/VehicleStoryRail';
 
 interface NewFeedPageProps {
@@ -111,8 +112,8 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
       {/* Competition strip */}
       <CompetitionStrip />
 
-      {/* Vehicle story rail */}
-      <VehicleStoryRail onNavigate={onNavigate} />
+      {/* Story rail — vehicles the user tracks */}
+      {user && <StoryRail onNavigate={onNavigate} />}
 
       {/* Filter bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>

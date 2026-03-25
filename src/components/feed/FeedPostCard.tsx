@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ReactionButton } from '../ReactionButton';
 import { CommentsModal } from '../CommentsModal';
+import { LicensePlate } from '../LicensePlate';
 import { buildSpotFeedSignals } from '../../lib/feed';
 
 interface FeedPostCardProps {
@@ -135,12 +136,30 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
         )}
 
         {/* MEDIA ZONE — image is the hero */}
-        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: hasPhoto ? 300 : 120 }}>
+        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: hasPhoto ? 300 : 220 }}>
           {hasPhoto ? (
             <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', background: '#0a0d14' }} />
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #070a0f 0%, #0a0d14 40%, #070a0f 100%)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, position: 'relative', overflow: 'hidden' }}>
+              {/* Subtle grid texture */}
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(249,115,22,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.04) 1px, transparent 1px)', backgroundSize: '32px 32px', pointerEvents: 'none' }} />
+              {/* Scan line */}
+              <div style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(249,115,22,0.4), transparent)', animation: 'motorate-scan 3s ease-in-out infinite', pointerEvents: 'none' }} />
+              {/* Plate */}
+              <div style={{ position: 'relative', zIndex: 2, cursor: 'pointer' }} onClick={() => onNavigate?.('vehicle-detail', vehicles?.id)}>
+                <LicensePlate plateNumber={vehicles?.plate_number || '?????'} plateState={vehicles?.plate_state || ''} size="lg" />
+              </div>
+              {/* Vehicle name */}
+              {(vehicles?.make || vehicles?.model) && (
+                <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.7)', marginBottom: 3 }}>{vehicles?.make ?? ''}</div>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{vehicles?.model ?? ''}</div>
+                </div>
+              )}
+              {/* Bottom fade */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(3,5,8,0.95) 0%, transparent 100%)', pointerEvents: 'none' }} />
+            </div>
           )}
 
           {/* Bottom gradient for text readability */}
@@ -199,27 +218,13 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
           )}
         </div>
 
-        {/* VEHICLE INFO — below image for non-photo posts */}
-        {!hasPhoto && (
-          <div style={{ padding: '10px 14px', background: '#070a0f' }}>
-            {makeLabel && (
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.85)', marginBottom: 1 }}>
-                {yearLabel ? `${yearLabel} ${makeLabel}` : makeLabel}
-              </div>
-            )}
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
-              {modelLabel ?? '---'}
-            </div>
-          </div>
-        )}
-
         {/* IMPACT ROW — spot stats */}
         {isSpot && vehicles && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '6px 14px', background: '#070a0f', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
             {[
-              { v: formatRP(vehicles.reputation_score), l: 'RP', hi: true },
-              { v: formatCount(vehicles.spots_count), l: 'Spots', hi: false },
-            ].map(({ v, l, hi }) => (
+              { v: formatRP(vehicles.reputation_score), raw: vehicles.reputation_score, l: 'RP', hi: true },
+              { v: formatCount(vehicles.spots_count), raw: vehicles.spots_count, l: 'Spots', hi: false },
+            ].filter(({ raw }) => raw != null && raw > 0).map(({ v, l, hi }) => (
               <div key={l} style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: hi ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{v}</span>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>{l}</span>
@@ -272,6 +277,12 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
         @keyframes motorate-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.55; transform: scale(0.85); }
+        }
+        @keyframes motorate-scan {
+          0% { top: -2px; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
         }
       `}</style>
     </>

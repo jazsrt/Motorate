@@ -22,7 +22,7 @@ import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { getTierFromScore } from '../lib/tierConfig';
-import { getBadgeType } from '../lib/badgeUtils';
+import { getBadgeType, getBadgeImagePath } from '../lib/badgeUtils';
 
 interface UserProfilePageProps {
   userId: string;
@@ -408,7 +408,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                         const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
                         return (
                           <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                            <BadgeCoin tier={tier} name={badge.name} size="sm" />
+                            <BadgeCoin tier={tier} name={badge.name} icon_path={getBadgeImagePath(badge)} size="sm" />
                             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: labelColor, textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{badge.name}</span>
                           </div>
                         );
@@ -780,8 +780,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                       {badges.map((item) => (
                         <div key={item.id} className="flex flex-col items-center gap-2" title={item.badge.description}>
                           <BadgeCoin
-                            iconName={item.badge.icon_name}
-                            category={item.badge.category}
+                            tier={(item.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
+                            name={item.badge.name}
+                            icon_path={getBadgeImagePath(item.badge)}
                             size="lg"
                           />
                           <div className="text-[10px] text-center text-tertiary line-clamp-2">
