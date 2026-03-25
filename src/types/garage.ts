@@ -25,11 +25,11 @@ export interface GarageVehicle {
   plate_hash: string;
   is_claimed: boolean;
   claimed_at: string | null;
-  verification_status: 'shadow' | 'conditional' | 'standard' | 'verified';
+  verification_tier: 'shadow' | 'conditional' | 'standard' | 'verified' | 'vin_verified';
   is_verified: boolean;
   avg_rating: number;
   rating_count: number;
-  spot_count: number;
+  spots_count: number;
   review_count: number;
   photos: VehiclePhoto[];
   modifications: Modification[];

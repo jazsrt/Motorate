@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { ReactionButton } from '../ReactionButton';
 import { CommentsModal } from '../CommentsModal';
-import { LicensePlate } from '../LicensePlate';
+import { buildSpotFeedSignals } from '../../lib/feed';
 
 interface FeedPostCardProps {
   post: {
     id: string;
     created_at: string;
     author_id: string;
+    post_type?: string | null;
+    spot_type?: 'quick' | 'full' | null;
     caption?: string | null;
     image_urls?: string[] | null;
     video_url?: string | null;
@@ -28,6 +30,7 @@ interface FeedPostCardProps {
       is_claimed?: boolean | null;
       owner_id?: string | null;
       reputation_score?: number | null;
+      spots_count?: number | null;
     } | null;
     profiles?: { id?: string; handle?: string | null; avatar_url?: string | null; reputation_score?: number | null; } | null;
     author?: { id: string; handle: string; avatar_url: string | null; };
@@ -42,14 +45,14 @@ interface FeedPostCardProps {
 }
 
 function formatCount(n: number | null | undefined): string {
-  if (n == null) return '—';
+  if (n == null) return '0';
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return n.toString();
 }
 
 function formatRP(n: number | null | undefined): string {
-  if (n == null) return '—';
+  if (n == null) return '0';
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return n.toLocaleString();
 }
@@ -83,13 +86,26 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
   const ownerHandle = post.author?.handle || (post as any).author_handle || post.profiles?.handle || 'owner';
   const cityLabel = extractCityOnly(post.location_label || post.location);
 
-  // Image source priority
+  // Image source priority: user photo > vehicle profile > stock image
   const imageUrl = (post.image_urls && post.image_urls.length > 0 && post.image_urls[0])
     || vehicles?.profile_image_url
     || vehicles?.stock_image_url
     || null;
 
+  // Hard rule: no image = no card render for spot/review posts
+  const isSpotType = (post as any).post_type === 'spot' || (post as any).post_type === 'review';
+  if (!imageUrl && isSpotType) return null;
+
   const hasPhoto = !!imageUrl;
+
+  // Build impact signals for spot posts
+  const isSpot = isSpotType;
+  const spotSignals = isSpot ? buildSpotFeedSignals({
+    postId: post.id,
+    spotType: post.spot_type,
+    spotsCount: vehicles?.spots_count,
+    reputationScore: vehicles?.reputation_score,
+  }) : null;
 
   // Activity label
   const repScore = vehicles?.reputation_score ?? 0;
@@ -98,93 +114,127 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     : (likeCount > 100 || repScore > 5000) ? 'Active'
     : null;
 
-  // Stats
-  const spotCount = (vehicles as any)?.spot_count ?? null;
-  const fanCount = (vehicles as any)?.follower_count ?? (vehicles as any)?.vehicle_follower_count ?? null;
+  // Vehicle headline
+  const makeLabel = vehicles?.make ?? null;
+  const modelLabel = vehicles?.model ?? null;
+  const yearLabel = vehicles?.year ?? null;
 
   return (
     <>
-      <div style={{ marginTop: 6, borderTop: '1px solid rgba(249,115,22,0.15)' }}>
-        {/* MEDIA ZONE */}
-        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: 330 }}>
+      <div style={{ marginTop: 4, borderTop: '1px solid rgba(249,115,22,0.12)' }}>
+        {/* SPOT SIGNAL STRIP — only for spot/review posts */}
+        {isSpot && spotSignals && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px', background: '#070a0f' }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              {spotSignals.primarySignal}
+            </span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: '#7a8e9e', fontVariantNumeric: 'tabular-nums' }}>
+              {spotSignals.impactSignal}
+            </span>
+          </div>
+        )}
+
+        {/* MEDIA ZONE — image is the hero */}
+        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: hasPhoto ? 300 : 120 }}>
           {hasPhoto ? (
             <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', position: 'relative',
-              background: 'radial-gradient(ellipse 70% 65% at 50% 42%, #1a2540 0%, #0a0d14 60%, #030508 100%)',
-              backgroundImage: 'linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px)',
-              backgroundSize: '28px 28px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <LicensePlate
-                plateNumber={vehicles?.plate_number || ''}
-                plateState={vehicles?.plate_state || ''}
-                size="lg"
-              />
-            </div>
+            <div style={{ width: '100%', height: '100%', background: '#0a0d14' }} />
           )}
 
-          {/* Gradient overlays (on photo only) */}
+          {/* Bottom gradient for text readability */}
           {hasPhoto && (
-            <>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '38%', background: 'linear-gradient(to bottom, rgba(3,5,8,0.72) 0%, transparent 100%)', pointerEvents: 'none' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '62%', background: 'linear-gradient(to top, rgba(3,5,8,0.98) 0%, rgba(3,5,8,0.55) 45%, transparent 100%)', pointerEvents: 'none' }} />
-            </>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to top, rgba(3,5,8,0.95) 0%, rgba(3,5,8,0.5) 50%, transparent 100%)', pointerEvents: 'none' }} />
           )}
 
           {/* Activity indicator top-left */}
-          {activityLabel && (
-            <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 5, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(6,9,14,0.76)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '4px 9px' }}>
+          {activityLabel && hasPhoto && (
+            <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 5, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(6,9,14,0.76)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '3px 8px' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#20c060', animation: 'motorate-pulse 2s infinite' }} />
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>{activityLabel}</span>
             </div>
           )}
 
           {/* Rank pill top-right */}
-          {vehicleRank != null && (
-            <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 5, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', background: 'rgba(6,9,14,0.82)', backdropFilter: 'blur(14px)', border: '1px solid rgba(249,115,22,0.38)', borderRadius: 6, padding: '5px 10px', minWidth: 44 }}>
-              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#F97316', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>#{vehicleRank}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginTop: 1 }}>CHI</span>
+          {vehicleRank != null && hasPhoto && (
+            <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 5, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', background: 'rgba(6,9,14,0.82)', backdropFilter: 'blur(14px)', border: '1px solid rgba(249,115,22,0.38)', borderRadius: 6, padding: '4px 9px', minWidth: 40 }}>
+              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#F97316', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>#{vehicleRank}</span>
             </div>
           )}
 
-          {/* Vehicle identity bottom-left */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, zIndex: 5, padding: '12px 14px' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.88)', marginBottom: 1 }}>
-              {vehicles?.make ?? '—'}
-            </div>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, color: '#eef4f8', lineHeight: 1, textShadow: '0 2px 18px rgba(0,0,0,0.95)' }}>
-              {vehicles?.model ?? '—'}
-            </div>
-            {(vehicles?.plate_number || vehicles?.plate_state) && (
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.42)', letterSpacing: '0.14em', marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>
-                {vehicles?.plate_state ? `${vehicles.plate_state} · ` : ''}{vehicles?.plate_number}
+          {/* Vehicle identity — overlaid on image bottom-left */}
+          {hasPhoto && (
+            <div style={{ position: 'absolute', bottom: 0, left: 0, zIndex: 5, padding: '10px 14px' }}>
+              {/* MAKE as overline */}
+              {makeLabel && (
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.85)', marginBottom: 1 }}>
+                  {yearLabel ? `${yearLabel} ${makeLabel}` : makeLabel}
+                </div>
+              )}
+              {/* MODEL as headline */}
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1, textShadow: '0 2px 14px rgba(0,0,0,0.9)' }}>
+                {modelLabel ?? '---'}
               </div>
-            )}
-            {cityLabel && (
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.28)', marginTop: 1 }}>
-                {cityLabel}
-              </div>
-            )}
-          </div>
+              {/* Plate as small secondary */}
+              {(vehicles?.plate_number || vehicles?.plate_state) && (
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.12em', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+                  {vehicles?.plate_state ? `${vehicles.plate_state} / ` : ''}{vehicles?.plate_number}
+                </div>
+              )}
+              {cityLabel && (
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>
+                  {cityLabel}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Stats bottom-right */}
-          <div style={{ position: 'absolute', bottom: 0, right: 0, zIndex: 5, padding: '12px 14px', display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-end', gap: 4 }}>
+          {/* RP badge bottom-right over image */}
+          {hasPhoto && repScore > 0 && (
+            <div style={{ position: 'absolute', bottom: 10, right: 14, zIndex: 5, display: 'flex', alignItems: 'baseline', gap: 3 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{formatRP(repScore)}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.6)' }}>RP</span>
+            </div>
+          )}
+        </div>
+
+        {/* VEHICLE INFO — below image for non-photo posts */}
+        {!hasPhoto && (
+          <div style={{ padding: '10px 14px', background: '#070a0f' }}>
+            {makeLabel && (
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.85)', marginBottom: 1 }}>
+                {yearLabel ? `${yearLabel} ${makeLabel}` : makeLabel}
+              </div>
+            )}
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+              {modelLabel ?? '---'}
+            </div>
+          </div>
+        )}
+
+        {/* IMPACT ROW — spot stats */}
+        {isSpot && vehicles && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '6px 14px', background: '#070a0f', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
             {[
-              { v: formatRP(vehicles?.reputation_score), l: 'RP', hi: true },
-              { v: formatCount(spotCount), l: 'Spots', hi: false },
-              { v: formatCount(fanCount), l: 'Fans', hi: false },
+              { v: formatRP(vehicles.reputation_score), l: 'RP', hi: true },
+              { v: formatCount(vehicles.spots_count), l: 'Spots', hi: false },
             ].map(({ v, l, hi }) => (
               <div key={l} style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: hi ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{v}</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: hi ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{v}</span>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>{l}</span>
               </div>
             ))}
+            {post.spot_type && (
+              <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: post.spot_type === 'full' ? 'rgba(249,115,22,0.6)' : '#3a4e60' }}>
+                {post.spot_type === 'full' ? 'Full Spot' : 'Quick Spot'}
+              </span>
+            )}
           </div>
-        </div>
+        )}
 
         {/* ACTION ROW */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '9px 14px 8px', background: '#070a0f', gap: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '7px 14px 6px', background: '#070a0f', gap: 0 }}>
           <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
           <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px' }} />
           <button onClick={() => setShowComments(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#5a6e7e', padding: '6px 8px 6px 0' }}>
@@ -202,11 +252,11 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
           </span>
         </div>
 
-        {/* CAPTION */}
-        {post.caption && (
-          <div style={{ padding: '0 14px 10px', background: '#070a0f' }}>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.55, margin: 0 }}>
-              {post.caption.length > 140 ? `${post.caption.slice(0, 140)}…` : post.caption}
+        {/* CAPTION — only if user-written, skip generic defaults */}
+        {post.caption && post.caption !== 'Spotted this ride!' && post.caption !== 'Full spot on this ride!' && (
+          <div style={{ padding: '0 14px 8px', background: '#070a0f' }}>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.5, margin: 0 }}>
+              {post.caption.length > 140 ? `${post.caption.slice(0, 140)}...` : post.caption}
             </p>
           </div>
         )}

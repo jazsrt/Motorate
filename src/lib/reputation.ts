@@ -61,31 +61,6 @@ interface ReputationResult {
   error?: string;
 }
 
-// MotoRate Reputation Formula:
-// - Quick Spot: 10 pts
-// - Full Spot: 15 pts
-// - New Plate Bonus: +2 pts
-// - Upgrade to Full: 5 pts
-// - Create Post: 5 pts (2 pts if over daily limit)
-// - Comment: 2 pts
-// - Receive Like: 0 pts
-// - Earn Badge: 10 pts
-// - Claim Vehicle: 25 pts
-// - Positive Sticker: 1 pt
-// - Negative Sticker: -1 pt
-export const REPUTATION_POINTS = {
-  CREATE_POST: 5,
-  ADD_COMMENT: 2,
-  RECEIVE_LIKE: 0,
-  EARN_BADGE: 10,
-  VERIFY_VEHICLE: 25,
-  POSITIVE_STICKER: 1,
-  NEGATIVE_STICKER: -1,
-  SPOT_QUICK: 10,
-  SPOT_FULL: 15,
-  NEW_PLATE_BONUS: 2,
-} as const;
-
 /**
  * CRITICAL FUNCTION: Calculates and awards reputation points
  * This implements the EXACT math from the requirements
@@ -215,35 +190,6 @@ export async function getLikeCount(postId: string): Promise<number> {
   }
 
   return count || 0;
-}
-
-export async function awardReputationPoints(
-  userId: string,
-  action: keyof typeof REPUTATION_POINTS,
-  referenceType?: string,
-  referenceId?: string
-) {
-  try {
-    const points = REPUTATION_POINTS[action];
-
-    const { error } = await supabase.rpc('award_reputation_points', {
-      p_user_id: userId,
-      p_action: action,
-      p_points: points,
-      p_reference_type: referenceType || null,
-      p_reference_id: referenceId || null,
-      p_description: `${action}: +${points} Reputation`
-    });
-
-    if (error) throw error;
-
-    await checkBadgeProgress(userId);
-
-    return { success: true, points };
-  } catch (error) {
-    console.error('Error awarding reputation:', error);
-    return { success: false, error };
-  }
 }
 
 export async function getUserReputationScore(userId: string): Promise<ReputationScore> {

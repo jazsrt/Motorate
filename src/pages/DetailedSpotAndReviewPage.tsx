@@ -110,6 +110,8 @@ export function DetailedSpotAndReviewPage({
   const [comment, setComment] = useState(initialComment);
   const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [showReward, setShowReward] = useState(false);
+  const [rewardData, setRewardData] = useState<{ rp: number; vehicleName: string; spotCount: number; vehicleId: string } | null>(null);
 
   const canSubmit = looksRating > 0 && soundRating > 0 && conditionRating > 0;
 
@@ -242,28 +244,41 @@ export function DetailedSpotAndReviewPage({
         }
         reviewId = reviewData.id;
 
-        // STEP 3: Create feed post so the review appears in the feed
-        await supabase
-          .from('posts')
-          .insert({
-            author_id: user.id,
-            vehicle_id: vehicleId,
-            post_type: 'review',
-            spot_type: 'full',
-            caption: comment.trim() || `Full spot on this ride!`,
-            image_url: null,
-            spot_history_id: spotHistoryId,
-            review_id: reviewId,
-            rating_driver: driverRating,
-            rating_driving: drivingRating,
-            rating_vehicle: vehicleRating,
-            looks_rating: looksRating,
-            sound_rating: soundRating,
-            condition_rating: conditionRating,
-            sentiment,
-            moderation_status: 'approved',
-            privacy_level: 'public',
-          });
+        // STEP 3: Resolve best available image for the feed post
+        let feedImageUrl: string | null = null;
+        {
+          const { data: vImg } = await supabase
+            .from('vehicles')
+            .select('profile_image_url, stock_image_url')
+            .eq('id', vehicleId)
+            .maybeSingle();
+          feedImageUrl = vImg?.profile_image_url || vImg?.stock_image_url || null;
+        }
+
+        // Only create a feed post if we have a visual anchor — no blank tiles
+        if (feedImageUrl) {
+          await supabase
+            .from('posts')
+            .insert({
+              author_id: user.id,
+              vehicle_id: vehicleId,
+              post_type: 'spot',
+              spot_type: 'full',
+              caption: comment.trim() || null,
+              image_url: feedImageUrl,
+              spot_history_id: spotHistoryId,
+              review_id: reviewId,
+              rating_driver: driverRating,
+              rating_driving: drivingRating,
+              rating_vehicle: vehicleRating,
+              looks_rating: looksRating,
+              sound_rating: soundRating,
+              condition_rating: conditionRating,
+              sentiment,
+              moderation_status: 'approved',
+              privacy_level: 'public',
+            });
+        }
       }
 
       // Save bumper stickers via stickerService → vehicle_stickers table
@@ -326,8 +341,22 @@ export function DetailedSpotAndReviewPage({
         console.error('Auto-award badge error:', autoAwardError);
       }
 
-      showToast(`Full Spot submitted! +${upgradeFromQuickSpot ? 20 : 35} RP earned`, 'success');
-      onNavigate('vehicle-detail', vehicleId);
+      // Fetch vehicle spot count for reward display
+      const { data: vehicleStats } = await supabase
+        .from('vehicles')
+        .select('spots_count')
+        .eq('id', vehicleId)
+        .maybeSingle();
+
+      const rpEarned = upgradeFromQuickSpot ? 5 : 15;
+      const vName = [wizardData.make, wizardData.model].filter(Boolean).join(' ');
+      setRewardData({
+        rp: rpEarned,
+        vehicleName: vName || 'Vehicle',
+        spotCount: vehicleStats?.spots_count ?? 1,
+        vehicleId,
+      });
+      setShowReward(true);
     } catch (err: any) {
       showToast(err.message || 'Failed to submit review', 'error');
     } finally {
@@ -336,6 +365,59 @@ export function DetailedSpotAndReviewPage({
   };
 
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
+
+  // Inline reward block — shown after successful submission, replacing the form
+  if (showReward && rewardData) {
+    const milestones = [1, 5, 10, 20, 50];
+    const nextMilestone = milestones.find(m => m > rewardData.spotCount) ?? null;
+    const spotsToNext = nextMilestone ? nextMilestone - rewardData.spotCount : null;
+
+    return (
+      <Layout currentPage="scan" onNavigate={onNavigate}>
+        <div style={{ maxWidth: 512, margin: '0 auto', padding: '32px 16px' }}>
+          {/* RP Earned */}
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 42, fontWeight: 700, color: '#F97316', lineHeight: 1 }}>+{rewardData.rp}</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316', marginLeft: 6 }}>RP</span>
+          </div>
+
+          {/* Vehicle Impact */}
+          <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '14px 16px', marginBottom: 12 }}>
+            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px' }}>
+              {rewardData.vehicleName}
+            </p>
+            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', margin: 0 }}>
+              {rewardData.spotCount === 1 ? 'First spot recorded' : `${rewardData.spotCount} spots total`}
+            </p>
+          </div>
+
+          {/* Milestone Progress */}
+          {spotsToNext !== null && nextMilestone !== null && (
+            <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 16px', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Next milestone</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#eef4f8' }}>{nextMilestone}</span>
+              </div>
+              <div style={{ width: '100%', height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                <div style={{ width: `${Math.min(100, (rewardData.spotCount / nextMilestone) * 100)}%`, height: '100%', background: '#F97316', borderRadius: 2 }} />
+              </div>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: '6px 0 0', textAlign: 'right' }}>
+                {spotsToNext} more {spotsToNext === 1 ? 'spot' : 'spots'} to go
+              </p>
+            </div>
+          )}
+
+          {/* Action */}
+          <button
+            onClick={() => onNavigate('vehicle-detail', rewardData.vehicleId)}
+            style={{ width: '100%', padding: '12px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' }}
+          >
+            View Vehicle
+          </button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
@@ -354,8 +436,8 @@ export function DetailedSpotAndReviewPage({
           </h1>
           <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#7a8e9e', margin: 0 }}>
             {upgradeFromQuickSpot
-              ? 'Add detailed ratings for +20 bonus RP'
-              : (vehicleName || 'Complete the review for +35 pts')
+              ? 'Add detailed ratings for +5 bonus RP'
+              : (vehicleName || 'Complete the review for +15 RP')
             }
           </p>
         </div>
@@ -442,7 +524,7 @@ export function DetailedSpotAndReviewPage({
             {submitting ? (
               <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             ) : null}
-            Submit Full Spot +35 RP
+            Submit Full Spot +15 RP
           </button>
         </div>
       </div>

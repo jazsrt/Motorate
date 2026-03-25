@@ -260,7 +260,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code);
 
         if (apiResult && apiResult.make && apiResult.model) {
-          // Auto.dev returned vehicle data — skip manual entry, go to quick spot review
+          // Auto.dev returned vehicle data — show confirm screen before rating
           const wizardData: SpotWizardData = {
             plateState: code,
             plateNumber: searchPlate.trim().toUpperCase(),
@@ -271,7 +271,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             year: apiResult.year || undefined,
             trim: apiResult.trim || undefined,
           };
-          onNavigate('quick-spot-review', { wizardData });
+          onNavigate('confirm-vehicle', { wizardData });
         } else {
           // Auto.dev returned nothing — show not-found state for manual entry
           setRevealResult({ vehicle: null, found: false });

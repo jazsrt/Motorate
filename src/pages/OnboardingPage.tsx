@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Car, FileText, ArrowRight, Loader, AlertCircle, ChevronDown, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, Loader, AlertCircle, ChevronDown, LogOut, LayoutGrid, Activity, Home, Award } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { supabase } from '../lib/supabase';
 import { hashPlate } from '../lib/hash';
-import Tesseract from 'tesseract.js';
 import {
   VEHICLE_YEARS,
   VEHICLE_MAKES,
@@ -13,7 +12,7 @@ import {
   US_STATES,
 } from '../data/vehicleData';
 
-type Step = 'handle_setup' | 'vehicle_info';
+type Step = 'welcome' | 'handle' | 'vehicle';
 
 interface VehicleData {
   year: string;
@@ -25,557 +24,343 @@ interface VehicleData {
   plateNumber: string;
 }
 
+const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6, display: 'block' };
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '12px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
+const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'none' as const, paddingRight: 36 };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '14px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 };
+const ghostBtnStyle: React.CSSProperties = { padding: '12px 20px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', cursor: 'pointer' };
+
+const HOW_IT_WORKS = [
+  {
+    icon: (active: boolean) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#F97316' : '#7a8e9e'} strokeWidth="2">
+        <circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+      </svg>
+    ),
+    title: 'Spot',
+    desc: 'See a car you like? Scan the plate. Rate it. Earn RP.',
+  },
+  {
+    icon: (_: boolean) => <Home size={22} strokeWidth={2} />,
+    title: 'Garage',
+    desc: 'Claim your vehicle. Build its reputation over time.',
+  },
+  {
+    icon: (_: boolean) => <Activity size={22} strokeWidth={2} />,
+    title: 'Rankings',
+    desc: 'Vehicles ranked by community reputation, not followers.',
+  },
+  {
+    icon: (_: boolean) => <Award size={22} strokeWidth={2} />,
+    title: 'Badges',
+    desc: 'Hit milestones. Unlock badges. Level up your tier.',
+  },
+];
+
 export default function OnboardingPage() {
   const { user, refreshProfile, signOut } = useAuth();
   const { showToast } = useToast();
 
-  const [step, setStep] = useState<Step>('handle_setup');
+  const [step, setStep] = useState<Step>('welcome');
   const [handle, setHandle] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
 
   const [vehicleData, setVehicleData] = useState<VehicleData>({
-    year: '',
-    make: '',
-    model: '',
-    trim: '',
-    color: '',
-    plateState: '',
-    plateNumber: ''
+    year: '', make: '', model: '', trim: '', color: '', plateState: '', plateNumber: ''
   });
 
-  const [registrationFile, setRegistrationFile] = useState<File | null>(null);
-  const [registrationPreview, setRegistrationPreview] = useState<string>('');
-
   const availableModels = vehicleData.make && VEHICLE_MODELS[vehicleData.make]
-    ? VEHICLE_MODELS[vehicleData.make]
-    : [];
+    ? VEHICLE_MODELS[vehicleData.make] : [];
 
-  const handleSkipVehicle = async () => {
-    if (!user) return;
-
-    setIsProcessing(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          onboarding_completed: true
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      await refreshProfile();
-      showToast('Welcome to Reputation!', 'success');
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
-      showToast('Failed to complete onboarding', 'error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
+  // ── Handle submit ──
   const handleHandleSubmit = async () => {
-    if (!handle.trim()) {
-      setError('Please enter a handle');
-      return;
-    }
+    if (!handle.trim()) { setError('Please enter a username'); return; }
+    if (handle.trim().length < 3) { setError('Username must be at least 3 characters'); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(handle.trim())) { setError('Letters, numbers, and underscores only'); return; }
 
     setIsProcessing(true);
     setError('');
-
     try {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ handle: handle.trim() })
+      const { data: existing } = await supabase.from('profiles').select('id').eq('handle', handle.trim().toLowerCase()).maybeSingle();
+      if (existing) { setError('This username is already taken'); setIsProcessing(false); return; }
+
+      const { error: profileError } = await supabase.from('profiles')
+        .update({ handle: handle.trim().toLowerCase() })
         .eq('id', user!.id);
-
-      if (profileError) {
-        if (profileError.code === '23505') {
-          throw new Error('This handle is already taken');
-        }
-        throw profileError;
-      }
-
-      await refreshProfile();
-      setStep('vehicle_info');
-    } catch (error: any) {
-      setError(error.message || 'Failed to save handle');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleVehicleInputChange = (field: keyof VehicleData, value: string) => {
-    setVehicleData(prev => ({ ...prev, [field]: value }));
-    if (field === 'make') {
-      setVehicleData(prev => ({ ...prev, model: '' }));
-    }
-  };
-
-  const handleRegistrationSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setRegistrationFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setRegistrationPreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-      setError('');
-    }
-  };
-
-  const validatePlateInImage = async (imageFile: File, expectedPlate: string): Promise<boolean> => {
-    try {
-      const { data: { text } } = await Tesseract.recognize(imageFile, 'eng', {
-        logger: () => {}
-      });
-
-      const normalizedOcrText = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const normalizedPlate = expectedPlate.toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-      return normalizedOcrText.includes(normalizedPlate);
-    } catch (error) {
-      console.error('OCR Error:', error);
-      return false;
-    }
-  };
-
-  const handleVehicleSubmit = async () => {
-    if (!user) return;
-
-    if (!vehicleData.year || !vehicleData.make || !vehicleData.model ||
-        !vehicleData.plateState || !vehicleData.plateNumber) {
-      setError('Please fill in all required vehicle fields');
-      return;
-    }
-
-    setIsProcessing(true);
-    setError('');
-
-    try {
-      const plateHash = await hashPlate(vehicleData.plateState, vehicleData.plateNumber);
-
-      let verificationTier: 'unverified' | 'possession_verified' | 'ownership_verified' = 'unverified';
-      let vin: string | null = null;
-      let isVerified = false;
-
-      // If registration document is provided, verify ownership
-      if (registrationFile) {
-        showToast('Verifying registration document...', 'info');
-
-        const fileExt = registrationFile.name.split('.').pop();
-        const fileName = `registration-${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `registration-temp/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('vehicles')
-          .upload(filePath, registrationFile);
-
-        if (uploadError) throw uploadError;
-
-        try {
-          const { data: functionData, error: functionError } = await supabase.functions
-            .invoke('verify-document', {
-              body: {
-                filePath,
-                expectedPlate: vehicleData.plateNumber,
-                expectedMake: vehicleData.make,
-                expectedModel: vehicleData.model
-              }
-            });
-
-          await supabase.storage
-            .from('vehicles')
-            .remove([filePath]);
-
-          if (!functionError && functionData?.verified) {
-            verificationTier = 'ownership_verified';
-            vin = functionData.vin || null;
-            isVerified = true;
-          }
-        } catch (err) {
-          console.error('Verification error:', err);
-        }
-      }
-
-      const { data: vehicle, error: vehicleError } = await supabase
-        .from('vehicles')
-        .insert({
-          plate_hash: plateHash,
-          state: vehicleData.plateState,
-          owner_id: user.id,
-          year: parseInt(vehicleData.year),
-          make: vehicleData.make,
-          model: vehicleData.model,
-          trim: vehicleData.trim || null,
-          color: vehicleData.color || null,
-          verification_tier: verificationTier,
-          is_claimed: true,
-          claimed_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (vehicleError) throw vehicleError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          is_verified: isVerified,
-          onboarding_completed: true
-        })
-        .eq('id', user.id);
-
       if (profileError) throw profileError;
 
-      const { error: albumError } = await supabase
-        .from('albums')
-        .insert({
-          title: 'My Garage',
-          description: 'My personal vehicle collection',
-          user_id: user.id,
-          vehicle_id: vehicle.id,
-          privacy_level: 'public'
-        });
-
-      if (albumError) console.error('Album creation error:', albumError);
-
       await refreshProfile();
-
-      if (verificationTier === 'ownership_verified') {
-        showToast('Ownership verified! Welcome to Reputation!', 'success');
-      } else {
-        showToast('Vehicle added! Welcome to Reputation!', 'success');
-      }
-    } catch (error) {
-      console.error('Onboarding error:', error);
-      setError('Failed to complete onboarding. Please try again.');
+      setStep('vehicle');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save username');
     } finally {
       setIsProcessing(false);
     }
   };
 
+  // ── Skip vehicle ──
+  const handleSkipVehicle = async () => {
+    setIsProcessing(true);
+    try {
+      await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', user!.id);
+      await refreshProfile();
+    } catch {
+      showToast('Something went wrong', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // ── Vehicle submit ──
+  const handleVehicleSubmit = async () => {
+    if (!vehicleData.year || !vehicleData.make || !vehicleData.model || !vehicleData.plateState || !vehicleData.plateNumber) {
+      setError('Fill in all required fields'); return;
+    }
+    setIsProcessing(true);
+    setError('');
+    try {
+      const plateHash = await hashPlate(vehicleData.plateState, vehicleData.plateNumber.trim().toUpperCase());
+      const { error: vErr } = await supabase.from('vehicles').insert({
+        plate_hash: plateHash,
+        plate_state: vehicleData.plateState,
+        plate_number: vehicleData.plateNumber.trim().toUpperCase(),
+        owner_id: user!.id,
+        year: parseInt(vehicleData.year),
+        make: vehicleData.make,
+        model: vehicleData.model,
+        trim: vehicleData.trim || null,
+        color: vehicleData.color || null,
+        is_claimed: true,
+        verification_tier: 'unverified',
+        claimed_at: new Date().toISOString(),
+      });
+      if (vErr) throw vErr;
+
+      await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', user!.id);
+      await refreshProfile();
+      showToast('Vehicle added to your garage', 'success');
+    } catch (err: any) {
+      setError(err.message || 'Failed to add vehicle');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleVehicleChange = (field: keyof VehicleData, value: string) => {
+    setVehicleData(prev => ({ ...prev, [field]: value }));
+    if (field === 'make') setVehicleData(prev => ({ ...prev, model: '' }));
+  };
+
+  // ── Progress indicator ──
+  const steps: Step[] = ['welcome', 'handle', 'vehicle'];
+  const stepIdx = steps.indexOf(step);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={signOut}
-            className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
+    <div style={{ minHeight: '100vh', background: '#030508', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+      <div style={{ maxWidth: 440, width: '100%' }}>
+
+        {/* Sign out */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <button onClick={signOut} style={{ ...ghostBtnStyle, padding: '6px 12px', fontSize: 9, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <LogOut size={12} /> Sign Out
           </button>
         </div>
 
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Car className="w-12 h-12 text-orange-500" />
-            <h1 className="text-4xl font-bold text-white">Welcome to Reputation</h1>
-          </div>
-          <p className="text-slate-400">Let's get you set up</p>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 8 }}>
+          <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#eef4f8' }}>
+            MOTO<em style={{ fontStyle: 'normal', color: '#F97316' }}>R</em>ATE
+          </span>
         </div>
 
-        <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-700">
-          {step === 'handle_setup' && (
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Choose Your Handle</h2>
-                <p className="text-slate-400">Pick a unique handle for your Reputation profile</p>
-              </div>
+        {/* Progress dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
+          {steps.map((s, i) => (
+            <div key={s} style={{ width: i <= stepIdx ? 24 : 8, height: 4, borderRadius: 2, background: i <= stepIdx ? '#F97316' : 'rgba(255,255,255,0.08)', transition: 'all 0.3s' }} />
+          ))}
+        </div>
 
-              {error && (
-                <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-red-200 text-sm font-semibold mb-1">Error</p>
-                    <p className="text-red-300 text-sm">{error}</p>
+        {/* ════════════════════════════════════════
+           STEP 1 — WELCOME / HOW IT WORKS
+        ════════════════════════════════════════ */}
+        {step === 'welcome' && (
+          <div>
+            <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', textAlign: 'center', margin: '0 0 4px' }}>
+              How MotoRate Works
+            </h1>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', textAlign: 'center', margin: '0 0 28px' }}>
+              Vehicles build reputation. You make it happen.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
+              {HOW_IT_WORKS.map((item, i) => (
+                <div key={item.title} style={{
+                  display: 'flex', alignItems: 'center', gap: 16,
+                  background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 10, padding: '14px 16px',
+                }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#F97316' }}>
+                    {item.icon(true)}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3 }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.4 }}>
+                      {item.desc}
+                    </div>
                   </div>
                 </div>
-              )}
+              ))}
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  value={handle}
-                  onChange={(e) => {
-                    setHandle(e.target.value);
-                    setError('');
-                  }}
-                  placeholder="e.g., cooldriver, speeddemon"
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  maxLength={30}
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  This will be your unique identifier on Reputation
-                </p>
+            <button onClick={() => setStep('handle')} style={primaryBtnStyle}>
+              Got It <ArrowRight size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════
+           STEP 2 — HANDLE SETUP
+        ════════════════════════════════════════ */}
+        {step === 'handle' && (
+          <div>
+            <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', textAlign: 'center', margin: '0 0 4px' }}>
+              Choose Your Username
+            </h1>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', textAlign: 'center', margin: '0 0 24px' }}>
+              This is how other users will find you
+            </p>
+
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+                <AlertCircle size={16} style={{ color: '#ef4444', flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#ef4444' }}>{error}</span>
               </div>
+            )}
 
-              <button
-                onClick={handleHandleSubmit}
-                disabled={isProcessing || !handle.trim()}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    Continue
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
+            <div style={{ marginBottom: 20 }}>
+              <label style={labelStyle}>Username</label>
+              <input
+                type="text" value={handle}
+                onChange={e => { setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')); setError(''); }}
+                placeholder="yourhandle"
+                maxLength={24}
+                autoCapitalize="off" autoComplete="username"
+                style={inputStyle}
+                onFocus={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'}
+                onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
+              />
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#3a4e60', marginTop: 6 }}>
+                Letters, numbers, underscores. 3-24 characters.
+              </p>
+            </div>
+
+            <button onClick={handleHandleSubmit} disabled={isProcessing || !handle.trim()} style={{ ...primaryBtnStyle, opacity: (isProcessing || !handle.trim()) ? 0.4 : 1 }}>
+              {isProcessing ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <>Continue <ArrowRight size={16} /></>}
+            </button>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════
+           STEP 3 — VEHICLE (OPTIONAL)
+        ════════════════════════════════════════ */}
+        {step === 'vehicle' && (
+          <div>
+            <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', textAlign: 'center', margin: '0 0 4px' }}>
+              Claim Your Ride
+            </h1>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', textAlign: 'center', margin: '0 0 24px' }}>
+              Optional. You can always do this later from your garage.
+            </p>
+
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+                <AlertCircle size={16} style={{ color: '#ef4444', flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#ef4444' }}>{error}</span>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>Year *</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={vehicleData.year} onChange={e => handleVehicleChange('year', e.target.value)} style={selectStyle}>
+                    <option value="">Year</option>
+                    {VEHICLE_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                  <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e', pointerEvents: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Make *</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={vehicleData.make} onChange={e => handleVehicleChange('make', e.target.value)} style={selectStyle}>
+                    <option value="">Make</option>
+                    {VEHICLE_MAKES.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e', pointerEvents: 'none' }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>Model *</label>
+              <div style={{ position: 'relative' }}>
+                <select value={vehicleData.model} onChange={e => handleVehicleChange('model', e.target.value)} disabled={!vehicleData.make} style={{ ...selectStyle, opacity: vehicleData.make ? 1 : 0.5 }}>
+                  <option value="">{vehicleData.make ? 'Model' : 'Select make first'}</option>
+                  {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e', pointerEvents: 'none' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>Color</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={vehicleData.color} onChange={e => handleVehicleChange('color', e.target.value)} style={selectStyle}>
+                    <option value="">Color</option>
+                    {VEHICLE_COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e', pointerEvents: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Trim</label>
+                <input type="text" value={vehicleData.trim} onChange={e => handleVehicleChange('trim', e.target.value)} placeholder="e.g. Sport, SRT" style={inputStyle} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+              <div>
+                <label style={labelStyle}>State *</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={vehicleData.plateState} onChange={e => handleVehicleChange('plateState', e.target.value)} style={selectStyle}>
+                    <option value="">State</option>
+                    {US_STATES.map(s => <option key={s.code} value={s.code}>{s.code}</option>)}
+                  </select>
+                  <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e', pointerEvents: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Plate *</label>
+                <input type="text" value={vehicleData.plateNumber} onChange={e => handleVehicleChange('plateNumber', e.target.value.toUpperCase())} placeholder="ABC1234" maxLength={8} style={{ ...inputStyle, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={handleSkipVehicle} disabled={isProcessing} style={ghostBtnStyle}>
+                Skip
+              </button>
+              <button onClick={handleVehicleSubmit} disabled={isProcessing} style={{ ...primaryBtnStyle, flex: 1, opacity: isProcessing ? 0.4 : 1 }}>
+                {isProcessing ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Adding...</> : <>Claim Vehicle <ArrowRight size={16} /></>}
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {step === 'vehicle_info' && (
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Add Your Vehicle (Optional)</h2>
-                <p className="text-slate-400">
-                  Add your vehicle to unlock features like creating posts and albums
-                </p>
-              </div>
-
-              {error && (
-                <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-red-200 text-sm font-semibold mb-1">Error</p>
-                    <p className="text-red-300 text-sm">{error}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Year *
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={vehicleData.year}
-                        onChange={(e) => handleVehicleInputChange('year', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
-                      >
-                        <option value="">Select Year</option>
-                        {VEHICLE_YEARS.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Make *
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={vehicleData.make}
-                        onChange={(e) => handleVehicleInputChange('make', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
-                      >
-                        <option value="">Select Make</option>
-                        {VEHICLE_MAKES.map((make) => (
-                          <option key={make} value={make}>{make}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Model *
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={vehicleData.model}
-                      onChange={(e) => handleVehicleInputChange('model', e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
-                      disabled={!vehicleData.make}
-                    >
-                      <option value="">{vehicleData.make ? 'Select Model' : 'Select Make First'}</option>
-                      {availableModels.map((model) => (
-                        <option key={model} value={model}>{model}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Trim (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={vehicleData.trim}
-                    onChange={(e) => handleVehicleInputChange('trim', e.target.value)}
-                    placeholder="e.g., Sport, Limited, EX"
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Color
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={vehicleData.color}
-                      onChange={(e) => handleVehicleInputChange('color', e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
-                    >
-                      <option value="">Select Color</option>
-                      {VEHICLE_COLORS.map((color) => (
-                        <option key={color} value={color}>{color}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      State *
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={vehicleData.plateState}
-                        onChange={(e) => handleVehicleInputChange('plateState', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none pr-10"
-                      >
-                        <option value="">Select State</option>
-                        {US_STATES.map((state) => (
-                          <option key={state.code} value={state.code}>
-                            {state.code} - {state.name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      License Plate *
-                    </label>
-                    <input
-                      type="text"
-                      value={vehicleData.plateNumber}
-                      onChange={(e) => handleVehicleInputChange('plateNumber', e.target.value.toUpperCase())}
-                      placeholder="ABC1234"
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Upload Vehicle Registration (Optional)</h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    Upload a clear photo or scan of your vehicle registration document to verify ownership and get the Verified Owner badge.
-                  </p>
-
-                    <div className="bg-orange-900/20 border border-orange-700/50 rounded-lg p-4 mb-4">
-                      <p className="text-xs text-orange-300">
-                        <span className="font-bold">Privacy Notice:</span> Your registration will be verified by AI and immediately deleted. We only store verification status, not documents or personal information.
-                      </p>
-                    </div>
-
-                    {!registrationFile ? (
-                      <label className="block cursor-pointer">
-                        <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-orange-500 transition-all">
-                          <FileText className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                          <p className="text-slate-400">Click to upload registration</p>
-                          <p className="text-xs text-slate-500 mt-2">PDF, JPG, or PNG</p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleRegistrationSelect}
-                          className="hidden"
-                        />
-                      </label>
-                    ) : (
-                      <div className="space-y-4">
-                        {registrationPreview && registrationFile.type.startsWith('image/') && (
-                          <img
-                            src={registrationPreview}
-                            alt="Registration preview"
-                            className="w-full rounded-lg max-h-64 object-contain bg-slate-950"
-                          />
-                        )}
-                        <div className="bg-slate-800 rounded-lg p-4 flex items-center gap-3">
-                          <FileText className="w-8 h-8 text-orange-500" />
-                          <div className="flex-1">
-                            <p className="text-white font-medium">{registrationFile.name}</p>
-                            <p className="text-xs text-slate-400">
-                              {(registrationFile.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setRegistrationFile(null);
-                            setRegistrationPreview('');
-                          }}
-                          className="text-sm text-orange-400 hover:text-orange-300"
-                        >
-                          Change document
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleSkipVehicle}
-                  disabled={isProcessing}
-                  className="px-6 py-3 bg-slate-700 text-slate-300 rounded-lg font-semibold hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Skip for now
-                </button>
-                <button
-                  onClick={handleVehicleSubmit}
-                  disabled={isProcessing}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      {registrationFile ? 'Verifying...' : 'Adding Vehicle...'}
-                    </>
-                  ) : (
-                    <>
-                      Add Vehicle
-                      <ArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <p className="text-center text-slate-500 text-sm mt-6">
-          By continuing, you agree to Reputation's Terms of Service
-        </p>
       </div>
     </div>
   );

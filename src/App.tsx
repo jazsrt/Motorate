@@ -52,6 +52,7 @@ const BadgesPage = lazy(() => import('./pages/BadgesPage').then(m => ({ default:
 const BadgeTestingPage = lazy(() => import('./pages/BadgeTestingPage').then(m => ({ default: m.BadgeTestingPage })));
 const BrowseVehiclesPage = lazy(() => import('./pages/BrowseVehiclesPage').then(m => ({ default: m.BrowseVehiclesPage })));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 
 type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'detailed-review' | 'completed-review';
 type AuthView = 'login' | 'register';
@@ -343,7 +344,14 @@ function AppContent() {
     );
   }
 
-
+  // Onboarding gate — new users (especially OAuth) must complete setup before using the app
+  if (user && profile && !profile.onboarding_completed) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <OnboardingPage />
+      </Suspense>
+    );
+  }
 
   let pageContent;
 
@@ -391,6 +399,8 @@ function AppContent() {
           vehicleRating={wizardReviewData.vehicleRating || 0}
           sentiment={wizardReviewData.sentiment || 'love'}
           comment={wizardReviewData.comment}
+          upgradeFromQuickSpot={wizardReviewData.upgradeFromQuickSpot}
+          existingReviewId={wizardReviewData.existingReviewId}
         />
       ) : (
         <SpotPage onNavigate={handleNavigate} />

@@ -3,7 +3,7 @@ import { Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
-import { awardReputationPoints } from '../lib/reputation';
+import { calculateAndAwardReputation } from '../lib/reputation';
 import { ModalShell, modalButtonPrimary, modalButtonGhost, modalInput, modalLabel } from './ui/ModalShell';
 
 interface RateDriverModalProps {
@@ -95,7 +95,12 @@ export function RateDriverModal({
             reputation_earned: 10,
           });
 
-          await awardReputationPoints(user.id, 'COMMENT_LEFT', 'review', review.id);
+          await calculateAndAwardReputation({
+            userId: user.id,
+            action: 'COMMENT_LEFT',
+            referenceType: 'review',
+            referenceId: review.id,
+          });
 
           try {
             await supabase.rpc('check_and_award_badges', {

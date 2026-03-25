@@ -75,6 +75,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
+  const [rewardData, setRewardData] = useState<{ rp: number; vehicleName: string; spotCount: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ratingsComplete = driverRating > 0 && drivingRating > 0 && vehicleRating > 0;
@@ -201,25 +202,39 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         throw new Error('Failed to record review: ' + reviewError.message);
       }
 
-      // STEP 3: Create feed post so the spot appears in the feed
-      await supabase
-        .from('posts')
-        .insert({
-          author_id: user.id,
-          vehicle_id: vehicleId,
-          post_type: 'spot',
-          spot_type: 'quick',
-          caption: comment.trim() || `Spotted this ride!`,
-          image_url: photoUrl,
-          spot_history_id: spotData.id,
-          review_id: reviewData.id,
-          rating_driver: driverRating,
-          rating_driving: drivingRating,
-          rating_vehicle: vehicleRating,
-          sentiment,
-          moderation_status: 'approved',
-          privacy_level: 'public',
-        });
+      // STEP 3: Resolve best available image for the feed post
+      // Priority: user photo > vehicle profile image > stock image
+      let feedImageUrl: string | null = photoUrl;
+      if (!feedImageUrl) {
+        const { data: vImg } = await supabase
+          .from('vehicles')
+          .select('profile_image_url, stock_image_url')
+          .eq('id', vehicleId)
+          .maybeSingle();
+        feedImageUrl = vImg?.profile_image_url || vImg?.stock_image_url || null;
+      }
+
+      // Only create a feed post if we have a visual anchor — no blank tiles
+      if (feedImageUrl) {
+        await supabase
+          .from('posts')
+          .insert({
+            author_id: user.id,
+            vehicle_id: vehicleId,
+            post_type: 'spot',
+            spot_type: 'quick',
+            caption: comment.trim() || null,
+            image_url: feedImageUrl,
+            spot_history_id: spotData.id,
+            review_id: reviewData.id,
+            rating_driver: driverRating,
+            rating_driving: drivingRating,
+            rating_vehicle: vehicleRating,
+            sentiment,
+            moderation_status: 'approved',
+            privacy_level: 'public',
+          });
+      }
 
       // STEP 4: Award reputation
       await calculateAndAwardReputation({
@@ -292,6 +307,20 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
       setReviewId(reviewData.id);
       setVehicleId(vehicleId);
 
+      // Fetch vehicle spot count for reward display
+      const { data: vehicleStats } = await supabase
+        .from('vehicles')
+        .select('spots_count')
+        .eq('id', vehicleId)
+        .maybeSingle();
+
+      const vName = [wizardData.make, wizardData.model].filter(Boolean).join(' ');
+      setRewardData({
+        rp: 10,
+        vehicleName: vName || 'Vehicle',
+        spotCount: vehicleStats?.spots_count ?? 1,
+      });
+
       // Show upgrade prompt instead of navigating away
       setShowUpgradePrompt(true);
     } catch (err: any) {
@@ -322,6 +351,79 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   const loveActive = sentiment === 'love';
   const hateActive = sentiment === 'hate';
 
+  // Inline reward block — shown after successful submission, replacing the form
+  if (showUpgradePrompt && rewardData) {
+    const milestones = [1, 5, 10, 20, 50];
+    const nextMilestone = milestones.find(m => m > rewardData.spotCount) ?? null;
+    const spotsToNext = nextMilestone ? nextMilestone - rewardData.spotCount : null;
+
+    return (
+      <Layout currentPage="scan" onNavigate={onNavigate}>
+        <div style={{ maxWidth: 512, margin: '0 auto', padding: '32px 16px' }}>
+          {/* RP Earned */}
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 42, fontWeight: 700, color: '#F97316', lineHeight: 1 }}>+{rewardData.rp}</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316', marginLeft: 6 }}>RP</span>
+          </div>
+
+          {/* Vehicle Impact */}
+          <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '14px 16px', marginBottom: 12 }}>
+            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px' }}>
+              {rewardData.vehicleName}
+            </p>
+            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', margin: 0 }}>
+              {rewardData.spotCount === 1 ? 'First spot recorded' : `${rewardData.spotCount} spots total`}
+            </p>
+          </div>
+
+          {/* Milestone Progress */}
+          {spotsToNext !== null && nextMilestone !== null && (
+            <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 16px', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Next milestone</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#eef4f8' }}>{nextMilestone}</span>
+              </div>
+              <div style={{ width: '100%', height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                <div style={{ width: `${Math.min(100, (rewardData.spotCount / nextMilestone) * 100)}%`, height: '100%', background: '#F97316', borderRadius: 2 }} />
+              </div>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: '6px 0 0', textAlign: 'right' }}>
+                {spotsToNext} more {spotsToNext === 1 ? 'spot' : 'spots'} to go
+              </p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <button
+              onClick={() => onNavigate('feed')}
+              style={{ padding: '12px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}
+            >
+              Done
+            </button>
+            <button
+              onClick={() => {
+                onNavigate('detailed-review', {
+                  wizardData: { ...wizardData, vehicleId },
+                  driverRating,
+                  drivingRating,
+                  vehicleRating,
+                  sentiment,
+                  comment,
+                  upgradeFromQuickSpot: true,
+                  existingReviewId: reviewId,
+                });
+              }}
+              style={{ ...primaryBtnStyle, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <Zap style={{ width: 14, height: 14 }} />
+              Full Spot +5 RP
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
       <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }}>
@@ -334,22 +436,10 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             <span>Back</span>
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {[1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  style={{ height: 6, borderRadius: 9999, width: 32, background: '#F97316' }}
-                />
-              ))}
-            </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e' }}>Step 3 of 3 — 100%</span>
-          </div>
-
           <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '4px 0' }}>
             Quick Spot
           </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>{vehicleName || 'Rate the vehicle'}</p>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>{vehicleName || 'Rate the vehicle'}</p>
         </div>
 
         {/* Vehicle Identity Card */}
@@ -494,7 +584,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           {(submitting || uploadingPhoto) ? (
             <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           ) : null}
-          {uploadingPhoto ? 'Uploading photo...' : 'Submit Quick Spot (+15 pts)'}
+          {uploadingPhoto ? 'Uploading photo...' : 'Submit Quick Spot (+10 RP)'}
         </button>
 
         <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 8, padding: '12px 14px' }}>
@@ -503,85 +593,12 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             disabled={!canSubmit}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '11px', background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: !canSubmit ? '#5a6e7e' : '#F97316', cursor: !canSubmit ? 'not-allowed' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
           >
-            <Zap style={{ width: 18, height: 18 }} />
-            +20 PTS: Add Year, Make & Model
+            <Zap style={{ width: 16, height: 16 }} />
+            Full Spot — +15 RP
             <ChevronRight style={{ width: 16, height: 16 }} />
           </button>
         </div>
       </div>
-
-      {showUpgradePrompt && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-          onClick={() => {
-            setShowUpgradePrompt(false);
-            onNavigate('completed-review', {
-              vehicleId,
-              reviewId,
-              spotType: 'quick',
-              wizardData: { ...wizardData, vehicleId },
-              driverRating,
-              drivingRating,
-              vehicleRating,
-              sentiment,
-              comment,
-              reputationEarned: 15,
-            });
-          }}
-        >
-          <div
-            style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, maxWidth: 448, width: '100%' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginTop: 0, marginBottom: 12 }}>
-              Want to leave a Full Spot for +20 bonus RP?
-            </h2>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', marginBottom: 24, lineHeight: 1.5 }}>
-              Add detailed ratings (Looks, Sound, Condition) to earn extra reputation points
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button
-                onClick={() => {
-                  setShowUpgradePrompt(false);
-                  onNavigate('completed-review', {
-                    vehicleId,
-                    reviewId,
-                    spotType: 'quick',
-                    wizardData: { ...wizardData, vehicleId },
-                    driverRating,
-                    drivingRating,
-                    vehicleRating,
-                    sentiment,
-                    comment,
-                    reputationEarned: 15,
-                  });
-                }}
-                style={{ padding: '12px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e', cursor: 'pointer' }}
-              >
-                No, I'm Done
-              </button>
-              <button
-                onClick={() => {
-                  setShowUpgradePrompt(false);
-                  onNavigate('detailed-review', {
-                    wizardData: { ...wizardData, vehicleId },
-                    driverRating,
-                    drivingRating,
-                    vehicleRating,
-                    sentiment,
-                    comment,
-                    upgradeFromQuickSpot: true,
-                    existingReviewId: reviewId,
-                  });
-                }}
-                style={{ ...primaryBtnStyle, padding: '12px' }}
-              >
-                Yes, Upgrade to Full Spot
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }

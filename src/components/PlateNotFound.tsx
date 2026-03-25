@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Car, Palette, Star, ArrowRight, ArrowLeft, Check, Key, Eye, Volume2, Flag } from 'lucide-react';
-import { StarRatingInput } from './StarRatingInput';
+import { AlertCircle, Car, ArrowRight, ArrowLeft, Check, Key } from 'lucide-react';
 import { AutocompleteInput } from './AutocompleteInput';
 import { VEHICLE_MAKES, VEHICLE_MODELS, VEHICLE_COLORS } from '../data/vehicleData';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
@@ -20,66 +19,37 @@ export interface CreateVehicleData {
   year: number | null;
   color: string;
   trim?: string;
-  ratings?: {
-    look: number;
-    sound: number;
-    condition: number;
-    driving: number;
-  };
-  comments?: string;
 }
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
 
-// State-specific plate colors
-const STATE_PLATE_COLORS: Record<string, { bg: string; text: string }> = {
-  CA: { bg: 'bg-white', text: 'text-black' },
-  NY: { bg: 'bg-yellow-400', text: 'text-black' },
-  TX: { bg: 'bg-white', text: 'text-black' },
-  FL: { bg: 'bg-orange-500', text: 'text-white' },
-  IL: { bg: 'bg-white', text: 'text-orange-600' },
-  DEFAULT: { bg: 'bg-white', text: 'text-black' },
-};
-
 export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimVehicle, loading = false }: PlateNotFoundProps) {
   const [step, setStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 2;
 
-  // Form data
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
   const [year, setYear] = useState<number | null>(null);
   const [trim, setTrim] = useState('');
   const [color, setColor] = useState('');
 
-  // Review data
-  const [lookRating, setLookRating] = useState(0);
-  const [soundRating, setSoundRating] = useState(0);
-  const [conditionRating, setConditionRating] = useState(0);
-  const [drivingRating, setDrivingRating] = useState(0);
-  const [comments, setComments] = useState('');
-
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [stockImageUrl, setStockImageUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  // Get state code from state name
   const stateCode = state.length === 2 ? state : state.substring(0, 2).toUpperCase();
-  const plateColors = STATE_PLATE_COLORS[stateCode] || STATE_PLATE_COLORS.DEFAULT;
 
-  // Update available models when make changes
   useEffect(() => {
     if (make) {
       setAvailableModels(VEHICLE_MODELS[make] || []);
-      setModel(''); // Reset model when make changes
-      setTrim(''); // Reset trim when make changes
+      setModel('');
+      setTrim('');
     } else {
       setAvailableModels([]);
     }
   }, [make]);
 
-  // Fetch stock image when make + model are set
   useEffect(() => {
     if (make && model) {
       let cancelled = false;
@@ -114,213 +84,156 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
       setError('Please complete all required fields');
       return;
     }
-
-    const hasRatings = lookRating > 0 || soundRating > 0 || conditionRating > 0 || drivingRating > 0;
-
     onCreate({
       make,
       model,
       year,
       color,
       trim: trim || undefined,
-      ratings: hasRatings ? {
-        look: lookRating,
-        sound: soundRating,
-        condition: conditionRating,
-        driving: drivingRating
-      } : undefined,
-      comments: comments.trim() || undefined
     });
   };
 
+  const progressPct = Math.round((step / totalSteps) * 100);
+
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-2xl overflow-hidden shadow-2xl">
-        {/* Header with Progress Bar */}
-        <div className="bg-gradient-to-r from-[rgba(249,115,22,0.12)] to-[rgba(245,158,11,0.08)] border-b border-surfacehighlight">
-          <div className="p-4 text-center">
-            <h2 className="text-2xl font-heading font-bold uppercase tracking-tight mb-1">
-              Spot This Plate
-            </h2>
-            <p className="text-secondary text-sm">Be the first to add this vehicle!</p>
+    <div style={{ maxWidth: 640, margin: '0 auto', padding: 16 }}>
+      <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ background: '#0d1117', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px', textTransform: 'uppercase' }}>
+            Spot This Plate
+          </h2>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#9CA3AF', margin: 0 }}>Be the first to add this vehicle!</p>
+        </div>
+
+        {/* Progress */}
+        <div style={{ padding: '12px 24px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#6B7280' }}>Step {step} of {totalSteps}</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#F97316' }}>{progressPct}%</span>
           </div>
-
-          {/* Progress Bar */}
-          <div className="px-4 pb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-bold text-secondary">Step {step} of {totalSteps}</span>
-              <span className="text-xs font-bold text-accent-2">{Math.round((step / totalSteps) * 100)}%</span>
+          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progressPct}%`, background: '#F97316', borderRadius: 9999, transition: 'width 0.4s ease-out' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: step >= 1 ? '#F97316' : '#6B7280' }}>
+              {step > 1 ? <Check style={{ width: 14, height: 14 }} /> : <Car style={{ width: 14, height: 14 }} />}
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Vehicle</span>
             </div>
-            <div className="h-1.5 bg-surfacehighlight rounded-full overflow-hidden">
-              <div
-                className="h-full transition-all duration-500 ease-out"
-                style={{ width: `${(step / totalSteps) * 100}%`, background: 'linear-gradient(90deg, #f97316, #f59e0b)' }}
-              />
-            </div>
-
-            {/* Step Labels */}
-            <div className="flex justify-between mt-2">
-              <div className={`flex items-center gap-1 ${step >= 1 ? 'text-accent-2' : 'text-secondary/50'}`}>
-                {step > 1 ? <Check className="w-3.5 h-3.5" /> : <Car className="w-3.5 h-3.5" />}
-                <span className="text-xs font-bold">Vehicle</span>
-              </div>
-              <div className={`flex items-center gap-1 ${step >= 2 ? 'text-accent-2' : 'text-secondary/50'}`}>
-                {step > 2 ? <Check className="w-3.5 h-3.5" /> : <Palette className="w-3.5 h-3.5" />}
-                <span className="text-xs font-bold">Confirm</span>
-              </div>
-              <div className={`flex items-center gap-1 ${step >= 3 ? 'text-accent-2' : 'text-secondary/50'}`}>
-                <Star className="w-3.5 h-3.5" />
-                <span className="text-xs font-bold">Review</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: step >= 2 ? '#F97316' : '#6B7280' }}>
+              <Check style={{ width: 14, height: 14 }} />
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Confirm</span>
             </div>
           </div>
         </div>
 
-        {/* Error Display */}
+        {/* Error */}
         {error && (
-          <div className="mx-6 mt-6 bg-status-danger/20 border border-status-danger rounded-xl p-4 flex items-start gap-3 animate-shake">
-            <AlertCircle className="w-5 h-5 text-status-danger flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-status-danger">{error}</p>
+          <div style={{ margin: '0 24px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <AlertCircle style={{ width: 18, height: 18, color: '#ef4444', flexShrink: 0, marginTop: 1 }} />
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#ef4444', margin: 0 }}>{error}</p>
           </div>
         )}
 
-        {/* Step 1: License Plate & Vehicle Identity */}
+        {/* Step 1: Vehicle Identity */}
         {step === 1 && (
-          <div className="p-6 space-y-5">
-            {/* License Plate Display - FIRST and PROMINENT */}
-            <div className="bg-gradient-to-br from-[rgba(249,115,22,0.1)] to-[rgba(245,158,11,0.06)] rounded-2xl p-5 border-2 border-[rgba(249,115,22,0.3)]">
-              <label className="block text-xs font-heading font-bold uppercase tracking-tight text-accent-2 mb-3 text-center">
-                License Plate *
+          <div style={{ padding: '0 24px 24px' }}>
+            {/* Plate display */}
+            <div style={{ background: '#030508', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: 20, marginBottom: 20, textAlign: 'center' }}>
+              <label style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#F97316', display: 'block', marginBottom: 12 }}>
+                License Plate
               </label>
-              <div className="flex justify-center">
-                <div className={`relative ${plateColors.bg} rounded-lg px-8 py-4 shadow-xl border-4 border-gray-800`}>
-                  <div className="absolute top-1.5 left-3 text-[10px] text-gray-600 font-bold">{stateCode}</div>
-                  <div className={`text-3xl font-mono font-extrabold ${plateColors.text} tracking-widest text-center`}>
-                    {plateNumber.toUpperCase()}
-                  </div>
+              <div style={{ display: 'inline-block', background: '#fff', borderRadius: 6, padding: '12px 28px', border: '3px solid #222' }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666', marginBottom: 2, textAlign: 'left' }}>{stateCode}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 26, fontWeight: 700, color: '#000', letterSpacing: '0.12em', textAlign: 'center' }}>
+                  {plateNumber.toUpperCase()}
                 </div>
               </div>
-              <p className="text-xs text-center text-secondary mt-3">From your search</p>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#6B7280', marginTop: 10, marginBottom: 0 }}>From your search</p>
             </div>
 
-            {/* Compact Vehicle Selection Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <AutocompleteInput
-                label="Make"
-                placeholder="Type make..."
-                value={make}
-                onChange={setMake}
-                options={VEHICLE_MAKES}
-                required
-              />
-              <AutocompleteInput
-                label="Model"
-                placeholder="Type model..."
-                value={model}
-                onChange={setModel}
-                options={availableModels}
-                required
-                disabled={!make}
-              />
-              <AutocompleteInput
-                label="Year"
-                placeholder="Type year..."
-                value={year ? String(year) : ''}
-                onChange={v => setYear(v ? Number(v) : null)}
-                options={years.map(String)}
-                inputMode="numeric"
-              />
-              <AutocompleteInput
-                label="Color"
-                placeholder="Type color..."
-                value={color}
-                onChange={setColor}
-                options={VEHICLE_COLORS}
-                required
-              />
+            {/* Vehicle form */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <AutocompleteInput label="Make" placeholder="Type make..." value={make} onChange={setMake} options={VEHICLE_MAKES} required />
+              <AutocompleteInput label="Model" placeholder="Type model..." value={model} onChange={setModel} options={availableModels} required disabled={!make} />
+              <AutocompleteInput label="Year" placeholder="Type year..." value={year ? String(year) : ''} onChange={v => setYear(v ? Number(v) : null)} options={years.map(String)} inputMode="numeric" />
+              <AutocompleteInput label="Color" placeholder="Type color..." value={color} onChange={setColor} options={VEHICLE_COLORS} required />
             </div>
 
-            {/* Stock Image Preview */}
+            {/* Stock image */}
             {stockImageUrl && (
-              <div className="rounded-xl overflow-hidden border border-surfacehighlight" style={{ animation: 'fup 0.4s cubic-bezier(.25,.46,.45,.94) forwards' }}>
-                <img
-                  src={stockImageUrl}
-                  alt={`${make} ${model}`}
-                  className="w-full h-40 object-cover"
-                  style={{ background: '#0c1218' }}
-                />
-                <div className="px-3 py-2 bg-surfacehighlight/40 text-center">
-                  <span className="text-xs text-secondary">Stock reference image</span>
+              <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 16 }}>
+                <img src={stockImageUrl} alt={`${make} ${model}`} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block', background: '#030508' }} />
+                <div style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.04)', textAlign: 'center' }}>
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#6B7280' }}>Stock reference image</span>
                 </div>
               </div>
             )}
 
-            {/* Trim - Optional */}
+            {/* Trim */}
             <div>
-              <label className="block text-xs font-heading font-bold uppercase tracking-tight text-secondary mb-1.5">
-                Trim Level <span className="text-secondary/50">(Optional)</span>
+              <label style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#6B7280', display: 'block', marginBottom: 6 }}>
+                Trim Level <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>(Optional)</span>
               </label>
               <input
                 type="text"
                 value={trim}
                 onChange={(e) => setTrim(e.target.value)}
                 placeholder="e.g., EX-L, Sport, Limited..."
-                className="w-full px-3 py-2.5 bg-surfacehighlight border border-surfacehighlight rounded-xl focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 transition-all placeholder-secondary/50 text-sm"
+                style={{ width: '100%', padding: '11px 14px', background: '#030508', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
           </div>
         )}
 
-        {/* Step 2: Vehicle Preview */}
+        {/* Step 2: Confirm */}
         {step === 2 && (
-          <div className="p-5 space-y-4">
-            <div className="text-center mb-4">
-              <h3 className="text-xl font-heading font-bold uppercase tracking-tight mb-1">Confirm Details</h3>
-              <p className="text-secondary text-sm">Does this look right?</p>
+          <div style={{ padding: '0 24px 24px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px', textTransform: 'uppercase' }}>Confirm Details</h3>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#9CA3AF', margin: 0 }}>Does this look right?</p>
             </div>
 
-            {/* Combined Summary */}
-            <div className="bg-gradient-to-br from-surfacehighlight/60 to-surfacehighlight/30 rounded-2xl p-5 border border-surfacehighlight">
-              {/* License Plate at Top */}
-              <div className="flex justify-center mb-4">
-                <div className={`relative ${plateColors.bg} rounded-lg px-6 py-3 shadow-lg border-4 border-gray-800`}>
-                  <div className="absolute top-1 left-2 text-[8px] text-gray-600 font-bold">{stateCode}</div>
-                  <div className={`text-2xl font-mono font-extrabold ${plateColors.text} tracking-widest text-center`}>
+            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              {/* Plate */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <div style={{ background: '#fff', borderRadius: 6, padding: '10px 24px', border: '3px solid #222' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666', marginBottom: 2, textAlign: 'left' }}>{stateCode}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: '#000', letterSpacing: '0.12em', textAlign: 'center' }}>
                     {plateNumber.toUpperCase()}
                   </div>
                 </div>
               </div>
 
-              {/* Stock Image in Confirm */}
+              {/* Stock image */}
               {stockImageUrl && (
-                <div className="rounded-lg overflow-hidden mb-3">
-                  <img src={stockImageUrl} alt={`${make} ${model}`} className="w-full h-32 object-cover" style={{ background: '#0c1218' }} />
+                <div style={{ borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+                  <img src={stockImageUrl} alt={`${make} ${model}`} style={{ width: '100%', height: 128, objectFit: 'cover', display: 'block', background: '#030508' }} />
                 </div>
               )}
 
-              {/* Vehicle Details */}
-              <div className="text-center mb-3">
-                <h4 className="text-xl font-bold">
+              {/* Vehicle name */}
+              <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                <h4 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: 0 }}>
                   {year && `${year} `}{make} {model}
                 </h4>
-                {trim && <p className="text-sm text-secondary">{trim}</p>}
+                {trim && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#9CA3AF', margin: '4px 0 0' }}>{trim}</p>}
               </div>
 
-              <div className="flex items-center justify-center gap-2">
-                <span className="px-3 py-1 bg-surface rounded-full text-sm font-medium">{color}</span>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <span style={{ padding: '4px 14px', background: '#030508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 600, color: '#eef4f8' }}>{color}</span>
               </div>
             </div>
 
-            {/* Is this your car? */}
+            {/* Claim prompt */}
             {onClaimVehicle && (
-              <div className="bg-[rgba(249,115,22,0.08)] border border-[rgba(249,115,22,0.25)] rounded-xl p-4 text-center">
-                <p className="text-sm text-accent-2 mb-2">Is this your vehicle?</p>
+              <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#F97316', margin: '0 0 10px' }}>Is this your vehicle?</p>
                 <button
                   onClick={onClaimVehicle}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-white font-bold rounded-lg transition-all text-sm"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' }}
                 >
-                  <Key className="w-4 h-4" />
+                  <Key style={{ width: 14, height: 14 }} />
                   Claim Instead
                 </button>
               </div>
@@ -328,68 +241,16 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
           </div>
         )}
 
-        {/* Step 3: Real-Time Review */}
-        {step === 3 && (
-          <div className="p-5 space-y-4">
-            <div className="text-center mb-3">
-              <h3 className="text-xl font-heading font-bold uppercase tracking-tight mb-1">Your Review</h3>
-              <p className="text-secondary text-xs">Optional - Share what you saw</p>
-            </div>
-
-            {/* Compact Rating Section */}
-            <div className="bg-surfacehighlight rounded-xl p-3 space-y-0.5">
-              <StarRatingInput
-                label="Look"
-                icon={<Eye className="w-5 h-5" strokeWidth={1.5} />}
-                value={lookRating}
-                onChange={setLookRating}
-              />
-              <StarRatingInput
-                label="Sound"
-                icon={<Volume2 className="w-5 h-5" strokeWidth={1.5} />}
-                value={soundRating}
-                onChange={setSoundRating}
-              />
-              <StarRatingInput
-                label="Condition"
-                icon={<Flag className="w-5 h-5" strokeWidth={1.5} />}
-                value={conditionRating}
-                onChange={setConditionRating}
-              />
-              <StarRatingInput
-                label="Driving"
-                icon={<Car className="w-5 h-5" strokeWidth={1.5} />}
-                value={drivingRating}
-                onChange={setDrivingRating}
-              />
-            </div>
-
-            {/* Comments */}
-            <div>
-              <label className="block text-xs font-heading font-bold uppercase tracking-tight text-secondary mb-1.5">
-                Comments <span className="text-secondary/50">(Optional)</span>
-              </label>
-              <textarea
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                placeholder="What did you think? Any mods spotted?"
-                rows={3}
-                className="w-full px-3 py-2.5 bg-surfacehighlight border border-surfacehighlight rounded-xl focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 transition-all placeholder-secondary/50 resize-none text-sm"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="px-5 pb-5 flex gap-2">
+        {/* Navigation */}
+        <div style={{ padding: '0 24px 24px', display: 'flex', gap: 10 }}>
           {step > 1 && (
             <button
               type="button"
               onClick={handleBack}
-              className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-surfacehighlight hover:bg-surfacehighlight/70 text-primary rounded-xl font-bold transition-all text-sm"
               disabled={loading}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 16px', background: '#030508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#eef4f8', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft style={{ width: 14, height: 14 }} />
               Back
             </button>
           )}
@@ -398,8 +259,8 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 btn-secondary text-sm py-2.5"
               disabled={loading}
+              style={{ flex: 1, padding: '11px', background: '#030508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9CA3AF', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
             >
               Cancel
             </button>
@@ -409,45 +270,30 @@ export function PlateNotFound({ state, plateNumber, onCancel, onCreate, onClaimV
             <button
               type="button"
               onClick={handleNext}
-              className="flex-1 btn-primary flex items-center justify-center gap-1.5 text-sm py-2.5"
               disabled={loading}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#000', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
             >
               Next
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight style={{ width: 14, height: 14 }} />
             </button>
           ) : (
             <button
               type="button"
               onClick={handleSubmit}
-              className="flex-1 btn-primary flex items-center justify-center gap-1.5 text-sm py-2.5"
               disabled={loading}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
             >
               {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
+                <div style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  Submit
-                </>
+                <Check style={{ width: 14, height: 14 }} />
               )}
+              {loading ? 'Saving...' : 'Confirm & Continue'}
+              {!loading && <ArrowRight style={{ width: 14, height: 14 }} />}
             </button>
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-10px); }
-          75% { transform: translateX(10px); }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
     </div>
   );
 }

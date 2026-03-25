@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, AlertTriangle, User, Heart, ThumbsDown, Eye, Car, MessageCircle } from 'lucide-react';
+import { Star, User, Heart, ThumbsDown, Eye, Car, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { UserAvatar } from './UserAvatar';
 import { AllReviewsModal } from './AllReviewsModal';
@@ -78,13 +78,11 @@ export function PlateFoundUnclaimed({
 
   useEffect(() => {
     const fetchData = async () => {
-      // Get spot count from spot_history
       const { count: spotCount } = await supabase
         .from('spot_history')
         .select('*', { count: 'exact', head: true })
         .eq('vehicle_id', vehicle.id);
 
-      // Get all reviews for this vehicle
       const { data: reviewData } = await supabase
         .from('reviews')
         .select(`
@@ -120,7 +118,6 @@ export function PlateFoundUnclaimed({
           hate_count: hateCount,
         });
 
-        // Get recent reviews with comments
         const recentWithComments = reviewData
           .filter(r => r.comment)
           .slice(0, 3)
@@ -136,7 +133,6 @@ export function PlateFoundUnclaimed({
 
         setRecentReviews(recentWithComments as any);
       } else if (spotCount) {
-        // If there are spots but no reviews, still show spot count
         setRatings({
           driver_avg: 0,
           driving_avg: 0,
@@ -152,157 +148,172 @@ export function PlateFoundUnclaimed({
     fetchData();
   }, [vehicle.id]);
 
+  const C = {
+    bg: '#030508',
+    surface: '#0d1117',
+    surface2: 'rgba(255,255,255,0.04)',
+    border: 'rgba(255,255,255,0.06)',
+    orange: '#F97316',
+    text1: '#eef4f8',
+    text2: '#9CA3AF',
+    text3: '#6B7280',
+  };
+
   return (
     <>
-      <div className="max-w-2xl mx-auto p-4">
-        <div className="bg-surface border border-surfacehighlight rounded-2xl overflow-hidden shadow-2xl">
-          <div className="bg-surface border-b border-white/[0.06] p-6 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mb-4" style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)' }}>
-              <AlertTriangle className="w-4 h-4 text-[#fbbf24]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-accent-primary">Unclaimed Plate</span>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: 16 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+          {/* Header */}
+          <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '20px 24px', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, marginBottom: 12 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.orange }}>Unclaimed Plate</span>
             </div>
-            <h2 className="text-3xl font-heading font-bold uppercase tracking-tight mb-2 bg-gradient-to-r from-white via-orange-200 to-[#F97316] bg-clip-text text-transparent">
-              Plate Found!
-            </h2>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 bg-surface/50 rounded-xl backdrop-blur-sm transition-all duration-700 ${revealStep >= 1 ? 'opacity-100' : 'opacity-0'}`}>
-              <span className="font-mono font-bold text-lg text-red-500">{state}</span>
-              <span className="text-red-500/60">—</span>
-              <span className="font-mono font-bold text-lg tracking-wider text-red-500">{plateNumber}</span>
+            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, color: C.text1, margin: '0 0 8px', textTransform: 'uppercase' }}>Plate Found</h2>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', background: C.bg, borderRadius: 8, transition: 'opacity 0.7s', opacity: revealStep >= 1 ? 1 : 0 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: '#ef4444' }}>{state}</span>
+              <span style={{ color: 'rgba(239,68,68,0.5)' }}>—</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, letterSpacing: '0.1em', color: '#ef4444' }}>{plateNumber}</span>
             </div>
-            <div className={`h-px mx-auto mt-2 transition-all duration-300 ${revealStep >= 2 ? 'w-full' : 'w-0'}`}
-                 style={{ background: 'var(--orange)', maxWidth: '200px' }} />
+            <div style={{ height: 1, margin: '10px auto 0', maxWidth: 200, background: C.orange, transition: 'width 0.3s', width: revealStep >= 2 ? '100%' : 0 }} />
           </div>
 
-          <div className={`p-6 transition-all duration-500 ${revealStep >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-            <div className="bg-surfacehighlight rounded-2xl overflow-hidden border border-surfacehighlight/50 mb-5">
+          {/* Body */}
+          <div style={{ padding: 24, transition: 'all 0.5s', opacity: revealStep >= 3 ? 1 : 0, transform: revealStep >= 3 ? 'translateY(0)' : 'translateY(8px)' }}>
+            {/* Vehicle card */}
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
               {vehicle.stock_image_url ? (
-                <div className="aspect-video">
-                  <img src={vehicle.stock_image_url} alt={vehicleName} className="w-full h-full object-cover" />
+                <div style={{ aspectRatio: '16/9' }}>
+                  <img src={vehicle.stock_image_url} alt={vehicleName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
               ) : (
-                <div className="aspect-video bg-gradient-to-br from-surface to-surfacehighlight flex items-center justify-center">
-                  <Car className="w-16 h-16 text-quaternary" />
+                <div style={{ aspectRatio: '16/9', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Car style={{ width: 64, height: 64, color: '#6B7280' }} />
                 </div>
               )}
 
-              <div className="p-5">
-                <h3 className="text-2xl font-heading font-black uppercase tracking-tight mb-4">{vehicleName}</h3>
+              <div style={{ padding: 20 }}>
+                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: C.text1, margin: '0 0 16px', textTransform: 'uppercase' }}>{vehicleName}</h3>
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
                   {vehicle.year && (
-                    <div className="bg-surface rounded-xl p-3 text-center border border-surfacehighlight">
-                      <p className="text-xs text-secondary uppercase tracking-wider mb-1">Year</p>
-                      <p className="font-bold">{vehicle.year}</p>
+                    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: '0 0 4px' }}>Year</p>
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, fontWeight: 600, color: C.text1, margin: 0 }}>{vehicle.year}</p>
                     </div>
                   )}
                   {vehicle.make && (
-                    <div className="bg-surface rounded-xl p-3 text-center border border-surfacehighlight">
-                      <p className="text-xs text-secondary uppercase tracking-wider mb-1">Make</p>
-                      <p className="font-bold">{vehicle.make}</p>
+                    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: '0 0 4px' }}>Make</p>
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, fontWeight: 600, color: C.text1, margin: 0 }}>{vehicle.make}</p>
                     </div>
                   )}
                   {vehicle.color && (
-                    <div className="bg-surface rounded-xl p-3 text-center border border-surfacehighlight">
-                      <p className="text-xs text-secondary uppercase tracking-wider mb-1">Color</p>
-                      <p className="font-bold capitalize">{vehicle.color}</p>
+                    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: '0 0 4px' }}>Color</p>
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, fontWeight: 600, color: C.text1, margin: 0, textTransform: 'capitalize' }}>{vehicle.color}</p>
                     </div>
                   )}
                 </div>
 
+                {/* Ratings */}
                 {ratings && ratings.spot_count > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Star className="w-5 h-5 fill-[#F97316] text-[#F97316]" />
-                        <span className="text-xl font-black">{ratings.overall_avg.toFixed(1)}</span>
-                        <span className="text-sm text-secondary">/ 5</span>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Star style={{ width: 20, height: 20, fill: C.orange, color: C.orange }} />
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: C.text1 }}>{ratings.overall_avg.toFixed(1)}</span>
+                        <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2 }}>/ 5</span>
                       </div>
                       <button
                         onClick={() => setShowAllReviews(true)}
-                        className="text-xs text-accent-primary hover:underline font-medium"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 600, color: C.orange }}
                       >
                         View {ratings.spot_count} {ratings.spot_count === 1 ? 'spot' : 'spots'}
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
                       {[
                         { label: 'Driver', value: ratings.driver_avg },
                         { label: 'Driving', value: ratings.driving_avg },
                         { label: 'Vehicle', value: ratings.vehicle_avg },
                       ].map(r => (
-                        <div key={r.label} className="bg-surface rounded-xl p-2.5 text-center border border-surfacehighlight">
-                          <p className="text-xs text-secondary mb-1">{r.label}</p>
-                          <p className="font-black text-primary">{r.value.toFixed(1)}</p>
+                        <div key={r.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 8, textAlign: 'center' }}>
+                          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.text2, margin: '0 0 4px' }}>{r.label}</p>
+                          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, fontWeight: 700, color: C.text1, margin: 0 }}>{r.value.toFixed(1)}</p>
                         </div>
                       ))}
                     </div>
 
                     {(ratings.love_count > 0 || ratings.hate_count > 0) && (
-                      <div className="flex items-center justify-center gap-4 py-2">
-                        <div className="flex items-center gap-1.5 text-rose-400">
-                          <Heart className="w-4 h-4 fill-current" />
-                          <span className="text-sm font-bold">{ratings.love_count}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fb7185' }}>
+                          <Heart style={{ width: 16, height: 16, fill: 'currentColor' }} />
+                          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700 }}>{ratings.love_count}</span>
                         </div>
-                        <div className="w-px h-4 bg-surfacehighlight" />
-                        <div className="flex items-center gap-1.5 text-neutral-400">
-                          <ThumbsDown className="w-4 h-4" />
-                          <span className="text-sm font-bold">{ratings.hate_count}</span>
+                        <div style={{ width: 1, height: 16, background: C.border }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9CA3AF' }}>
+                          <ThumbsDown style={{ width: 16, height: 16 }} />
+                          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700 }}>{ratings.hate_count}</span>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Recent Review Summaries */}
+                {/* Recent reviews */}
                 {recentReviews.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-2">Recent Spots</p>
-                    {recentReviews.map((review) => (
-                      <div key={review.id} className="bg-surface rounded-xl p-3 border border-surfacehighlight">
-                        <div className="flex items-start gap-2 mb-2">
-                          {review.author && (
-                            <>
-                              <UserAvatar src={review.author.avatar_url} alt={review.author.handle} size="sm" />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-xs">@{review.author.handle}</p>
-                                <div className="flex items-center gap-1 mt-0.5">
-                                  <Star className="w-3 h-3 fill-[#F97316] text-[#F97316]" />
-                                  <span className="text-xs font-bold">
-                                    {((review.driver_rating + review.driving_rating + review.vehicle_rating) / 3).toFixed(1)}
-                                  </span>
+                  <div style={{ marginTop: 16 }}>
+                    <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: '0 0 10px' }}>Recent Spots</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {recentReviews.map((review) => (
+                        <div key={review.id} style={{ background: C.bg, borderRadius: 8, padding: 12, border: `1px solid ${C.border}` }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+                            {review.author && (
+                              <>
+                                <UserAvatar src={review.author.avatar_url} alt={review.author.handle} size="sm" />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 600, color: C.text1, margin: 0 }}>@{review.author.handle}</p>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                                    <Star style={{ width: 12, height: 12, fill: C.orange, color: C.orange }} />
+                                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: C.text1 }}>
+                                      {((review.driver_rating + review.driving_rating + review.vehicle_rating) / 3).toFixed(1)}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            </>
+                              </>
+                            )}
+                          </div>
+                          {review.comment && (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                              <MessageCircle style={{ width: 12, height: 12, color: C.text3, flexShrink: 0, marginTop: 2 }} />
+                              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.text2, margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{review.comment}</p>
+                            </div>
                           )}
                         </div>
-                        {review.comment && (
-                          <div className="flex items-start gap-1.5">
-                            <MessageCircle className="w-3 h-3 text-secondary flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-secondary line-clamp-2">{review.comment}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
 
+                {/* Spotted by */}
                 {vehicle.creator && (
-                  <div className="mt-4 flex items-center gap-3 p-3 bg-surface rounded-xl border border-surfacehighlight">
-                    <User className="w-4 h-4 text-secondary flex-shrink-0" />
-                    <span className="text-xs text-secondary">Spotted by</span>
+                  <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: C.bg, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                    <User style={{ width: 14, height: 14, color: C.text3, flexShrink: 0 }} />
+                    <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.text2 }}>Spotted by</span>
                     <UserAvatar src={vehicle.creator.avatar_url} alt={vehicle.creator.handle} size="sm" />
-                    <span className="font-medium text-sm">@{vehicle.creator.handle}</span>
+                    <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 600, color: C.text1 }}>@{vehicle.creator.handle}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="space-y-3">
+            {/* CTAs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {ratings && ratings.spot_count > 0 && (
                 <button
                   onClick={() => setShowAllReviews(true)}
-                  className="w-full py-3 bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95"
+                  style={{ width: '100%', padding: '12px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text1, cursor: 'pointer' }}
                 >
                   SEE ALL SPOTS ({ratings.spot_count})
                 </button>
@@ -311,33 +322,27 @@ export function PlateFoundUnclaimed({
               {onViewVehicle && (
                 <button
                   onClick={() => onViewVehicle(vehicle.id)}
-                  className="w-full py-3.5 rounded-xl text-primary text-[15px] font-bold font-heading tracking-wide flex items-center justify-center gap-2 mb-3 border border-white/[0.06] bg-surface hover:bg-surface-2 transition-all"
+                  style={{ width: '100%', padding: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text1, cursor: 'pointer' }}
                 >
-                  <Eye className="w-5 h-5" /> VIEW PLATE PROFILE
+                  <Eye style={{ width: 16, height: 16 }} /> VIEW PLATE PROFILE
                 </button>
               )}
 
-              {ratings && ratings.spot_count > 0 && (
-                <p className="text-center text-sm text-secondary">
-                  {ratings.spot_count} {ratings.spot_count === 1 ? 'person has' : 'people have'} spotted this plate
-                </p>
-              )}
               <button
                 onClick={onSpotAndReview}
                 disabled={!isLoggedIn}
-                className={`w-full py-4 disabled:opacity-50 rounded-xl font-heading font-bold uppercase tracking-tight transition-all active:scale-95 shadow-lg text-white relative flex items-center justify-center gap-3 ${revealStep >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
-                style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+                style={{ width: '100%', padding: '14px 16px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: isLoggedIn ? 'pointer' : 'not-allowed', opacity: isLoggedIn ? 1 : 0.5, transition: 'all 0.5s', transform: revealStep >= 4 ? 'translateY(0)' : 'translateY(8px)' }}
               >
                 {ratings?.spot_count && ratings.spot_count > 0 ? 'SPOT THIS PLATE' : 'BE THE FIRST TO SPOT!'}
-                <span className="absolute right-4 bg-black/20 px-2 py-0.5 rounded-full text-xs font-bold">+15 pts</span>
+                <span style={{ position: 'absolute', right: 14, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: 'rgba(0,0,0,0.5)' }}>+15 PTS</span>
               </button>
 
               {isLoggedIn && (
-                <div className="pt-4 border-t border-surfacehighlight">
-                  <p className="text-center text-sm text-secondary mb-3">Is this your car?</p>
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+                  <p style={{ textAlign: 'center', fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2, margin: '0 0 10px' }}>Is this your car?</p>
                   <button
                     onClick={onClaimVehicle}
-                    className="w-full py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 shadow-lg"
+                    style={{ width: '100%', padding: '13px', background: 'none', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.orange, cursor: 'pointer' }}
                   >
                     CLAIM THIS PLATE
                   </button>

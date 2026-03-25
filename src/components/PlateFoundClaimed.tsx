@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, CheckCircle, Heart, ThumbsDown, Wrench, Car } from 'lucide-react';
+import { Star, Heart, ThumbsDown, Wrench, Car } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { TierBadge } from './TierBadge';
 import { UserAvatar } from './UserAvatar';
@@ -121,52 +121,62 @@ export function PlateFoundClaimed({
     ...(ratings.condition_avg != null ? [{ label: 'Condition', value: ratings.condition_avg, count: ratings.full_review_count }] : []),
   ] : [];
 
+  const C = {
+    bg: '#030508',
+    surface: '#0d1117',
+    border: 'rgba(255,255,255,0.06)',
+    orange: '#F97316',
+    text1: '#eef4f8',
+    text2: '#9CA3AF',
+    text3: '#6B7280',
+  };
+
   return (
     <>
-      <div className="max-w-2xl mx-auto p-4">
-        <div className="bg-surface border border-surfacehighlight rounded-2xl overflow-hidden shadow-2xl">
-          <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border-b border-surfacehighlight p-6 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500/20 rounded-lg border border-green-500/30 mb-4">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-green-400">Claimed Plate</span>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: 16 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+          {/* Header */}
+          <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '20px 24px', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, marginBottom: 12 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.orange }}>Claimed Plate</span>
             </div>
-            <h2 className="text-3xl font-heading font-bold uppercase tracking-tight mb-2 text-primary">
-              Plate Found!
-            </h2>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 bg-surface/50 rounded-xl backdrop-blur-sm transition-all duration-700 ${revealStep >= 1 ? 'opacity-100' : 'opacity-0'}`}>
-              <span className="font-mono font-bold text-lg text-red-500">{state}</span>
-              <span className="text-red-500/60">—</span>
-              <span className="font-mono font-bold text-lg tracking-wider text-red-500">{plateNumber}</span>
+            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, color: C.text1, margin: '0 0 8px', textTransform: 'uppercase' }}>Plate Found</h2>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', background: C.bg, borderRadius: 8, transition: 'opacity 0.7s', opacity: revealStep >= 1 ? 1 : 0 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: '#ef4444' }}>{state}</span>
+              <span style={{ color: 'rgba(239,68,68,0.5)' }}>—</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, letterSpacing: '0.1em', color: '#ef4444' }}>{plateNumber}</span>
             </div>
-            <div className={`h-px mx-auto mt-2 transition-all duration-300 ${revealStep >= 2 ? 'w-full' : 'w-0'}`}
-                 style={{ background: 'var(--orange)', maxWidth: '200px' }} />
+            <div style={{ height: 1, margin: '10px auto 0', maxWidth: 200, background: C.orange, transition: 'width 0.3s', width: revealStep >= 2 ? '100%' : 0 }} />
           </div>
 
-          <div className={`p-6 space-y-5 transition-all duration-500 ${revealStep >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-            <div className="bg-surfacehighlight rounded-2xl overflow-hidden border border-surfacehighlight/50">
+          {/* Body */}
+          <div style={{ padding: 24, transition: 'all 0.5s', opacity: revealStep >= 3 ? 1 : 0, transform: revealStep >= 3 ? 'translateY(0)' : 'translateY(8px)' }}>
+            {/* Vehicle card */}
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
               {vehicle.stock_image_url ? (
-                <div className="aspect-video">
-                  <img src={vehicle.stock_image_url} alt={vehicleName} className="w-full h-full object-cover" />
+                <div style={{ aspectRatio: '16/9' }}>
+                  <img src={vehicle.stock_image_url} alt={vehicleName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
               ) : (
-                <div className="aspect-video bg-gradient-to-br from-surface to-surfacehighlight flex items-center justify-center">
-                  <Car className="w-16 h-16 text-quaternary" />
+                <div style={{ aspectRatio: '16/9', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Car style={{ width: 64, height: 64, color: C.text3 }} />
                 </div>
               )}
-              <div className="p-5">
-                <h3 className="text-2xl font-heading font-black uppercase tracking-tight mb-1">{vehicleName}</h3>
-                {vehicle.color && <p className="text-secondary text-sm capitalize mb-4">{vehicle.color}</p>}
+              <div style={{ padding: 20 }}>
+                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: C.text1, margin: '0 0 4px', textTransform: 'uppercase' }}>{vehicleName}</h3>
+                {vehicle.color && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2, margin: '0 0 16px', textTransform: 'capitalize' }}>{vehicle.color}</p>}
 
+                {/* Owner row */}
                 {vehicle.owner && (
                   <button
                     onClick={() => onViewOwnerProfile?.(vehicle.owner_id)}
-                    className="w-full flex items-center justify-between p-3 bg-surface rounded-xl border border-surfacehighlight hover:border-accent-primary/50 transition-colors"
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, cursor: 'pointer' }}
                   >
-                    <div className="flex items-center gap-3">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <UserAvatar src={vehicle.owner.avatar_url} alt={vehicle.owner.handle} size="md" />
-                      <div className="text-left">
-                        <p className="text-xs text-secondary font-bold uppercase tracking-wider">Owner</p>
-                        <p className="font-bold text-primary">@{vehicle.owner.handle}</p>
+                      <div style={{ textAlign: 'left' }}>
+                        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: 0 }}>Owner</p>
+                        <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, fontWeight: 600, color: C.text1, margin: '2px 0 0' }}>@{vehicle.owner.handle}</p>
                       </div>
                     </div>
                     <TierBadge tier={vehicle.verification_tier} size="medium" />
@@ -175,48 +185,51 @@ export function PlateFoundClaimed({
               </div>
             </div>
 
+            {/* Ratings */}
             {ratings && ratings.spot_count > 0 && (
-              <div className="bg-surface border border-surfacehighlight rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 fill-[#F97316] text-[#F97316]" />
-                    <span className="text-2xl font-black">{ratings.overall_avg.toFixed(1)}</span>
-                    <span className="text-secondary text-sm">/ 5</span>
+              <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20, marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Star style={{ width: 20, height: 20, fill: C.orange, color: C.orange }} />
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: C.text1 }}>{ratings.overall_avg.toFixed(1)}</span>
+                    <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2 }}>/ 5</span>
                   </div>
                   <button
                     onClick={() => setShowAllReviews(true)}
-                    className="text-xs text-accent-primary hover:underline font-medium"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 600, color: C.orange }}
                   >
                     View {ratings.spot_count} spots
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
                   {ratingRows.map(r => (
-                    <div key={r.label} className="bg-surfacehighlight rounded-xl p-2.5 text-center">
-                      <p className="text-xs text-secondary mb-1">{r.label}</p>
-                      <p className="font-black text-primary">{r.value.toFixed(1)}</p>
-                      <p className="text-xs text-neutral-600">({r.count})</p>
+                    <div key={r.label} style={{ background: C.surface, borderRadius: 8, padding: 8, textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.text2, margin: '0 0 4px' }}>{r.label}</p>
+                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, fontWeight: 700, color: C.text1, margin: 0 }}>{r.value.toFixed(1)}</p>
+                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.text3, margin: '2px 0 0' }}>({r.count})</p>
                     </div>
                   ))}
                 </div>
 
                 {(ratings.love_count > 0 || ratings.hate_count > 0) && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5 text-rose-400">
-                        <Heart className="w-4 h-4 fill-current" />
-                        <span className="text-sm font-bold">{ratings.love_count} Love It</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fb7185' }}>
+                        <Heart style={{ width: 16, height: 16, fill: 'currentColor' }} />
+                        <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700 }}>{ratings.love_count} Love It</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-neutral-400">
-                        <ThumbsDown className="w-4 h-4" />
-                        <span className="text-sm font-bold">{ratings.hate_count} Hate It</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.text2 }}>
+                        <ThumbsDown style={{ width: 16, height: 16 }} />
+                        <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700 }}>{ratings.hate_count} Hate It</span>
                       </div>
                     </div>
-                    <div className="h-2 bg-neutral-700 rounded-full overflow-hidden">
+                    <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
                       <div
-                        className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full"
                         style={{
+                          height: '100%',
+                          background: '#fb7185',
+                          borderRadius: 9999,
                           width: `${ratings.love_count + ratings.hate_count > 0
                             ? (ratings.love_count / (ratings.love_count + ratings.hate_count)) * 100
                             : 0}%`
@@ -227,20 +240,21 @@ export function PlateFoundClaimed({
                 )}
 
                 {topStickers.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-surfacehighlight">
-                    <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-2">Top Stickers</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+                    <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: '0 0 10px' }}>Top Stickers</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {topStickers.map(s => (
                         <span
                           key={s.tag_name}
-                          className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium ${
-                            s.tag_sentiment === 'positive'
-                              ? 'bg-rose-500/15 text-rose-300'
-                              : 'bg-neutral-700/60 text-neutral-400'
-                          }`}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: "'Barlow', sans-serif", fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                            ...(s.tag_sentiment === 'positive'
+                              ? { background: 'rgba(251,113,133,0.12)', color: '#fda4af' }
+                              : { background: 'rgba(255,255,255,0.04)', color: C.text2 }),
+                          }}
                         >
                           {s.tag_name}
-                          <span className="opacity-70">×{s.count}</span>
+                          <span style={{ opacity: 0.6 }}>{'\u00d7'}{s.count}</span>
                         </span>
                       ))}
                     </div>
@@ -249,58 +263,58 @@ export function PlateFoundClaimed({
               </div>
             )}
 
+            {/* Mods */}
             {modCategories.length > 0 && (
-              <div className="bg-surface border border-surfacehighlight rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Wrench className="w-4 h-4 text-secondary" />
-                  <p className="text-xs font-bold uppercase tracking-wider text-secondary">Modifications</p>
+              <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20, marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <Wrench style={{ width: 14, height: 14, color: C.text2 }} />
+                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, margin: 0 }}>Modifications</p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {modCategories.map(mod => (
-                    <div key={mod.category} className="bg-surfacehighlight rounded-xl p-3 flex items-center justify-between">
-                      <span className="text-sm font-medium">{mod.category}</span>
-                      <span className="text-xs text-secondary bg-surface px-2 py-0.5 rounded-lg">{mod.count}</span>
+                    <div key={mod.category} style={{ background: C.surface, borderRadius: 8, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 600, color: C.text1 }}>{mod.category}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.text2, background: C.bg, padding: '2px 8px', borderRadius: 4 }}>{mod.count}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            <div className={`space-y-3 transition-all duration-500 ${revealStep >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+            {/* CTAs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, transition: 'all 0.5s', opacity: revealStep >= 4 ? 1 : 0, transform: revealStep >= 4 ? 'translateY(0)' : 'translateY(8px)' }}>
               {onViewVehicle && (
                 <button
                   onClick={() => onViewVehicle(vehicle.id)}
-                  className="w-full py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 text-white"
-                  style={{ background: '#F97316' }}
+                  style={{ width: '100%', padding: '14px', background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' }}
                 >
-                  View Vehicle Profile
+                  VIEW VEHICLE PROFILE
                 </button>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <button
                   onClick={onBack}
-                  className="py-3.5 bg-surface border border-surfacehighlight hover:bg-surfacehighlight rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95"
+                  style={{ padding: '13px', background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text2, cursor: 'pointer' }}
                 >
                   Back
                 </button>
                 <button
                   onClick={onLeaveReview}
-                  className="py-3.5 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95 text-white"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}
+                  style={{ padding: '13px', background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' }}
                 >
                   Spot This Plate
                 </button>
               </div>
-            </div>
 
-            {ratings && ratings.spot_count > 0 && (
-              <button
-                onClick={() => setShowAllReviews(true)}
-                className="w-full py-3 bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-xl font-heading font-bold uppercase tracking-tight text-sm transition-all active:scale-95"
-              >
-                SEE ALL SPOTS ({ratings.spot_count})
-              </button>
-            )}
+              {ratings && ratings.spot_count > 0 && (
+                <button
+                  onClick={() => setShowAllReviews(true)}
+                  style={{ width: '100%', padding: '12px', background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text1, cursor: 'pointer' }}
+                >
+                  SEE ALL SPOTS ({ratings.spot_count})
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

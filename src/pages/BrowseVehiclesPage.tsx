@@ -16,9 +16,9 @@ interface Vehicle {
   year: number;
   color: string;
   avg_rating: number;
-  spot_count: number;
+  spots_count: number;
   is_claimed: boolean;
-  verification_status: string;
+  verification_tier: string;
   owner_id?: string;
   photos?: { url: string; is_private?: boolean; uploaded_by?: string }[];
   stock_image_url?: string;
@@ -81,9 +81,9 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
           year,
           color,
           avg_rating,
-          spot_count,
+          spots_count,
           is_claimed,
-          verification_status,
+          verification_tier,
           owner_id,
           stock_image_url,
           photos:vehicle_images(url, is_private, uploaded_by)
@@ -108,7 +108,7 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
     .filter((v) => {
       if (filters.make && v.make !== filters.make) return false;
       if (filters.year && v.year !== parseInt(filters.year)) return false;
-      if (filters.verifiedOnly && v.verification_status !== 'verified') return false;
+      if (filters.verifiedOnly && v.verification_tier !== 'verified') return false;
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
@@ -125,7 +125,7 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
         case 'rating':
           return (b.avg_rating || 0) - (a.avg_rating || 0);
         case 'spots':
-          return (b.spot_count || 0) - (a.spot_count || 0);
+          return (b.spots_count || 0) - (a.spots_count || 0);
         case 'oldest':
           return a.year - b.year;
         case 'newest':
@@ -217,7 +217,7 @@ function VehicleCard({ vehicle, onNavigate, currentUserId }: VehicleCardProps) {
 
   const primaryPhoto = visiblePhotos[0]?.url || vehicle.stock_image_url;
   const hasPrivatePhoto = vehicle.photos?.[0]?.is_private && !isOwner;
-  const isVerified = vehicle.verification_status === 'verified';
+  const isVerified = vehicle.verification_tier === 'verified';
 
   return (
     <div
@@ -252,7 +252,7 @@ function VehicleCard({ vehicle, onNavigate, currentUserId }: VehicleCardProps) {
           <div className="flex items-center gap-3 text-white text-sm" style={{ fontFamily: 'var(--font-cond)' }}>
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              <span>{vehicle.spot_count || 0} Spots</span>
+              <span>{vehicle.spots_count || 0} Spots</span>
             </div>
             <span className="text-white/50">&middot;</span>
             <div className="flex items-center gap-1">
@@ -269,7 +269,7 @@ function VehicleCard({ vehicle, onNavigate, currentUserId }: VehicleCardProps) {
         </h3>
         <p className="mt-1" style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', color: 'var(--dim)' }}>{vehicle.color}</p>
         <div className="mt-1" style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)' }}>
-          {vehicle.spot_count || 0} Spots &middot; 0 Followers
+          {vehicle.spots_count || 0} Spots &middot; 0 Followers
         </div>
         <div className="flex items-center gap-2 mt-2">
           <span style={{

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { SlidersHorizontal, X, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
@@ -10,11 +11,22 @@ interface NewFeedPageProps {
   onNavigate: OnNavigate;
 }
 
+const pillStyle = (active: boolean): React.CSSProperties => ({
+  flexShrink: 0, padding: '5px 13px', borderRadius: 20,
+  background: active ? 'rgba(249,115,22,0.12)' : 'rgba(10,13,20,0.9)',
+  border: `1px solid ${active ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.06)'}`,
+  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+  color: active ? '#F97316' : '#445566', cursor: 'pointer', whiteSpace: 'nowrap' as const,
+});
+
 export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
   const { user, loading: authLoading } = useAuth();
   const { posts, loading, error, refreshFeed, hasMore, loadMore } = useFeed(user?.id);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const [scope, setScope] = useState<'near' | 'following' | 'top'>('near');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterMake, setFilterMake] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'spots' | 'posts'>('all');
 
   // Infinite scroll
   useEffect(() => {
@@ -27,24 +39,34 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
     return () => observer.disconnect();
   }, [hasMore, loading, loadMore]);
 
-  // Filter to owner posts only. Fall back to all posts if filter returns empty.
-  const ownerPosts = posts.filter(post => {
-    const v = (post as any).vehicles;
-    if (!v) return false;
-    if (v.is_claimed && v.owner_id && post.author_id === v.owner_id) return true;
-    if ((post as any).post_type === 'post') return true;
-    return false;
-  });
-  // Aspirational filter — data may not be perfect yet, fall back to all posts
-  const displayPosts = ownerPosts.length > 0 ? ownerPosts : posts;
+  // Extract available makes from loaded posts
+  const availableMakes = useMemo(() => {
+    const makes = new Set<string>();
+    posts.forEach((p: any) => {
+      if (p.vehicles?.make) makes.add(p.vehicles.make);
+    });
+    return Array.from(makes).sort();
+  }, [posts]);
+
+  // Client-side filtering
+  const displayPosts = useMemo(() => {
+    return posts.filter((p: any) => {
+      if (filterMake && p.vehicles?.make !== filterMake) return false;
+      if (filterType === 'spots' && p.post_type !== 'spot') return false;
+      if (filterType === 'posts' && p.post_type === 'spot') return false;
+      return true;
+    });
+  }, [posts, filterMake, filterType]);
+
+  const hasActiveFilters = filterMake !== null || filterType !== 'all';
 
   // Auth loading skeleton
   if (authLoading) {
     return (
       <Layout currentPage="feed" onNavigate={onNavigate}>
         <div>
-          {[330, 315, 345].map((h, i) => (
-            <div key={i} style={{ width: '100%', height: h + 48, background: '#0a0d14', marginTop: i > 0 ? 6 : 0, borderTop: i > 0 ? '1px solid rgba(249,115,22,0.15)' : 'none' }}>
+          {[300, 285, 315].map((h, i) => (
+            <div key={i} style={{ width: '100%', height: h + 48, background: '#0a0d14', marginTop: i > 0 ? 4 : 0, borderTop: i > 0 ? '1px solid rgba(249,115,22,0.12)' : 'none' }}>
               <div style={{ width: '100%', height: h, background: 'linear-gradient(90deg, #0a0d14 25%, #0e1320 50%, #0a0d14 75%)', backgroundSize: '200% 100%', animation: 'motorate-shimmer 1.5s infinite' }} />
             </div>
           ))}
@@ -88,25 +110,69 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
       {/* Competition strip */}
       <CompetitionStrip />
 
-      {/* Scope selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px 8px', background: 'rgba(6,9,14,0.97)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        {(['Near Me', 'Following', 'Top Ranked'] as const).map((label, i) => {
-          const key = (['near', 'following', 'top'] as const)[i];
-          const isOn = scope === key;
+      {/* Filter bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <button
+          onClick={() => setFilterOpen(!filterOpen)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20,
+            background: hasActiveFilters ? 'rgba(249,115,22,0.08)' : 'rgba(7,10,15,0.82)',
+            border: `1px solid ${hasActiveFilters ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.07)'}`,
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: hasActiveFilters ? '#F97316' : '#5a6e7e', cursor: 'pointer',
+          }}
+        >
+          <SlidersHorizontal size={12} />
+          <span>Filter</span>
+          {hasActiveFilters && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />}
+        </button>
+
+        {/* Type pills */}
+        {(['All', 'Spots', 'Posts'] as const).map((label) => {
+          const key = label.toLowerCase() as 'all' | 'spots' | 'posts';
           return (
-            <button key={label} onClick={() => setScope(key)}
-              style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: isOn ? '#F97316' : '#5a6e7e', background: isOn ? 'rgba(249,115,22,0.09)' : 'transparent', border: 'none', cursor: 'pointer', borderRadius: 5, transition: 'all 0.18s' }}>
+            <button key={label} onClick={() => setFilterType(key)} style={pillStyle(filterType === key)}>
               {label}
             </button>
           );
         })}
+
+        {/* Active make pill with clear */}
+        {filterMake && (
+          <button onClick={() => setFilterMake(null)} style={{ ...pillStyle(true), display: 'flex', alignItems: 'center', gap: 4 }}>
+            {filterMake} <X size={10} />
+          </button>
+        )}
       </div>
+
+      {/* Filter drawer */}
+      {filterOpen && (
+        <div style={{ padding: '12px 16px 14px', background: 'rgba(7,10,15,0.97)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#445566' }}>Filter by Make</span>
+            {hasActiveFilters && (
+              <button onClick={() => { setFilterMake(null); setFilterType('all'); }} style={{ background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#F97316', cursor: 'pointer' }}>
+                Clear All
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 5, overflowX: 'auto', scrollbarWidth: 'none' as const, paddingBottom: 2 }}>
+            <button onClick={() => setFilterMake(null)} style={pillStyle(filterMake === null)}>All</button>
+            {availableMakes.map(make => (
+              <button key={make} onClick={() => setFilterMake(make)} style={pillStyle(filterMake === make)}>
+                {make}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Loading skeleton */}
       {loading && posts.length === 0 && (
         <div>
-          {[330, 315, 345].map((h, i) => (
-            <div key={i} style={{ width: '100%', height: h + 48, background: '#0a0d14', marginTop: i > 0 ? 6 : 0, borderTop: i > 0 ? '1px solid rgba(249,115,22,0.15)' : 'none' }}>
+          {[300, 285, 315].map((h, i) => (
+            <div key={i} style={{ width: '100%', height: h + 48, background: '#0a0d14', marginTop: i > 0 ? 4 : 0, borderTop: i > 0 ? '1px solid rgba(249,115,22,0.12)' : 'none' }}>
               <div style={{ width: '100%', height: h, background: 'linear-gradient(90deg, #0a0d14 25%, #0e1320 50%, #0a0d14 75%)', backgroundSize: '200% 100%', animation: 'motorate-shimmer 1.5s infinite' }} />
             </div>
           ))}
@@ -119,8 +185,12 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1" style={{ margin: '0 auto 16px', display: 'block' }}>
             <circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
           </svg>
-          <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>No Posts Yet</p>
-          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Own a car? Claim it and start posting.</p>
+          <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>
+            {hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
+          </p>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>
+            {hasActiveFilters ? 'Try changing your filters.' : 'Own a car? Claim it and start posting.'}
+          </p>
         </div>
       )}
 
@@ -148,6 +218,21 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
           </div>
         </div>
       )}
+
+      {/* New Post FAB */}
+      <button
+        onClick={() => onNavigate('create-post')}
+        aria-label="New Post"
+        style={{
+          position: 'fixed', bottom: 88, right: 16, zIndex: 30,
+          width: 44, height: 44, borderRadius: 12,
+          background: '#0a0d14', border: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+        }}
+      >
+        <Plus size={20} strokeWidth={2} color="#F97316" />
+      </button>
 
       <style>{`
         @keyframes motorate-shimmer {

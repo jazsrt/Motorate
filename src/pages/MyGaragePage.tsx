@@ -29,21 +29,10 @@ import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
 import { TIER_COLORS } from '../config/badgeConfig';
-import { getBadgeType } from '../lib/badgeUtils';
+import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
 
-function getTopBadge(badges: any[]): { name: string; icon?: string; type: 'prestige' | 'milestone' | 'identity' } | null {
-  if (!badges || badges.length === 0) return null;
-  const order: Record<string, number> = { prestige: 0, milestone: 1, identity: 2 };
-  const sorted = [...badges].sort((a, b) => (order[getBadgeType(a)] ?? 1) - (order[getBadgeType(b)] ?? 1));
-  const top = sorted[0];
-  return { name: top.name, icon: top.icon, type: getBadgeType(top) };
-}
-
-function formatRP(n: number | null | undefined): string {
-  if (n == null) return '\u2014';
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return n.toLocaleString();
-}
+/** Owner columns + avg_rating + joins needed by garage */
+const GARAGE_VEHICLE_SELECT = VEHICLE_OWNER_COLUMNS + `, avg_rating, photos:vehicle_images(*), modifications(*)`;
 
 interface MyGaragePageProps {
   onNavigate?: (page: string, data?: any) => void;
@@ -180,13 +169,13 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const loadVehicles = async () => {
     const { data: ownedVehicles } = await supabase
       .from('vehicles')
-      .select(`*, stock_image_url, photos:vehicle_images(*), modifications(*)`)
+      .select(GARAGE_VEHICLE_SELECT)
       .eq('owner_id', user!.id)
       .order('created_at', { ascending: false });
 
     const { data: allClaims } = await supabase
       .from('verification_claims')
-      .select(`vehicle_id, status, created_at, vehicle:vehicles!inner(*, stock_image_url, photos:vehicle_images(*), modifications(*))`)
+      .select(`vehicle_id, status, created_at, vehicle:vehicles!inner(${GARAGE_VEHICLE_SELECT})`)
       .eq('user_id', user!.id)
       .in('status', ['pending', 'approved']);
 
@@ -199,7 +188,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           allVehicles.push({
             ...claim.vehicle,
             _claimStatus: claim.status,
-            verification_status: claim.status === 'pending' ? 'pending' : claim.vehicle.verification_status,
+            verification_tier: claim.status === 'pending' ? 'pending' : claim.vehicle.verification_tier,
           });
         }
       }
@@ -336,9 +325,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     const stockPhoto = vehicle.stock_image_url || stockImages[vehicle.id];
     const photoUrl = imgError ? null : (userPhoto || stockPhoto);
 
-    const isPending = vehicle._claimStatus === 'pending' || vehicle.verification_status === 'pending';
+    const isPending = vehicle._claimStatus === 'pending' || vehicle.verification_tier === 'pending';
     const isClaimed = !isPending && (vehicle.owner_id || vehicle.is_claimed);
-    const isVerified = vehicle.verification_status === 'verified' || vehicle.verification_status === 'approved';
+    const isVerified = vehicle.verification_tier === 'verified' || vehicle.verification_tier === 'vin_verified';
 
     const statusLabel = isPending ? 'Pending' : isVerified ? 'Verified' : isClaimed ? 'Claimed' : 'Unclaimed';
     const statusBg = isPending ? 'rgba(249,115,22,0.1)' : isVerified ? 'rgba(34,197,94,0.1)' : isClaimed ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.04)';
@@ -722,9 +711,14 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#445566' }}>
                 The Fleet {'\u00B7'} {vehicles.length}
               </span>
-              <span onClick={() => setShowClaimSearch(true)} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                + Claim Vehicle
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span onClick={() => onNavigate('create-post')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
+                  + New Post
+                </span>
+                <span onClick={() => setShowClaimSearch(true)} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                  + Claim Vehicle
+                </span>
+              </div>
             </div>
 
             {/* Fleet carousel */}

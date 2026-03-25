@@ -36,6 +36,12 @@ export function useFeed(userId?: string): UseFeedReturn {
 
       // Map posts with existing view_count from database (already included in feed query)
       const postsWithViews = result.posts.map(post => {
+        // Resolve best image: post image > vehicle profile > stock
+        const postImage = post.image_url || null;
+        const vehicleProfileImage = post.vehicles?.profile_image_url || null;
+        const vehicleStockImage = post.vehicles?.stock_image_url || null;
+        const resolvedImage = postImage || vehicleProfileImage || vehicleStockImage || null;
+
         return {
           id: post.post_id,
           author_id: post.author_id,
@@ -43,7 +49,7 @@ export function useFeed(userId?: string): UseFeedReturn {
           spot_type: post.spot_type,
           sentiment: post.sentiment,
           caption: post.caption,
-          image_urls: post.image_url ? [post.image_url] : null,
+          image_urls: resolvedImage ? [resolvedImage] : null,
           video_url: post.video_url || null,
           content_type: post.content_type || (post.video_url ? 'video' : 'image'),
           location: post.location_label,
@@ -68,6 +74,14 @@ export function useFeed(userId?: string): UseFeedReturn {
             verified: post.author_is_verified || false
           }
         };
+      })
+
+      // Safety net: filter out spot/review posts with no image
+      .filter(p => {
+        if (p.post_type === 'spot' || p.post_type === 'review') {
+          return p.image_urls && p.image_urls.length > 0 && p.image_urls[0];
+        }
+        return true;
       });
 
       setPosts(reset ? postsWithViews : [...posts, ...postsWithViews]);

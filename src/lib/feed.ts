@@ -55,6 +55,8 @@ export interface FeedPost {
     color: string | null;
     stock_image_url: string | null;
     profile_image_url: string | null;
+    reputation_score: number | null;
+    spots_count: number | null;
   } | null;
 }
 
@@ -168,7 +170,7 @@ export async function loadFeedCursor(
       view_count,
       comment_count,
       author:profiles!posts_author_id_fkey(handle, avatar_url, location, is_admin),
-      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url)
+      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count)
     `)
     .order('created_at', { ascending: false })
     .limit(limit + 20);
@@ -393,4 +395,48 @@ export async function refreshFeed(
   limit = 20
 ): Promise<FeedResult> {
   return loadFeedCursor(userId, limit);
+}
+
+/**
+ * Minimal input for building spot feed signals.
+ * Keeps the call site clean — no need to fabricate a full FeedPost.
+ */
+export interface SpotSignalInput {
+  postId: string;
+  spotType: 'quick' | 'full' | null | undefined;
+  spotsCount: number | null | undefined;
+  reputationScore: number | null | undefined;
+}
+
+/**
+ * Build impact-driven feed signals for spot posts.
+ * Returns a primary signal label and an impact line.
+ */
+export function buildSpotFeedSignals(input: SpotSignalInput): {
+  primarySignal: string;
+  impactSignal: string;
+} {
+  const spotsCount = input.spotsCount ?? 0;
+  const isQuick = input.spotType === 'quick';
+
+  // Primary signal — varies by context to break repetition
+  const primarySignals = spotsCount <= 1
+    ? ['New Spot', '+1 Spot', 'Spotted']
+    : ['Seen Again', '+1 Spot', 'Spotted'];
+  // Deterministic pick based on postId to keep it stable across renders
+  const hash = input.postId.charCodeAt(0) + input.postId.charCodeAt(input.postId.length - 1);
+  const primarySignal = primarySignals[hash % primarySignals.length];
+
+  // Impact signal — shows vehicle momentum
+  const rpScore = input.reputationScore ?? 0;
+  let impactSignal: string;
+  if (spotsCount > 1) {
+    impactSignal = `${spotsCount} spots total`;
+  } else if (rpScore > 0) {
+    impactSignal = `${rpScore >= 1000 ? `${(rpScore / 1000).toFixed(1)}K` : rpScore} RP`;
+  } else {
+    impactSignal = isQuick ? '+10 RP' : '+15 RP';
+  }
+
+  return { primarySignal, impactSignal };
 }
