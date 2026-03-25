@@ -3,6 +3,7 @@ import { Star, User, Heart, ThumbsDown, Eye, Car, MessageCircle } from 'lucide-r
 import { supabase } from '../lib/supabase';
 import { UserAvatar } from './UserAvatar';
 import { AllReviewsModal } from './AllReviewsModal';
+import { LicensePlate } from './LicensePlate';
 import { haptics } from '../lib/haptics';
 
 interface VehicleRatings {
@@ -150,29 +151,28 @@ export function PlateFoundUnclaimed({
 
   const C = {
     bg: '#030508',
-    surface: '#0d1117',
+    surface: '#0a0d14',
     surface2: 'rgba(255,255,255,0.04)',
     border: 'rgba(255,255,255,0.06)',
     orange: '#F97316',
     text1: '#eef4f8',
-    text2: '#9CA3AF',
-    text3: '#6B7280',
+    text2: '#7a8e9e',
+    text3: '#5a6e7e',
   };
+
+  const stateCode = state.length === 2 ? state : state.substring(0, 2).toUpperCase();
 
   return (
     <>
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: 16 }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ maxWidth: 512, margin: '0 auto', padding: '0 16px' }}>
           {/* Header */}
           <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '20px 24px', textAlign: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, marginBottom: 12 }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.orange }}>Unclaimed Plate</span>
             </div>
             <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, color: C.text1, margin: '0 0 8px', textTransform: 'uppercase' }}>Plate Found</h2>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', background: C.bg, borderRadius: 8, transition: 'opacity 0.7s', opacity: revealStep >= 1 ? 1 : 0 }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: '#ef4444' }}>{state}</span>
-              <span style={{ color: 'rgba(239,68,68,0.5)' }}>—</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, letterSpacing: '0.1em', color: '#ef4444' }}>{plateNumber}</span>
+            <div style={{ display: 'inline-block', transition: 'opacity 0.7s', opacity: revealStep >= 1 ? 1 : 0 }}>
+              <LicensePlate plateNumber={plateNumber} plateState={stateCode} size="lg" />
             </div>
             <div style={{ height: 1, margin: '10px auto 0', maxWidth: 200, background: C.orange, transition: 'width 0.3s', width: revealStep >= 2 ? '100%' : 0 }} />
           </div>
@@ -331,10 +331,9 @@ export function PlateFoundUnclaimed({
               <button
                 onClick={onSpotAndReview}
                 disabled={!isLoggedIn}
-                style={{ width: '100%', padding: '14px 16px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: isLoggedIn ? 'pointer' : 'not-allowed', opacity: isLoggedIn ? 1 : 0.5, transition: 'all 0.5s', transform: revealStep >= 4 ? 'translateY(0)' : 'translateY(8px)' }}
+                style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(135deg, #f97316, #f59e0b)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: isLoggedIn ? 'pointer' : 'not-allowed', opacity: isLoggedIn ? 1 : 0.5, transition: 'all 0.5s', transform: revealStep >= 4 ? 'translateY(0)' : 'translateY(8px)' }}
               >
-                {ratings?.spot_count && ratings.spot_count > 0 ? 'SPOT THIS PLATE' : 'BE THE FIRST TO SPOT!'}
-                <span style={{ position: 'absolute', right: 14, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: 'rgba(0,0,0,0.5)' }}>+15 PTS</span>
+                SPOT THIS PLATE {'\u00B7'} +15 RP
               </button>
 
               {isLoggedIn && (
@@ -342,7 +341,7 @@ export function PlateFoundUnclaimed({
                   <p style={{ textAlign: 'center', fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2, margin: '0 0 10px' }}>Is this your car?</p>
                   <button
                     onClick={onClaimVehicle}
-                    style={{ width: '100%', padding: '13px', background: 'none', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.orange, cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '13px', background: '#0a0d14', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#F97316', cursor: 'pointer' }}
                   >
                     CLAIM THIS PLATE
                   </button>
@@ -351,6 +350,7 @@ export function PlateFoundUnclaimed({
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {showAllReviews && (

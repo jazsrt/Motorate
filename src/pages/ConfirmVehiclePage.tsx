@@ -69,19 +69,19 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
         </div>
 
         <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ position: 'relative', aspectRatio: '16/9', background: 'linear-gradient(135deg, #1a1a1a, #111)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div
-                style={{ width: 80, height: 80, borderRadius: 16, margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colorHex + '33', border: `2px solid ${colorHex}66` }}
-              >
-                <Car style={{ width: 40, height: 40, color: colorHex }} />
+          <div style={{ position: 'relative', aspectRatio: '16/9', background: 'linear-gradient(135deg, #0e1320, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {wizardData.stockImageUrl ? (
+              <img
+                src={wizardData.stockImageUrl}
+                alt={vehicleName}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <Car style={{ width: 48, height: 48, color: '#5a6e7e', marginBottom: 8 }} />
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#3a4e60', margin: 0 }}>No image available</p>
               </div>
-              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>Stock image preview</p>
-            </div>
-            <div
-              style={{ position: 'absolute', bottom: 12, right: 12, width: 40, height: 40, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.12)', backgroundColor: colorHex, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
-              title={wizardData.color}
-            />
+            )}
           </div>
 
           <div style={{ padding: 24 }}>
