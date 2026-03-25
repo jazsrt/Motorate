@@ -260,7 +260,8 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code);
 
         if (apiResult && apiResult.make && apiResult.model) {
-          // Auto.dev returned vehicle data — show confirm screen before rating
+          // Auto.dev returned vehicle data — fetch stock image in parallel, show confirm screen
+          const stockImageUrl = await getVehicleImageUrl(apiResult.make, apiResult.model, apiResult.year ? parseInt(apiResult.year) : undefined);
           const wizardData: SpotWizardData = {
             plateState: code,
             plateNumber: searchPlate.trim().toUpperCase(),
@@ -270,6 +271,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             color: apiResult.color || '',
             year: apiResult.year || undefined,
             trim: apiResult.trim || undefined,
+            stockImageUrl: stockImageUrl || undefined,
           };
           onNavigate('confirm-vehicle', { wizardData });
         } else {

@@ -131,6 +131,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         color: wizardData.color,
         year: wizardData.year ? parseInt(wizardData.year) : null,
         trim: wizardData.trim || null,
+        stock_image_url: wizardData.stockImageUrl || null,
         is_claimed: false,
         verification_tier: 'shadow',
         created_by_user_id: user?.id,
