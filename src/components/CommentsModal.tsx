@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Heart, Trash2, CreditCard as Edit2, MessageCircle, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -53,12 +53,7 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
   const [editingComment, setEditingComment] = useState<{ id: string; text: string } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    loadComments(0);
-    inputRef.current?.focus();
-  }, [postId]);
-
-  const loadComments = async (pageNum: number) => {
+  const loadComments = useCallback(async (pageNum: number) => {
     if (!user) return;
 
     const isLoadingMore = pageNum > 0;
@@ -149,7 +144,12 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [user, postId, showToast]);
+
+  useEffect(() => {
+    loadComments(0);
+    inputRef.current?.focus();
+  }, [postId, loadComments]);
 
   const loadMoreComments = () => {
     if (!loadingMore && hasMore) {

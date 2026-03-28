@@ -147,79 +147,6 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
   const [disputeComment, setDisputeComment] = useState<string | null>(null);
   const PAGE_SIZE = 20;
 
-  useEffect(() => {
-    loadInitialData();
-  }, [vehicleId]);
-
-  const loadInitialData = async () => {
-    setLoading(true);
-    await Promise.all([loadRatings(), loadStickers(), loadReviews(0), loadUnlinkedSpots()]);
-    setLoading(false);
-  };
-
-  const loadRatings = async () => {
-    const { data } = await supabase
-      .from('vehicle_ratings')
-      .select('*')
-      .eq('vehicle_id', vehicleId)
-      .maybeSingle();
-    if (data) setRatings(data);
-  };
-
-  const loadStickers = async () => {
-    const { data } = await supabase
-      .from('vehicle_sticker_counts')
-      .select('tag_name, tag_sentiment, count')
-      .eq('vehicle_id', vehicleId)
-      .order('count', { ascending: false })
-      .limit(10);
-    if (data) setTopStickers(data);
-  };
-
-  const loadUnlinkedSpots = async () => {
-    // Get all spot_history entries for this vehicle
-    const { data: spotData } = await supabase
-      .from('spot_history')
-      .select(`
-        id, spot_type, created_at, spotter_id,
-        spotter:profiles!spot_history_spotter_id_fkey(handle, avatar_url)
-      `)
-      .eq('vehicle_id', vehicleId)
-      .order('created_at', { ascending: false });
-
-    if (!spotData || spotData.length === 0) return;
-
-    // Get spot_history IDs that are already linked to reviews
-    const { data: linkedData } = await supabase
-      .from('reviews')
-      .select('spot_history_id')
-      .eq('vehicle_id', vehicleId)
-      .not('spot_history_id', 'is', null);
-
-    const linkedIds = new Set((linkedData || []).map((r: any) => r.spot_history_id));
-
-    // Convert unlinked spot_history entries to display format
-    const unlinked: ReviewWithAuthor[] = (spotData as any[])
-      .filter(s => !linkedIds.has(s.id))
-      .map(s => ({
-        id: s.id,
-        spot_type: (s.spot_type as 'quick' | 'full') || 'quick',
-        rating_driver: 0,
-        rating_driving: 0,
-        rating_vehicle: 0,
-        looks_rating: null,
-        sound_rating: null,
-        condition_rating: null,
-        sentiment: null,
-        comment: null,
-        created_at: s.created_at,
-        author: Array.isArray(s.spotter) ? s.spotter[0] : s.spotter,
-        tags: [],
-      }));
-
-    setUnlinkedSpots(unlinked);
-  };
-
   const loadReviews = useCallback(async (pageNum: number) => {
     const from = pageNum * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
@@ -267,6 +194,79 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
 
     setHasMore(data.length === PAGE_SIZE);
   }, [vehicleId]);
+
+  const loadInitialData = useCallback(async () => {
+    const loadRatings = async () => {
+      const { data } = await supabase
+        .from('vehicle_ratings')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .maybeSingle();
+      if (data) setRatings(data);
+    };
+
+    const loadStickers = async () => {
+      const { data } = await supabase
+        .from('vehicle_sticker_counts')
+        .select('tag_name, tag_sentiment, count')
+        .eq('vehicle_id', vehicleId)
+        .order('count', { ascending: false })
+        .limit(10);
+      if (data) setTopStickers(data);
+    };
+
+    const loadUnlinkedSpots = async () => {
+      // Get all spot_history entries for this vehicle
+      const { data: spotData } = await supabase
+        .from('spot_history')
+        .select(`
+          id, spot_type, created_at, spotter_id,
+          spotter:profiles!spot_history_spotter_id_fkey(handle, avatar_url)
+        `)
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false });
+
+      if (!spotData || spotData.length === 0) return;
+
+      // Get spot_history IDs that are already linked to reviews
+      const { data: linkedData } = await supabase
+        .from('reviews')
+        .select('spot_history_id')
+        .eq('vehicle_id', vehicleId)
+        .not('spot_history_id', 'is', null);
+
+      const linkedIds = new Set((linkedData || []).map((r: any) => r.spot_history_id));
+
+      // Convert unlinked spot_history entries to display format
+      const unlinked: ReviewWithAuthor[] = (spotData as any[])
+        .filter(s => !linkedIds.has(s.id))
+        .map(s => ({
+          id: s.id,
+          spot_type: (s.spot_type as 'quick' | 'full') || 'quick',
+          rating_driver: 0,
+          rating_driving: 0,
+          rating_vehicle: 0,
+          looks_rating: null,
+          sound_rating: null,
+          condition_rating: null,
+          sentiment: null,
+          comment: null,
+          created_at: s.created_at,
+          author: Array.isArray(s.spotter) ? s.spotter[0] : s.spotter,
+          tags: [],
+        }));
+
+      setUnlinkedSpots(unlinked);
+    };
+
+    setLoading(true);
+    await Promise.all([loadRatings(), loadStickers(), loadReviews(0), loadUnlinkedSpots()]);
+    setLoading(false);
+  }, [vehicleId, loadReviews]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore) return;

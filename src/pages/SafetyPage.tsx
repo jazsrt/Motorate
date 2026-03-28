@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { Layout } from '../components/Layout';
 import { type OnNavigate } from '../types/navigation';
@@ -28,11 +28,7 @@ export function SafetyPage({ onNavigate }: SafetyPageProps) {
   const [mapCenter, setMapCenter] = useState<[number, number]>([41.8781, -87.6298]);
   const [searching, setSearching] = useState(false);
 
-  useEffect(() => {
-    loadCrimeData(mapCenter[0], mapCenter[1]);
-  }, []);
-
-  const loadCrimeData = async (lat: number, lng: number) => {
+  const loadCrimeData = useCallback(async (lat: number, lng: number) => {
     setLoading(true);
     setError(null);
     try {
@@ -44,7 +40,11 @@ export function SafetyPage({ onNavigate }: SafetyPageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCrimeData(mapCenter[0], mapCenter[1]);
+  }, [mapCenter, loadCrimeData]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();

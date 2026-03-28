@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
@@ -84,16 +84,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
     }
   }, [searchQuery, plateState]);
 
-  useEffect(() => {
-    if (isUserSearch && searchTerm) {
-      performUserSearch();
-    } else if (!isUserSearch) {
-      setUsers([]);
-      setHasSearched(false);
-    }
-  }, [searchQuery]);
-
-  async function performUserSearch() {
+  const performUserSearch = useCallback(async function performUserSearch() {
     if (!searchTerm) {
       setUsers([]);
       setHasSearched(false);
@@ -122,7 +113,16 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (isUserSearch && searchTerm) {
+      performUserSearch();
+    } else if (!isUserSearch) {
+      setUsers([]);
+      setHasSearched(false);
+    }
+  }, [searchQuery, isUserSearch, performUserSearch, searchTerm]);
 
   const startCamera = async () => {
     try {

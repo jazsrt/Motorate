@@ -16,13 +16,12 @@ export function BlockUserButton({ userId, userName, variant = 'button' }: BlockU
   const { showToast } = useToast();
 
   useEffect(() => {
+    async function checkBlockStatus() {
+      const blocked = await isUserBlocked(userId);
+      setIsBlocked(blocked);
+    }
     checkBlockStatus();
   }, [userId]);
-
-  async function checkBlockStatus() {
-    const blocked = await isUserBlocked(userId);
-    setIsBlocked(blocked);
-  }
 
   async function handleToggleBlock() {
     if (!isBlocked) {

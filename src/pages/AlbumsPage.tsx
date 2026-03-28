@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
@@ -36,13 +36,7 @@ export function AlbumsPage({ onNavigate }: AlbumsPageProps) {
   const [newAlbumDescription, setNewAlbumDescription] = useState('');
   const [newAlbumPublic, setNewAlbumPublic] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadAlbums();
-    }
-  }, [user]);
-
-  const loadAlbums = async () => {
+  const loadAlbums = useCallback(async () => {
     if (!user) return;
 
     const { data, error } = await supabase
@@ -67,7 +61,13 @@ export function AlbumsPage({ onNavigate }: AlbumsPageProps) {
       setAlbums(albumsWithCounts);
     }
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadAlbums();
+    }
+  }, [user, loadAlbums]);
 
   const createAlbum = async () => {
     if (!user || !newAlbumName.trim()) return;

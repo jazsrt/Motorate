@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Plus,
   Car,
@@ -70,7 +70,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     if (user) {
       loadGarageData();
     }
-  }, [user]);
+  }, [user, loadGarageData]);
 
   useEffect(() => {
     if (!user) return;
@@ -134,7 +134,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         // silent
       }
     });
-  }, [retiredVehicles]);
+  }, [retiredVehicles, retiredStockImages]);
 
   const fleetStats = useMemo(() => {
     const totalSpots = vehicles.reduce((sum, v) => sum + (v.spot_count ?? v.spots_count ?? 0), 0);
@@ -155,7 +155,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     };
   }, [vehicles, vehicleStickerCounts]);
 
-  const loadGarageData = async () => {
+  const loadGarageData = useCallback(async () => {
     try {
       setLoading(true);
       await Promise.all([loadVehicles(), loadRetiredVehicles()]);
@@ -164,9 +164,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, loadVehicles, loadRetiredVehicles]);
 
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     const { data: ownedVehicles } = await supabase
       .from('vehicles')
       .select(GARAGE_VEHICLE_SELECT)
@@ -250,9 +250,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     }
 
     return allVehicles;
-  };
+  }, [user]);
 
-  const loadRetiredVehicles = async () => {
+  const loadRetiredVehicles = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
       .from('retired_vehicles')
@@ -260,7 +260,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       .eq('user_id', user.id)
       .order('retired_at', { ascending: false });
     if (data) setRetiredVehicles(data);
-  };
+  }, [user]);
 
   const handleClaimSearch = async () => {
     const query = claimSearchQuery.trim().toUpperCase().replace(/\s+/g, '');

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { uploadImage } from '../lib/storage';
@@ -57,11 +57,7 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
   const [newNotes, setNewNotes] = useState('');
   const [newImage, setNewImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadModifications();
-  }, [vehicleId]);
-
-  const loadModifications = async () => {
+  const loadModifications = useCallback(async () => {
     const { data } = await supabase
       .from('vehicle_modifications')
       .select('*')
@@ -70,7 +66,11 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
 
     if (data) setModifications(data);
     setLoading(false);
-  };
+  }, [vehicleId]);
+
+  useEffect(() => {
+    loadModifications();
+  }, [vehicleId, loadModifications]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, X, Check, RefreshCw, AlertCircle, Zap } from 'lucide-react';
 import { extractPlateFromImage } from '../../lib/ocr';
 
@@ -11,42 +11,44 @@ export function CameraModal({ onClose, onPlateDetected }: CameraModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [detectedPlate, setDetectedPlate] = useState<string | null>(null);
   const [confidence, setConfidence] = useState(0);
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+  }, []);
+
   useEffect(() => {
+    async function startCamera() {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+        streamRef.current = mediaStream;
+        setStream(mediaStream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      } catch {
+        setError('Unable to access camera. Please check permissions in your browser settings.');
+      }
+    }
+
     startCamera();
     return () => {
       stopCamera();
     };
-  }, []);
-
-  async function startCamera() {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-    } catch {
-      setError('Unable to access camera. Please check permissions in your browser settings.');
-    }
-  }
-
-  function stopCamera() {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-  }
+  }, [stopCamera]);
 
   async function capturePhoto() {
     if (!videoRef.current || !canvasRef.current) return;

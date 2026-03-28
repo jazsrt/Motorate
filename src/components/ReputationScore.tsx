@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getUserReputationScore, ReputationScore as ReputationScoreType } from '../lib/reputation';
 
 interface ReputationScoreProps {
@@ -28,11 +28,7 @@ export function ReputationScore({ userId, size = 'md', showLabel = true }: Reput
   const [reputationData, setReputationData] = useState<ReputationScoreType | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadScore();
-  }, [userId]);
-
-  async function loadScore() {
+  const loadScore = useCallback(async () => {
     try {
       const data = await getUserReputationScore(userId);
       setReputationData(data);
@@ -41,7 +37,11 @@ export function ReputationScore({ userId, size = 'md', showLabel = true }: Reput
     } finally {
       setLoading(false);
     }
-  }
+  }, [userId]);
+
+  useEffect(() => {
+    loadScore();
+  }, [loadScore]);
 
   if (loading || !reputationData) {
     return null;

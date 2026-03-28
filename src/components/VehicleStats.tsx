@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Eye, Star, ThumbsUp, MessageSquare, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -27,11 +27,7 @@ export function VehicleStats({ vehicleId }: VehicleStatsProps) {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadStats();
-  }, [vehicleId]);
-
-  async function loadStats() {
+  const loadStats = useCallback(async function loadStats() {
     try {
       const { data: reviews, error: reviewsError } = await supabase
         .from('posts')
@@ -79,7 +75,11 @@ export function VehicleStats({ vehicleId }: VehicleStatsProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [vehicleId]);
+
+  useEffect(() => {
+    loadStats();
+  }, [vehicleId, loadStats]);
 
   if (loading) {
     return (

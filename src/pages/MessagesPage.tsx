@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
@@ -76,33 +76,7 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadConversations();
-      if (recipientId) {
-        createOrOpenConversation(recipientId);
-      }
-    }
-  }, [user, recipientId]);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      loadMessages(selectedConversation);
-      markAsRead(selectedConversation);
-      subscribeToMessages(selectedConversation);
-    }
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
-    };
-  }, [selectedConversation]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  async function loadConversations() {
+  const loadConversations = useCallback(async function loadConversations() {
     if (!user) return;
 
     try {
@@ -182,9 +156,9 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
 
-  async function loadMessages(conversationId: string) {
+  const loadMessages = useCallback(async function loadMessages(conversationId: string) {
     if (!user) return;
 
     try {
@@ -219,59 +193,36 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
     } catch (error) {
       console.error('Error loading messages:', error);
     }
-  }
+  }, [user]);
 
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (userSearchQuery.trim()) {
-      searchTimeoutRef.current = setTimeout(() => {
-        searchUsers(userSearchQuery);
-      }, 300);
-    } else {
-      setUserSearchResults([]);
-    }
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [userSearchQuery]);
-
-  async function loadFollowers() {
+  const markAsRead = useCallback(async function markAsRead(conversationId: string) {
     if (!user) return;
 
-    setLoadingFollowers(true);
     try {
-      const { data } = await supabase
-        .from('follows')
-        .select('follower_id')
-        .eq('following_id', user.id);
+      await supabase
+        .from('conversation_participants')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id);
 
-      if (!data || data.length === 0) {
-        setFollowers([]);
-        return;
-      }
+      await supabase
+        .from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .is('read_at', null);
 
-      const followerIds = data.map(f => f.follower_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, handle, avatar_url, car_make, car_model')
-        .in('id', followerIds)
-        .order('handle');
-
-      setFollowers(profiles || []);
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === conversationId ? { ...c, unread_count: 0 } : c
+        )
+      );
     } catch (error) {
-      console.error('Error loading followers:', error);
-    } finally {
-      setLoadingFollowers(false);
+      console.error('Error marking as read:', error);
     }
-  }
+  }, [user]);
 
-  async function searchUsers(query: string) {
+  const searchUsers = useCallback(async function searchUsers(query: string) {
     if (!user || !query.trim()) return;
 
     setSearchingUsers(true);
@@ -292,9 +243,9 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
     } finally {
       setSearchingUsers(false);
     }
-  }
+  }, [user]);
 
-  async function createOrOpenConversation(otherUserId: string) {
+  const createOrOpenConversation = useCallback(async function createOrOpenConversation(otherUserId: string) {
     if (!user || otherUserId === user.id) return;
 
     try {
@@ -343,7 +294,7 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
     } catch (error) {
       console.error('Error creating conversation:', error);
     }
-  }
+  }, [user, loadConversations]);
 
   function subscribeToMessages(conversationId: string) {
     if (channelRef.current) {
@@ -376,30 +327,79 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
     channelRef.current = channel;
   }
 
-  async function markAsRead(conversationId: string) {
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+      if (recipientId) {
+        createOrOpenConversation(recipientId);
+      }
+    }
+  }, [user, recipientId, loadConversations, createOrOpenConversation]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation);
+      markAsRead(selectedConversation);
+      subscribeToMessages(selectedConversation);
+    }
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
+  }, [selectedConversation, loadMessages, markAsRead]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (userSearchQuery.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchUsers(userSearchQuery);
+      }, 300);
+    } else {
+      setUserSearchResults([]);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [userSearchQuery, searchUsers]);
+
+  async function loadFollowers() {
     if (!user) return;
 
+    setLoadingFollowers(true);
     try {
-      await supabase
-        .from('conversation_participants')
-        .update({ last_read_at: new Date().toISOString() })
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id);
+      const { data } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', user.id);
 
-      await supabase
-        .from('messages')
-        .update({ read_at: new Date().toISOString() })
-        .eq('conversation_id', conversationId)
-        .neq('sender_id', user.id)
-        .is('read_at', null);
+      if (!data || data.length === 0) {
+        setFollowers([]);
+        return;
+      }
 
-      setConversations(prev =>
-        prev.map(c =>
-          c.id === conversationId ? { ...c, unread_count: 0 } : c
-        )
-      );
+      const followerIds = data.map(f => f.follower_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, handle, avatar_url, car_make, car_model')
+        .in('id', followerIds)
+        .order('handle');
+
+      setFollowers(profiles || []);
     } catch (error) {
-      console.error('Error marking as read:', error);
+      console.error('Error loading followers:', error);
+    } finally {
+      setLoadingFollowers(false);
     }
   }
 

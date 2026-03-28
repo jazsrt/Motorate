@@ -28,7 +28,7 @@ export default function Feed() {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loading]);
+  }, [hasMore, loading, loadMore]);
 
   return (
     <div className="space-y-4">

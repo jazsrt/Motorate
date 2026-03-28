@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,11 +26,7 @@ export function SuggestedUsers({ onNavigate }: SuggestedUsersProps) {
     try { return sessionStorage.getItem(DISMISSED_KEY) === '1'; } catch { return false; }
   });
 
-  useEffect(() => {
-    if (user && !dismissed) loadSuggestedUsers();
-  }, [user, dismissed]);
-
-  async function loadSuggestedUsers() {
+  const loadSuggestedUsers = useCallback(async () => {
     try {
       if (!user) return;
       const { data: followingData } = await supabase
@@ -54,7 +50,11 @@ export function SuggestedUsers({ onNavigate }: SuggestedUsersProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && !dismissed) loadSuggestedUsers();
+  }, [user, dismissed, loadSuggestedUsers]);
 
   const handleDismiss = () => {
     setDismissed(true);

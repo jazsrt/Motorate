@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Heart, Clock, Check } from 'lucide-react';
@@ -25,13 +25,9 @@ export function VehicleFollowButton({
   const [status, setStatus] = useState<FollowStatus>('none');
   const [loading, setLoading] = useState(false);
 
-  const isOwner = user?.id === vehicleOwnerId;
+  const isOwner = useMemo(() => user?.id === vehicleOwnerId, [user, vehicleOwnerId]);
 
-  useEffect(() => {
-    if (user && !isOwner) checkStatus();
-  }, [user, vehicleId]);
-
-  const checkStatus = async () => {
+  const checkStatus = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
       .from('vehicle_follows')
@@ -40,7 +36,11 @@ export function VehicleFollowButton({
       .eq('vehicle_id', vehicleId)
       .maybeSingle();
     setStatus(data ? (data.status as FollowStatus) : 'none');
-  };
+  }, [user, vehicleId]);
+
+  useEffect(() => {
+    if (user && !isOwner) checkStatus();
+  }, [user, vehicleId, isOwner, checkStatus]);
 
   const toggle = async () => {
     if (!user || loading || isOwner) return;

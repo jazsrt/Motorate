@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Eye, Users, TrendingUp, User, Heart, MessageCircle, Zap } from 'lucide-react';
 import { getProfileViewStats, getRecentVisitors, RecentVisitor } from '../lib/profileViews';
 import { UserAvatar } from './UserAvatar';
@@ -22,11 +22,7 @@ export function ProfileInsights({ profileId }: ProfileInsightsProps) {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadInsights();
-  }, [profileId]);
-
-  async function loadInsights() {
+  const loadInsights = useCallback(async () => {
     setLoading(true);
     try {
       const [statsData, visitorsData, postStatsData] = await Promise.all([
@@ -49,7 +45,11 @@ export function ProfileInsights({ profileId }: ProfileInsightsProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [profileId]);
+
+  useEffect(() => {
+    loadInsights();
+  }, [loadInsights]);
 
   async function loadPostStats(userId: string) {
     try {

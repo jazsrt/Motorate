@@ -317,7 +317,6 @@ export function PlateFoundClaimed({
             </div>
           </div>
         </div>
-      </div>
 
       {showAllReviews && (
         <AllReviewsModal

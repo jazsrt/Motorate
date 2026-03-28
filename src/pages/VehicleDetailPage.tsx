@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
@@ -108,9 +108,9 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => { loadFollows(); }, [vehicleId]);
+  useEffect(() => { loadFollows(); }, [vehicleId, loadFollows]);
 
-  const loadFollows = async () => {
+  const loadFollows = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from('vehicle_follows')
@@ -119,7 +119,7 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
       .order('created_at', { ascending: false });
     setFollows(data || []);
     setLoading(false);
-  };
+  }, [vehicleId]);
 
   const pending = follows.filter(f => f.status === 'pending');
   const accepted = follows.filter(f => f.status === 'accepted');
@@ -212,7 +212,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   useEffect(() => {
     loadVehicleData();
-  }, [vehicleId]);
+  }, [vehicleId, loadVehicleData]);
 
   useEffect(() => {
     if (vehicle && !vehicleImages[0]?.image_url && !vehicle.stock_image_url && !vehicle.profile_image_url) {
@@ -237,7 +237,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   }, [scrollTo, loading, vehicle]);
 
-  const loadVehicleData = async () => {
+  const loadVehicleData = useCallback(async () => {
     const { data: vehicleData } = await supabase
       .from('vehicles')
       // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
@@ -400,7 +400,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
 
     setLoading(false);
-  };
+  }, [vehicleId]);
 
   useEffect(() => {
     if (!vehicleId) return;
@@ -450,7 +450,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [vehicleId]);
+  }, [vehicleId, loadVehicleData]);
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;

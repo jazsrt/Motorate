@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
@@ -38,30 +38,7 @@ export function EventsPage({ onNavigate }: EventsPageProps) {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'attending'>('upcoming');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      getUserLocation();
-      loadEvents();
-    }
-  }, [user, filter]);
-
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-        }
-      );
-    }
-  };
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -132,7 +109,26 @@ export function EventsPage({ onNavigate }: EventsPageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, filter, userLocation]);
+
+  useEffect(() => {
+    if (user) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+          }
+        );
+      }
+      loadEvents();
+    }
+  }, [user, filter, loadEvents]);
 
   const toggleAttendance = async (eventId: string, currentlyAttending: boolean) => {
     if (!user) return;

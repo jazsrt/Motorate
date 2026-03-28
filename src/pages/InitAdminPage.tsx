@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
@@ -57,13 +57,7 @@ export default function InitAdminPage({ onNavigate }: InitAdminPageProps = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchAdminStats();
-    }
-  }, [user]);
-
-  async function fetchAdminStats() {
+  const fetchAdminStats = useCallback(async function fetchAdminStats() {
     if (!user) return;
 
     setLoading(true);
@@ -127,7 +121,13 @@ export default function InitAdminPage({ onNavigate }: InitAdminPageProps = {}) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, showToast]);
+
+  useEffect(() => {
+    if (user) {
+      fetchAdminStats();
+    }
+  }, [user, fetchAdminStats]);
 
   async function handleBanUser(userId: string, handle: string) {
     setActionLoading(userId);

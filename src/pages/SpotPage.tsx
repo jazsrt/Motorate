@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -129,9 +129,67 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    async function loadWeeklySpots() {
+      if (!user) return;
+      const now = new Date();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      monday.setHours(0, 0, 0, 0);
+
+      try {
+        const { data } = await supabase
+          .from('spot_history')
+          .select('created_at')
+          .eq('spotter_id', user.id)
+          .gte('created_at', monday.toISOString())
+          .order('created_at', { ascending: true });
+
+        if (data) {
+          const counts = [0, 0, 0, 0, 0, 0, 0];
+          data.forEach(spot => {
+            const d = new Date(spot.created_at);
+            const dayIdx = (d.getDay() + 6) % 7;
+            counts[dayIdx]++;
+          });
+          setWeeklySpots(counts);
+          setWeekTotal(data.length);
+        }
+      } catch (err) {
+        console.error('Error loading weekly spots:', err);
+      }
+    }
+
+    async function loadRecentSpots() {
+      try {
+        const { data } = await supabase
+          .from('spot_history')
+          .select(`
+            id,
+            created_at,
+            vehicle:vehicles(
+              id,
+              make,
+              model,
+              year,
+              color,
+              plate_state,
+              plate_number
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(8);
+
+        if (data) {
+          setRecentSpots(data.filter(s => s.vehicle));
+        }
+      } catch (error) {
+        console.error('Error loading recent spots:', error);
+      }
+    }
+
     loadRecentSpots();
     loadWeeklySpots();
-  }, []);
+  }, [user]);
 
   // Reveal animation phases with proper cleanup
   useEffect(() => {
@@ -151,64 +209,6 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     }, 1400));
     return () => timeouts.forEach(t => clearTimeout(t));
   }, [viewState, revealResult]);
-
-  async function loadWeeklySpots() {
-    if (!user) return;
-    const now = new Date();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    monday.setHours(0, 0, 0, 0);
-
-    try {
-      const { data } = await supabase
-        .from('spot_history')
-        .select('created_at')
-        .eq('spotter_id', user.id)
-        .gte('created_at', monday.toISOString())
-        .order('created_at', { ascending: true });
-
-      if (data) {
-        const counts = [0, 0, 0, 0, 0, 0, 0];
-        data.forEach(spot => {
-          const d = new Date(spot.created_at);
-          const dayIdx = (d.getDay() + 6) % 7;
-          counts[dayIdx]++;
-        });
-        setWeeklySpots(counts);
-        setWeekTotal(data.length);
-      }
-    } catch (err) {
-      console.error('Error loading weekly spots:', err);
-    }
-  }
-
-  async function loadRecentSpots() {
-    try {
-      const { data } = await supabase
-        .from('spot_history')
-        .select(`
-          id,
-          created_at,
-          vehicle:vehicles(
-            id,
-            make,
-            model,
-            year,
-            color,
-            plate_state,
-            plate_number
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(8);
-
-      if (data) {
-        setRecentSpots(data.filter(s => s.vehicle));
-      }
-    } catch (error) {
-      console.error('Error loading recent spots:', error);
-    }
-  }
 
   const handleSearch = async (searchState: string, searchPlate: string) => {
     if (!searchPlate.trim()) return;

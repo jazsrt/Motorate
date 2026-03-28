@@ -99,7 +99,7 @@ export function useFeed(userId?: string): UseFeedReturn {
     setCursor(undefined);
     setHasMore(true);
     await loadPosts(true);
-  }, [userId]);
+  }, [loadPosts]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -111,7 +111,7 @@ export function useFeed(userId?: string): UseFeedReturn {
     if (userId) {
       loadPosts(true);
     }
-  }, [userId]);
+  }, [userId, loadPosts]);
 
   return { posts, loading, error, refreshFeed, hasMore, loadMore };
 }

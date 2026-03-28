@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getChallengesWithProgress } from '../lib/challenges';
 
@@ -8,11 +8,7 @@ export function useChallenges() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadChallenges();
-  }, [user]);
-
-  const loadChallenges = async () => {
+  const loadChallenges = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -29,7 +25,11 @@ export function useChallenges() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadChallenges();
+  }, [user, loadChallenges]);
 
   return {
     challenges,

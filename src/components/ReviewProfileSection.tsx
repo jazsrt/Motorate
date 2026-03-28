@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BarChart3, ThumbsUp, ThumbsDown, Star, User, Award, AlertTriangle, FileText, Tag } from 'lucide-react';
 import { getReviewProfile } from '../lib/reviewProfileService';
 import { type ReviewProfile } from '../types/reviewProfile';
@@ -26,16 +26,16 @@ export function ReviewProfileSection({
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'positive' | 'negative'>('all');
 
-  useEffect(() => {
-    loadProfile();
-  }, [userId]);
-
-  async function loadProfile() {
+  const loadProfile = useCallback(async () => {
     setLoading(true);
     const data = await getReviewProfile(userId);
     setProfile(data);
     setLoading(false);
-  }
+  }, [userId]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   if (loading) {
     return (

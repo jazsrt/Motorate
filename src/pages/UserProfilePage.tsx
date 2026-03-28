@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
@@ -73,7 +73,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
       loadSpotAndReviewCounts();
       loadAllPhotos();
     }
-  }, [userId, followStatus]);
+  }, [userId, followStatus, checkFollowStatus, loadAllPhotos, loadBadges, loadFollowCounts, loadProfile, loadSpotAndReviewCounts]);
 
   useEffect(() => {
     if (!userId || !canViewContent) return;
@@ -85,9 +85,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     } else if (activeTab === 'reviews' && !ratingsLoaded) {
       loadRatings();
     }
-  }, [activeTab, userId, canViewContent]);
+  }, [activeTab, userId, canViewContent, loadVehicles, loadUserPosts, loadRatings, vehiclesLoaded, postsLoaded, ratingsLoaded]);
 
-  const checkFollowStatus = async () => {
+  const checkFollowStatus = useCallback(async () => {
     if (!currentUser || isOwnProfile) return;
 
     const { data } = await supabase
@@ -105,9 +105,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
       setFollowStatus('none');
       setIsFollowing(false);
     }
-  };
+  }, [currentUser, isOwnProfile, userId]);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -120,9 +120,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     if (currentUser && currentUser.id !== userId) {
       await trackProfileView(userId, currentUser.id);
     }
-  };
+  }, [userId, currentUser]);
 
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     setLoadingVehicles(true);
     try {
       // PLATE: hidden — public surface
@@ -137,9 +137,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     } finally {
       setLoadingVehicles(false);
     }
-  };
+  }, [userId]);
 
-  const loadBadges = async () => {
+  const loadBadges = useCallback(async () => {
     const { data: earnedData } = await supabase
       .from('user_badges')
       .select(`
@@ -164,9 +164,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
       const locked = allBadgeData.filter((b: any) => !earnedIds.has(b.id)).slice(0, 5);
       setLockedBadges(locked);
     }
-  };
+  }, [userId]);
 
-  const loadAllPhotos = async () => {
+  const loadAllPhotos = useCallback(async () => {
     const { data: vehicleData } = await supabase
       .from('vehicles')
       .select('photos')
@@ -182,9 +182,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     });
 
     setAllPhotos(photos);
-  };
+  }, [userId]);
 
-  const loadFollowCounts = async () => {
+  const loadFollowCounts = useCallback(async () => {
     const { count: followers } = await supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
@@ -199,9 +199,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
     setFollowerCount(followers || 0);
     setFollowingCount(following || 0);
-  };
+  }, [userId]);
 
-  const loadRatings = async () => {
+  const loadRatings = useCallback(async () => {
     setLoadingRatings(true);
     try {
       const { data: vehicleData } = await supabase
@@ -225,9 +225,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     } finally {
       setLoadingRatings(false);
     }
-  };
+  }, [userId]);
 
-  const loadUserPosts = async () => {
+  const loadUserPosts = useCallback(async () => {
     setLoadingPosts(true);
     const { data, error } = await supabase
       .from('posts')
@@ -270,14 +270,14 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     }
     setPostsLoaded(true);
     setLoadingPosts(false);
-  };
+  }, [userId]);
 
   const loadProfileViews = async () => {
     // profile_views table not yet created in Supabase — skip query to avoid 400 errors
   };
 
 
-  const loadSpotAndReviewCounts = async () => {
+  const loadSpotAndReviewCounts = useCallback(async () => {
     const { count: spots } = await supabase
       .from('spot_history')
       .select('*', { count: 'exact', head: true })
@@ -290,7 +290,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
     setSpotsCount(spots || 0);
     setReviewsCount(reviews || 0);
-  };
+  }, [userId]);
 
   if (loading) {
     return (

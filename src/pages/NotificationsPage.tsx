@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Bell, Check, Award, Heart, MessageCircle, UserPlus, Users, Shield, Car, Star, X, MapPin } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
@@ -232,11 +232,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   const [deadLinkNotifications, setDeadLinkNotifications] = useState<Set<string>>(new Set());
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
 
-  useEffect(() => {
-    if (user) loadNotifications();
-  }, [user]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -252,7 +248,11 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, showToast]);
+
+  useEffect(() => {
+    if (user) loadNotifications();
+  }, [user, loadNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MessageCircle, MoreVertical, Trash2, Edit, CheckCircle,
   MapPin, Star, Car
@@ -129,7 +129,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
     setImageErrors(prev => new Set(prev).add(index));
   };
 
-  const loadCommentPreview = async () => {
+  const loadCommentPreview = useCallback(async () => {
     try {
       const { data, count } = await supabase
         .from('post_comments')
@@ -144,14 +144,9 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
       setCommentPreview(mapped);
       setTotalComments(count || 0);
     } catch {}
-  };
-
-  useEffect(() => {
-    loadCommentPreview();
-    loadAuthorBadges();
   }, [post.id]);
 
-  const loadAuthorBadges = async () => {
+  const loadAuthorBadges = useCallback(async () => {
     try {
       setLoading(true);
       const [userBadges, rating, verifiedVehicles] = await Promise.all([
@@ -166,7 +161,12 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
     } catch {} finally {
       setLoading(false);
     }
-  };
+  }, [post.author_id]);
+
+  useEffect(() => {
+    loadCommentPreview();
+    loadAuthorBadges();
+  }, [post.id, loadCommentPreview, loadAuthorBadges]);
 
   useEffect(() => {
     if (!cardRef.current) return;

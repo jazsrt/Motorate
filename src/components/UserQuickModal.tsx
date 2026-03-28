@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Users, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,11 +33,7 @@ export function UserQuickModal({ userId, onClose, onNavigate }: UserQuickModalPr
   const [loading, setLoading] = useState(true);
   const [canViewPrivate, setCanViewPrivate] = useState(false);
 
-  useEffect(() => {
-    loadProfile();
-  }, [userId]);
-
-  async function loadProfile() {
+  const loadProfile = useCallback(async () => {
     try {
       const [profileResult, countsResult] = await Promise.all([
         supabase
@@ -92,7 +88,11 @@ export function UserQuickModal({ userId, onClose, onNavigate }: UserQuickModalPr
     } finally {
       setLoading(false);
     }
-  }
+  }, [userId, currentUser]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleViewFull = () => {
     if (profile && onNavigate) {

@@ -13,19 +13,18 @@ export function BadgeDisplay({ userId, maxShow = 5, size = 'md' }: BadgeDisplayP
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function loadBadges() {
+      try {
+        const data = await getUserBadges(userId);
+        setBadges(data);
+      } catch (error) {
+        console.error('Error loading badges:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadBadges();
   }, [userId]);
-
-  async function loadBadges() {
-    try {
-      const data = await getUserBadges(userId);
-      setBadges(data);
-    } catch (error) {
-      console.error('Error loading badges:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   if (loading || badges.length === 0) return null;
 

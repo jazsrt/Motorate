@@ -350,8 +350,6 @@ export function PlateFoundUnclaimed({
             </div>
           </div>
         </div>
-      </div>
-      </div>
 
       {showAllReviews && (
         <AllReviewsModal

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getChallengeDetail, calculateDistance } from '../lib/challenges';
 
@@ -9,12 +9,7 @@ export function useChallenge(challengeId: string) {
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    loadChallenge();
-    getUserLocation();
-  }, [challengeId, user]);
-
-  const loadChallenge = async () => {
+  const loadChallenge = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -31,7 +26,12 @@ export function useChallenge(challengeId: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [challengeId, user]);
+
+  useEffect(() => {
+    loadChallenge();
+    getUserLocation();
+  }, [challengeId, user, loadChallenge]);
 
   const getUserLocation = () => {
     if ('geolocation' in navigator) {

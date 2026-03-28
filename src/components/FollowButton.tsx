@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, UserCheck, Clock } from 'lucide-react';
@@ -20,13 +20,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
   const [loading, setLoading] = useState(false);
   const { checkAndConsume } = useRateLimit('follow');
 
-  useEffect(() => {
-    if (user && targetUserId) {
-      checkFollowStatus();
-    }
-  }, [user, targetUserId]);
-
-  const checkFollowStatus = async () => {
+  const checkFollowStatus = useCallback(async () => {
     if (!user) return;
 
     const [followResult, profileResult] = await Promise.all([
@@ -50,7 +44,13 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
     }
 
     setTargetUserPrivate(profileResult.data?.is_private || false);
-  };
+  }, [user, targetUserId]);
+
+  useEffect(() => {
+    if (user && targetUserId) {
+      checkFollowStatus();
+    }
+  }, [user, targetUserId, checkFollowStatus]);
 
   const toggleFollow = async () => {
     if (!user || loading) return;

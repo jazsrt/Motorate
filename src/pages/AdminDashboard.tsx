@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LayoutDashboard, Users, Shield, FileText, Search, MoreVertical, Ban, UserPlus, Key, TrendingUp, Car, AlertTriangle, Check, CheckCircle, X, ChevronLeft, ArrowUp, ArrowDown, Clock, XCircle, Flag, UserCheck, Activity, Award, RefreshCw, MessageSquare, Heart, Image, MapPin, CircleUser as UserCircle, Trash2 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { supabase } from '../lib/supabase';
@@ -600,16 +600,37 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   const [vehicleActionModal, setVehicleActionModal] = useState<'transfer' | 'revoke' | 'delete' | 'instant' | null>(null);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
 
+  const checkAdminAccess = useCallback(async () => {
+    if (!user) {
+      setHasAccess(false);
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile?.role === 'admin' || profile?.role === 'moderator') {
+      setHasAccess(true);
+    } else {
+      setHasAccess(false);
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     checkAdminAccess();
-  }, [user]);
+  }, [user, checkAdminAccess]);
 
   useEffect(() => {
     if (hasAccess) {
       loadDashboardData();
       loadBadges();
     }
-  }, [hasAccess]);
+  }, [hasAccess, loadDashboardData]);
 
   useEffect(() => {
     if (!hasAccess) return;
@@ -634,27 +655,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       supabase.removeChannel(channel);
     };
   }, [hasAccess]);
-
-  const checkAdminAccess = async () => {
-    if (!user) {
-      setHasAccess(false);
-      setLoading(false);
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (profile?.role === 'admin' || profile?.role === 'moderator') {
-      setHasAccess(true);
-    } else {
-      setHasAccess(false);
-      setLoading(false);
-    }
-  };
 
   const loadBadges = async () => {
     try {
@@ -854,7 +854,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     };
   };
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch metrics
@@ -958,7 +958,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

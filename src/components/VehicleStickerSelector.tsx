@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { giveSticker } from '../lib/stickerService';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,46 +26,47 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
   const [negativeCount, setNegativeCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [vehicleId, user]);
-
-  async function loadData() {
+  const loadData = useCallback(async function loadData() {
     setLoading(true);
+
+    async function loadStickerDefinitions() {
+      const { data } = await supabase
+        .from('sticker_catalog')
+        .select('*')
+        .order('category', { ascending: false });
+
+      if (data) setStickers(data);
+    }
+
+    async function loadUserStickerCounts() {
+      if (!user) return;
+
+      const { data: givenStickers } = await supabase
+        .from('vehicle_stickers')
+        .select(`sticker_id, bumper_stickers(category)`)
+        .eq('vehicle_id', vehicleId)
+        .eq('given_by', user.id);
+
+      if (givenStickers) {
+        let positive = 0;
+        let negative = 0;
+        givenStickers.forEach((item: any) => {
+          const category = item.bumper_stickers?.category;
+          if (category === 'Positive') positive++;
+          else if (category === 'Negative') negative++;
+        });
+        setPositiveCount(positive);
+        setNegativeCount(negative);
+      }
+    }
+
     await Promise.all([loadStickerDefinitions(), loadUserStickerCounts()]);
     setLoading(false);
-  }
+  }, [vehicleId, user]);
 
-  async function loadStickerDefinitions() {
-    const { data } = await supabase
-      .from('sticker_catalog')
-      .select('*')
-      .order('category', { ascending: false });
-
-    if (data) setStickers(data);
-  }
-
-  async function loadUserStickerCounts() {
-    if (!user) return;
-
-    const { data: givenStickers } = await supabase
-      .from('vehicle_stickers')
-      .select(`sticker_id, bumper_stickers(category)`)
-      .eq('vehicle_id', vehicleId)
-      .eq('given_by', user.id);
-
-    if (givenStickers) {
-      let positive = 0;
-      let negative = 0;
-      givenStickers.forEach((item: any) => {
-        const category = item.bumper_stickers?.category;
-        if (category === 'Positive') positive++;
-        else if (category === 'Negative') negative++;
-      });
-      setPositiveCount(positive);
-      setNegativeCount(negative);
-    }
-  }
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   async function handleGiveSticker(sticker: any) {
     if (!user) {

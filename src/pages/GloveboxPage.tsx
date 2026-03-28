@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,13 +29,7 @@ export function GloveboxPage({ onNavigate }: GloveboxPageProps) {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const { data: badgesData } = await supabase
       .from('badges')
       .select('*')
@@ -50,7 +44,13 @@ export function GloveboxPage({ onNavigate }: GloveboxPageProps) {
     if (badgesData) setBadges(badgesData);
     if (inventoryData) setInventory(inventoryData as any);
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   const initializeBadge = async (badge: Badge) => {
     if (!user) return;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,11 +13,7 @@ export function LiveStatsBar() {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState<Stats>({ spotsWeek: 0, repToday: 0, newFans: 0, badgesMonth: 0 });
 
-  useEffect(() => {
-    if (user) loadStats();
-  }, [user]);
-
-  async function loadStats() {
+  const loadStats = useCallback(async () => {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -47,7 +43,11 @@ export function LiveStatsBar() {
       newFans: fansRes.count ?? 0,
       badgesMonth: badgesRes.count ?? 0,
     });
-  }
+  }, [user, profile]);
+
+  useEffect(() => {
+    if (user) loadStats();
+  }, [user, loadStats]);
 
   const metrics = [
     { value: stats.spotsWeek, label: 'Spots/wk' },

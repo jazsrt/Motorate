@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -45,30 +45,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
   const targetUserId = viewingUserId || user?.id;
   const isOwnProfile = targetUserId === user?.id;
 
-  useEffect(() => {
-    if (targetUserId) {
-      loadData();
-      if (isOwnProfile && activeTab !== 'pending') {
-        loadPendingRequests();
-      }
-    }
-  }, [targetUserId, activeTab]);
-
-  const loadData = async () => {
-    if (!targetUserId) return;
-
-    setLoading(true);
-
-    if (activeTab === 'friends') {
-      await loadFollowers();
-    } else {
-      await loadPendingRequests();
-    }
-
-    setLoading(false);
-  };
-
-  const loadFollowers = async () => {
+  const loadFollowers = useCallback(async () => {
     if (!targetUserId) return;
 
     const { data: followData } = await supabase
@@ -123,9 +100,9 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     );
 
     setFollowers(enrichedProfiles);
-  };
+  }, [targetUserId, user]);
 
-  const loadPendingRequests = async () => {
+  const loadPendingRequests = useCallback(async () => {
     if (!targetUserId) return;
 
     const { data: followData } = await supabase
@@ -168,7 +145,30 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     );
 
     setPendingRequests(enrichedProfiles);
-  };
+  }, [targetUserId]);
+
+  const loadData = useCallback(async () => {
+    if (!targetUserId) return;
+
+    setLoading(true);
+
+    if (activeTab === 'friends') {
+      await loadFollowers();
+    } else {
+      await loadPendingRequests();
+    }
+
+    setLoading(false);
+  }, [targetUserId, activeTab, loadFollowers, loadPendingRequests]);
+
+  useEffect(() => {
+    if (targetUserId) {
+      loadData();
+      if (isOwnProfile && activeTab !== 'pending') {
+        loadPendingRequests();
+      }
+    }
+  }, [targetUserId, activeTab, isOwnProfile, loadData, loadPendingRequests]);
 
   const handleApproveRequest = async (userId: string) => {
     if (!user) return;

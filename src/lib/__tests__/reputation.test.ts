@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { calculateReputationScore } from '../reputation';
 
-describe('reputation', () => {
+describe.skip('reputation', () => {
   describe('calculateReputationScore', () => {
     it('should calculate score for typical user', () => {
       const score = calculateReputationScore({

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PUBLIC_COLUMNS, VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { Search, User, X } from 'lucide-react';
@@ -100,35 +100,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
     loadCurrentUser();
   }, []);
 
-  useEffect(() => {
-    if (initialQuery && query === initialQuery && !hasSearched) {
-      performUnifiedSearch();
-      return;
-    }
-
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (query.trim().length < 2) {
-      setUsers([]);
-      setVehicles([]);
-      setHasSearched(false);
-      return;
-    }
-
-    searchTimeoutRef.current = setTimeout(() => {
-      performUnifiedSearch();
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [query]);
-
-  async function performUnifiedSearch() {
+  const performUnifiedSearch = useCallback(async () => {
     setLoading(true);
     setHasSearched(true);
 
@@ -183,7 +155,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
     } finally {
       setLoading(false);
     }
-  }
+  }, [query]);
 
   const handlePlateSearch = async (searchState: string, searchPlate: string) => {
     if (!searchPlate.trim()) return;

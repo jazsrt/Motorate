@@ -56,7 +56,7 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
       sounds.badge();
       haptics.celebration();
     }
-  }, []);
+  }, [isNegativeBadge]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';

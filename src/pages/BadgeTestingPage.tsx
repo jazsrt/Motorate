@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -24,22 +24,22 @@ export function BadgeTestingPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  useEffect(() => {
-    loadBadges();
-    loadUserBadges();
-  }, [user?.id]);
-
-  async function loadBadges() {
+  const loadBadges = useCallback(async function loadBadges() {
     const { data } = await supabase.from('badges').select('*').order('category').order('name');
     setBadges(data || []);
     setInitialLoading(false);
-  }
+  }, []);
 
-  async function loadUserBadges() {
+  const loadUserBadges = useCallback(async function loadUserBadges() {
     if (!user?.id) return;
     const { data } = await supabase.from('user_badges').select('badge_id').eq('user_id', user.id);
     setUserBadges(new Set(data?.map(ub => ub.badge_id) || []));
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadBadges();
+    loadUserBadges();
+  }, [user?.id, loadBadges, loadUserBadges]);
 
   async function awardBadge(badgeId: string, badgeName: string) {
     if (!user?.id) return;

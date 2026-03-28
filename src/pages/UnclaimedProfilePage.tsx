@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { hashPlate } from '../lib/hash';
 import { useAuth } from '../contexts/AuthContext';
@@ -60,15 +60,7 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
   const [plateState, setPlateState] = useState('');
   const [plateNum, setPlateNum] = useState('');
 
-  useEffect(() => {
-    if (plateNumber) {
-      loadPlateData();
-    } else {
-      // No plateNumber provided
-    }
-  }, [plateNumber]);
-
-  const loadPlateData = async () => {
+  const loadPlateData = useCallback(async () => {
     if (!plateNumber) return;
 
     setLoading(true);
@@ -190,7 +182,15 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
     } finally {
       setLoading(false);
     }
-  };
+  }, [plateNumber]);
+
+  useEffect(() => {
+    if (plateNumber) {
+      loadPlateData();
+    } else {
+      // No plateNumber provided
+    }
+  }, [plateNumber, loadPlateData]);
 
   if (loading) {
     return (

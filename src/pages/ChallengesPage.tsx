@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
@@ -29,27 +29,6 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    getUserLocation();
-    loadChallenges();
-  }, []);
-
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-        }
-      );
-    }
-  };
-
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3;
     const φ1 = lat1 * Math.PI / 180;
@@ -65,7 +44,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
     return R * c;
   };
 
-  const loadChallenges = async () => {
+  const loadChallenges = useCallback(async () => {
     if (!user) return;
 
     const { data: challengesData, error } = await supabase
@@ -104,7 +83,24 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
 
     setChallenges(challengesWithStatus);
     setLoading(false);
-  };
+  }, [user, userLocation]);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
+    loadChallenges();
+  }, [loadChallenges]);
 
   const openInMaps = (lat: number, lng: number) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;

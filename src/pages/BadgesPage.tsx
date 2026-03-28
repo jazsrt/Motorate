@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Award, Lock, CheckCircle2, ChevronRight, Crosshair, Star, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, Car, Tag, Zap, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -142,13 +142,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
     commentLikes: 0,
   });
 
-  useEffect(() => {
-    if (user) {
-      loadBadgeData();
-    }
-  }, [user]);
-
-  async function loadBadgeData() {
+  const loadBadgeData = useCallback(async function loadBadgeData() {
     if (!user) return;
     try {
       const { data: badges } = await supabase
@@ -173,58 +167,64 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
     } finally {
       setLoading(false);
     }
-  }
 
-  async function loadActivityCounts(): Promise<ActivityCounts> {
-    if (!user) return {
-      spots: 0, reviews: 0, posts: 0, comments: 0, likesGiven: 0,
-      likesReceived: 0, followers: 0, photos: 0, mods: 0,
-      commentLikes: 0,
-    };
+    async function loadActivityCounts(): Promise<ActivityCounts> {
+      if (!user) return {
+        spots: 0, reviews: 0, posts: 0, comments: 0, likesGiven: 0,
+        likesReceived: 0, followers: 0, photos: 0, mods: 0,
+        commentLikes: 0,
+      };
 
-    const [
-      { count: spotsCount },
-      { count: reviewsCount },
-      { count: postsCount },
-      { count: commentsCount },
-      { count: likesGivenCount },
-      { count: followersCount },
-      { count: photosCount },
-    ] = await Promise.all([
-      supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('spotter_id', user.id),
-      supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('post_comments').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('reactions').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
-      supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('spotter_id', user.id).not('photo_url', 'is', null),
-    ]);
+      const [
+        { count: spotsCount },
+        { count: reviewsCount },
+        { count: postsCount },
+        { count: commentsCount },
+        { count: likesGivenCount },
+        { count: followersCount },
+        { count: photosCount },
+      ] = await Promise.all([
+        supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('spotter_id', user.id),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
+        supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
+        supabase.from('post_comments').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
+        supabase.from('reactions').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
+        supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('spotter_id', user.id).not('photo_url', 'is', null),
+      ]);
 
-    const { data: myPosts } = await supabase.from('posts').select('id').eq('author_id', user.id);
-    const postIds = myPosts?.map(p => p.id) || [];
-    const { count: likesReceivedCount } = postIds.length > 0
-      ? await supabase.from('reactions').select('*', { count: 'exact', head: true }).in('post_id', postIds)
-      : { count: 0 };
+      const { data: myPosts } = await supabase.from('posts').select('id').eq('author_id', user.id);
+      const postIds = myPosts?.map(p => p.id) || [];
+      const { count: likesReceivedCount } = postIds.length > 0
+        ? await supabase.from('reactions').select('*', { count: 'exact', head: true }).in('post_id', postIds)
+        : { count: 0 };
 
-    const { data: myComments } = await supabase.from('post_comments').select('id').eq('author_id', user.id);
-    const commentIds = myComments?.map(c => c.id) || [];
-    const { count: commentLikesCount } = commentIds.length > 0
-      ? await supabase.from('comment_likes').select('*', { count: 'exact', head: true }).in('comment_id', commentIds)
-      : { count: 0 };
+      const { data: myComments } = await supabase.from('post_comments').select('id').eq('author_id', user.id);
+      const commentIds = myComments?.map(c => c.id) || [];
+      const { count: commentLikesCount } = commentIds.length > 0
+        ? await supabase.from('comment_likes').select('*', { count: 'exact', head: true }).in('comment_id', commentIds)
+        : { count: 0 };
 
-    return {
-      spots: spotsCount || 0,
-      reviews: reviewsCount || 0,
-      posts: postsCount || 0,
-      comments: commentsCount || 0,
-      likesGiven: likesGivenCount || 0,
-      likesReceived: likesReceivedCount || 0,
-      followers: followersCount || 0,
-      photos: photosCount || 0,
-      mods: 0,
-      commentLikes: commentLikesCount || 0,
-    };
-  }
+      return {
+        spots: spotsCount || 0,
+        reviews: reviewsCount || 0,
+        posts: postsCount || 0,
+        comments: commentsCount || 0,
+        likesGiven: likesGivenCount || 0,
+        likesReceived: likesReceivedCount || 0,
+        followers: followersCount || 0,
+        photos: photosCount || 0,
+        mods: 0,
+        commentLikes: commentLikesCount || 0,
+      };
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadBadgeData();
+    }
+  }, [user, loadBadgeData]);
 
   const earnedBadgeIds = useMemo(() => new Set(userBadges.map(ub => ub.badge_id)), [userBadges]);
 

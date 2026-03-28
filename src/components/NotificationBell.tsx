@@ -79,6 +79,22 @@ export function NotificationBell({ onNavigate }: NotificationBellProps = {}) {
     setTimeout(() => setIsAnimating(false), 1000);
   }, []);
 
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (data) {
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.is_read).length);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -106,23 +122,7 @@ export function NotificationBell({ onNavigate }: NotificationBellProps = {}) {
     return () => {
       channel.unsubscribe();
     };
-  }, [user, triggerNotificationAlert]);
-
-  const loadNotifications = async () => {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (data) {
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
-    }
-  };
+  }, [user, triggerNotificationAlert, loadNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     await supabase

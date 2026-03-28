@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSwipe } from '../hooks/useSwipe';
 
@@ -10,6 +10,14 @@ interface PhotoLightboxProps {
 
 export function PhotoLightbox({ photos, initialIndex, onClose }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  const goToNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % photos.length);
+  }, [photos.length]);
+
+  const goToPrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
+  }, [photos.length]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -25,15 +33,7 @@ export function PhotoLightbox({ photos, initialIndex, onClose }: PhotoLightboxPr
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [currentIndex]);
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % photos.length);
-  };
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
-  };
+  }, [onClose, goToPrevious, goToNext]);
 
   const swipeHandlers = useSwipe({
     onSwipeLeft: goToNext,

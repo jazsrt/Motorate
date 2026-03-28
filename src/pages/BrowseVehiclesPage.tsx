@@ -71,7 +71,7 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
   const loadVehicles = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      const query = supabase
         .from('vehicles')
         .select(
           `

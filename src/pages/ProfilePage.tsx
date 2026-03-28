@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
@@ -117,10 +117,10 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       loadAllPhotos();
       loadWeeklyPulse();
     }
-  }, [user]);
+  }, [user, loadProfile, loadVehicles, loadUserBadges, loadFollowCounts, loadUserPosts, loadTagBreakdown, loadActiveQuests, loadUserStickers, loadPinnedBadges, loadAllPhotos, loadWeeklyPulse]);
 
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -139,9 +139,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         .gt('reputation_score', data.reputation_score || 0);
       setCityRank((count || 0) + 1);
     }
-  };
+  }, [user]);
 
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     const { data } = await supabase
       .from('vehicles')
       // PLATE: owner context
@@ -162,18 +162,18 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         if (vBadges) setFleetBadges(vBadges);
       }
     }
-  };
+  }, [user]);
 
-  const loadUserBadges = async () => {
+  const loadUserBadges = useCallback(async () => {
     try {
       const badges = await getUserBadges(user!.id);
       setUserBadges(badges);
     } catch (error) {
       console.error('Failed to load user badges:', error);
     }
-  };
+  }, [user]);
 
-  const loadFollowCounts = async () => {
+  const loadFollowCounts = useCallback(async () => {
     const { count: followers } = await supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
@@ -188,10 +188,10 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
     setFollowerCount(followers || 0);
     setFollowingCount(following || 0);
-  };
+  }, [user]);
 
 
-  const loadUserPosts = async () => {
+  const loadUserPosts = useCallback(async () => {
     if (!user) return;
 
     setLoadingPosts(true);
@@ -234,9 +234,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       setUserPosts(postsWithCounts);
     }
     setLoadingPosts(false);
-  };
+  }, [user]);
 
-  const loadTagBreakdown = async () => {
+  const loadTagBreakdown = useCallback(async () => {
     if (!user) return;
 
     const { data: userVehicles } = await supabase
@@ -274,13 +274,13 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
       setTagBreakdown(breakdown);
     }
-  };
+  }, [user]);
 
   const loadProfileViews = async () => {
     // profile_views table not yet created in Supabase — skip query to avoid 400 errors
   };
 
-  const loadActiveQuests = async () => {
+  const loadActiveQuests = useCallback(async () => {
     if (!user) return;
 
     const { data: questsData } = await supabase
@@ -306,9 +306,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       const incompleteQuests = questsWithProgress.filter(q => !q.progress.completed_at);
       setActiveQuests(incompleteQuests);
     }
-  };
+  }, [user]);
 
-  const loadPinnedBadges = async () => {
+  const loadPinnedBadges = useCallback(async () => {
     if (!user) return;
 
     const { data: profileData } = await supabase
@@ -330,7 +330,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         setPinnedBadges(sortedBadges);
       }
     }
-  };
+  }, [user]);
 
   const loadSpotsGiven = async () => {
     if (!user) return;
@@ -397,7 +397,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     if (data) setFollowing(data.map(f => f.following));
   };
 
-  const loadAllPhotos = async () => {
+  const loadAllPhotos = useCallback(async () => {
     if (!user) return;
 
     const { data: vehicleData } = await supabase
@@ -415,9 +415,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     });
 
     setAllPhotos(photos);
-  };
+  }, [user]);
 
-  const loadWeeklyPulse = async () => {
+  const loadWeeklyPulse = useCallback(async () => {
     if (!user) return;
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
@@ -441,7 +441,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         setWeeklyStickers(count || 0);
       }
     } catch {}
-  };
+  }, [user]);
 
   const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -459,7 +459,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     }
   };
 
-  const loadUserStickers = async () => {
+  const loadUserStickers = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -516,7 +516,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       console.error('Error loading user stickers:', error);
       setUserStickers([]);
     }
-  };
+  }, [user]);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

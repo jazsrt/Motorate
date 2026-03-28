@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Car, Crosshair } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
@@ -35,19 +35,7 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
   const [loading, setLoading] = useState(true);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadVehicle();
-  }, [vehicleId]);
-
-  useEffect(() => {
-    if (vehicle && !vehicle.stock_image_url) {
-      getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined).then(url => {
-        if (url) setCarImageryUrl(url);
-      });
-    }
-  }, [vehicle]);
-
-  async function loadVehicle() {
+  const loadVehicle = useCallback(async () => {
     try {
       // PLATE: hidden — public surface
       const { data } = await supabase
@@ -70,7 +58,19 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
     } finally {
       setLoading(false);
     }
-  }
+  }, [vehicleId]);
+
+  useEffect(() => {
+    loadVehicle();
+  }, [loadVehicle]);
+
+  useEffect(() => {
+    if (vehicle && !vehicle.stock_image_url) {
+      getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined).then(url => {
+        if (url) setCarImageryUrl(url);
+      });
+    }
+  }, [vehicle]);
 
   const vehicleName = vehicle
     ? [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')

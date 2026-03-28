@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Tag, ChevronRight } from 'lucide-react';
 import { getVehicleStickers, type VehicleStickerWithCount } from '../lib/stickers';
 import { LoadingSpinner } from './ui/LoadingSpinner';
@@ -158,16 +158,16 @@ export function VehicleStickersDisplay({ vehicleId }: VehicleStickersDisplayProp
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    loadStickers();
-  }, [vehicleId]);
-
-  async function loadStickers() {
+  const loadStickers = useCallback(async () => {
     setLoading(true);
     const data = await getVehicleStickers(vehicleId);
     setStickers(data);
     setLoading(false);
-  }
+  }, [vehicleId]);
+
+  useEffect(() => {
+    loadStickers();
+  }, [loadStickers]);
 
   if (loading) {
     return (

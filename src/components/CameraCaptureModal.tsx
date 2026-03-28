@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Camera, RotateCcw, Check } from 'lucide-react';
 
 interface CameraCaptureModalProps {
@@ -13,13 +13,22 @@ export function CameraCaptureModal({ title, onCapture, onClose }: CameraCaptureM
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      setStream(null);
+    }
+  }, []);
 
   useEffect(() => {
     startCamera();
     return () => {
       stopCamera();
     };
-  }, []);
+  }, [stopCamera]);
 
   async function startCamera() {
     try {
@@ -34,18 +43,12 @@ export function CameraCaptureModal({ title, onCapture, onClose }: CameraCaptureM
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
+      streamRef.current = mediaStream;
       setStream(mediaStream);
       setError(null);
     } catch (err) {
       console.error('Error accessing camera:', err);
       setError('Unable to access camera. Please check permissions.');
-    }
-  }
-
-  function stopCamera() {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
     }
   }
 

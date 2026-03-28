@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, Flame, Skull, HandMetal, Smile, AlertCircle, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -50,9 +50,22 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
   const reactorsRef = useRef<HTMLDivElement>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const loadReactions = useCallback(async () => {
+    try {
+      const reactionCounts = await getReactionCounts(postId);
+      setCounts(reactionCounts);
+      if (user) {
+        const userReactionType = await getUserReaction(postId, user.id);
+        setUserReaction(userReactionType);
+      }
+      const totalCount = Object.values(reactionCounts).reduce((sum, count) => sum + count, 0);
+      if (onCountChange) onCountChange(totalCount);
+    } catch {}
+  }, [postId, user, onCountChange]);
+
   useEffect(() => {
     loadReactions();
-  }, [postId, user]);
+  }, [postId, user, loadReactions]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -69,19 +82,6 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showPicker]);
-
-  const loadReactions = async () => {
-    try {
-      const reactionCounts = await getReactionCounts(postId);
-      setCounts(reactionCounts);
-      if (user) {
-        const userReactionType = await getUserReaction(postId, user.id);
-        setUserReaction(userReactionType);
-      }
-      const totalCount = Object.values(reactionCounts).reduce((sum, count) => sum + count, 0);
-      if (onCountChange) onCountChange(totalCount);
-    } catch {}
-  };
 
   const loadReactors = async () => {
     if (loadingReactors) return;
