@@ -1,6 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-interface ModerationQueueItem {
+interface _ModerationQueueItem {
   id: string;
   content_type: string;
   content_id: string;

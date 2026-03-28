@@ -54,6 +54,18 @@ interface ReputationContext {
   };
 }
 
+interface UserActionCounts {
+  posts: number;
+  vehicles: number;
+  comments: number;
+  commentLikes: number;
+  hasAvatar: boolean;
+  hasBio: boolean;
+  hasVerifiedVehicle: boolean;
+  driverRating: number;
+  followerCount: number;
+}
+
 interface ReputationResult {
   success: boolean;
   pointsAwarded: number;
@@ -70,7 +82,7 @@ export async function calculateAndAwardReputation(
 ): Promise<ReputationResult> {
   const { userId, action, referenceType, referenceId, metadata } = context;
 
-  const config = REPUTATION_ACTIONS[action];
+  const config = REPUTATION_ACTIONS[action] as any;
   if (!config) {
     return {
       success: false,
@@ -93,24 +105,26 @@ export async function calculateAndAwardReputation(
     case 'SPOT_FULL_REVIEW':
     case 'SPOT_UPGRADE_TO_FULL':
     case 'NEW_PLATE_BONUS':
-      pointsToAward = config.points;
+      pointsToAward = config.points as number;
       break;
 
-    case 'POST_CREATED':
+    case 'POST_CREATED': {
       // Logic: If daily_post_count > 10, award 5pts instead of 15pts
       const dailyCount = metadata?.dailyPostCount || 0;
       pointsToAward = dailyCount > config.dailyLimit
-        ? config.fallbackPoints
-        : config.basePoints;
+        ? config.fallbackPoints as number
+        : config.basePoints as number;
       break;
+    }
 
-    case 'LIKE_RECEIVED':
+    case 'LIKE_RECEIVED': {
       // Logic: If like_count_on_item > 10, award 1pt instead of 2pts
       const likeCount = metadata?.likeCount || 0;
-      pointsToAward = likeCount > config.threshold
-        ? config.fallbackPoints
-        : config.basePoints;
+      pointsToAward = likeCount > (config.threshold as number)
+        ? config.fallbackPoints as number
+        : config.basePoints as number;
       break;
+    }
   }
 
   // Call Supabase RPC to award points
@@ -278,7 +292,7 @@ export async function getLeaderboard(limit = 10) {
   }
 }
 
-async function checkBadgeProgress(userId: string) {
+async function _checkBadgeProgress(userId: string) {
   try {
     const counts = await getUserActionCounts(userId);
 
@@ -336,7 +350,7 @@ async function getUserActionCounts(userId: string) {
 
   let commentLikesCount = 0;
   if (userComments.data && userComments.data.length > 0) {
-    const commentIds = userComments.data.map((c: any) => c.id);
+    const commentIds = userComments.data.map((c) => c.id);
     const { count } = await supabase
       .from('comment_likes')
       .select('*', { count: 'exact', head: true })
@@ -357,7 +371,7 @@ async function getUserActionCounts(userId: string) {
   };
 }
 
-async function checkOnboardingBadges(userId: string, counts: any) {
+async function checkOnboardingBadges(userId: string, counts: UserActionCounts) {
   const badgesToCheck = [
     { name: 'first_profile_photo', condition: counts.hasAvatar },
     { name: 'first_vehicle', condition: counts.vehicles >= 1 },
@@ -371,7 +385,7 @@ async function checkOnboardingBadges(userId: string, counts: any) {
   }
 }
 
-async function checkQualityBadges(userId: string, counts: any) {
+async function checkQualityBadges(userId: string, counts: UserActionCounts) {
   if (counts.driverRating >= 4.5) {
     await awardBadge(userId, 'excellent_driver');
   }
@@ -391,7 +405,7 @@ async function checkQualityBadges(userId: string, counts: any) {
   }
 }
 
-async function checkMilestoneBadges(userId: string, counts: any) {
+async function checkMilestoneBadges(userId: string, counts: UserActionCounts) {
   if (counts.posts >= 10) {
     await awardBadge(userId, 'posts_10');
   }

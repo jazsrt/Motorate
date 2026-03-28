@@ -182,7 +182,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         throw new Error('Failed to record spot: ' + spotError.message);
       }
 
-      try { sounds.revEngine(); } catch {}
+      try { sounds.revEngine(); } catch { /* intentionally empty */ }
 
       // STEP 2: Record the review in reviews table
       const { data: reviewData, error: reviewError } = await supabase
@@ -327,8 +327,8 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
 
       // Show upgrade prompt instead of navigating away
       setShowUpgradePrompt(true);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to submit spot', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to submit spot', 'error');
     } finally {
       setSubmitting(false);
     }

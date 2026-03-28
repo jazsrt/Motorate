@@ -303,7 +303,7 @@ export function ReviewProfileSection({
                         <Star
                           key={star}
                           className={`w-3 h-3 ${
-                            star <= (review.rating_driver || 0)
+                            star <= (review.driver_rating || 0)
                               ? 'text-[#F97316] fill-[#F97316]'
                               : 'text-gray-300'
                           }`}
@@ -316,7 +316,7 @@ export function ReviewProfileSection({
                         <Star
                           key={star}
                           className={`w-3 h-3 ${
-                            star <= (review.rating_vehicle || 0)
+                            star <= (review.vehicle_rating || 0)
                               ? 'text-[#F97316] fill-[#F97316]'
                               : 'text-gray-300'
                           }`}

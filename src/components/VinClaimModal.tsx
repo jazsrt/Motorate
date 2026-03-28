@@ -52,8 +52,8 @@ export function VinClaimModal({
       const result = await decodeVin(cleaned);
       setVinResult(result);
       setStep('review');
-    } catch (err: any) {
-      setError(err.message || 'Failed to decode VIN');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to decode VIN');
     } finally {
       setDecoding(false);
     }
@@ -98,8 +98,8 @@ export function VinClaimModal({
       showToast('Your ride is now verified!', 'success');
       setStep('done');
       onSuccess();
-    } catch (err: any) {
-      showToast(err.message || 'Claim failed', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Claim failed', 'error');
     } finally {
       setClaiming(false);
     }

@@ -1,22 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
-  claimVehicleStandard,
-  claimVehicleVerified,
-  hasVerifiedOwnership,
   getClaimErrorMessage
 } from '../lib/vehicles';
 import {
-  canClaimVehicle,
-  submitVehicleClaim,
-  getPendingClaims,
-  approveClaim,
-  rejectClaim,
-  getClaimStatus
-} from '../lib/claims';
-import {
   isValidVINFormat,
   normalizeVIN,
-  verifyDocument
 } from '../lib/verification';
 
 /**
@@ -37,9 +25,9 @@ describe('Vehicle Claiming Edge Cases', () => {
       // TODO: Requires mock Supabase with transaction simulation
       // EXPECTED: First claim succeeds, second receives "Vehicle already claimed" error
 
-      const vehicleId = 'test-vehicle-123';
-      const userId1 = 'user-1';
-      const userId2 = 'user-2';
+      const _vehicleId = 'test-vehicle-123';
+      const _userId1 = 'user-1';
+      const _userId2 = 'user-2';
 
       // Mock: simulate first user claiming
       // await claimVehicleStandard(vehicleId, userId1);

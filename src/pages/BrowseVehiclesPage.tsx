@@ -44,65 +44,65 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
   const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   useEffect(() => {
+    async function loadFilterOptions() {
+      const { data: makesData } = await supabase
+        .from('vehicles')
+        .select('make')
+        .not('make', 'is', null);
+
+      const { data: yearsData } = await supabase
+        .from('vehicles')
+        .select('year')
+        .not('year', 'is', null);
+
+      const makes = [...new Set(makesData?.map((v) => v.make).filter(Boolean) || [])].sort();
+      const years = [...new Set(yearsData?.map((v) => v.year).filter(Boolean) || [])].sort(
+        (a, b) => b - a
+      );
+
+      setAvailableMakes(makes);
+      setAvailableYears(years);
+    }
+
+    async function loadVehicles() {
+      setLoading(true);
+      try {
+        const query = supabase
+          .from('vehicles')
+          .select(
+            `
+            id,
+            make,
+            model,
+            year,
+            color,
+            avg_rating,
+            spots_count,
+            is_claimed,
+            verification_tier,
+            owner_id,
+            stock_image_url,
+            photos:vehicle_images(url, is_private, uploaded_by)
+          `
+          )
+          .not('make', 'is', null)
+          .not('model', 'is', null);
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        setVehicles((data as unknown as typeof vehicles) || []);
+      } catch (error) {
+        console.error('Error loading vehicles:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     loadVehicles();
     loadFilterOptions();
   }, []);
-
-  const loadFilterOptions = async () => {
-    const { data: makesData } = await supabase
-      .from('vehicles')
-      .select('make')
-      .not('make', 'is', null);
-
-    const { data: yearsData } = await supabase
-      .from('vehicles')
-      .select('year')
-      .not('year', 'is', null);
-
-    const makes = [...new Set(makesData?.map((v) => v.make).filter(Boolean) || [])].sort();
-    const years = [...new Set(yearsData?.map((v) => v.year).filter(Boolean) || [])].sort(
-      (a, b) => b - a
-    );
-
-    setAvailableMakes(makes);
-    setAvailableYears(years);
-  };
-
-  const loadVehicles = async () => {
-    setLoading(true);
-    try {
-      const query = supabase
-        .from('vehicles')
-        .select(
-          `
-          id,
-          make,
-          model,
-          year,
-          color,
-          avg_rating,
-          spots_count,
-          is_claimed,
-          verification_tier,
-          owner_id,
-          stock_image_url,
-          photos:vehicle_images(url, is_private, uploaded_by)
-        `
-        )
-        .not('make', 'is', null)
-        .not('model', 'is', null);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      setVehicles((data as any) || []);
-    } catch (error) {
-      console.error('Error loading vehicles:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredVehicles = vehicles
     .filter((v) => {
@@ -172,7 +172,7 @@ export function BrowseVehiclesPage({ onNavigate }: BrowseVehiclesPageProps) {
 
         {filteredVehicles.length === 0 ? (
           <EmptyState
-            icon={<Car className="w-16 h-16 text-secondary" />}
+            icon={Car}
             title="No vehicles found"
             description="Try adjusting your search or filters"
           />

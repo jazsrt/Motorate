@@ -40,7 +40,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
   const [followers, setFollowers] = useState<UserData[]>([]);
   const [pendingRequests, setPendingRequests] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
+  const [_showMenuFor, setShowMenuFor] = useState<string | null>(null);
 
   const targetUserId = viewingUserId || user?.id;
   const isOwnProfile = targetUserId === user?.id;
@@ -183,7 +183,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
       try {
         const { notifyFriendAccepted } = await import('../lib/notifications');
         await notifyFriendAccepted(userId, user.id);
-      } catch {}
+      } catch { /* intentionally empty */ }
       await loadData();
     }
   };
@@ -202,7 +202,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     }
   };
 
-  const handleMuteToggle = async (userId: string, currentlyMuted: boolean) => {
+  const _handleMuteToggle = async (userId: string, currentlyMuted: boolean) => {
     if (!user) return;
 
     const { error } = await supabase
@@ -217,7 +217,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     }
   };
 
-  const handleFavoriteToggle = async (userId: string, currentlyFavorite: boolean) => {
+  const _handleFavoriteToggle = async (userId: string, currentlyFavorite: boolean) => {
     if (!user) return;
 
     const { error } = await supabase
@@ -232,7 +232,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     }
   };
 
-  const handleBlock = async (userId: string) => {
+  const _handleBlock = async (userId: string) => {
     if (!user) return;
 
     if (window.confirm('Are you sure you want to block this user? This will unfollow them and hide all their content.')) {

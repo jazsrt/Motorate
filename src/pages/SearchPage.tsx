@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
-import { Search, User, Car, Camera, Target, Upload, X, Info, Award, Star, Hash } from 'lucide-react';
+import { User, Car, Camera, Target, Upload, X, Info, Award, Star, Hash } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { FollowButton } from '../components/FollowButton';
 import { VinClaimModal } from '../components/VinClaimModal';
@@ -33,13 +33,13 @@ interface Vehicle {
 }
 
 interface SearchPageProps {
-  onNavigate: (page: any, data?: any) => void;
+  onNavigate: (page: string, data?: unknown) => void;
 }
 
 export default function SearchPage({ onNavigate }: SearchPageProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
-  const navigation = useNavigation();
+  const _navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [plateState, setPlateState] = useState('IL');
   const [users, setUsers] = useState<Profile[]>([]);
@@ -105,7 +105,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
         console.error('Search error:', error);
         setUsers([]);
       } else {
-        setUsers(data || []);
+        setUsers((data || []) as Profile[]);
       }
     } catch (error) {
       console.error('Search exception:', error);
@@ -134,7 +134,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
         streamRef.current = stream;
       }
       setShowCamera(true);
-    } catch (err) {
+    } catch {
       showToast('Unable to access camera. Please check permissions.', 'error');
     }
   };
@@ -193,7 +193,7 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
       } else {
         showToast('Could not detect plate number. Please enter manually.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('OCR processing failed. Please enter plate manually.', 'error');
     } finally {
       setOcrProcessing(false);
@@ -219,8 +219,9 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
       if (error) throw error;
 
       if (vehicle) {
-        setClaimableVehicle(vehicle);
-        if (!vehicle.owner_id || vehicle.owner_id === '') {
+        const v = vehicle as unknown as Vehicle;
+        setClaimableVehicle(v);
+        if (!v.owner_id || v.owner_id === '') {
           showToast('Unclaimed vehicle found! You can claim ownership.', 'success');
         } else {
           showToast('Vehicle found! This vehicle has been claimed.', 'success');

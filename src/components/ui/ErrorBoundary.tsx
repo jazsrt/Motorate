@@ -1,4 +1,4 @@
-import { Component, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { captureException } from '../../lib/sentry';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
-  errorInfo?: string;
+  errorInfo?: string | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Send to Sentry
     captureException(error, {
       componentStack: errorInfo.componentStack,

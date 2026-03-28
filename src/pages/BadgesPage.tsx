@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Award, Lock, CheckCircle2, ChevronRight, Crosshair, Star, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, Car, Tag, Zap, Trophy } from 'lucide-react';
+import { Award, CheckCircle2, Crosshair, Star, Users, Heart, Camera, FileText, MessageCircle, TrendingUp, Wrench, ThumbsUp, MapPin, UserPlus, Car, Tag, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
@@ -85,17 +85,6 @@ function getCountForBadge(badge: Badge, activityCounts: ActivityCounts): number 
   }
 }
 
-function getRarityColor(rarity: string): string {
-  switch (rarity?.toLowerCase()) {
-    case 'common':    return 'var(--silver)';
-    case 'uncommon':  return 'var(--positive)';
-    case 'rare':      return 'var(--blue)';
-    case 'epic':      return 'var(--accent)';
-    case 'legendary': return 'var(--gold)';
-    default:          return 'var(--muted)';
-  }
-}
-
 function stripRpReferences(desc: string): string {
   if (!desc) return '';
   return desc
@@ -104,17 +93,6 @@ function stripRpReferences(desc: string): string {
     .replace(/\s*rewards?\s*\d+\s*RP\.?/gi, '')
     .replace(/\s*RP\s*reward.*$/gi, '')
     .trim();
-}
-
-function getTierBarColor(tier: string | null | undefined): string {
-  switch (tier?.toLowerCase()) {
-    case 'bronze':   return '#c07840';
-    case 'silver':   return '#9ab0c0';
-    case 'gold':     return '#f0a030';
-    case 'platinum':
-    case 'plat':     return '#8a88a8';
-    default:         return 'var(--accent)';
-  }
 }
 
 const tierLabel = (tier: string | null): string => {
@@ -128,7 +106,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [activeSection, setActiveSection] = useState<'earned' | 'progress' | 'locked'>('earned');
-  const [celebBadge, setCelebBadge] = useState<any>(null);
+  const [celebBadge, setCelebBadge] = useState<Badge | null>(null);
   const [activityCounts, setActivityCounts] = useState<ActivityCounts>({
     spots: 0,
     reviews: 0,
@@ -260,15 +238,6 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
     return sorted[0];
   }, [inProgress, activityCounts]);
 
-  const getTierBackground = (tier: string) => {
-    switch (tier) {
-      case 'gold': return 'linear-gradient(135deg, #c07830 0%, #f0a030 40%, #c07830 100%)';
-      case 'silver': return 'linear-gradient(135deg, #6888a0 0%, #9ab8cc 40%, #6888a0 100%)';
-      case 'bronze': return 'linear-gradient(135deg, #804828 0%, #b07040 40%, #804828 100%)';
-      default: return 'linear-gradient(135deg, #c04810 0%, #f97316 40%, #c04810 100%)';
-    }
-  };
-
   if (loading) {
     return (
       <Layout currentPage="badges" onNavigate={onNavigate}>
@@ -361,7 +330,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
 
             return (
               <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: isEarned ? 'pointer' : 'default' }}
-                onClick={() => { if (isEarned) { setCelebBadge(badge); try { sounds.badge(); haptics.medium(); } catch {} } }}>
+                onClick={() => { if (isEarned) { setCelebBadge(badge); try { sounds.badge(); haptics.medium(); } catch { /* intentionally empty */ } } }}>
                 <div style={{ position: 'relative', filter: isLocked ? 'grayscale(1)' : 'none', opacity: isLocked ? 0.4 : 1, transition: 'opacity 0.2s' }}>
                   <BadgeCoin tier={tier} name={isLocked ? '???' : badge.name} icon_path={getBadgeImagePath(badge)} locked={isLocked} size="sm" />
                   {/* Progress ring for in-progress badges */}

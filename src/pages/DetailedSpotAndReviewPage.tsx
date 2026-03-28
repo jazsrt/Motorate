@@ -358,8 +358,8 @@ export function DetailedSpotAndReviewPage({
         vehicleId,
       });
       setShowReward(true);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to submit review', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to submit review', 'error');
     } finally {
       setSubmitting(false);
     }

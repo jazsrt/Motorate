@@ -175,7 +175,7 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
       .in('review_id', reviewIds);
 
     const tagsByReview: Record<string, Array<{ tag_name: string; tag_sentiment: string }>> = {};
-    (tagData || []).forEach((t: any) => {
+    (tagData || []).forEach((t: { review_id: string; tag_name: string; tag_sentiment: string }) => {
       if (!tagsByReview[t.review_id]) tagsByReview[t.review_id] = [];
       tagsByReview[t.review_id].push({ tag_name: t.tag_name, tag_sentiment: t.tag_sentiment });
     });

@@ -16,7 +16,7 @@ type FollowStatus = 'none' | 'pending' | 'accepted';
 export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: FollowButtonProps) {
   const { user } = useAuth();
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
-  const [targetUserPrivate, setTargetUserPrivate] = useState(false);
+  const [_targetUserPrivate, setTargetUserPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
   const { checkAndConsume } = useRateLimit('follow');
 
@@ -100,14 +100,14 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
 
         if (!error) {
           setFollowStatus(newStatus);
-          onFollowChange?.(newStatus === 'accepted');
+          onFollowChange?.((newStatus as FollowStatus) === 'accepted');
 
           // Send notification for friend request
           if (newStatus === 'pending') {
             try {
               const { notifyFriendRequest } = await import('../lib/notifications');
               await notifyFriendRequest(targetUserId, user.id);
-            } catch {}
+            } catch { /* intentionally empty */ }
           }
 
           // AUTO-AWARD: Check for tiered follower badges (follower_id = the user who followed)

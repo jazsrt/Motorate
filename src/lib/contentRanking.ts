@@ -197,16 +197,16 @@ export function categorizeByRanking<T extends ContentItem>(content: T[]) {
   const rankedContent = rankContent(content);
 
   return {
-    elite: rankedContent.filter(item => (item as any)._rankingScore > 300),
+    elite: rankedContent.filter(item => (item as T & { _rankingScore: number })._rankingScore > 300),
     great: rankedContent.filter(item => {
-      const score = (item as any)._rankingScore;
+      const score = (item as T & { _rankingScore: number })._rankingScore;
       return score >= 200 && score <= 300;
     }),
     good: rankedContent.filter(item => {
-      const score = (item as any)._rankingScore;
+      const score = (item as T & { _rankingScore: number })._rankingScore;
       return score >= 100 && score < 200;
     }),
-    average: rankedContent.filter(item => (item as any)._rankingScore < 100),
+    average: rankedContent.filter(item => (item as T & { _rankingScore: number })._rankingScore < 100),
   };
 }
 

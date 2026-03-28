@@ -33,7 +33,7 @@ export async function fileDispute(
   disputeType: DisputeType,
   description: string,
   evidenceUrls?: string[]
-): Promise<any> {
+): Promise<unknown> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 

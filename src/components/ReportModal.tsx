@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createReport, ReportContentType } from '../lib/reports';
 import { useAuth } from '../contexts/AuthContext';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { ModalShell, modalButtonGhost, modalButtonDanger, modalInput, modalLabel } from './ui/ModalShell';
 
 interface ReportModalProps {
@@ -59,8 +59,8 @@ export function ReportModal({ contentType, contentId, onClose }: ReportModalProp
       if (!result.success) throw new Error(result.error || 'Failed to submit report');
       setSubmitted(true);
       setTimeout(() => onClose(), 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit report');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit report');
     } finally {
       setSubmitting(false);
     }

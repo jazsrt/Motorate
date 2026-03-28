@@ -1,5 +1,5 @@
 const audioCtx = typeof window !== 'undefined'
-  ? new (window.AudioContext || (window as any).webkitAudioContext)()
+  ? new (window.AudioContext || (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)()
   : null;
 
 function playTone(freq: number, duration: number, type: OscillatorType = 'sine', volume = 0.15) {

@@ -127,15 +127,6 @@ export async function loadFeedCursor(
 ): Promise<FeedResult> {
   const now = new Date().toISOString();
 
-  const columnsSelected = [
-    'id', 'author_id', 'post_type', 'image_url', 'video_url', 'content_type',
-    'caption', 'location_label', 'vehicle_id', 'badge_id', 'recipient_vehicle_id',
-    'created_at', 'published_at', 'privacy_level', 'moderation_status',
-    'heat_score', 'quality_score', 'rating_look', 'rating_sound', 'rating_condition',
-    'rating_driver', 'spot_type', 'sentiment', 'rating_vehicle', 'rating_driving',
-    'looks_rating', 'sound_rating', 'condition_rating', 'author:profiles'
-  ];
-
   let query = supabase
     .from('posts')
     .select(`
@@ -192,7 +183,7 @@ export async function loadFeedCursor(
 
   const mutedUserIds = await getMutedUserIds(userId);
 
-  const filteredPosts = allPosts.filter((post: any) => {
+  const filteredPosts = allPosts.filter((post) => {
     const isPublished = !post.published_at || post.published_at <= now;
     const isNotBlocked = !blockedUserIds.has(post.author_id);
     const isNotMuted = !mutedUserIds.has(post.author_id);
@@ -202,7 +193,7 @@ export async function loadFeedCursor(
 
 
   const visiblePosts = filteredPosts.slice(0, limit);
-  const postIds = visiblePosts.map((p: any) => p.id);
+  const postIds = visiblePosts.map((p) => p.id);
 
   // Batch: count likes per post
   const { data: allReactions } = await supabase
@@ -212,20 +203,20 @@ export async function loadFeedCursor(
 
   const likeCounts: Record<string, number> = {};
   const userLiked: Record<string, boolean> = {};
-  (allReactions || []).forEach((r: any) => {
+  (allReactions || []).forEach((r) => {
     likeCounts[r.post_id] = (likeCounts[r.post_id] || 0) + 1;
     if (r.user_id === userId) userLiked[r.post_id] = true;
   });
 
   // Batch: count comments for posts missing comment_count
-  const postsNeedingCommentCount = visiblePosts.filter((p: any) => p.comment_count == null).map((p: any) => p.id);
+  const postsNeedingCommentCount = visiblePosts.filter((p) => p.comment_count == null).map((p) => p.id);
   const commentCounts: Record<string, number> = {};
   if (postsNeedingCommentCount.length > 0) {
     const { data: allComments } = await supabase
       .from('post_comments')
       .select('post_id')
       .in('post_id', postsNeedingCommentCount);
-    (allComments || []).forEach((c: any) => {
+    (allComments || []).forEach((c) => {
       commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1;
     });
   }
@@ -327,7 +318,7 @@ export async function loadFeedCursor(
     isFavorite: false
   } : null;
 
-  return { posts: enrichedPosts, nextCursor };
+  return { posts: enrichedPosts as FeedPost[], nextCursor };
 }
 
 /**
@@ -347,7 +338,7 @@ async function getBlockedUserIds(userId: string): Promise<Set<string>> {
     }
 
     const blockedIds = new Set<string>();
-    (data || []).forEach((block: any) => {
+    (data || []).forEach((block) => {
       if (block.blocker_id === userId) {
         blockedIds.add(block.blocked_id);
       } else {
@@ -379,7 +370,7 @@ async function getMutedUserIds(userId: string): Promise<Set<string>> {
       return new Set();
     }
 
-    const result = new Set((data || []).map((follow: any) => follow.following_id));
+    const result = new Set((data || []).map((follow) => follow.following_id));
     return result;
   } catch (err) {
     console.error('getMutedUserIds exception:', err);

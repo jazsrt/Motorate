@@ -33,7 +33,7 @@ export async function deleteAccount(): Promise<void> {
         .from('motorate-images')
         .list(folder);
       if (files && files.length > 0) {
-        const paths = files.map((f: any) => `${folder}/${f.name}`);
+        const paths = files.map((f: { name: string }) => `${folder}/${f.name}`);
         await supabase.storage.from('motorate-images').remove(paths);
       }
     }

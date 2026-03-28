@@ -26,7 +26,7 @@ interface RankingsPageProps {
 }
 
 export function RankingsPage({ onNavigate }: RankingsPageProps) {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [ranked, setRanked] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [scope, setScope] = useState<'city' | 'state' | 'national' | 'class'>('city');

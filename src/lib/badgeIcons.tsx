@@ -7,7 +7,7 @@ import {
   AlertTriangle, CircleOff, CarFront, Gauge, Volume2, CloudRain, Clock
 } from 'lucide-react';
 
-export function getBadgeIcon(iconString: string, tier?: string): ReactNode {
+export function getBadgeIcon(iconString: string, _tier?: string): ReactNode {
   if (!iconString) {
     return <Award className="w-full h-full" />;
   }

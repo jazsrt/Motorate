@@ -35,7 +35,7 @@ export async function giveSticker(
   }
 
   // Try sticker_catalog first, fall back to bumper_stickers
-  let sticker: any = null;
+  let sticker: any | null = null;
   const { data: catalogSticker } = await supabase
     .from('sticker_catalog')
     .select('*')
@@ -179,7 +179,7 @@ export async function giveSticker(
 async function checkStickerBadge(
   vehicleId: string,
   stickerId: string,
-  ownerId: string
+  _ownerId: string
 ) {
   const { data: stickerDef } = await supabase
     .from('sticker_catalog')
@@ -280,7 +280,7 @@ export async function getVehicleStickers(vehicleId: string) {
 
   data.forEach((item: any) => {
     const stickerId = item.sticker_id;
-    const def = item.sticker_catalog;
+    const def = item.sticker_catalog as any;
     if (!def) return;
 
     if (!stickerMap.has(stickerId)) {
@@ -297,7 +297,7 @@ export async function getVehicleStickers(vehicleId: string) {
     stickerMap.get(stickerId).uniqueUsers.add(item.given_by);
   });
 
-  return Array.from(stickerMap.values()).map((sticker: any) => {
+  return Array.from(stickerMap.values()).map((sticker) => {
     const count = sticker.uniqueUsers.size;
     let tier = null;
 

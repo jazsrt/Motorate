@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export function InstallPrompt() {
   const [show, setShow] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     // Don't show if already installed
@@ -19,9 +24,9 @@ export function InstallPrompt() {
     }
 
     // Listen for install prompt
-    const handleBeforeInstall = (e: any) => {
+    const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setTimeout(() => setShow(true), 10000);
     };
 

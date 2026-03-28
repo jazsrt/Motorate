@@ -73,8 +73,8 @@ export function LoginPage({ onSuccess, onSwitchToRegister }: LoginPageProps) {
         setResetSuccess(false);
         setResetEmail('');
       }, 5000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email. Please try again.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email. Please try again.');
     } finally {
       setResetLoading(false);
     }

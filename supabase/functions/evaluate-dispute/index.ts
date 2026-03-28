@@ -20,7 +20,7 @@ interface EvaluationResult {
   suggestedAction: 'none' | 'remove_review' | 'edit_review' | 'warn_reviewer' | 'warn_disputer';
 }
 
-async function evaluateDispute(disputeData: any): Promise<EvaluationResult> {
+async function evaluateDispute(disputeData: Record<string, unknown>): Promise<EvaluationResult> {
   const review = disputeData.review;
   const vehicle = review.vehicle;
   const dispute = disputeData;
@@ -133,7 +133,7 @@ Deno.serve(async (req: Request) => {
     await supabase
       .from('review_disputes')
       .update({
-        ai_recommendation: evaluation as any,
+        ai_recommendation: evaluation as unknown as Record<string, unknown>,
       })
       .eq('id', disputeId);
 
@@ -209,10 +209,10 @@ Deno.serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error evaluating dispute:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

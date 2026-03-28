@@ -28,6 +28,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
           base: 'bg-gradient-to-br from-orange-900 to-orange-700 border-2 border-orange-600',
           glow: 'shadow-[0_0_20px_rgba(194,65,12,0.4)] hover:shadow-[0_0_30px_rgba(194,65,12,0.6)]',
           text: 'text-orange-200',
+          shine: '',
           badge: 'B'
         };
       case 'silver':
@@ -35,6 +36,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
           base: 'bg-gradient-to-br from-gray-500 to-gray-300 border-2 border-gray-400',
           glow: 'shadow-[0_0_20px_rgba(156,163,175,0.4)] hover:shadow-[0_0_30px_rgba(156,163,175,0.6)]',
           text: 'text-gray-800',
+          shine: '',
           badge: 'S'
         };
       case 'gold':
@@ -42,6 +44,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
           base: 'bg-gradient-to-br from-yellow-500 to-yellow-400 border-2 border-yellow-500',
           glow: 'shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:shadow-[0_0_30px_rgba(234,179,8,0.6)]',
           text: 'text-yellow-900',
+          shine: '',
           badge: 'G'
         };
       case 'platinum':
@@ -49,6 +52,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
           base: 'bg-gradient-to-br from-[#fb923c] to-[#fb923c] border-2 border-orange',
           glow: 'shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_30px_rgba(249,115,22,0.6)]',
           text: 'text-accent-primary',
+          shine: '',
           badge: 'P'
         };
       default:
@@ -144,7 +148,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
         <div
           className={`${styles.base} ${styles.glow} ${styles.shine} ${sizeClasses.pill[size]} rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 cursor-pointer relative overflow-hidden ${className}`}
           onMouseEnter={() => {
-            description && setShowTooltip(true);
+            if (description) setShowTooltip(true);
             setIsHovered(true);
           }}
           onMouseLeave={() => {
@@ -181,7 +185,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
       <div
         className={`${styles.base} ${styles.glow} ${styles.shine} ${sizeClasses.card[size]} rounded-3xl text-center transition-all duration-300 hover:scale-110 hover:-translate-y-1 cursor-pointer relative overflow-hidden ${className}`}
         onMouseEnter={() => {
-          description && setShowTooltip(true);
+          if (description) setShowTooltip(true);
           setIsHovered(true);
         }}
         onMouseLeave={() => {
@@ -223,7 +227,7 @@ export function Badge({ name, icon, type, description, count, size = 'medium', v
             <div className="text-primary font-bold text-sm">{name}</div>
             {tierStyles && (
               <div className="text-secondary text-xs">
-                Tier: {tier?.charAt(0).toUpperCase() + tier?.slice(1)}
+                Tier: {(tier?.charAt(0).toUpperCase() ?? '') + (tier?.slice(1) ?? '')}
               </div>
             )}
             {category && (

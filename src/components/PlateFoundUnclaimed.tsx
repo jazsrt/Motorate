@@ -132,7 +132,7 @@ export function PlateFoundUnclaimed({
             author: r.author,
           }));
 
-        setRecentReviews(recentWithComments as any);
+        setRecentReviews(recentWithComments as any as RecentReview[]);
       } else if (spotCount) {
         setRatings({
           driver_avg: 0,

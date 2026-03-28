@@ -25,7 +25,7 @@ export type Database = {
           role: string | null;
           onboarding_completed: boolean;
           is_private: boolean;
-          notification_preferences: Record<string, any> | null;
+          notification_preferences: Record<string, unknown> | null;
           created_at: string;
         };
         Insert: {
@@ -75,7 +75,7 @@ export type Database = {
           reputation_score: number;
           spots_count: number;
           vin: string | null;
-          vin_raw_data: Record<string, any> | null;
+          vin_raw_data: Record<string, unknown> | null;
           vin_year: number | null;
           vin_make: string | null;
           vin_model: string | null;

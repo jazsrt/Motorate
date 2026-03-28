@@ -49,8 +49,8 @@ export function DisputeReviewModal({ reviewId, reviewComment, onClose }: Dispute
       await fileDispute(reviewId, selectedType, description.trim());
       setSubmitted(true);
       showToast('Dispute filed successfully. Our team will review it shortly.', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to file dispute', 'error');
+    } catch (err: unknown) {
+      showToast((err instanceof Error ? err.message : null) || 'Failed to file dispute', 'error');
     } finally {
       setSubmitting(false);
     }

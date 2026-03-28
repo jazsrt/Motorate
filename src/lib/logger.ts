@@ -12,7 +12,7 @@ export const logger = {
   /**
    * Debug logging - only shown in development
    */
-  debug: (...args: any[]) => {
+  debug: (...args: unknown[]) => {
     if (isDev) {
       console.debug(...args);
     }
@@ -21,7 +21,7 @@ export const logger = {
   /**
    * Info logging - only shown in development
    */
-  info: (...args: any[]) => {
+  info: (...args: unknown[]) => {
     if (isDev) {
       console.info(...args);
     }
@@ -30,7 +30,7 @@ export const logger = {
   /**
    * Warning logging - shown in development, sent to Sentry in production
    */
-  warn: (...args: any[]) => {
+  warn: (...args: unknown[]) => {
     if (isDev) {
       console.warn(...args);
     } else {
@@ -44,7 +44,7 @@ export const logger = {
   /**
    * Error logging - shown in development, sent to Sentry in production
    */
-  error: (error: Error | string, context?: Record<string, any>) => {
+  error: (error: Error | string, context?: Record<string, unknown>) => {
     if (isDev) {
       console.error(error, context);
     } else {
@@ -60,7 +60,7 @@ export const logger = {
    * Log method - only shown in development
    * Use this instead of console.log
    */
-  log: (...args: any[]) => {
+  log: (...args: unknown[]) => {
     if (isDev) {
       console.log(...args);
     }
@@ -72,11 +72,11 @@ export const logger = {
  */
 export function createLogger(namespace: string) {
   return {
-    debug: (...args: any[]) => logger.debug(`[${namespace}]`, ...args),
-    info: (...args: any[]) => logger.info(`[${namespace}]`, ...args),
-    warn: (...args: any[]) => logger.warn(`[${namespace}]`, ...args),
-    error: (error: Error | string, context?: Record<string, any>) =>
+    debug: (...args: unknown[]) => logger.debug(`[${namespace}]`, ...args),
+    info: (...args: unknown[]) => logger.info(`[${namespace}]`, ...args),
+    warn: (...args: unknown[]) => logger.warn(`[${namespace}]`, ...args),
+    error: (error: Error | string, context?: Record<string, unknown>) =>
       logger.error(error, { ...context, namespace }),
-    log: (...args: any[]) => logger.log(`[${namespace}]`, ...args),
+    log: (...args: unknown[]) => logger.log(`[${namespace}]`, ...args),
   };
 }

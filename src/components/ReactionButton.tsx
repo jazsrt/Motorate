@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, Flame, Skull, HandMetal, Smile, AlertCircle, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { addReaction, getReactionCounts, getUserReaction, ReactionType, REACTION_EMOJIS, ReactionCounts } from '../lib/reactions';
+import { addReaction, getReactionCounts, getUserReaction, ReactionType, ReactionCounts } from '../lib/reactions';
 import { sounds } from '../lib/sounds';
-import { haptics } from '../lib/haptics';
 import { floatPoints, haptic } from '../utils/floatPoints';
 
 const REACTION_ICONS: Record<ReactionType, React.ElementType> = {
@@ -33,7 +32,7 @@ interface ReactionButtonProps {
   onNavigate?: OnNavigate;
 }
 
-export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavigate }: ReactionButtonProps) {
+export function ReactionButton({ postId, onCountChange, onNavigate }: ReactionButtonProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [counts, setCounts] = useState<ReactionCounts>({ fire: 0, heart: 0, dead: 0, applause: 0, laugh: 0, shock: 0, angry: 0 });
@@ -60,7 +59,9 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
       }
       const totalCount = Object.values(reactionCounts).reduce((sum, count) => sum + count, 0);
       if (onCountChange) onCountChange(totalCount);
-    } catch {}
+    } catch {
+      // intentionally empty
+    }
   }, [postId, user, onCountChange]);
 
   useEffect(() => {
@@ -94,15 +95,20 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
         .order('created_at', { ascending: false })
         .limit(5);
 
-      const mapped: ReactionUser[] = (data || []).map((r: any) => ({
-        id: r.user_id,
-        handle: r.profiles?.handle || 'unknown',
-        avatar_url: r.profiles?.avatar_url || null,
-        reaction_type: r.reaction_type,
-      }));
+      const mapped: ReactionUser[] = (data || []).map((r) => {
+        const profiles = r.profiles as any;
+        return {
+          id: r.user_id as string,
+          handle: (profiles?.handle as string) || 'unknown',
+          avatar_url: (profiles?.avatar_url as string) || null,
+          reaction_type: r.reaction_type as ReactionType,
+        };
+      });
       setReactors(mapped);
       setReactorsTotal(count || 0);
-    } catch {} finally {
+    } catch {
+      // intentionally empty
+    } finally {
       setLoadingReactors(false);
     }
   };
@@ -126,13 +132,14 @@ export function ReactionButton({ postId, initialCount = 0, onCountChange, onNavi
       await loadReactions();
       setShowPicker(false);
       setTimeout(() => setAnimating(false), 300);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setAnimating(false);
+      const errObj = err instanceof Error ? err : null;
       let errorMessage = 'Failed to update reaction';
-      if (err?.message?.includes('row-level security')) {
+      if (errObj?.message?.includes('row-level security')) {
         errorMessage = 'Authentication error. Please refresh and try again.';
-      } else if (err?.message) {
-        errorMessage = err.message;
+      } else if (errObj?.message) {
+        errorMessage = errObj.message;
       }
       showToast(errorMessage, 'error');
     } finally {

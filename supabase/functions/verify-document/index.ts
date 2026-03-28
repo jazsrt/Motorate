@@ -209,14 +209,14 @@ Respond ONLY with a valid JSON object in this exact format (no markdown, no code
       // Remove markdown code blocks if present
       const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       result = JSON.parse(cleanContent);
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse OpenAI response:', content);
       throw new Error('Invalid response format from AI');
     }
 
     // Update vehicle with verification results if verified
     if (result.verified && result.confidence >= 0.7) {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         verification_tier: 'verified',
         owner_proof_url: imageUrl,
       };

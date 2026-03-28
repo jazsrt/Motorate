@@ -42,7 +42,7 @@ export function GloveboxPage({ onNavigate }: GloveboxPageProps) {
       .eq('user_id', user!.id);
 
     if (badgesData) setBadges(badgesData);
-    if (inventoryData) setInventory(inventoryData as any);
+    if (inventoryData) setInventory(inventoryData as unknown as typeof inventory);
     setLoading(false);
   }, [user]);
 

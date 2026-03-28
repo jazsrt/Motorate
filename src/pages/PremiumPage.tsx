@@ -79,15 +79,15 @@ const subscriptionTiers: SubscriptionTier[] = [
 ];
 
 export function PremiumPage({ onNavigate }: PremiumPageProps) {
-  const { user, profile } = useAuth();
+  const { user: _user, profile: _profile } = useAuth();
   const { showToast } = useToast();
-  const [selectedTier, setSelectedTier] = useState<string>('free');
+  const [selectedTier, _setSelectedTier] = useState<string>('free');
   const [billingPeriod, setBillingPeriod] = useState<'month' | 'year'>('month');
-  const [loading, setLoading] = useState(false);
+  const [loading, _setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
 
-  const handleSubscribe = async (tier: SubscriptionTier) => {
+  const handleSubscribe = async (_tier: SubscriptionTier) => {
     showToast('Payment integration launching soon! Sign up below to be notified.', 'info');
   };
 

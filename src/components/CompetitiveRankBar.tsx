@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+// lucide-react icons available if needed
 
 interface CompetitiveRankBarProps {
   rank: number;

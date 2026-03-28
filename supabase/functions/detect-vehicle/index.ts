@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
 
     if (annotations.labelAnnotations) {
       const labels = annotations.labelAnnotations.map(
-        (label: any) => label.description.toLowerCase()
+        (label: { description: string }) => label.description.toLowerCase()
       );
 
       const vehicleKeywords = [

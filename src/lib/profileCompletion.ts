@@ -57,7 +57,6 @@ export function calculateProfileCompletionLevel(profile: GarageProfile | null): 
 
 export function calculateProfileCompletion(profile: GarageProfile | null): ProfileCompletionStatus {
   const level = calculateProfileCompletionLevel(profile);
-  const badge = PROFILE_COMPLETION_BADGES[level];
 
   if (!profile) {
     return {

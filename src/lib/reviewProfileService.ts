@@ -92,14 +92,18 @@ async function getStickerStats(userId: string): Promise<StickerStats> {
       `)
       .eq('placed_by', userId);
 
-    const positiveCount = stickers?.filter(s => s.bumper_stickers.category === 'positive').length || 0;
-    const negativeCount = stickers?.filter(s => s.bumper_stickers.category === 'negative').length || 0;
+    const stickerData = stickers?.map(s => ({
+      ...s,
+      bumper_stickers: Array.isArray(s.bumper_stickers) ? s.bumper_stickers[0] : s.bumper_stickers
+    })) || [];
+    const positiveCount = stickerData.filter(s => s.bumper_stickers?.category === 'positive').length || 0;
+    const negativeCount = stickerData.filter(s => s.bumper_stickers?.category === 'negative').length || 0;
     const total = positiveCount + negativeCount;
     const positivityRatio = total > 0 ? positiveCount / total : 0;
 
     const stickerCounts: Record<string, number> = {};
-    stickers?.forEach(s => {
-      const name = s.bumper_stickers.name;
+    stickerData.forEach(s => {
+      const name = s.bumper_stickers?.name;
       stickerCounts[name] = (stickerCounts[name] || 0) + 1;
     });
 
@@ -232,6 +236,7 @@ async function getRecentReviews(userId: string, limit: number = 20) {
       ...review,
       text: review.comment,
       overall_rating: review.rating_driver || 0,
+      author: Array.isArray(review.author) ? review.author[0] || null : review.author,
       vehicle: userVehicles.find(v => v.id === review.vehicle_id) || null
     }));
   } catch (error) {

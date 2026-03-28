@@ -51,8 +51,8 @@ export function EditProfileModal({ profile, onClose, onSave }: EditProfileModalP
       const photoUrl = await uploadImage(file, 'profiles');
       setPhotoPreview(photoUrl);
       showToast('Photo uploaded successfully', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to upload photo', 'error');
+    } catch (err: unknown) {
+      showToast((err instanceof Error ? err.message : null) || 'Failed to upload photo', 'error');
     } finally {
       setUploading(false);
     }
@@ -80,9 +80,9 @@ export function EditProfileModal({ profile, onClose, onSave }: EditProfileModalP
       showToast('Profile updated successfully!', 'success');
       onSave();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Profile update error:', err);
-      const errorMsg = err.message || 'Failed to update profile';
+      const errorMsg = (err instanceof Error ? err.message : null) || 'Failed to update profile';
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {

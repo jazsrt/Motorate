@@ -12,7 +12,7 @@ interface UserAvatarProps {
   alt?: string;
 }
 
-export function UserAvatar({ avatarUrl, src, userName, handle, userId, size = 'medium', className = '', alt }: UserAvatarProps) {
+export function UserAvatar({ avatarUrl, src, userName, handle, size = 'medium', className = '', alt }: UserAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {

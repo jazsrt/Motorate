@@ -19,9 +19,10 @@ export const ERROR_MESSAGES: Record<string, string> = {
   'unauthorized': 'You must be logged in to do this',
 };
 
-export function getErrorMessage(error: any): string {
-  if (error?.message) {
-    const message = error.message.toLowerCase();
+export function getErrorMessage(error: unknown): string {
+  const err = error as { message?: string; code?: string } | null;
+  if (err?.message) {
+    const message = err.message.toLowerCase();
 
     if (message.includes('invalid login credentials')) {
       return ERROR_MESSAGES.invalid_credentials;
@@ -43,8 +44,8 @@ export function getErrorMessage(error: any): string {
     }
   }
 
-  if (error?.code) {
-    const errorMsg = ERROR_MESSAGES[error.code];
+  if (err?.code) {
+    const errorMsg = ERROR_MESSAGES[err.code];
     if (errorMsg) return errorMsg;
   }
 

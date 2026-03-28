@@ -76,7 +76,9 @@ export function VehicleFollowButton({
               const { notifyVehicleFollowRequest } = await import('../lib/notifications');
               await notifyVehicleFollowRequest(vehicleId, user.id);
             }
-          } catch {}
+          } catch {
+            // intentionally empty
+          }
         }
       }
     } catch (error) {

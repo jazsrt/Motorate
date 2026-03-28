@@ -58,11 +58,11 @@ export async function adminGrantBadge(
       message: data.message,
       error: data.error
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Exception granting badge:', error);
     return {
       success: false,
-      error: error.message || 'An unexpected error occurred'
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
     };
   }
 }

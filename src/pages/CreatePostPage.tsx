@@ -4,11 +4,11 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { fuzzCoordinates, calculateDistance } from '../lib/locationPrivacy';
-import { Camera, X, Globe, Users, Lock, AlertCircle, MapPin, ChevronLeft, Car } from 'lucide-react';
+import { Camera, X, Globe, Users, Lock, AlertCircle, MapPin, ChevronLeft } from 'lucide-react';
 import { useRateLimit } from '../hooks/useRateLimit';
 import RateLimitError from '../components/RateLimitError';
 import { useToast } from '../contexts/ToastContext';
-import { validateVideoFile, formatFileSize, formatDuration, getVideoMetadata, VIDEO_CONSTRAINTS } from '../utils/videoHelpers';
+import { validateVideoFile, getVideoMetadata } from '../utils/videoHelpers';
 import { calculateAndAwardReputation, getDailyPostCount } from '../lib/reputation';
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
@@ -111,7 +111,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         }
 
         // Get and log video metadata
-        const metadata = await getVideoMetadata(file);
+        const _metadata = await getVideoMetadata(file);
         showToast('Video validated successfully', 'success');
       } catch (err) {
         console.error('[Upload] Video validation error:', err);
@@ -154,7 +154,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
-    } catch (err) {
+    } catch (_err) {
       // Location detection skipped or denied
     } finally {
       setDetectingLocation(false);
@@ -182,8 +182,8 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
       setUpgradeRequested(true);
       showToast('Upgrade request submitted! An admin will review it soon.', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to submit upgrade request', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to submit upgrade request', 'error');
     }
   };
 
@@ -322,7 +322,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
       // AUTO-AWARD: Check for tiered post badges
       try {
-        const { data: awardedBadges } = await supabase
+        const { data: _awardedBadges } = await supabase
           .rpc('check_and_award_badges', {
             p_user_id: user.id,
             p_action: 'post'
@@ -377,8 +377,8 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
       showToast('Post created successfully!', 'success');
 
       onNavigate('feed');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create post');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create post');
     } finally {
       setLoading(false);
     }
@@ -724,7 +724,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
               <div style={{ maxWidth: 560, margin: '0 auto' }}>
                 <button
                   type="button"
-                  onClick={handleSubmit as any}
+                  onClick={handleSubmit as unknown as React.MouseEventHandler}
                   disabled={loading || !isAllowed || !image}
                   style={{
                     ...primaryBtnStyle,

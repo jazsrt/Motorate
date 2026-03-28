@@ -28,9 +28,9 @@ async function waitForProfile(userId: string, maxAttempts = 10): Promise<boolean
 }
 
 describe.skip('Security Tiers Test Suite', () => {
-  let spectatorAuth: any = null;
-  let driverAuth: any = null;
-  let ownerAuth: any = null;
+  let spectatorAuth: unknown = null;
+  let driverAuth: unknown = null;
+  let ownerAuth: unknown = null;
 
   let spectatorId: string;
   let driverId: string;
@@ -444,7 +444,7 @@ describe.skip('Security Tiers Test Suite', () => {
 
       console.log('Non-follower visibility check:', { visiblePosts });
 
-      const isVisible = visiblePosts && visiblePosts.length > 0;
+      const _isVisible = visiblePosts && visiblePosts.length > 0;
       const canAccess = visiblePosts?.[0]?.privacy_level === 'public' || followCheck !== null;
 
       expect(canAccess).toBe(false);

@@ -27,7 +27,7 @@ export function AddRetiredVehicleModal({ userId, onClose, onSuccess }: AddRetire
     if (file.size > 5 * 1024 * 1024) { showToast('Image must be less than 5MB', 'error'); return; }
     setUploadingPhoto(true);
     try {
-      const photoUrl = await uploadImage(file, 'retired-vehicles');
+      const photoUrl = await uploadImage(file, 'vehicles');
       setFormData(prev => ({ ...prev, [`photo_url_${photoNumber}`]: photoUrl }));
       showToast(`Photo ${photoNumber} uploaded successfully`, 'success');
     } catch { showToast('Failed to upload photo', 'error'); }

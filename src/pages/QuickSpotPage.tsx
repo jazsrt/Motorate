@@ -70,7 +70,7 @@ const chevronStyle: React.CSSProperties = {
   pointerEvents: 'none' as const,
 };
 
-const loadingTextStyle: React.CSSProperties = {
+const _loadingTextStyle: React.CSSProperties = {
   fontFamily: "'Barlow Condensed', sans-serif",
   fontSize: 10,
   fontWeight: 700,

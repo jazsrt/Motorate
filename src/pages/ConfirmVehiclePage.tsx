@@ -31,7 +31,7 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
     tan: '#d2b48c', bronze: '#cd7f32', copper: '#b87333', chrome: '#dce0e5',
   };
 
-  const colorHex = colorMap[wizardData.color?.toLowerCase() || ''] || '#888';
+  const _colorHex = colorMap[wizardData.color?.toLowerCase() || ''] || '#888';
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>

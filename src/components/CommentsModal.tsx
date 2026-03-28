@@ -8,7 +8,7 @@ import { EmptyState } from './ui/EmptyState';
 import { EditCommentModal } from './EditCommentModal';
 import { UserAvatar } from './UserAvatar';
 import { BadgeList } from './badges/BadgeList';
-import { getUserBadges, getUserDriverRating, type Badge, type UserBadge } from '../lib/badges';
+import { getUserBadges, getUserDriverRating, type Badge } from '../lib/badges';
 import { type OnNavigate } from '../types/navigation';
 import { calculateAndAwardReputation } from '../lib/reputation';
 import { formatTimeAgo } from '../lib/formatting';
@@ -40,7 +40,7 @@ interface CommentsModalProps {
 
 const COMMENTS_PER_PAGE = 20;
 
-export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: CommentsModalProps) {
+export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavigate }: CommentsModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -93,7 +93,7 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
           .in('comment_id', (data || []).map(c => c.id));
 
         likedCommentIds = new Set((likesData || []).map(l => l.comment_id));
-      } catch (likesError) {
+      } catch {
         // Comment likes table not yet available
       }
 
@@ -286,7 +286,7 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
       setTimeout(() => {
         onClose();
       }, 500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding comment:', error);
       showToast('Failed to add comment', 'error');
     } finally {
@@ -380,7 +380,7 @@ export function CommentsModal({ postId, postAuthor, onClose, onNavigate }: Comme
         return updated;
       });
       showToast('Comment updated', 'success');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating comment:', error);
       throw error;
     }

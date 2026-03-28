@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Eye, Star, ThumbsUp, MessageSquare, TrendingUp } from 'lucide-react';
+import { Eye, Star, ThumbsUp, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface VehicleStatsProps {
@@ -56,8 +56,8 @@ export function VehicleStats({ vehicleId }: VehicleStatsProps) {
       if (stickersError) throw stickersError;
 
       const totalStickers = stickers?.length || 0;
-      const positiveStickers = stickers?.filter((s: any) => s.bumper_stickers?.category === 'Positive').length || 0;
-      const negativeStickers = stickers?.filter((s: any) => s.bumper_stickers?.category === 'Negative').length || 0;
+      const positiveStickers = stickers?.filter((s: Record<string, unknown>) => (s.bumper_stickers as Record<string, unknown>)?.category === 'Positive').length || 0;
+      const negativeStickers = stickers?.filter((s: Record<string, unknown>) => (s.bumper_stickers as Record<string, unknown>)?.category === 'Negative').length || 0;
 
       // profile_views table not yet created in Supabase
       const viewsCount = 0;

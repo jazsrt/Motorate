@@ -106,7 +106,7 @@ export function calculateBadgesScore(stats: UserStats): number {
 
   if (stats.badges && stats.badges.length > 0) {
     stats.badges.forEach(badge => {
-      switch (badge.rarity) {
+      switch ((badge as unknown as { rarity?: string }).rarity || badge.tier) {
         case 'Common':
           score += 50;
           break;
@@ -201,7 +201,7 @@ export function calculateTimeBonus(stats: UserStats): number {
 /**
  * Calculate special penalties
  */
-export function calculatePenalties(stats: UserStats): number {
+export function calculatePenalties(_stats: UserStats): number {
   // Penalties are already included in community health score
   // This is a placeholder for future penalty types
   return 0;

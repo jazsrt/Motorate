@@ -55,7 +55,7 @@ export function AlbumsPage({ onNavigate }: AlbumsPageProps) {
             .select('*', { count: 'exact', head: true })
             .eq('album_id', album.id);
 
-          return { ...album, post_count: count || 0 };
+          return { ...album, photo_count: count || 0 };
         })
       );
       setAlbums(albumsWithCounts);
@@ -198,7 +198,7 @@ export function AlbumsPage({ onNavigate }: AlbumsPageProps) {
                   )}
 
                   <div className="flex items-center justify-between text-xs text-secondary mb-3">
-                    <span>{album.post_count} {album.post_count === 1 ? 'photo' : 'photos'}</span>
+                    <span>{album.photo_count} {album.photo_count === 1 ? 'photo' : 'photos'}</span>
                     <span>{album.is_public ? 'Public' : 'Private'}</span>
                   </div>
 

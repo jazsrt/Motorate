@@ -89,13 +89,13 @@ export async function sendPushNotification(
   userId: string,
   title: string,
   body: string,
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ): Promise<void> {
   try {
     // Check if notifications are enabled for this type
     const notificationType = data?.type;
     if (notificationType) {
-      const allowed = await checkNotificationPreference(userId, notificationType);
+      const allowed = await checkNotificationPreference(userId, notificationType as NotificationType);
       if (!allowed) {
         return;
       }

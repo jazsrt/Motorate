@@ -104,8 +104,8 @@ export function PlateFoundClaimed({
       if (sData) setTopStickers(sData);
       if (mData) {
         const counts: Record<string, number> = {};
-        mData.forEach((m: any) => {
-          const cat = m.category || 'Other';
+        mData.forEach((m: Record<string, unknown>) => {
+          const cat = (m.category as string) || 'Other';
           counts[cat] = (counts[cat] || 0) + 1;
         });
         setModCategories(Object.entries(counts).map(([category, count]) => ({ category, count })));

@@ -15,7 +15,6 @@ import { LoadingScreen } from './components/ui/LoadingScreen';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 import { CompletedReviewModal } from './components/CompletedReviewModal';
-import { supabase } from './lib/supabase';
 import { useBadgeChecker } from './hooks/useBadgeChecker';
 import './index.css';
 
@@ -44,7 +43,7 @@ const UserProfilePage = lazy(() => import('./pages/UserProfilePage').then(m => (
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
+const _SearchPage = lazy(() => import('./pages/SearchPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage').then(m => ({ default: m.EventsPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })));
 const MyGaragePage = lazy(() => import('./pages/MyGaragePage').then(m => ({ default: m.MyGaragePage })));
@@ -115,12 +114,12 @@ function AppContent() {
   const [claimingVehicleId, setClaimingVehicleId] = useState<string | undefined>(undefined);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
-  const [selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined);
+  const [_selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined);
   const [messageRecipientId, setMessageRecipientId] = useState<string | undefined>(undefined);
   const [shadowPlateNumber, setShadowPlateNumber] = useState<string>('');
   const [spotPlateState, setSpotPlateState] = useState<string>('');
   const [spotPlateNumber, setSpotPlateNumber] = useState<string>('');
-  const [spotVehicleImage, setSpotVehicleImage] = useState<string | null>(null);
+  const [_spotVehicleImage, _setSpotVehicleImage] = useState<string | null>(null);
   const [wizardData, setWizardData] = useState<any>(null);
   const [wizardReviewData, setWizardReviewData] = useState<any>(null);
   const [completedReviewData, setCompletedReviewData] = useState<any>(null);
@@ -129,7 +128,7 @@ function AppContent() {
   const [vehicleDetailScrollTo, setVehicleDetailScrollTo] = useState<string | undefined>(undefined);
   const [vehicleDetailOpenReviewModal, setVehicleDetailOpenReviewModal] = useState<boolean>(false);
   const [previousPage, setPreviousPage] = useState<Page>('feed');
-  const [previousPageData, setPreviousPageData] = useState<any>(null);
+  const [_previousPageData, setPreviousPageData] = useState<any>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -187,48 +186,49 @@ function AppContent() {
     setCurrentPage('build-sheet');
   };
 
-  const handleNavigate = (page: string, data?: any) => {
+  const handleNavigate = (page: string, data?: unknown) => {
+    const obj = (typeof data === 'object' && data !== null ? data : {}) as Record<string, unknown>;
     if (page === 'shadow-profile' && typeof data === 'string') {
       setPreviousPage(currentPage);
       setShadowPlateNumber(data);
       setCurrentPage('shadow-profile');
     } else if (page === 'vehicle-detail') {
-      const vehicleId = typeof data === 'string' ? data : data?.vehicleId;
+      const vehicleId = typeof data === 'string' ? data : (obj.vehicleId as string | undefined);
       if (vehicleId) {
         setPreviousPage(currentPage);
         setPreviousPageData({ spotPlateState, spotPlateNumber });
         setSelectedVehicleId(vehicleId);
-        setVehicleDetailScrollTo(data?.scrollTo);
-        setVehicleDetailOpenReviewModal(data?.openReviewModal || false);
+        setVehicleDetailScrollTo(obj.scrollTo as string | undefined);
+        setVehicleDetailOpenReviewModal((obj.openReviewModal as boolean) || false);
         setCurrentPage('vehicle-detail');
       }
     } else if (page === 'user-profile') {
-      const userId = typeof data === 'string' ? data : data?.userId;
+      const userId = typeof data === 'string' ? data : (obj.userId as string | undefined);
       if (userId) {
         setPreviousPage(currentPage);
         setSelectedUserId(userId);
         setCurrentPage('user-profile');
       }
     } else if (page === 'quick-spot' && data && typeof data === 'object') {
-      setWizardData(data.wizardData || null);
+      setWizardData((obj.wizardData as Record<string, unknown>) || null);
       setCurrentPage('quick-spot');
     } else if (page === 'confirm-vehicle' && data && typeof data === 'object') {
-      setWizardData(data.wizardData || null);
+      setWizardData((obj.wizardData as Record<string, unknown>) || null);
       setCurrentPage('confirm-vehicle');
     } else if (page === 'quick-spot-review' && data && typeof data === 'object') {
-      setWizardData(data.wizardData || null);
+      setWizardData((obj.wizardData as Record<string, unknown>) || null);
       setCurrentPage('quick-spot-review');
     } else if (page === 'detailed-review' && data && typeof data === 'object') {
-      setWizardData(data.wizardData || data);
-      setWizardReviewData(data);
+      setWizardData((obj.wizardData as Record<string, unknown>) || obj);
+      setWizardReviewData(obj);
       setCurrentPage('detailed-review');
     } else if (page === 'completed-review' && data && typeof data === 'object') {
-      setCompletedReviewData(data);
+      setCompletedReviewData(obj);
       setCurrentPage('completed-review');
     } else if (page === 'scan') {
       if (data && typeof data === 'object') {
-        setSpotPlateState(data.plateState || '');
-        setSpotPlateNumber(data.plateNumber || '');
+        setSpotPlateState((obj.plateState as string) || '');
+        setSpotPlateNumber((obj.plateNumber as string) || '');
       }
       setCurrentPage('scan');
     } else if (page === 'search' && typeof data === 'string') {

@@ -7,7 +7,6 @@ import { useFeed } from '../hooks/useFeed';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
-import { VehicleStoryRail } from '../components/feed/VehicleStoryRail';
 
 interface NewFeedPageProps {
   onNavigate: OnNavigate;
@@ -205,7 +204,7 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
           {displayPosts.map((post) => (
             <FeedPostCard
               key={post.id}
-              post={post as any}
+              post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
               vehicleRank={null}
               currentUserId={user?.id}
               onNavigate={onNavigate}

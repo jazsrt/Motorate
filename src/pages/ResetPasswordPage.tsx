@@ -29,7 +29,7 @@ export function ResetPasswordPage() {
         }
 
         // Now check if we have a valid session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
 
         // Session validated
 
@@ -77,8 +77,8 @@ export function ResetPasswordPage() {
         window.location.hash = '';
         window.location.reload();
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password');
     } finally {
       setLoading(false);
     }

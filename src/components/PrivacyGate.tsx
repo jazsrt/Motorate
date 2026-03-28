@@ -8,7 +8,7 @@ interface PrivacyGateProps {
   onFollowChange?: () => void;
 }
 
-export function PrivacyGate({ profileUserId, profileHandle, isFollowing, onFollowChange }: PrivacyGateProps) {
+export function PrivacyGate({ profileUserId, profileHandle, onFollowChange }: PrivacyGateProps) {
   return (
     <div className="bg-surface border border-surfacehighlight rounded-xl p-12 text-center">
       <div className="inline-flex items-center justify-center w-20 h-20 bg-surfacehighlight rounded-full mb-6">

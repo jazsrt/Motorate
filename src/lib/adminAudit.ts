@@ -4,7 +4,7 @@ interface AuditLogEntry {
   action: string;
   targetType?: string;
   targetId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export async function logAdminAction({

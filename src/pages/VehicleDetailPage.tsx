@@ -11,15 +11,14 @@ import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
-import { TierBadge, type VerificationTier } from '../components/TierBadge';
+import { type VerificationTier } from '../components/TierBadge';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Edit, Trash2, AlertCircle, Upload, X, Star, Shield, Key, Info, Share2, ChevronLeft, User, Wrench, Disc3, Palette, Armchair, Droplet, FileText, Download, Car, MapPin, MoreHorizontal, Camera, BookOpen, ChevronRight, ChevronDown, Heart, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, User, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, MapPin, Camera, BookOpen, ChevronRight, Heart } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { shareToSocial } from '../components/ShareCardGenerator';
 import { GuestBottomNav } from '../components/GuestBottomNav';
-import { RateDriverModal } from '../components/RateDriverModal';
-import { VehicleStats } from '../components/VehicleStats';
+// RateDriverModal and VehicleStats imports removed - unused
 import { GarageSection } from '../components/GarageSection';
 import { ModList } from '../components/ModList';
 import { StickerSlab } from '../components/StickerSlab';
@@ -28,8 +27,7 @@ import { BADGE_TIER_THRESHOLDS, TIER_COLORS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
 import { VehicleFollowButton } from '../components/VehicleFollowButton';
 import { FollowButton } from '../components/FollowButton';
-import { BadgeChip } from '../components/badges/BadgeChip';
-import { getBadgeType } from '../lib/badgeUtils';
+// BadgeChip and getBadgeType imports removed - unused
 
 interface VehicleDetailPageProps {
   vehicleId: string;
@@ -81,6 +79,7 @@ interface Vehicle {
   state?: string | null;
   plate_number?: string | null;
   is_private?: boolean;
+  trim?: string | null;
   owner?: {
     id: string;
     handle: string | null;
@@ -108,8 +107,6 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => { loadFollows(); }, [vehicleId, loadFollows]);
-
   const loadFollows = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
@@ -121,12 +118,14 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
     setLoading(false);
   }, [vehicleId]);
 
+  useEffect(() => { loadFollows(); }, [vehicleId, loadFollows]);
+
   const pending = follows.filter(f => f.status === 'pending');
   const accepted = follows.filter(f => f.status === 'accepted');
 
   const handleApprove = async (followId: string, followerId: string) => {
     await supabase.from('vehicle_follows').update({ status: 'accepted' }).eq('id', followId);
-    try { const { notifyVehicleFollowApproved } = await import('../lib/notifications'); await notifyVehicleFollowApproved(followerId, vehicleId); } catch {}
+    try { const { notifyVehicleFollowApproved } = await import('../lib/notifications'); await notifyVehicleFollowApproved(followerId, vehicleId); } catch { /* intentionally empty */ }
     loadFollows(); onFollowerUpdated();
   };
 
@@ -166,7 +165,7 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
   );
 }
 
-export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSheet, guestMode = false, scrollTo, openReviewModal }: VehicleDetailPageProps) {
+export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSheet: _onEditBuildSheet, guestMode = false, scrollTo, openReviewModal: _openReviewModal }: VehicleDetailPageProps) {
   const C = {
     black: '#030508', carbon0: '#070a0f', carbon1: '#0a0d14', carbon2: '#0e1320',
     steel: '#2c3a50', muted: '#445566', dim: '#7a8e9e', light: '#a8bcc8', white: '#eef4f8',
@@ -175,7 +174,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   const { user } = useAuth();
   const { goBack, getReturnLabel } = useNavigation();
-  const returnLabel = getReturnLabel();
+  const _returnLabel = getReturnLabel();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [modifications, setModifications] = useState<Modification[]>([]);
@@ -183,9 +182,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [vehicleImages, setVehicleImages] = useState<VehicleImage[]>([]);
   const [spotCount, setSpotCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
-  const [viewCount, setViewCount] = useState(0);
-  const [cityRank, setCityRank] = useState<number | null>(null);
-  const [showSpotReviewModal, setShowSpotReviewModal] = useState(false);
+  const [_viewCount, _setViewCount] = useState(0);
+  const [cityRank, _setCityRank] = useState<number | null>(null);
+  const [_showSpotReviewModal, _setShowSpotReviewModal] = useState(false);
 
   useModerationSubscription(() => !guestMode && loadVehicleData());
   const [loading, setLoading] = useState(true);
@@ -196,11 +195,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [showShareModal, setShowShareModal] = useState(false);
   const [guestJoinAction, setGuestJoinAction] = useState('');
   const [error, setError] = useState('');
-  const [showRateDriver, setShowRateDriver] = useState(false);
+  const [_showRateDriver, _setShowRateDriver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const manualInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingManual, setUploadingManual] = useState(false);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [_uploadingManual, setUploadingManual] = useState(false);
+  const [_expandedCategory, _setExpandedCategory] = useState<string | null>(null);
 
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
@@ -209,10 +208,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const isOwner = user && vehicle?.owner_id === user.id;
   const isUnclaimed = vehicle && !vehicle.is_claimed;
   const canClaim = user && isUnclaimed && !vehicle?.owner_id;
-
-  useEffect(() => {
-    loadVehicleData();
-  }, [vehicleId, loadVehicleData]);
 
   useEffect(() => {
     if (vehicle && !vehicleImages[0]?.image_url && !vehicle.stock_image_url && !vehicle.profile_image_url) {
@@ -283,7 +278,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       .order('created_at', { ascending: false });
 
     // Fetch spot history
-    const { data: spotHistoryData } = await supabase
+    const { data: _spotHistoryData } = await supabase
       .from('spot_history')
       .select(`
         id,
@@ -312,14 +307,15 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         .order('is_primary', { ascending: false })
         .order('created_at', { ascending: false });
       imagesData = result.data;
-    } catch (error) {
+    } catch {
       // vehicle_images table may not exist yet
     }
 
     if (vehicleData) {
-      const ownerData = vehicleData.profiles;
+      const vData = vehicleData as unknown as any;
+      const ownerData = vData.profiles;
       setVehicle({
-        ...vehicleData,
+        ...vData,
         owner: ownerData ? {
           id: ownerData.id,
           handle: ownerData.handle,
@@ -346,7 +342,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         moderation_status: 'approved',
         author: review.author || { handle: 'Anonymous' }
       }));
-      setReviews(mappedReviews as any);
+      setReviews(mappedReviews as unknown as Review[]);
     }
     if (modsData) {
       setModifications(modsData);
@@ -401,6 +397,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
     setLoading(false);
   }, [vehicleId]);
+
+  useEffect(() => {
+    loadVehicleData();
+  }, [vehicleId, loadVehicleData]);
 
   useEffect(() => {
     if (!vehicleId) return;
@@ -500,7 +500,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       const fileName = `${vehicle.id}/manual-${Date.now()}.${fileExt}`;
       const filePath = `vehicles/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('vehicle-images')
         .upload(filePath, file);
 
@@ -519,8 +519,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
       setVehicle({ ...vehicle, owners_manual_url: urlData.publicUrl });
       setError('');
-    } catch (err: any) {
-      setError(err.message || 'Failed to upload manual');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to upload manual');
     } finally {
       setUploadingManual(false);
     }
@@ -539,8 +539,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       if (updateError) throw updateError;
 
       setVehicle({ ...vehicle, owners_manual_url: null });
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove manual');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to remove manual');
     }
   };
 
@@ -575,8 +575,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       if (insertError) throw insertError;
 
       await loadVehicleData();
-    } catch (err: any) {
-      setError(err.message || 'Failed to upload image');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
     } finally {
       setUploading(false);
     }
@@ -597,8 +597,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       if (updateError) throw updateError;
 
       await loadVehicleData();
-    } catch (err: any) {
-      setError(err.message || 'Failed to set primary image');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to set primary image');
     }
   };
 
@@ -616,8 +616,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       if (deleteError) throw deleteError;
 
       await loadVehicleData();
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete image');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete image');
     }
   };
 
@@ -650,7 +650,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const hateCount = reviews.filter(r => r.sentiment === 'hate').length;
 
   // Derive hero image
-  const vehicleImageUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
+  const _vehicleImageUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
 
   // Derive encounter count from reviews
   const encounterCount = reviews.length;
@@ -666,7 +666,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   ].filter(s => s.value) : [];
 
   // Powertrain string — no VIN data
-  const powertrain = '';
+  const _powertrain = '';
 
   // Verification badge color
   const verBadgeColor = vehicle?.verification_tier === 'vin_verified' ? C.green : vehicle?.is_claimed ? C.green : C.dim;
@@ -1246,8 +1246,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                     {review.author_id === user?.id && review.moderation_status !== 'approved' && (
                       <div style={{ marginBottom: 10 }}>
                         <ModerationStatus
-                          status={review.moderation_status}
-                          rejectionReason={review.rejection_reason}
+                          status={review.moderation_status as 'pending' | 'approved' | 'rejected'}
+                          rejectionReason={review.rejection_reason ?? undefined}
                           isOwnContent={true}
                         />
                       </div>
@@ -1609,7 +1609,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 make: vehicle.make,
                 model: vehicle.model,
                 year: vehicle.year,
-                stock_image_url: vehicle.stock_image_url
+                stock_image_url: vehicle.stock_image_url ?? null
               }}
               user={{
                 handle: user?.email?.split('@')[0] || 'anonymous',

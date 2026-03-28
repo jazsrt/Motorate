@@ -13,7 +13,7 @@ interface StoryVehicle {
 }
 
 interface StoryRailProps {
-  onNavigate: (page: string, data?: any) => void;
+  onNavigate: (page: string, data?: unknown) => void;
 }
 
 export function StoryRail({ onNavigate }: StoryRailProps) {
@@ -37,9 +37,9 @@ export function StoryRail({ onNavigate }: StoryRailProps) {
 
       if (data) {
         const mapped = data
-          .map((row: any) => row.vehicles)
+          .map((row: any) => Array.isArray(row.vehicles) ? row.vehicles[0] : row.vehicles)
           .filter(Boolean)
-          .sort((a: any, b: any) => (b.reputation_score ?? 0) - (a.reputation_score ?? 0));
+          .sort((a: StoryVehicle, b: StoryVehicle) => (b.reputation_score ?? 0) - (a.reputation_score ?? 0));
         setVehicles(mapped);
       }
     }

@@ -20,7 +20,7 @@ interface Notification {
   created_at: string;
   link_type?: string;
   link_id?: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 type NotificationFilter = 'all' | 'badges' | 'social' | 'vehicles' | 'unread';
@@ -258,7 +258,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
     try {
       await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
       setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
-    } catch {}
+    } catch { /* intentionally empty */ }
   };
 
   const markAllAsRead = async () => {
@@ -296,7 +296,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
             setSelectedBadge(badgeData as Badge);
             return;
           }
-        } catch {}
+        } catch { /* intentionally empty */ }
       }
       // Fallback: navigate to badges page
       onNavigate('badges');

@@ -53,8 +53,8 @@ export function ReportStolenModal({ onClose, onSuccess }: ReportStolenModalProps
       if (insertError) throw insertError;
       showToast('Vehicle reported as stolen. The community will be notified.', 'success');
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit report');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit report');
     } finally {
       setLoading(false);
     }

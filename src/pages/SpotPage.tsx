@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Camera, Upload, Keyboard, Car, Zap } from 'lucide-react';
+import { ArrowLeft, Camera, Upload, Car } from 'lucide-react';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { supabase } from '../lib/supabase';
@@ -251,8 +251,8 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
       if (vehicleData) {
         // Found in DB — trigger reveal animation
-        setRevealResult({ vehicle: vehicleData as VehicleResult, found: true });
-        setVehicle(vehicleData as VehicleResult);
+        setRevealResult({ vehicle: vehicleData as unknown as VehicleResult, found: true });
+        setVehicle(vehicleData as unknown as VehicleResult);
         setViewState('revealing');
         setRevealPhase(1);
       } else {
@@ -281,7 +281,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           setRevealPhase(1);
         }
       }
-    } catch (err: any) {
+    } catch {
       showToast('Failed to search. Please try again.', 'error');
       setViewState('search');
     }
@@ -341,7 +341,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       };
 
       onNavigate('quick-spot-review', { wizardData });
-    } catch (err: any) {
+    } catch {
       showToast('Failed to create vehicle. Please try again.', 'error');
     } finally {
       setLoading(false);
@@ -725,7 +725,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         <PlateFoundClaimed
           state={state}
           plateNumber={plateNumber}
-          vehicle={vehicle as any}
+          vehicle={vehicle as unknown as Parameters<typeof PlateFoundClaimed>[0]['vehicle']}
           onLeaveReview={handleSpotAndReview}
           onBack={handleBack}
           onViewOwnerProfile={(userId) => onNavigate('user-profile', userId)}

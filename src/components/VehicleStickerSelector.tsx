@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { AlertCircle, ThumbsUp, ThumbsDown, Sparkles } from 'lucide-react';
 import { sounds } from '../lib/sounds';
-import { haptics } from '../lib/haptics';
 import { floatPoints, haptic } from '../utils/floatPoints';
 
 interface VehicleStickerSelectorProps {
@@ -51,7 +50,7 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
         let positive = 0;
         let negative = 0;
         givenStickers.forEach((item: any) => {
-          const category = item.bumper_stickers?.category;
+          const category = (item.bumper_stickers as any)?.category;
           if (category === 'Positive') positive++;
           else if (category === 'Negative') negative++;
         });

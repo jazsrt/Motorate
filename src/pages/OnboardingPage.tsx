@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Loader, AlertCircle, ChevronDown, LogOut, LayoutGrid, Activity, Home, Award } from 'lucide-react';
+import { ArrowRight, Loader, AlertCircle, ChevronDown, LogOut, Activity, Home, Award } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { supabase } from '../lib/supabase';
@@ -41,17 +41,17 @@ const HOW_IT_WORKS = [
     desc: 'See a car you like? Scan the plate. Rate it. Earn RP.',
   },
   {
-    icon: (_: boolean) => <Home size={22} strokeWidth={2} />,
+    icon: (_active: boolean) => <Home size={22} strokeWidth={2} />,
     title: 'Garage',
     desc: 'Claim your vehicle. Build its reputation over time.',
   },
   {
-    icon: (_: boolean) => <Activity size={22} strokeWidth={2} />,
+    icon: (_active: boolean) => <Activity size={22} strokeWidth={2} />,
     title: 'Rankings',
     desc: 'Vehicles ranked by community reputation, not followers.',
   },
   {
-    icon: (_: boolean) => <Award size={22} strokeWidth={2} />,
+    icon: (_active: boolean) => <Award size={22} strokeWidth={2} />,
     title: 'Badges',
     desc: 'Hit milestones. Unlock badges. Level up your tier.',
   },
@@ -92,8 +92,8 @@ export default function OnboardingPage() {
 
       await refreshProfile();
       setStep('vehicle');
-    } catch (err: any) {
-      setError(err.message || 'Failed to save username');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save username');
     } finally {
       setIsProcessing(false);
     }
@@ -140,8 +140,8 @@ export default function OnboardingPage() {
       await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', user!.id);
       await refreshProfile();
       showToast('Vehicle added to your garage', 'success');
-    } catch (err: any) {
-      setError(err.message || 'Failed to add vehicle');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add vehicle');
     } finally {
       setIsProcessing(false);
     }
@@ -194,7 +194,7 @@ export default function OnboardingPage() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
-              {HOW_IT_WORKS.map((item, i) => (
+              {HOW_IT_WORKS.map((item, _i) => (
                 <div key={item.title} style={{
                   display: 'flex', alignItems: 'center', gap: 16,
                   background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',

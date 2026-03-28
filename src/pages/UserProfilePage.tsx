@@ -4,20 +4,20 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Car, Award, Star, Instagram, Music, Eye, MessageCircle, Calendar, Lock, Flag, Image, ImageIcon, MapPin } from 'lucide-react';
+import { ArrowLeft, Car, Award, Instagram, Music, Eye, MessageCircle, Calendar, Lock, Flag, Image, ImageIcon, MapPin } from 'lucide-react';
 import { EmptyState } from '../components/ui/EmptyState';
 import { TierBadge } from '../components/TierBadge';
 import { VerifiedBadge } from '../components/VerifiedBadge';
-import { Badge } from '../components/Badge';
+// Badge import removed - unused
 import { BadgeCoin } from '../components/BadgeCoin';
 import { ReactionButton } from '../components/ReactionButton';
-import { DashLight, DigitalDisplay } from '../components/gauges';
+// DashLight, DigitalDisplay imports removed - unused
 import { FollowButton } from '../components/FollowButton';
 import { BlockUserButton } from '../components/BlockUserButton';
 import { ReportModal } from '../components/ReportModal';
 import { PrivacyGate } from '../components/PrivacyGate';
 import { ProfileInsights } from '../components/ProfileInsights';
-import { trackProfileView, checkIfFollowing } from '../lib/profileViews';
+import { trackProfileView } from '../lib/profileViews';
 import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
@@ -37,16 +37,16 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const [_followingCount, setFollowingCount] = useState(0);
   const [spotsCount, setSpotsCount] = useState(0);
-  const [reviewsCount, setReviewsCount] = useState(0);
+  const [_reviewsCount, setReviewsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [loadingRatings, setLoadingRatings] = useState(false);
   const [activeTab, setActiveTab] = useState<'garage' | 'posts' | 'badges' | 'reviews'>('garage');
-  const [profileViewCount, setProfileViewCount] = useState(0);
+  const [profileViewCount, _setProfileViewCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted'>('none');
   const [showReportModal, setShowReportModal] = useState(false);
@@ -62,30 +62,6 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const isPrivate = profile?.is_private === true;
   const canViewContent = !isPrivate || followStatus === 'accepted' || isOwnProfile;
   const weeklyMetrics = useWeeklyMetrics(isOwnProfile ? profile?.id : undefined);
-
-  useEffect(() => {
-    if (userId) {
-      loadProfile();
-      loadBadges();
-      loadFollowCounts();
-      loadProfileViews();
-      checkFollowStatus();
-      loadSpotAndReviewCounts();
-      loadAllPhotos();
-    }
-  }, [userId, followStatus, checkFollowStatus, loadAllPhotos, loadBadges, loadFollowCounts, loadProfile, loadSpotAndReviewCounts]);
-
-  useEffect(() => {
-    if (!userId || !canViewContent) return;
-
-    if (activeTab === 'garage' && !vehiclesLoaded) {
-      loadVehicles();
-    } else if (activeTab === 'posts' && !postsLoaded) {
-      loadUserPosts();
-    } else if (activeTab === 'reviews' && !ratingsLoaded) {
-      loadRatings();
-    }
-  }, [activeTab, userId, canViewContent, loadVehicles, loadUserPosts, loadRatings, vehiclesLoaded, postsLoaded, ratingsLoaded]);
 
   const checkFollowStatus = useCallback(async () => {
     if (!currentUser || isOwnProfile) return;
@@ -216,7 +192,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
       const vehicleIds = vehicleData.map(v => v.id);
 
-      const { data: reviewData } = await supabase
+      await supabase
         .from('reviews')
         .select('rating_driver, rating_vehicle')
         .in('vehicle_id', vehicleIds);
@@ -291,6 +267,30 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     setSpotsCount(spots || 0);
     setReviewsCount(reviews || 0);
   }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      loadProfile();
+      loadBadges();
+      loadFollowCounts();
+      loadProfileViews();
+      checkFollowStatus();
+      loadSpotAndReviewCounts();
+      loadAllPhotos();
+    }
+  }, [userId, followStatus, checkFollowStatus, loadAllPhotos, loadBadges, loadFollowCounts, loadProfile, loadSpotAndReviewCounts]);
+
+  useEffect(() => {
+    if (!userId || !canViewContent) return;
+
+    if (activeTab === 'garage' && !vehiclesLoaded) {
+      loadVehicles();
+    } else if (activeTab === 'posts' && !postsLoaded) {
+      loadUserPosts();
+    } else if (activeTab === 'reviews' && !ratingsLoaded) {
+      loadRatings();
+    }
+  }, [activeTab, userId, canViewContent, loadVehicles, loadUserPosts, loadRatings, vehiclesLoaded, postsLoaded, ratingsLoaded]);
 
   if (loading) {
     return (

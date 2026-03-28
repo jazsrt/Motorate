@@ -107,23 +107,25 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
   const [showOptions, setShowOptions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
-  const [commentPreview, setCommentPreview] = useState<Comment[]>([]);
+  const [, setCommentPreview] = useState<Comment[]>([]);
   const [totalComments, setTotalComments] = useState(post.comment_count || 0);
   const [viewCount, setViewCount] = useState(post.view_count || 0);
-  const [authorBadges, setAuthorBadges] = useState<Badge[]>([]);
-  const [driverRating, setDriverRating] = useState<{ avg_driver_rating: number; driver_rating_count: number }>({ avg_driver_rating: 0, driver_rating_count: 0 });
-  const [loading, setLoading] = useState(true);
+  const [, setAuthorBadges] = useState<Badge[]>([]);
+  const [, setDriverRating] = useState<{ avg_driver_rating: number; driver_rating_count: number }>({ avg_driver_rating: 0, driver_rating_count: 0 });
+  const [, setLoading] = useState(true);
   const [isVerifiedOwner, setIsVerifiedOwner] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [vehicleImgError, setVehicleImgError] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const commentSectionRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.id === post.author_id;
-  const spotOrReview = isSpotOrReview(post);
-  const typeLabel = getTypeLabel(post);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const spotOrReview = isSpotOrReview(post as any);
+  const typeLabel = getTypeLabel(post as any);
 
   const handleImageError = (index: number) => {
     setImageErrors(prev => new Set(prev).add(index));
@@ -143,7 +145,9 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
       })) || [];
       setCommentPreview(mapped);
       setTotalComments(count || 0);
-    } catch {}
+    } catch {
+      // intentionally empty
+    }
   }, [post.id]);
 
   const loadAuthorBadges = useCallback(async () => {
@@ -158,7 +162,9 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
       setAuthorBadges(badges);
       setDriverRating(rating);
       setIsVerifiedOwner((verifiedVehicles.data?.length || 0) > 0);
-    } catch {} finally {
+    } catch {
+      // intentionally empty
+    } finally {
       setLoading(false);
     }
   }, [post.author_id]);
@@ -201,9 +207,10 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
 
   const handleCommentClick = () => setShowComments(true);
 
-  const hasRatings = (post as any).rating_vehicle || (post as any).rating_driver || (post as any).rating_driving;
-  const hasDetailRatings = (post as any).spot_type === 'full' && (
-    (post as any).looks_rating || (post as any).sound_rating || (post as any).condition_rating
+  const postRecord = post as any;
+  const hasRatings = postRecord.rating_vehicle || postRecord.rating_driver || postRecord.rating_driving;
+  const hasDetailRatings = postRecord.spot_type === 'full' && (
+    postRecord.looks_rating || postRecord.sound_rating || postRecord.condition_rating
   );
   const vehicleData = post.vehicles;
   const vehicleDisplay = vehicleData
@@ -307,8 +314,8 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         {/* ── STATS STRIP ──────────────────────────────────── */}
         <div style={{ display: 'flex', background: 'rgba(7,10,15,0.5)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {[
-            { label: 'SPOTS', value: (post.vehicles as any)?.spot_count || 0, accent: true },
-            { label: 'FOLLOWERS', value: (post.vehicles as any)?.vehicle_follower_count || (post.vehicles as any)?.follower_count || 0, accent: false },
+            { label: 'SPOTS', value: (post.vehicles as any)?.spot_count as number || 0, accent: true },
+            { label: 'FOLLOWERS', value: ((post.vehicles as any)?.vehicle_follower_count || (post.vehicles as any)?.follower_count || 0) as number, accent: false },
             { label: 'VIEWS', value: viewCount, accent: false },
           ].map((stat, i) => (
             <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : undefined }}>
@@ -321,14 +328,14 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         {/* ── RATINGS ROW ──────────────────────────────────── */}
         {hasRatings && (
           <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(7,10,15,0.3)' }}>
-            {(post as any).rating_driver && (
-              <RatingStars value={(post as any).rating_driver} label="Driver" />
+            {postRecord.rating_driver && (
+              <RatingStars value={postRecord.rating_driver as number} label="Driver" />
             )}
-            {(post as any).rating_driving && (
-              <RatingStars value={(post as any).rating_driving} label="Driving" />
+            {postRecord.rating_driving && (
+              <RatingStars value={postRecord.rating_driving as number} label="Driving" />
             )}
-            {(post as any).rating_vehicle && (
-              <RatingStars value={(post as any).rating_vehicle} label="Vehicle" />
+            {postRecord.rating_vehicle && (
+              <RatingStars value={postRecord.rating_vehicle as number} label="Vehicle" />
             )}
           </div>
         )}
@@ -336,22 +343,22 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         {/* ── DETAIL RATINGS ROW (full review only) ────────── */}
         {hasDetailRatings && (
           <div style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(7,10,15,0.3)' }}>
-            {(post as any).looks_rating && (
+            {postRecord.looks_rating && (
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '2px', color: 'var(--muted)' }}>Looks</p>
-                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold-h)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{(post as any).looks_rating}/5</p>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold-h)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{postRecord.looks_rating as number}/5</p>
               </div>
             )}
-            {(post as any).sound_rating && (
+            {postRecord.sound_rating && (
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '2px', color: 'var(--muted)' }}>Sound</p>
-                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold-h)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{(post as any).sound_rating}/5</p>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold-h)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{postRecord.sound_rating as number}/5</p>
               </div>
             )}
-            {(post as any).condition_rating && (
+            {postRecord.condition_rating && (
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '2px', color: 'var(--muted)' }}>Condition</p>
-                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold-h)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{(post as any).condition_rating}/5</p>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold-h)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{postRecord.condition_rating as number}/5</p>
               </div>
             )}
           </div>
@@ -408,9 +415,14 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
 
       {showEditModal && (
         <EditPostModal
-          post={post}
+          postId={post.id}
+          currentCaption={post.caption}
           onClose={() => setShowEditModal(false)}
-          onUpdate={() => { setShowEditModal(false); showToast('Post updated!', 'success'); }}
+          onSave={async (postId: string, newCaption: string) => {
+            await supabase.from('posts').update({ caption: newCaption }).eq('id', postId);
+            setShowEditModal(false);
+            showToast('Post updated!', 'success');
+          }}
         />
       )}
 

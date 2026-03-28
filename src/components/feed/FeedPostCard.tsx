@@ -42,7 +42,7 @@ interface FeedPostCardProps {
   };
   vehicleRank?: number | null;
   currentUserId?: string | null;
-  onNavigate?: (page: string, data?: any) => void;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
 function formatCount(n: number | null | undefined): string {
@@ -80,11 +80,11 @@ function TrackButton({ vehicleId }: { vehicleId: string | null }) {
   );
 }
 
-export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: FeedPostCardProps) {
+export function FeedPostCard({ post, vehicleRank, onNavigate }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
 
   const vehicles = post.vehicles;
-  const ownerHandle = post.author?.handle || (post as any).author_handle || post.profiles?.handle || 'owner';
+  const ownerHandle = post.author?.handle || post.author_handle || post.profiles?.handle || 'owner';
   const cityLabel = extractCityOnly(post.location_label || post.location);
 
   // Image source priority: user photo > vehicle profile > stock image
@@ -94,7 +94,7 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     || null;
 
   // Hard rule: no image = no card render for spot/review posts
-  const isSpotType = (post as any).post_type === 'spot' || (post as any).post_type === 'review';
+  const isSpotType = post.post_type === 'spot' || post.post_type === 'review';
   if (!imageUrl && isSpotType) return null;
 
   const hasPhoto = !!imageUrl;

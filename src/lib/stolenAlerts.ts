@@ -135,7 +135,8 @@ export async function reportSighting(alertId: string, data: SightingData) {
     .single();
 
   if (alert) {
-    const vehicleName = `${alert.vehicle.year || ''} ${alert.vehicle.make || ''} ${alert.vehicle.model || ''}`.trim();
+    const vehicle = Array.isArray(alert.vehicle) ? alert.vehicle[0] : alert.vehicle;
+    const vehicleName = `${vehicle?.year || ''} ${vehicle?.make || ''} ${vehicle?.model || ''}`.trim();
     const locationText = data.location?.label ? ` near ${data.location.label}` : '';
 
     await sendPushNotification(

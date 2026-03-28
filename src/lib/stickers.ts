@@ -69,7 +69,7 @@ export async function getVehicleStickers(vehicleId: string, userId?: string): Pr
   const stickerMap = new Map<string, VehicleStickerWithCount>();
 
   data?.forEach((item: any) => {
-    const sticker = item.bumper_stickers;
+    const sticker = item.bumper_stickers as any;
     if (!sticker) return;
 
     if (!stickerMap.has(sticker.id)) {
@@ -123,9 +123,9 @@ export async function removeSticker(
     if (error) throw error;
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error removing sticker:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
@@ -172,7 +172,7 @@ export async function getTopStickeredVehicles(limit: number = 10): Promise<Array
 
   data?.forEach((item: any) => {
     const vehicleId = item.vehicle_id;
-    const category = item.bumper_stickers?.category;
+    const category = (item.bumper_stickers as any)?.category;
 
     if (!vehicleCounts.has(vehicleId)) {
       vehicleCounts.set(vehicleId, {

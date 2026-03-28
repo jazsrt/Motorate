@@ -27,7 +27,7 @@ export async function optimizeImage(file: File): Promise<File> {
 
         canvas.width = width;
         canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
+        ctx!.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
           (blob) => {

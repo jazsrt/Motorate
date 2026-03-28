@@ -106,7 +106,7 @@ export async function updateReportStatus(
       return { success: false, error: 'Not authenticated' };
     }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status,
       reviewed_at: new Date().toISOString(),
       reviewed_by: user.id,

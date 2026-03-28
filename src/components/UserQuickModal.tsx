@@ -53,7 +53,7 @@ export function UserQuickModal({ userId, onClose, onNavigate }: UserQuickModalPr
       const [followers, following, spots, badges, ratingsData] = countsResult;
       const ratings = ratingsData.data || [];
       const avgRating = ratings.length > 0
-        ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
+        ? ratings.reduce((sum: number, r: Record<string, unknown>) => sum + (r.rating as number), 0) / ratings.length
         : 0;
 
       if (profileResult.data) {
@@ -84,7 +84,7 @@ export function UserQuickModal({ userId, onClose, onNavigate }: UserQuickModalPr
           setCanViewPrivate(true);
         }
       }
-    } catch {
+    } catch { // intentionally empty
     } finally {
       setLoading(false);
     }

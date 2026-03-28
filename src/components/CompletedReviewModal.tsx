@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Star, Heart, ThumbsDown, X, Car, Zap, TrendingUp, Award, Share2 } from 'lucide-react';
+import { Star, Heart, ThumbsDown, X, Zap, TrendingUp, Award, Share2 } from 'lucide-react';
 import type { SpotWizardData } from '../types/spot';
 import { floatPoints } from '../utils/floatPoints';
 import { shareToSocial } from './ShareCardGenerator';

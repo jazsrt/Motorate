@@ -16,4 +16,4 @@ export type NavigationPage =
   | 'admin-reports'
   | 'debug-feed';
 
-export type OnNavigate = (page: NavigationPage | string, data?: any) => void;
+export type OnNavigate = (page: NavigationPage | string, data?: unknown) => void;

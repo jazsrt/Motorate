@@ -13,7 +13,7 @@ interface StoryVehicle {
 }
 
 interface VehicleStoryRailProps {
-  onNavigate: (page: string, data?: any) => void;
+  onNavigate: (page: string, data?: unknown) => void;
 }
 
 export function VehicleStoryRail({ onNavigate }: VehicleStoryRailProps) {
@@ -30,7 +30,7 @@ export function VehicleStoryRail({ onNavigate }: VehicleStoryRailProps) {
         .limit(15);
 
       if (data) {
-        setVehicles(data.filter((v: any) => v.profile_image_url || v.stock_image_url));
+        setVehicles((data as unknown as StoryVehicle[]).filter((v: StoryVehicle) => v.profile_image_url || v.stock_image_url));
       }
     }
     load();

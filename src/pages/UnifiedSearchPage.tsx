@@ -51,7 +51,7 @@ interface Vehicle {
 }
 
 interface SearchPageProps {
-  onNavigate: (page: any, data?: any) => void;
+  onNavigate: (page: string, data?: unknown) => void;
   onViewVehicle?: (vehicleId: string) => void;
   initialQuery?: string;
   onClose?: () => void;
@@ -61,7 +61,7 @@ interface SearchPageProps {
 type SearchMode = 'general' | 'plate';
 type PlateViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading';
 
-export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQuery = '', onClose }: SearchPageProps) {
+export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQuery = '' }: SearchPageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [searchMode, setSearchMode] = useState<SearchMode>('general');
@@ -70,8 +70,8 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [currentUserHandle, setCurrentUserHandle] = useState<string>('');
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [_currentUserHandle, setCurrentUserHandle] = useState<string>('');
+  const _searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   const [plateViewState, setPlateViewState] = useState<PlateViewState>('search');
   const [plateState, setPlateState] = useState('');
@@ -100,7 +100,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
     loadCurrentUser();
   }, []);
 
-  const performUnifiedSearch = useCallback(async () => {
+  const _performUnifiedSearch = useCallback(async () => {
     setLoading(true);
     setHasSearched(true);
 
@@ -146,7 +146,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       if (vehiclesResult.error) {
         setVehicles([]);
       } else {
-        setVehicles(vehiclesResult.data || []);
+        setVehicles((vehiclesResult.data || []) as unknown as Vehicle[]);
       }
 
       setUsers([]);
@@ -197,8 +197,9 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       }
 
       if (vehicleData) {
-        setPlateVehicle(vehicleData as Vehicle);
-        setPlateViewState(vehicleData.is_claimed ? 'claimed' : 'unclaimed');
+        const vehicle = vehicleData as unknown as Vehicle;
+        setPlateVehicle(vehicle);
+        setPlateViewState(vehicle.is_claimed ? 'claimed' : 'unclaimed');
       } else {
         // Not in DB — try Auto.dev plate lookup
         const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code);
@@ -221,7 +222,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
           setPlateViewState('not-found');
         }
       }
-    } catch (err: any) {
+    } catch {
       showToast('Failed to search. Please try again.', 'error');
       setPlateViewState('search');
     }
@@ -587,7 +588,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
             <PlateFoundClaimed
               state={plateState}
               plateNumber={plateNumber}
-              vehicle={plateVehicle as any}
+              vehicle={plateVehicle as unknown as Parameters<typeof PlateFoundClaimed>[0]['vehicle']}
               onLeaveReview={handleSpotAndReview}
               onBack={handleBackToPlateSearch}
               onViewOwnerProfile={(userId) => onNavigate('user-profile', userId)}

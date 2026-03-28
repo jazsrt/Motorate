@@ -76,9 +76,9 @@ export async function rateVehicle(
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error rating vehicle:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
@@ -137,9 +137,9 @@ export async function rateDriver(
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error rating driver:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
@@ -360,7 +360,7 @@ export async function getTopRatedVehicles(limit: number = 10): Promise<Array<{
 
     if (error) throw error;
 
-    return (data || []).map((v: any) => ({
+    return (data as any[] || []).map((v: any) => ({
       vehicle_id: v.id,
       year: v.year,
       make: v.make,

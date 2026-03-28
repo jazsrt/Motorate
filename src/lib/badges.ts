@@ -93,16 +93,19 @@ export async function getUserBadges(userId: string): Promise<UserBadge[]> {
 
     const badgesWithDefaults = (data || [])
       .filter((item: any) => item.badge !== null)
-      .map((item: any) => ({
-        ...item,
-        badge: {
-          ...item.badge,
-          rarity: item.badge.tier === 'platinum' ? 'Legendary' :
-                  item.badge.tier === 'gold' ? 'Epic' :
-                  item.badge.tier === 'silver' ? 'Rare' :
-                  item.badge.tier === 'bronze' ? 'Uncommon' : 'Common'
-        }
-      }));
+      .map((item: any) => {
+        const badge = item.badge as any;
+        return {
+          ...item,
+          badge: {
+            ...badge,
+            rarity: badge.tier === 'platinum' ? 'Legendary' :
+                    badge.tier === 'gold' ? 'Epic' :
+                    badge.tier === 'silver' ? 'Rare' :
+                    badge.tier === 'bronze' ? 'Uncommon' : 'Common'
+          }
+        };
+      });
 
     return badgesWithDefaults as UserBadge[];
   } catch (error) {

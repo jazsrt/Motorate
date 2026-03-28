@@ -219,7 +219,7 @@ export async function getChallengeDetail(challengeId: string, userId: string) {
   if (progressError) throw progressError;
 
   // Map progress to checkpoints
-  const checkpointsWithProgress = challenge.checkpoints?.map((checkpoint: any) => {
+  const checkpointsWithProgress = challenge.checkpoints?.map((checkpoint: Record<string, unknown>) => {
     const checkpointProgress = progress?.find((p) => p.checkpoint_id === checkpoint.id);
     return {
       ...checkpoint,

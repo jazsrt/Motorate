@@ -29,7 +29,7 @@ export async function sendPushNotification(
       const error = await response.json();
       console.error('Failed to send push notification:', error);
     } else {
-      const result = await response.json();
+      await response.json();
     }
   } catch (error) {
     console.error('Error sending push notification:', error);

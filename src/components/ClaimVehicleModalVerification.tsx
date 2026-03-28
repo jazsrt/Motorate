@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Upload, Camera, FileText, User, Check, AlertCircle } from 'lucide-react';
+import { X, Camera, FileText, User, Check, AlertCircle } from 'lucide-react';
 import { submitVehicleClaim, ClaimDocuments } from '../lib/claims';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -79,8 +79,8 @@ export function ClaimVehicleModalVerification({
         setError(result.error || 'Failed to submit claim');
         showToast(result.error || 'Failed to submit claim', 'error');
       }
-    } catch (error: any) {
-      const errorMsg = error.message || 'Failed to submit claim';
+    } catch (error: unknown) {
+      const errorMsg = (error instanceof Error ? error.message : null) || 'Failed to submit claim';
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {

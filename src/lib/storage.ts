@@ -20,16 +20,10 @@ export async function uploadImage(
 
   const optimized = await optimizeImage(fileToOptimize);
 
-  let fileToUpload: File;
-  let fileName: string;
-
-  // Compress image if it's larger than 2MB or dimensions exceed limits
-  const shouldCompress = typeof optimized !== 'string' && optimized.size > 2 * 1024 * 1024;
-
   // Use optimized file for upload
   const fileExt = optimized.name.split('.').pop() || 'jpg';
-  fileName = `${user.id}/${folder}/${Date.now()}.${fileExt}`;
-  fileToUpload = optimized;
+  const fileName = `${user.id}/${folder}/${Date.now()}.${fileExt}`;
+  const fileToUpload = optimized;
 
   const { data, error } = await supabase.storage
     .from('motorate-images')

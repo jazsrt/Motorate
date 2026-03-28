@@ -28,7 +28,7 @@ interface RegisterPageProps {
 }
 
 export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
-  const { signUp, signInWithOAuth } = useAuth();
+  const { signInWithOAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [handle, setHandle] = useState('');
@@ -72,7 +72,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
       return;
     }
 
-    const { data, error: signUpError } = await signUp(email, password);
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
 
     if (signUpError) {
       setError(signUpError.message);

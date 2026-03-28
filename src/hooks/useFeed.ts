@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
 import { loadFeedCursor, FeedPost, FeedCursor } from '../lib/feed';
 
 interface UseFeedReturn {
@@ -16,7 +15,7 @@ interface UseFeedReturn {
 }
 
 export function useFeed(userId?: string): UseFeedReturn {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<UseFeedReturn['posts']>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [cursor, setCursor] = useState<FeedCursor | undefined>(undefined);
@@ -61,9 +60,9 @@ export function useFeed(userId?: string): UseFeedReturn {
           rating_driver: post.rating_driver,
           rating_driving: post.rating_driving,
           rating_vehicle: post.rating_vehicle,
-          looks_rating: post.looks_rating || post.rating_look || null,
-          sound_rating: post.sound_rating || post.rating_sound || null,
-          condition_rating: post.condition_rating || post.rating_condition || null,
+          looks_rating: post.looks_rating || null,
+          sound_rating: post.sound_rating || null,
+          condition_rating: post.condition_rating || null,
           vehicles: post.vehicles || null,
           author: {
             id: post.author_id,
@@ -84,7 +83,7 @@ export function useFeed(userId?: string): UseFeedReturn {
         return true;
       });
 
-      setPosts(reset ? postsWithViews : [...posts, ...postsWithViews]);
+      setPosts(reset ? postsWithViews as any : [...posts, ...postsWithViews] as any);
       setCursor(result.nextCursor || undefined);
       setHasMore(!!result.nextCursor);
     } catch (err) {

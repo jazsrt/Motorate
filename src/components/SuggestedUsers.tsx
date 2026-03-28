@@ -46,7 +46,7 @@ export function SuggestedUsers({ onNavigate }: SuggestedUsersProps) {
         .limit(12);
 
       setUsers(data || []);
-    } catch {
+    } catch { // intentionally empty
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,11 @@ export function SuggestedUsers({ onNavigate }: SuggestedUsersProps) {
 
   const handleDismiss = () => {
     setDismissed(true);
-    try { sessionStorage.setItem(DISMISSED_KEY, '1'); } catch {}
+    try {
+      sessionStorage.setItem(DISMISSED_KEY, '1');
+    } catch {
+      // intentionally empty
+    }
   };
 
   const handleFollowChange = (userId: string, isFollowing: boolean) => {

@@ -5,11 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import {
-  ArrowLeft, Star, User, Camera, AlertCircle, Key, ChevronLeft,
-  Award, TrendingUp, ThumbsUp, ThumbsDown, MessageCircle, Eye,
-  Sparkles, Shield, Car
+  Star, Camera, AlertCircle, ChevronLeft,
+  Eye,
+  Sparkles
 } from 'lucide-react';
-import { StarRating } from '../components/StarRating';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestBottomNav } from '../components/GuestBottomNav';
 import { UserAvatar } from '../components/UserAvatar';
@@ -40,7 +39,7 @@ interface BumperSticker {
 
 interface UnclaimedProfilePageProps {
   plateNumber: string;
-  onNavigate: (page: any, vehicleId?: string) => void;
+  onNavigate: (page: string, data?: unknown) => void;
 }
 
 export default function UnclaimedProfilePage({ plateNumber, onNavigate }: UnclaimedProfilePageProps) {
@@ -119,7 +118,7 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
 
         if (postsError) throw postsError;
 
-        setPosts((postsData as any) || []);
+        setPosts((postsData as unknown as Post[]) || []);
 
         // Calculate average ratings
         if (postsData && postsData.length > 0) {
@@ -159,7 +158,7 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
             'Show Car', 'Sleeper', 'Classic', 'Work in Progress'
           ];
 
-          const tagCounts = tags.reduce((acc: Record<string, number>, tag) => {
+          const tagCounts = tags.reduce((acc: Record<string, number>, tag: { tag_label: string; post_id: string }) => {
             acc[tag.tag_label] = (acc[tag.tag_label] || 0) + 1;
             return acc;
           }, {});

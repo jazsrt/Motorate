@@ -41,7 +41,7 @@ export async function verifyDocument(
   }
 
   // Map the edge function response to our VerificationResult format
-  const result = data as any;
+  const result = data as { verified: boolean; confidence: number; reason?: string; extractedData?: { vin?: string } };
   return {
     success: result.verified && result.confidence >= 0.7,
     message: result.verified
@@ -58,7 +58,7 @@ export async function verifyDocument(
  * Normalize VIN for comparison (uppercase, no spaces/dashes)
  */
 export function normalizeVIN(vin: string): string {
-  return vin.toUpperCase().replace(/[\s\-]/g, '');
+  return vin.toUpperCase().replace(/[\s-]/g, '');
 }
 
 /**

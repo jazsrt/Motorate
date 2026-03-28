@@ -116,8 +116,8 @@ export function RateDriverModal({
       showToast('Driver rating submitted! +10 points', 'success');
       onSuccess();
       onClose();
-    } catch (error: any) {
-      showToast(error.message || 'Failed to submit rating', 'error');
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : 'Failed to submit rating', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +127,7 @@ export function RateDriverModal({
   const displayVehicle = hoverVehicle || vehicleRating;
   const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 
-  function StarRow({ label, display, value, onHover, onChange, onLeave }: {
+  function StarRow({ label, display, onHover, onChange, onLeave }: {
     label: string; display: number; value: number;
     onHover: (v: number) => void; onChange: (v: number) => void; onLeave: () => void;
   }) {

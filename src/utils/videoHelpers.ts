@@ -95,7 +95,7 @@ export async function validateVideoFile(file: File): Promise<string | null> {
       const maxMinutes = Math.floor(VIDEO_CONSTRAINTS.maxDuration / 60);
       return `Video is too long. Maximum duration is ${maxMinutes} minutes.`;
     }
-  } catch (err) {
+  } catch {
     return 'Error reading video file. The file may be corrupted. Please try a different file.';
   }
 

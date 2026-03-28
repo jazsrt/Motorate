@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutDashboard, Users, Shield, FileText, Search, MoreVertical, Ban, UserPlus, Key, TrendingUp, Car, AlertTriangle, Check, CheckCircle, X, ChevronLeft, ArrowUp, ArrowDown, Clock, XCircle, Flag, UserCheck, Activity, Award, RefreshCw, MessageSquare, Heart, Image, MapPin, CircleUser as UserCircle, Trash2 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LayoutDashboard, Users, Shield, FileText, Search, MoreVertical, Ban, UserPlus, Key, TrendingUp, Car, Check, CheckCircle, X, ChevronLeft, ArrowUp, XCircle, UserCheck, Activity, Award, RefreshCw, MessageSquare, Heart, Image, MapPin, CircleUser as UserCircle, Trash2 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { UserAvatar } from '../components/UserAvatar';
@@ -567,7 +567,7 @@ function VehicleActionModal({ vehicle, action, users, onClose, onInstantClaim, o
 }
 
 interface AdminDashboardProps {
-  onNavigate?: (page: 'feed') => void;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
 export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
@@ -590,7 +590,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   const [badgeSearchQuery, setBadgeSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [pendingClaims, setPendingClaims] = useState<ClaimWithDetails[]>([]);
-  const [selectedClaim, setSelectedClaim] = useState<ClaimWithDetails | null>(null);
+  const [_selectedClaim, setSelectedClaim] = useState<ClaimWithDetails | null>(null);
   const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
   const [vehicleSearchResults, setVehicleSearchResults] = useState<ClaimedVehicle[]>([]);
   const [claimedVehicles, setClaimedVehicles] = useState<ClaimedVehicle[]>([]);
@@ -624,13 +624,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   useEffect(() => {
     checkAdminAccess();
   }, [user, checkAdminAccess]);
-
-  useEffect(() => {
-    if (hasAccess) {
-      loadDashboardData();
-      loadBadges();
-    }
-  }, [hasAccess, loadDashboardData]);
 
   useEffect(() => {
     if (!hasAccess) return;
@@ -817,7 +810,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     const day7Retention = 0; // Placeholder
 
     // Churned Users
-    const { count: churnedUsers } = await supabase
+    const { count: _churnedUsers } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true });
 
@@ -924,7 +917,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
         })
       );
 
-      setReports(reportsWithContent);
+      setReports(reportsWithContent as any);
 
       // Load logs
       const logsData = await supabase
@@ -942,7 +935,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
         .order('created_at', { ascending: false })
         .limit(50);
 
-      setLogs(logsData.data || []);
+      setLogs((logsData.data || []) as unknown as AdminLog[]);
 
       // Load pending posts
       const { data: pendingPostsData } = await supabase.rpc('get_pending_posts');
@@ -959,6 +952,13 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       setLoading(false);
     }
   }, [showToast]);
+
+  useEffect(() => {
+    if (hasAccess) {
+      loadDashboardData();
+      loadBadges();
+    }
+  }, [hasAccess, loadDashboardData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -1178,11 +1178,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
         </div>
       );
     }
-
-    const calculatePercentageChange = (current: number, previous: number) => {
-      if (previous === 0) return 0;
-      return Math.round(((current - previous) / previous) * 100);
-    };
 
     return (
       <div className="space-y-6">
@@ -1957,7 +1952,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
                         </p>
                         <div className="grid grid-cols-2 gap-3">
                           {claim.document_urls.map((url: string, index: number) => {
-                            const docType = (claim as any).document_types?.[index] || `Document ${index + 1}`;
+                            const docType = (claim as unknown as Record<string, string[]>).document_types?.[index] || `Document ${index + 1}`;
                             const icon = docType === 'registration' || docType === 'insurance' ? FileText :
                                         docType === 'photo' ? Image :
                                         docType === 'selfie' ? UserCircle : FileText;
@@ -2031,7 +2026,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       try {
         const results = await adminSearchVehicles(user.id, vehicleSearchQuery.trim());
         setVehicleSearchResults(results);
-      } catch (error) {
+      } catch (_error) {
         showToast('Failed to search vehicles', 'error');
       } finally {
         setVehiclesLoading(false);
@@ -2043,7 +2038,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       try {
         const results = await adminSearchUsers(user.id, userSearchQuery.trim());
         setUserSearchResults(results);
-      } catch (error) {
+      } catch (_error) {
         showToast('Failed to search users', 'error');
       }
     };
@@ -2054,7 +2049,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       try {
         const vehicles = await adminGetClaimedVehicles(user.id, 50, 0);
         setClaimedVehicles(vehicles);
-      } catch (error) {
+      } catch (_error) {
         showToast('Failed to load claimed vehicles', 'error');
       } finally {
         setVehiclesLoading(false);

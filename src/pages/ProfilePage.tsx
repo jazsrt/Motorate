@@ -11,7 +11,6 @@ import { PhotoLightbox } from '../components/PhotoLightbox';
 import { uploadImage } from '../lib/storage';
 import { ReactionButton } from '../components/ReactionButton';
 import { getUserBadges, type UserBadge } from '../lib/badges';
-import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { CreditCard as Edit } from 'lucide-react';
 import { BadgeCoin } from '../components/BadgeCoin';
 import { getTierFromScore } from '../lib/tierConfig';
@@ -22,25 +21,6 @@ interface ProfilePageProps {
   onNavigate: OnNavigate;
   onViewVehicle: (vehicleId: string) => void;
   onSendMessage?: (recipientId: string) => void;
-}
-
-function CountUp({ target, duration = 800 }: { target: number; duration?: number }) {
-  const [current, setCurrent] = useState(0);
-  const frameRef = useRef<number>();
-
-  useEffect(() => {
-    const start = performance.now();
-    function tick(now: number) {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCurrent(Math.round(target * eased));
-      if (progress < 1) frameRef.current = requestAnimationFrame(tick);
-    }
-    frameRef.current = requestAnimationFrame(tick);
-    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
-  }, [target, duration]);
-
-  return <span className="font-mono font-semibold text-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{current.toLocaleString()}</span>;
 }
 
 function ChangeArrow({ value }: { value: number }) {
@@ -76,9 +56,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
-  const [tagBreakdown, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
-  const [profileViewCount, setProfileViewCount] = useState(0);
-  const [activeQuests, setActiveQuests] = useState<any[]>([]);
+  const [_tagBreakdown, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
+  const [_profileViewCount, _setProfileViewCount] = useState(0);
+  const [_activeQuests, setActiveQuests] = useState<any[]>([]);
   const [userStickers, setUserStickers] = useState<any[]>([]);
   const [pinnedBadges, setPinnedBadges] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,27 +78,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [following, setFollowing] = useState<any[]>([]);
   const [cityRank, setCityRank] = useState<number | null>(null);
   const [weeklySpots, setWeeklySpots] = useState(0);
-  const [weeklyReviews, setWeeklyReviews] = useState(0);
-  const [weeklyStickers, setWeeklyStickers] = useState(0);
+  const [_weeklyReviews, setWeeklyReviews] = useState(0);
+  const [_weeklyStickers, setWeeklyStickers] = useState(0);
   const [fleetBadges, setFleetBadges] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-      loadVehicles();
-      loadUserBadges();
-      loadFollowCounts();
-      loadUserPosts();
-      loadTagBreakdown();
-      loadProfileViews();
-      loadActiveQuests();
-      loadUserStickers();
-      loadPinnedBadges();
-      loadAllPhotos();
-      loadWeeklyPulse();
-    }
-  }, [user, loadProfile, loadVehicles, loadUserBadges, loadFollowCounts, loadUserPosts, loadTagBreakdown, loadActiveQuests, loadUserStickers, loadPinnedBadges, loadAllPhotos, loadWeeklyPulse]);
-
 
   const loadProfile = useCallback(async () => {
     const { data } = await supabase
@@ -153,7 +115,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       setVehicles(data);
       // Load fleet badges from vehicle_badges
       if (data.length > 0) {
-        const vehicleIds = data.map(v => v.id);
+        const vehicleIds = (data as any[]).map((v: any) => v.id);
         const { data: vBadges } = await supabase
           .from('vehicle_badges')
           .select('vehicle_id, badge_id, tier, sticker_count')
@@ -347,7 +309,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     if (data) setSpotsGiven(data.filter(s => s.vehicle));
   };
 
-  const loadSpotsReceived = async () => {
+  const _loadSpotsReceived = async () => {
     if (!user) return;
     const { data: userVehicles } = await supabase
       .from('vehicles')
@@ -384,7 +346,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     if (data) setFollowers(data.map(f => f.follower));
   };
 
-  const loadFollowingList = async () => {
+  const _loadFollowingList = async () => {
     if (!user) return;
     const { data } = await supabase
       .from('follows')
@@ -440,7 +402,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           .gte('created_at', weekAgo);
         setWeeklyStickers(count || 0);
       }
-    } catch {}
+    } catch { /* intentionally empty */ }
   }, [user]);
 
   const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -449,7 +411,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
     setUploadingPhoto(true);
     try {
-      const photoUrl = await uploadImage(file, 'profile-photos');
+      const _photoUrl = await uploadImage(file, 'profiles');
       await loadAllPhotos();
       onNavigate('feed');
     } catch (error) {
@@ -499,7 +461,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
       const stickerMap = new Map();
       stickersData?.forEach((item: any) => {
-        const sticker = item.bumper_stickers;
+        const sticker = item.bumper_stickers as any;
         if (!sticker) return;
 
         if (!stickerMap.has(sticker.id)) {
@@ -517,6 +479,23 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       setUserStickers([]);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+      loadVehicles();
+      loadUserBadges();
+      loadFollowCounts();
+      loadUserPosts();
+      loadTagBreakdown();
+      loadProfileViews();
+      loadActiveQuests();
+      loadUserStickers();
+      loadPinnedBadges();
+      loadAllPhotos();
+      loadWeeklyPulse();
+    }
+  }, [user, loadProfile, loadVehicles, loadUserBadges, loadFollowCounts, loadUserPosts, loadTagBreakdown, loadActiveQuests, loadUserStickers, loadPinnedBadges, loadAllPhotos, loadWeeklyPulse]);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -540,7 +519,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { data: _uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -568,9 +547,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
       setProfile({ ...profile, avatar_url: publicUrl });
       alert('Profile photo updated successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading photo:', error);
-      const errorMessage = error?.message || 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`Failed to upload photo: ${errorMessage}`);
     } finally {
       setUploadingPhoto(false);
@@ -919,7 +898,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 {userBadges.slice(0, 10).map((userBadge) => (
                   <div key={userBadge.badge.id} className="flex flex-col items-center gap-1" title={userBadge.badge.name}>
                     <BadgeCoin
-                      tier={(userBadge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
+                      tier={((userBadge as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
                       name={userBadge.badge.name}
                       icon_path={getBadgeImagePath(userBadge.badge)}
                       size="md"
@@ -1314,7 +1293,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     {userBadges.map((userBadge) => (
                       <div key={userBadge.badge.id} className="flex flex-col items-center gap-2" title={userBadge.badge.description}>
                         <BadgeCoin
-                          tier={(userBadge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
+                          tier={((userBadge as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
                           name={userBadge.badge.name}
                           icon_path={getBadgeImagePath(userBadge.badge)}
                           size="lg"

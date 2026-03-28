@@ -39,7 +39,7 @@ function clean(val: string | undefined | null): string | null {
  * Build a human-readable engine description from NHTSA fields
  * e.g. "1.8L 4-Cyl 132hp" or "5.0L V8 460hp"
  */
-function buildEngineString(result: Record<string, any>): string | null {
+function buildEngineString(result: Record<string, string>): string | null {
   const parts: string[] = [];
 
   const displacement = result.DisplacementL;

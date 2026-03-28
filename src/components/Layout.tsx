@@ -7,7 +7,7 @@ import { LiveStatsBar } from './LiveStatsBar';
 interface LayoutProps {
   children: ReactNode;
   currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications' | 'search' | 'badges';
-  onNavigate: (page: string, data?: any) => void;
+  onNavigate: (page: string, data?: unknown) => void;
 }
 
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {

@@ -13,7 +13,7 @@ interface PushRequest {
   userId: string;
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 const corsHeaders = {
@@ -79,9 +79,9 @@ Deno.serve(async (req: Request) => {
         try {
           await webpush.sendNotification(subscription, payload);
           return { success: true, endpoint: sub.endpoint };
-        } catch (err: any) {
+        } catch (err: unknown) {
           // If subscription is invalid (410), mark it as inactive
-          if (err.statusCode === 410) {
+          if (err && typeof err === 'object' && 'statusCode' in err && (err as Record<string, unknown>).statusCode === 410) {
             await supabase
               .from('push_subscriptions')
               .update({ active: false })
@@ -104,11 +104,11 @@ Deno.serve(async (req: Request) => {
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Push notification error:', error);
 
     return new Response(
-      JSON.stringify({ success: false, error: error.message || 'Internal server error' }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

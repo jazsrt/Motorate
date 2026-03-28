@@ -24,7 +24,7 @@ export function useModerationSubscription(onUpdate?: () => void) {
           table: 'reviews',
           filter: `author_id=eq.${user.id}`,
         },
-        (payload: any) => {
+        (payload: { new: Record<string, unknown>; old?: Record<string, unknown> }) => {
           const newStatus = payload.new.moderation_status;
           const oldStatus = payload.old?.moderation_status;
 
@@ -58,7 +58,7 @@ export function useModerationSubscription(onUpdate?: () => void) {
           table: 'posts',
           filter: `author_id=eq.${user.id}`,
         },
-        (payload: any) => {
+        (payload: { new: Record<string, unknown>; old?: Record<string, unknown> }) => {
           const newStatus = payload.new.moderation_status;
           const oldStatus = payload.old?.moderation_status;
 

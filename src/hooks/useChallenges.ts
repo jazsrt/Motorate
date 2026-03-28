@@ -4,7 +4,7 @@ import { getChallengesWithProgress } from '../lib/challenges';
 
 export function useChallenges() {
   const { user } = useAuth();
-  const [challenges, setChallenges] = useState<any[]>([]);
+  const [challenges, setChallenges] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,9 +19,9 @@ export function useChallenges() {
       const data = await getChallengesWithProgress(user.id);
       setChallenges(data || []);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading challenges:', err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }

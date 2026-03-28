@@ -4,7 +4,7 @@ interface NavigationState {
   returnTo?: string;
   returnLabel?: string;
   breadcrumb?: string[];
-  preserveState?: any;
+  preserveState?: unknown;
 }
 
 interface NavigationContextType {
@@ -27,7 +27,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const goBack = () => {
     if (navigationState?.returnTo) {
       window.location.hash = navigationState.returnTo;
-      setNavigationState(navigationState.preserveState || {});
+      setNavigationState((navigationState.preserveState as NavigationState) || {});
     } else {
       window.history.back();
     }

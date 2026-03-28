@@ -129,10 +129,10 @@ Deno.serve(async (req: Request) => {
         'Content-Disposition': `attachment; filename="motorated-data-export-${user.id}.json"`,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error exporting user data:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to export data', details: error.message }),
+      JSON.stringify({ error: 'Failed to export data', details: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

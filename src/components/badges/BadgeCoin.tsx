@@ -17,6 +17,7 @@ const tierGradients = {
   locked: '#202c3c',
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function BadgeCoin({ tier, icon, name, earned, size = 56, onClick }: BadgeCoinProps) {
   return (
     <button

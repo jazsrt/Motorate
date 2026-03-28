@@ -8,14 +8,6 @@ interface NHTSAModel {
   Model_Name: string;
 }
 
-interface NHTSAYear {
-  year: number;
-}
-
-interface NHTSATrim {
-  Trim: string;
-}
-
 const NHTSA_BASE_URL = 'https://vpic.nhtsa.dot.gov/api/vehicles';
 
 // Keywords to exclude (trailers, motorcycles, etc.)
@@ -85,12 +77,12 @@ export async function getTrimsForModel(make: string, model: string, year?: strin
     if (data.Results && Array.isArray(data.Results)) {
       // Filter to the specific model and extract unique trims
       const trims = data.Results
-        .filter((item: any) => item.Model_Name === model && item.Trim)
-        .map((item: any) => item.Trim)
+        .filter((item: { Model_Name: string; Trim?: string }) => item.Model_Name === model && item.Trim)
+        .map((item: { Model_Name: string; Trim?: string }) => item.Trim)
         .filter((trim: string) => trim && trim.trim());
 
       // Remove duplicates and sort
-      return [...new Set(trims)].sort();
+      return [...new Set(trims)].sort() as string[];
     }
 
     return [];

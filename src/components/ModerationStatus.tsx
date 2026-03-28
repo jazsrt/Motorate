@@ -1,4 +1,4 @@
-import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Clock, XCircle } from 'lucide-react';
 
 type ModerationStatusType = 'pending' | 'approved' | 'rejected';
 

@@ -1,13 +1,13 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useFeed } from '../hooks/useFeed';
 import PostCard from './PostCard';
-import LoadingSpinner from './ui/LoadingSpinner';
+import { LoadingSpinner } from './ui/LoadingSpinner';
 import { PostCardSkeleton } from './ui/PostCardSkeleton';
 
 export default function Feed() {
   const { posts, loading, hasMore, loadMore } = useFeed();
-  const observerRef = useRef(null);
-  const loadMoreRef = useRef(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -32,7 +32,7 @@ export default function Feed() {
 
   return (
     <div className="space-y-4">
-      {posts.map(post => <PostCard key={post.id} post={post} />)}
+      {posts.map(post => <PostCard key={post.id} post={post as unknown as React.ComponentProps<typeof PostCard>['post']} />)}
       {loading && posts.length === 0 && (
         <>
           <PostCardSkeleton />

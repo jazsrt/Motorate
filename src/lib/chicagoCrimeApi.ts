@@ -9,13 +9,16 @@ export interface CrimeIncident {
   case_number: string;
   date: string;
   primary_type: string;
+  type?: string;
   description: string;
   location_description: string;
+  block?: string;
   arrest: boolean;
   domestic: boolean;
   latitude: string;
   longitude: string;
   year: string;
+  location?: { lat: number; lng: number };
 }
 
 export async function fetchChicagoCrimeData(): Promise<CrimeIncident[]> {

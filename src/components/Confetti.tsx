@@ -15,7 +15,7 @@ interface Particle {
 
 const CONFETTI_EMOJIS = ['🎉', '⭐', '✨', '🏆', '🎊', '💫', '🌟', '🔥'];
 
-export function Confetti({ duration = 3000 }: ConfettiProps) {
+export function Confetti({ duration: _duration = 3000 }: ConfettiProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {

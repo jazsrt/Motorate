@@ -52,11 +52,11 @@ export async function trackPostView(postId: string, userId?: string | null): Pro
       .then(({ error }) => {
         if (error) return;
         // Increment view_count on posts table (existing column)
-        supabase.rpc('increment_post_view_count', {
+        void Promise.resolve(supabase.rpc('increment_post_view_count', {
           p_post_id: postId,
           p_user_id: userId || null,
           p_session_id: sessionId,
-        }).catch(() => {});
+        })).catch(() => {});
       });
 
   } catch {

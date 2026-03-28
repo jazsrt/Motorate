@@ -39,7 +39,7 @@ export function VerifyEmailPage() {
       } else {
         setResent(true);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to resend verification email. Please try again.');
     } finally {
       setResending(false);
@@ -64,7 +64,7 @@ export function VerifyEmailPage() {
         setResent(true);
         setNewEmail('');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to change email. Please try again.');
     } finally {
       setChangingEmail(false);

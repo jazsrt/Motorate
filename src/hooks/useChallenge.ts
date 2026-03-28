@@ -4,7 +4,7 @@ import { getChallengeDetail, calculateDistance } from '../lib/challenges';
 
 export function useChallenge(challengeId: string) {
   const { user } = useAuth();
-  const [challenge, setChallenge] = useState<any>(null);
+  const [challenge, setChallenge] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -20,9 +20,9 @@ export function useChallenge(challengeId: string) {
       const data = await getChallengeDetail(challengeId, user.id);
       setChallenge(data);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading challenge:', err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -49,13 +49,13 @@ export function useChallenge(challengeId: string) {
     }
   };
 
-  const checkpointsWithDistance = challenge?.checkpoints?.map((checkpoint: any) => {
+  const checkpointsWithDistance = (challenge?.checkpoints as Array<Record<string, unknown>> | undefined)?.map((checkpoint: Record<string, unknown>) => {
     if (userLocation) {
       const distance = calculateDistance(
         userLocation.lat,
         userLocation.lng,
-        parseFloat(checkpoint.lat),
-        parseFloat(checkpoint.lng)
+        parseFloat(String(checkpoint.lat)),
+        parseFloat(String(checkpoint.lng))
       );
       return { ...checkpoint, distance };
     }

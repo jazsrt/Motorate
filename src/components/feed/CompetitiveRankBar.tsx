@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
 
 interface CompetitiveRankBarProps {
   rank: number;
@@ -12,7 +11,7 @@ interface CompetitiveRankBarProps {
 }
 
 export function CompetitiveRankBar({
-  rank, city = 'your city', totalUsers = 0, topPercent = 0, spotsThisWeek = 0, userId,
+  rank, city = 'your city', topPercent = 0, spotsThisWeek = 0, userId,
 }: CompetitiveRankBarProps) {
   const [nudge, setNudge] = useState<{ name: string; remaining: number; percent: number } | null>(null);
 
@@ -42,7 +41,7 @@ export function CompetitiveRankBar({
           const percent = Math.min(95, Math.round((spots / next.tier_threshold) * 100));
           if (percent >= 10) setNudge({ name: next.name, remaining, percent });
         }
-      } catch {}
+      } catch { /* intentionally empty */ }
     }
     loadNudge();
   }, [userId]);

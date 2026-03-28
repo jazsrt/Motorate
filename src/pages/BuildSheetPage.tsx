@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { uploadImage } from '../lib/storage';
-import { ArrowLeft, Plus, Trash2, AlertCircle, Upload, X, DollarSign, Package } from 'lucide-react';
+import { ArrowLeft, Plus, AlertCircle, Upload, X, DollarSign, Package } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 
 interface BuildSheetPageProps {
@@ -125,8 +125,8 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
         setShowAddForm(false);
         loadModifications();
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to add modification');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add modification');
     } finally {
       setSubmitting(false);
     }

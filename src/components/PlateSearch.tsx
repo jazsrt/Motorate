@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, Car } from 'lucide-react';
+import { } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const US_STATES = [
@@ -63,10 +63,10 @@ interface PlateSearchProps {
   initialPlate?: string;
 }
 
-export function PlateSearch({ onSearch, onCameraScan, onNavigateToVehicle, initialPlate }: PlateSearchProps) {
+export function PlateSearch({ onSearch, initialPlate }: PlateSearchProps) {
   const [state, setState] = useState('Illinois');
   const [plateNumber, setPlateNumber] = useState(initialPlate || '');
-  const [recentSpots, setRecentSpots] = useState<any[]>([]);
+  const [, setRecentSpots] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     loadRecentSpots();

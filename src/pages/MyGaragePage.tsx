@@ -2,17 +2,11 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Plus,
   Car,
-  Star,
-  Eye,
-  Wrench,
   Sparkles,
-  Lock,
   Calendar,
   Crosshair,
-  Zap,
   ChevronRight,
   X,
-  Image as ImageIcon,
   User,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -35,7 +29,7 @@ import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
 const GARAGE_VEHICLE_SELECT = VEHICLE_OWNER_COLUMNS + `, avg_rating, photos:vehicle_images(*), modifications(*)`;
 
 interface MyGaragePageProps {
-  onNavigate?: (page: string, data?: any) => void;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
 export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
@@ -47,7 +41,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [retiredVehicles, setRetiredVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddRetiredVehicle, setShowAddRetiredVehicle] = useState(false);
-  const [vehicleToRetire, setVehicleToRetire] = useState<any | null>(null);
+  const [vehicleToRetire, setVehicleToRetire] = useState<GarageVehicle | null>(null);
   const [showAllRetiredModal, setShowAllRetiredModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [vehicleToVerify, setVehicleToVerify] = useState<(GarageVehicle & { [key: string]: any }) | null>(null);
@@ -55,22 +49,16 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [showClaimSearch, setShowClaimSearch] = useState(false);
   const [claimSearchQuery, setClaimSearchQuery] = useState('');
   const [claimSearchLoading, setClaimSearchLoading] = useState(false);
-  const [claimSearchResult, setClaimSearchResult] = useState<any | null>(null);
+  const [claimSearchResult, setClaimSearchResult] = useState<any>(null);
   const [claimSearchError, setClaimSearchError] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [userBadgesForGarage, setUserBadgesForGarage] = useState<any[]>([]);
+  const [_userBadgesForGarage, setUserBadgesForGarage] = useState<any[]>([]);
   const [retiredStockImages, setRetiredStockImages] = useState<Record<string, string>>({});
 
   // New state for garage hero
   const [userProfile, setUserProfile] = useState<{ handle: string; full_name: string | null; avatar_url: string | null; reputation_tier: string | null } | null>(null);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
   const [badgeCount, setBadgeCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      loadGarageData();
-    }
-  }, [user, loadGarageData]);
 
   useEffect(() => {
     if (!user) return;
@@ -155,17 +143,6 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     };
   }, [vehicles, vehicleStickerCounts]);
 
-  const loadGarageData = useCallback(async () => {
-    try {
-      setLoading(true);
-      await Promise.all([loadVehicles(), loadRetiredVehicles()]);
-    } catch {
-      showToast('Failed to load garage', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast, loadVehicles, loadRetiredVehicles]);
-
   const loadVehicles = useCallback(async () => {
     const { data: ownedVehicles } = await supabase
       .from('vehicles')
@@ -180,10 +157,10 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       .in('status', ['pending', 'approved']);
 
     const allVehicles: any[] = [];
-    if (ownedVehicles) allVehicles.push(...ownedVehicles);
+    if (ownedVehicles) allVehicles.push(...(ownedVehicles as any[]));
     if (allClaims) {
-      const ownedIds = new Set(ownedVehicles?.map(v => v.id) || []);
-      for (const claim of allClaims) {
+      const ownedIds = new Set((ownedVehicles as any[])?.map((v: any) => v.id) || []);
+      for (const claim of (allClaims as any[])) {
         if (claim.vehicle && !ownedIds.has(claim.vehicle.id)) {
           allVehicles.push({
             ...claim.vehicle,
@@ -223,7 +200,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         countMap[f.vehicle_id] = (countMap[f.vehicle_id] || 0) + 1;
       });
       allVehicles.forEach((v: any) => {
-        v._vehicleFollowerCount = countMap[v.id] || 0;
+        v._vehicleFollowerCount = countMap[v.id as string] || 0;
       });
 
       // Load vehicle badges for fleet tiles
@@ -235,7 +212,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       if (vehicleBadgeData) {
         const tierOrder: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
         const badgeMap: Record<string, { badge_id: string; tier: string }> = {};
-        (vehicleBadgeData as any[]).forEach(vb => {
+        (vehicleBadgeData as any[]).forEach((vb: any) => {
           const existing = badgeMap[vb.vehicle_id];
           const newOrder = tierOrder[vb.tier] || 0;
           const existingOrder = existing ? (tierOrder[existing.tier] || 0) : 0;
@@ -244,7 +221,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           }
         });
         allVehicles.forEach((v: any) => {
-          v.topBadge = badgeMap[v.id] || null;
+          v.topBadge = badgeMap[v.id as string] || null;
         });
       }
     }
@@ -261,6 +238,23 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       .order('retired_at', { ascending: false });
     if (data) setRetiredVehicles(data);
   }, [user]);
+
+  const loadGarageData = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([loadVehicles(), loadRetiredVehicles()]);
+    } catch {
+      showToast('Failed to load garage', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast, loadVehicles, loadRetiredVehicles]);
+
+  useEffect(() => {
+    if (user) {
+      loadGarageData();
+    }
+  }, [user, loadGarageData]);
 
   const handleClaimSearch = async () => {
     const query = claimSearchQuery.trim().toUpperCase().replace(/\s+/g, '');
@@ -293,7 +287,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     }
   };
 
-  const handleNavigate = (page: string, data?: any) => {
+  const handleNavigate = (page: string, data?: unknown) => {
     if (onNavigate) {
       onNavigate(page, data);
     } else {
@@ -312,7 +306,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const handle = userProfile?.handle || user?.user_metadata?.handle || 'driver';
   const avatarUrl = userProfile?.avatar_url || user?.user_metadata?.avatar_url;
   const tier = userProfile?.reputation_tier;
-  const totalRP = vehicles.reduce((sum, v) => sum + ((v as any).reputation_score ?? 0), 0);
+  const totalRP = vehicles.reduce((sum, v) => sum + ((v as unknown as Record<string, number>).reputation_score ?? 0), 0);
 
   // FleetTile component
   const FleetTile = ({ vehicle }: { vehicle: GarageVehicle & { [key: string]: any } }) => {
@@ -323,9 +317,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
     const userPhoto = vehicle.photos?.[0]?.url || vehicle.photo_url;
     const stockPhoto = vehicle.stock_image_url || stockImages[vehicle.id];
-    const photoUrl = imgError ? null : (userPhoto || stockPhoto);
+    const photoUrl: string | null = imgError ? null : (userPhoto || stockPhoto) as string | null;
 
-    const isPending = vehicle._claimStatus === 'pending' || vehicle.verification_tier === 'pending';
+    const isPending = vehicle._claimStatus === 'pending' || (vehicle.verification_tier as string) === 'pending';
     const isClaimed = !isPending && (vehicle.owner_id || vehicle.is_claimed);
     const isVerified = vehicle.verification_tier === 'verified' || vehicle.verification_tier === 'vin_verified';
 
@@ -335,7 +329,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     const statusColor = isPending ? '#F97316' : isVerified ? '#22c55e' : isClaimed ? '#22c55e' : '#556677';
 
     const spotCount = vehicle.spot_count ?? vehicle.spots_count ?? 0;
-    const vehiclePhotos = (vehicle.photos as Array<{ url: string; uploaded_at: string }>) || [];
+    const vehiclePhotos = (vehicle.photos as unknown as Array<{ url: string; uploaded_at: string }>) || [];
     const photoUrls = vehiclePhotos.map(p => p.url);
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -349,7 +343,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
       setUploading(true);
       try {
-        const photoUrl = await uploadImage(file, 'vehicle-photos');
+        const photoUrl = await uploadImage(file, 'vehicles');
         const updatedPhotos = [
           ...vehiclePhotos,
           { url: photoUrl, uploaded_at: new Date().toISOString() }
@@ -712,7 +706,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                 The Fleet {'\u00B7'} {vehicles.length}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <span onClick={() => onNavigate('create-post')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
+                <span onClick={() => onNavigate?.('create-post')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
                   + New Post
                 </span>
                 <span onClick={() => setShowClaimSearch(true)} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>

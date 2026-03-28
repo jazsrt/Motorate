@@ -28,7 +28,7 @@ export function initSentry() {
     replaysOnErrorSampleRate: 1.0,
 
     // Filter out sensitive data
-    beforeSend(event, hint) {
+    beforeSend(event, _hint) {
       // Remove sensitive query parameters
       if (event.request?.url) {
         try {
@@ -38,8 +38,8 @@ export function initSentry() {
           url.searchParams.delete('key');
           url.searchParams.delete('api_key');
           event.request.url = url.toString();
-        } catch (e) {
-          // Invalid URL, leave as is
+        } catch (_e) {
+          // intentionally empty
         }
       }
 
@@ -91,7 +91,7 @@ export function setSentryUser(user: { id: string; email?: string; handle?: strin
 }
 
 // Capture exceptions manually
-export function captureException(error: Error, context?: Record<string, any>) {
+export function captureException(error: Error, context?: Record<string, unknown>) {
   Sentry.captureException(error, {
     extra: context,
   });

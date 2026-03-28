@@ -54,7 +54,7 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
           owner: Array.isArray(data.owner) ? data.owner[0] : data.owner,
         } as VehicleData);
       }
-    } catch {
+    } catch { // intentionally empty
     } finally {
       setLoading(false);
     }

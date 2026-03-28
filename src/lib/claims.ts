@@ -513,6 +513,7 @@ export interface ClaimedVehicle {
   owner_handle: string | null;
   owner_avatar_url: string | null;
   is_verified: boolean;
+  is_claimed: boolean;
   claimed_at: string | null;
 }
 
