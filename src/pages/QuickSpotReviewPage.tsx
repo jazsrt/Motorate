@@ -163,6 +163,9 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
       }
 
       // STEP 1: Record the spot in spot_history
+      // NOTE: If location (lat/lng) is added to this payload in the future,
+      // it MUST go through fuzzCoordinates() from src/lib/locationPrivacy.ts first.
+      // Never store raw GPS coordinates.
       const spotPayload: Record<string, unknown> = {
         spotter_id: user.id,
         vehicle_id: vehicleId,

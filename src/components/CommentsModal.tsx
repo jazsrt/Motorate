@@ -110,7 +110,7 @@ export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavi
 
           authorBadges = userBadges
             .map(ub => ub.badge)
-            .filter(b => b && b.id && b.rarity && b.icon_name);
+            .filter(b => b && b.id && b.icon_name);
           driverRating = rating;
         } catch (error) {
           console.error('Error loading author data for comment:', error);
@@ -243,7 +243,7 @@ export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavi
 
           authorBadges = userBadges
             .map(ub => ub.badge)
-            .filter(b => b && b.id && b.rarity && b.icon_name);
+            .filter(b => b && b.id && b.icon_name);
           driverRating = rating;
         } catch (error) {
           console.error('Error loading author data:', error);

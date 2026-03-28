@@ -45,6 +45,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
     plate_number: string | null;
     plate_state: string | null;
     stock_image_url: string | null;
+    profile_image_url?: string | null;
   }>>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
@@ -60,7 +61,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
     if (!user) return;
     supabase
       .from('vehicles')
-      .select('id, make, model, year, plate_number, plate_state, stock_image_url')
+      .select('id, make, model, year, plate_number, plate_state, stock_image_url, profile_image_url')
       .eq('owner_id', user.id)
       .eq('is_claimed', true)
       .then(({ data }) => {
@@ -601,8 +602,8 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                             width: 36, height: 26, borderRadius: 5, overflow: 'hidden',
                             background: '#0e1320', flexShrink: 0,
                           }}>
-                            {v.stock_image_url && (
-                              <img src={v.stock_image_url} alt={label}
+                            {(v.profile_image_url || v.stock_image_url) && (
+                              <img src={(v.profile_image_url || v.stock_image_url)!} alt={label}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             )}
                           </div>

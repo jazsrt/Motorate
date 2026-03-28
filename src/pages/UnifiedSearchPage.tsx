@@ -33,6 +33,7 @@ interface Vehicle {
   color: string | null;
   trim: string | null;
   stock_image_url: string | null;
+  profile_image_url?: string | null;
   owner_id: string | null;
   is_claimed: boolean;
   verification_tier: VerificationTier;
@@ -402,8 +403,8 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
                         width: 58, height: 40, borderRadius: 5, overflow: 'hidden',
                         background: '#0e1320', flexShrink: 0,
                       }}>
-                        {v.stock_image_url && (
-                          <img src={v.stock_image_url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {(v.profile_image_url || v.stock_image_url) && (
+                          <img src={(v.profile_image_url || v.stock_image_url)!} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         )}
                       </div>
 
@@ -541,7 +542,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
             </div>
 
             <button
-              onClick={() => onNavigate('spot', { plateNumber, plateState: plateStateCode || plateState })}
+              onClick={() => onNavigate('scan', { plateNumber, plateState: plateStateCode || plateState })}
               style={{
                 width: '100%', padding: '13px',
                 background: '#F97316', border: 'none', borderRadius: 8,

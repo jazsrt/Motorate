@@ -202,6 +202,9 @@ export function DetailedSpotAndReviewPage({
         // NEW FULL SPOT CASE: Insert into all three tables
 
         // STEP 1: Record the spot in spot_history
+        // NOTE: If location (lat/lng) is added to this payload in the future,
+        // it MUST go through fuzzCoordinates() from src/lib/locationPrivacy.ts first.
+        // Never store raw GPS coordinates.
         const { data: spotData, error: spotError } = await supabase
           .from('spot_history')
           .insert({

@@ -20,6 +20,7 @@ interface VehicleData {
   year: number | null;
   color: string | null;
   stock_image_url: string | null;
+  profile_image_url: string | null;
   owner_id: string | null;
   is_claimed: boolean;
   verification_tier: 'shadow' | 'standard' | 'verified';
@@ -41,7 +42,7 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
       const { data } = await supabase
         .from('vehicles')
         .select(`
-          id, make, model, year, color, stock_image_url,
+          id, make, model, year, color, stock_image_url, profile_image_url,
           owner_id, is_claimed, verification_tier,
           owner:profiles!owner_id(handle, avatar_url)
         `)
@@ -65,9 +66,12 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
   }, [loadVehicle]);
 
   useEffect(() => {
-    if (vehicle && !vehicle.stock_image_url) {
-      getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined).then(url => {
-        if (url) setCarImageryUrl(url);
+    if (vehicle && !vehicle.profile_image_url && !vehicle.stock_image_url) {
+      getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined, vehicle.color || undefined).then(url => {
+        if (url) {
+          setCarImageryUrl(url);
+          supabase.from('vehicles').update({ stock_image_url: url }).eq('id', vehicle.id).then(() => {});
+        }
       });
     }
   }, [vehicle]);
@@ -83,7 +87,7 @@ export function VehicleQuickModal({ vehicleId, onClose, onNavigate }: VehicleQui
     }
   };
 
-  const imgUrl = vehicle?.stock_image_url || carImageryUrl;
+  const imgUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
 
   return (
     <ModalShell

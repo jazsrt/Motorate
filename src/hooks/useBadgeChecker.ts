@@ -23,7 +23,6 @@ import { useBadges } from '../contexts/BadgeContext';
 interface AwardedBadge {
   badge_id: string;
   badge_name: string;
-  badge_rarity: string;
 }
 
 export function useBadgeChecker() {

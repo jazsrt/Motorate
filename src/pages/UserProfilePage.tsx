@@ -123,7 +123,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
         earned_at,
         tier,
         badge_id,
-        badge:badges(id, name, icon_name, category, rarity, description)
+        badge:badges(id, name, icon_name, category, description)
       `)
       .eq('user_id', userId);
 
@@ -131,7 +131,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
     const { data: allBadgeData } = await supabase
       .from('badges')
-      .select('id, name, icon_name, category, rarity, tier, tier_threshold')
+      .select('id, name, icon_name, category, tier, tier_threshold')
       .order('tier_threshold', { ascending: true })
       .limit(60);
 

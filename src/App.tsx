@@ -114,7 +114,7 @@ function AppContent() {
   const [claimingVehicleId, setClaimingVehicleId] = useState<string | undefined>(undefined);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | undefined>(undefined);
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
-  const [_selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined);
+  const [selectedPostId, setSelectedPostId] = useState<string | undefined>(undefined);
   const [messageRecipientId, setMessageRecipientId] = useState<string | undefined>(undefined);
   const [shadowPlateNumber, setShadowPlateNumber] = useState<string>('');
   const [spotPlateState, setSpotPlateState] = useState<string>('');
@@ -304,7 +304,7 @@ function AppContent() {
       if (currentPage === 'post-detail') {
         return (
           <Suspense fallback={<LoadingScreen />}>
-            <NewFeedPage onNavigate={handleNavigate} />
+            <NewFeedPage onNavigate={handleNavigate} focusPostId={selectedPostId} />
           </Suspense>
         );
       }
@@ -512,7 +512,7 @@ function AppContent() {
       pageContent = <NewFeedPage onNavigate={handleNavigate} />;
       break;
     case 'post-detail':
-      pageContent = <NewFeedPage onNavigate={handleNavigate} />;
+      pageContent = <NewFeedPage onNavigate={handleNavigate} focusPostId={selectedPostId} />;
       break;
     default:
       pageContent = (

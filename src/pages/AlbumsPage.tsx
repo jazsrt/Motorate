@@ -51,7 +51,7 @@ export function AlbumsPage({ onNavigate }: AlbumsPageProps) {
       const albumsWithCounts = await Promise.all(
         data.map(async (album) => {
           const { count } = await supabase
-            .from('album_posts')
+            .from('album_photos')
             .select('*', { count: 'exact', head: true })
             .eq('album_id', album.id);
 

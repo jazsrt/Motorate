@@ -4,12 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
 import { useFeed } from '../hooks/useFeed';
+import { supabase } from '../lib/supabase';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
 
 interface NewFeedPageProps {
   onNavigate: OnNavigate;
+  focusPostId?: string;
 }
 
 const pillStyle = (active: boolean): React.CSSProperties => ({
@@ -21,13 +23,54 @@ const pillStyle = (active: boolean): React.CSSProperties => ({
   color: active ? '#F97316' : '#445566', cursor: 'pointer', whiteSpace: 'nowrap' as const,
 });
 
-export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
+export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const { user, loading: authLoading } = useAuth();
   const { posts, loading, error, refreshFeed, hasMore, loadMore } = useFeed(user?.id);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterMake, setFilterMake] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'spots' | 'posts'>('all');
+  const [focusPost, setFocusPost] = useState<any>(null);
+  const [focusLoading, setFocusLoading] = useState(!!focusPostId);
+
+  useEffect(() => {
+    if (!focusPostId) return;
+    setFocusLoading(true);
+    supabase
+      .from('posts')
+      .select(`
+        id, author_id, post_type, spot_type, sentiment, caption, image_url, video_url, content_type,
+        location_label, vehicle_id, created_at, view_count, comment_count,
+        rating_driver, rating_driving, rating_vehicle, looks_rating, sound_rating, condition_rating,
+        author:profiles!posts_author_id_fkey(handle, avatar_url, is_admin),
+        vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count)
+      `)
+      .eq('id', focusPostId)
+      .maybeSingle()
+      .then(async ({ data }) => {
+        if (!data) { setFocusLoading(false); return; }
+        const author = Array.isArray(data.author) ? data.author[0] : data.author;
+        const vehicles = Array.isArray(data.vehicles) ? data.vehicles[0] : data.vehicles;
+        const postImage = data.image_url || null;
+        const vehicleImage = vehicles?.profile_image_url || vehicles?.stock_image_url || null;
+        const { data: reactions } = await supabase.from('reactions').select('user_id').eq('post_id', data.id);
+        setFocusPost({
+          id: data.id, author_id: data.author_id, post_type: data.post_type, spot_type: data.spot_type,
+          sentiment: data.sentiment, caption: data.caption,
+          image_urls: (postImage || vehicleImage) ? [postImage || vehicleImage] : null,
+          video_url: data.video_url || null, content_type: data.content_type || (data.video_url ? 'video' : 'image'),
+          location: data.location_label, created_at: data.created_at,
+          like_count: reactions?.length || 0, comment_count: data.comment_count || 0,
+          view_count: data.view_count || 0, vehicle_id: data.vehicle_id,
+          rating_driver: data.rating_driver, rating_driving: data.rating_driving, rating_vehicle: data.rating_vehicle,
+          looks_rating: data.looks_rating, sound_rating: data.sound_rating, condition_rating: data.condition_rating,
+          vehicles: vehicles || null,
+          author: { id: data.author_id, handle: author?.handle || 'unknown', avatar_url: author?.avatar_url || null },
+          profiles: { verified: author?.is_admin || false },
+        });
+        setFocusLoading(false);
+      });
+  }, [focusPostId]);
 
   // Infinite scroll
   useEffect(() => {
@@ -169,6 +212,27 @@ export function NewFeedPage({ onNavigate }: NewFeedPageProps) {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Focused post (from shared link) */}
+      {focusPostId && focusLoading && (
+        <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+          <div style={{ width: 20, height: 20, margin: '0 auto', border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      )}
+      {focusPost && (
+        <div>
+          <div style={{ padding: '10px 16px 6px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+            Shared Post
+          </div>
+          <FeedPostCard
+            post={focusPost}
+            vehicleRank={null}
+            currentUserId={user?.id}
+            onNavigate={onNavigate}
+          />
+          <div style={{ height: 2, background: 'rgba(249,115,22,0.15)', margin: '4px 0' }} />
         </div>
       )}
 

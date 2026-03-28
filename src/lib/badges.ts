@@ -11,7 +11,6 @@ export interface Badge {
   name: string;
   description: string;
   category: string;
-  rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
   icon_name: string;
   icon_path?: string;
   level: number;
@@ -33,24 +32,6 @@ export interface UserBadge {
   earned_at: string;
   badge: Badge;
 }
-
-export type BadgeRarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
-
-export const BADGE_RARITY_COLORS: Record<BadgeRarity, string> = {
-  Common: 'text-gray-400',
-  Uncommon: 'text-green-400',
-  Rare: 'text-[#F97316]',
-  Epic: 'text-[#fb923c]',
-  Legendary: 'text-yellow-400'
-};
-
-export const BADGE_RARITY_BG: Record<BadgeRarity, string> = {
-  Common: 'bg-gray-400/20',
-  Uncommon: 'bg-green-400/20',
-  Rare: 'bg-[#F97316]/20',
-  Epic: 'bg-[#fb923c]/20',
-  Legendary: 'bg-yellow-400/20'
-};
 
 /**
  * Get all badges earned by a user
@@ -99,10 +80,6 @@ export async function getUserBadges(userId: string): Promise<UserBadge[]> {
           ...item,
           badge: {
             ...badge,
-            rarity: badge.tier === 'platinum' ? 'Legendary' :
-                    badge.tier === 'gold' ? 'Epic' :
-                    badge.tier === 'silver' ? 'Rare' :
-                    badge.tier === 'bronze' ? 'Uncommon' : 'Common'
           }
         };
       });
@@ -184,43 +161,3 @@ export async function getUserDriverRating(userId: string): Promise<{ avg_driver_
   }
 }
 
-/**
- * Share a badge unlock to the public feed
- * Creates a post celebrating the badge achievement
- *
- * @param userId - ID of user who earned the badge
- * @param badge - Badge that was earned
- * @param privacySetting - 'public', 'friends', or 'private'
- * @returns Post ID if shared, null if kept private
- */
-export async function shareBadgeUnlock(
-  userId: string,
-  badge: Badge,
-  privacySetting: 'public' | 'friends' | 'private'
-): Promise<string | null> {
-  // If private, don't create a post
-  if (privacySetting === 'private') {
-    return null;
-  }
-
-  const caption = `Just unlocked the "${badge.name}" badge! ${badge.icon_name}\n\n${badge.description}`;
-
-  const { data, error } = await supabase
-    .from('posts')
-    .insert({
-      author_id: userId,
-      post_type: 'badge_given',
-      caption,
-      privacy_level: privacySetting,
-      moderation_status: 'approved'
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('Failed to share badge:', error);
-    throw error;
-  }
-
-  return data.id;
-}

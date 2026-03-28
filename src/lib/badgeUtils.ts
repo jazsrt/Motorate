@@ -1,9 +1,9 @@
 export type BadgeDisplayType = 'prestige' | 'milestone' | 'identity';
 
-export function getBadgeType(badge: { category?: string | null; rarity?: string | null; tier?: string | null }): BadgeDisplayType {
+export function getBadgeType(badge: { category?: string | null; tier?: string | null }): BadgeDisplayType {
   const cat = (badge.category ?? '').toLowerCase();
-  const rar = (badge.rarity ?? '').toLowerCase();
-  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || rar === 'legendary' || rar === 'epic') return 'prestige';
+  const t = (badge.tier ?? '').toLowerCase();
+  if (cat.includes('rank') || cat.includes('leader') || cat.includes('top') || t === 'platinum' || t === 'gold') return 'prestige';
   if (cat.includes('identity') || cat.includes('build') || cat.includes('mod') || cat === 'builder') return 'identity';
   return 'milestone';
 }

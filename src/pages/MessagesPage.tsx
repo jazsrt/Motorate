@@ -571,14 +571,14 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
 
   if (loading) {
     return (
-      <Layout currentPage="profile" onNavigate={onNavigate}>
+      <Layout currentPage="messages" onNavigate={onNavigate}>
         <LoadingSpinner size="lg" label="Loading messages..." className="h-96" />
       </Layout>
     );
   }
 
   return (
-    <Layout currentPage="profile" onNavigate={onNavigate}>
+    <Layout currentPage="messages" onNavigate={onNavigate}>
       <div style={{ height: 'calc(100vh - 120px)', display: 'flex', gap: 0 }}>
         {/* Conversation list sidebar */}
         <div style={{ width: 320, flexShrink: 0, background: '#0a0e17', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

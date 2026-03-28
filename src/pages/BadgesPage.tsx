@@ -19,7 +19,6 @@ interface Badge {
   description: string;
   icon: string;
   category: string;
-  rarity: string;
   earning_method: string;
   tier: string | null;
   tier_threshold: number | null;

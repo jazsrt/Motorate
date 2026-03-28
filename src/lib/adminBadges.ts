@@ -75,7 +75,7 @@ export async function adminGrantBadge(
 export async function getAllBadges() {
   const { data, error } = await supabase
     .from('badges')
-    .select('id, name, description, icon_name, rarity, category, level')
+    .select('id, name, description, icon_name, category, level')
     .order('category', { ascending: true })
     .order('name', { ascending: true });
 

@@ -8,6 +8,7 @@ interface ShareBuildCardProps {
     model: string | null;
     year: number | null;
     stock_image_url: string | null;
+    profile_image_url?: string | null;
   };
   user: {
     handle: string;
@@ -23,15 +24,15 @@ interface ShareBuildCardProps {
 }
 
 export function ShareBuildCard({ vehicle, user, stats }: ShareBuildCardProps) {
-  const vehicleUrl = `${window.location.origin}/vehicle/${vehicle.id}`;
+  const vehicleUrl = `${window.location.origin}/#/vehicle/${vehicle.id}`;
   const avgScore = stats ? Math.round((stats.rating_driver + stats.rating_vehicle) / 2) : 0;
 
   return (
     <div className="w-full max-w-md bg-gradient-to-br from-background via-surface to-surfacehighlight rounded-2xl overflow-hidden border-2 border-accent-primary shadow-2xl">
       <div className="relative h-64 bg-gradient-to-br from-surfacehighlight to-surface">
-        {vehicle.stock_image_url ? (
+        {(vehicle.profile_image_url || vehicle.stock_image_url) ? (
           <img
-            src={vehicle.stock_image_url}
+            src={(vehicle.profile_image_url || vehicle.stock_image_url)!}
             alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
             className="w-full h-full object-cover"
           />

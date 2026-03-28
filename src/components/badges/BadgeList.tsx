@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { getBadgeIcon } from '../../lib/badgeIcons';
+import { BADGE_TIER_COLORS } from '../../config/badgeConfig';
 
 interface Badge {
   id: string;
   name: string;
   icon_name: string;
-  rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
+  tier?: string;
   description?: string;
   level_name?: string;
 }
@@ -31,28 +32,13 @@ const ICON_PX = {
   lg: 20,
 };
 
-const rarityStyles = {
-  Common: {
-    gradient: 'from-slate-400 via-slate-500 to-slate-600',
-    glow: 'shadow-slate-400/30',
-  },
-  Uncommon: {
-    gradient: 'from-[#F97316] via-[#F97316] to-[#fb923c]',
-    glow: 'shadow-[#F97316]/40',
-  },
-  Rare: {
-    gradient: 'from-[#fb923c] via-[#fb923c] to-[#fb923c]',
-    glow: 'shadow-[#fb923c]/50',
-  },
-  Epic: {
-    gradient: 'from-[#F97316] via-orange-500 to-orange-600',
-    glow: 'shadow-orange-400/60',
-  },
-  Legendary: {
-    gradient: 'from-orange-500 via-orange-600 to-red-600',
-    glow: 'shadow-orange-500/70',
-  },
-};
+function getTierStyle(tier?: string) {
+  const t = (tier || '').toLowerCase();
+  if (t === 'platinum') return { colors: BADGE_TIER_COLORS.Platinum, label: 'Platinum' };
+  if (t === 'gold') return { colors: BADGE_TIER_COLORS.Gold, label: 'Gold' };
+  if (t === 'silver') return { colors: BADGE_TIER_COLORS.Silver, label: 'Silver' };
+  return { colors: BADGE_TIER_COLORS.Bronze, label: 'Bronze' };
+}
 
 function BadgeTooltip({ badge, anchorRef }: { badge: Badge; anchorRef: React.RefObject<HTMLDivElement> }) {
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -86,14 +72,16 @@ function BadgeTooltip({ badge, anchorRef }: { badge: Badge; anchorRef: React.Ref
         <span className="text-xs">{getBadgeIcon(badge.icon_name)}</span>
         <span className="text-xs font-bold truncate">{badge.name}</span>
       </div>
-      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full inline-block mb-1 ${
-        badge.rarity === 'Common' ? 'bg-slate-500/30 text-slate-300' :
-        badge.rarity === 'Uncommon' ? 'bg-orange/30 text-accent-2' :
-        badge.rarity === 'Rare' ? 'bg-accent-2/30 text-accent-2' :
-        badge.rarity === 'Epic' ? 'bg-orange-500/30 text-orange-300' :
-        'bg-pink-500/30 text-pink-300'
-      }`}>
-        {badge.rarity}
+      <span
+        style={{
+          fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 9999,
+          display: 'inline-block', marginBottom: 4,
+          background: getTierStyle(badge.tier).colors.bg,
+          border: `1px solid ${getTierStyle(badge.tier).colors.border}`,
+          color: getTierStyle(badge.tier).colors.text,
+        }}
+      >
+        {getTierStyle(badge.tier).label}
       </span>
       {badge.description && (
         <p className="text-[10px] text-gray-300 leading-snug">{badge.description}</p>
@@ -105,8 +93,7 @@ function BadgeTooltip({ badge, anchorRef }: { badge: Badge; anchorRef: React.Ref
 function BadgeItem({ badge, size, showTooltip }: { badge: Badge; size: 'xs' | 'sm' | 'md' | 'lg'; showTooltip: boolean }) {
   const [hovered, setHovered] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
-  const validRarity = badge.rarity as keyof typeof rarityStyles;
-  const style = rarityStyles[validRarity] || rarityStyles.Common;
+  const tierStyle = getTierStyle(badge.tier);
   const px = SIZE_PX[size];
   const iconPx = ICON_PX[size];
 
@@ -118,8 +105,13 @@ function BadgeItem({ badge, size, showTooltip }: { badge: Badge; size: 'xs' | 's
       onMouseLeave={() => setHovered(false)}
     >
       <div
-        className={`bg-gradient-to-br ${style.gradient} rounded-lg flex items-center justify-center cursor-help transition-transform duration-150 hover:scale-110 shadow-md ${style.glow} border border-white/20`}
-        style={{ width: px, height: px }}
+        className="rounded-lg flex items-center justify-center cursor-help transition-transform duration-150 hover:scale-110"
+        style={{
+          width: px, height: px,
+          background: tierStyle.colors.bg,
+          border: `1px solid ${tierStyle.colors.border}`,
+          boxShadow: tierStyle.colors.glow,
+        }}
       >
         <div className="flex items-center justify-center text-white drop-shadow-sm" style={{ width: iconPx, height: iconPx, fontSize: iconPx }}>
           {getBadgeIcon(badge.icon_name)}
@@ -140,7 +132,7 @@ export function BadgeList({
   showTooltip = true,
 }: BadgeListProps) {
   const validBadges = badges.filter(badge =>
-    badge && badge.id && badge.icon_name && badge.rarity && rarityStyles[badge.rarity as keyof typeof rarityStyles]
+    badge && badge.id && badge.icon_name
   );
 
   if (validBadges.length === 0) return null;

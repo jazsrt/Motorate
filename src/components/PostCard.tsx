@@ -158,7 +158,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         getUserDriverRating(post.author_id),
         supabase.from('vehicles').select('id').eq('owner_id', post.author_id).eq('is_verified', true).limit(1)
       ]);
-      const badges = userBadges.map(ub => ub.badge).filter(b => b !== null && b !== undefined && b.rarity && b.icon_name);
+      const badges = userBadges.map(ub => ub.badge).filter(b => b !== null && b !== undefined && b.icon_name);
       setAuthorBadges(badges);
       setDriverRating(rating);
       setIsVerifiedOwner((verifiedVehicles.data?.length || 0) > 0);

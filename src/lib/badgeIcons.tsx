@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { ReactNode } from 'react';
 import {
   AlertCircle, StopCircle, Zap, Award, Shield, Star, Trophy, Target,

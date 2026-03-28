@@ -77,7 +77,6 @@ export interface Badge {
   name: string;
   description: string;
   category: string;
-  rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
   icon_name: string;
   level: number;
   level_name: string;

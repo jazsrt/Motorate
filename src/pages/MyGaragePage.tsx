@@ -8,6 +8,7 @@ import {
   ChevronRight,
   X,
   User,
+  Album,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -55,6 +56,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [_userBadgesForGarage, setUserBadgesForGarage] = useState<any[]>([]);
   const [retiredStockImages, setRetiredStockImages] = useState<Record<string, string>>({});
 
+  // Albums
+  const [garageAlbums, setGarageAlbums] = useState<{ id: string; title: string; cover_image_url: string | null; photo_count: number }[]>([]);
+
   // New state for garage hero
   const [userProfile, setUserProfile] = useState<{ handle: string; full_name: string | null; avatar_url: string | null; reputation_tier: string | null } | null>(null);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
@@ -68,6 +72,15 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       .then(({ count }) => { if (count !== null) setFollowerCount(count); });
     supabase.from('user_badges').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
       .then(({ count }) => { if (count !== null) setBadgeCount(count); });
+    supabase.from('albums').select('id, title, cover_image_url').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10)
+      .then(async ({ data }) => {
+        if (!data) return;
+        const withCounts = await Promise.all(data.map(async (a) => {
+          const { count } = await supabase.from('album_photos').select('*', { count: 'exact', head: true }).eq('album_id', a.id);
+          return { ...a, photo_count: count || 0 };
+        }));
+        setGarageAlbums(withCounts);
+      });
   }, [user]);
 
   useEffect(() => {
@@ -80,7 +93,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         return;
       }
       try {
-        const url = await getVehicleImageUrl(vehicle.make, vehicle.model, vehicle.year);
+        const url = await getVehicleImageUrl(vehicle.make, vehicle.model, vehicle.year, vehicle.color || undefined);
         if (url) {
           setStockImages(prev => ({ ...prev, [vehicle.id]: url }));
           await supabase.from('vehicles').update({ stock_image_url: url }).eq('id', vehicle.id);
@@ -175,14 +188,14 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     if (user?.id) {
       const { data: badgeData } = await supabase
         .from('user_badges')
-        .select('badge_id, badges(id, name, icon_name, category, rarity, tier)')
+        .select('badge_id, badges(id, name, icon_name, category, tier)')
         .eq('user_id', user.id)
         .limit(20);
       if (badgeData) {
         setUserBadgesForGarage(
           badgeData.filter((ub: any) => ub.badges).map((ub: any) => ({
             id: ub.badges.id, name: ub.badges.name, icon: ub.badges.icon_name,
-            category: ub.badges.category, rarity: ub.badges.rarity, tier: ub.badges.tier,
+            category: ub.badges.category, tier: ub.badges.tier,
           }))
         );
       }
@@ -763,7 +776,93 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           </div>
         )}
 
-        {/* 4. LIFETIME RIDES */}
+        {/* 4. ALBUMS */}
+        <div style={{ padding: '16px 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#445566' }}>
+            Albums{garageAlbums.length > 0 ? ` \u00B7 ${garageAlbums.length}` : ''}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {garageAlbums.length > 0 && (
+              <span
+                onClick={() => handleNavigate('albums')}
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}
+              >
+                View All
+                <ChevronRight style={{ width: 12, height: 12 }} />
+              </span>
+            )}
+            <span
+              onClick={() => handleNavigate('albums')}
+              style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}
+            >
+              + New Album
+            </span>
+          </div>
+        </div>
+
+        {garageAlbums.length > 0 ? (
+          <div style={{ display: 'flex', gap: 10, padding: '0 18px 18px', overflowX: 'auto', scrollSnapType: 'x mandatory' as const, scrollbarWidth: 'none' as const }}>
+            {garageAlbums.map(album => (
+              <div
+                key={album.id}
+                onClick={() => handleNavigate('albums')}
+                style={{
+                  flexShrink: 0, width: 140, borderRadius: 8, overflow: 'hidden',
+                  background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+                  cursor: 'pointer', scrollSnapAlign: 'start' as const,
+                }}
+              >
+                <div style={{ height: 100, position: 'relative', overflow: 'hidden' }}>
+                  {album.cover_image_url ? (
+                    <img src={album.cover_image_url} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: '#0e1320', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Album style={{ width: 24, height: 24, color: '#334455' }} strokeWidth={1.2} />
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top, rgba(10,13,20,0.9), transparent)' }} />
+                  <div style={{ position: 'absolute', bottom: 6, left: 8, right: 8, zIndex: 2 }}>
+                    <div style={{
+                      fontFamily: "'Rajdhani', sans-serif", fontSize: 12, fontWeight: 700,
+                      color: '#eef4f8', lineHeight: 1.1,
+                      whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {album.title}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ padding: '6px 8px' }}>
+                  <div style={{
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600,
+                    letterSpacing: '0.04em', color: '#7a8e9e',
+                  }}>
+                    {album.photo_count} {album.photo_count === 1 ? 'photo' : 'photos'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ margin: '0 18px 18px' }}>
+            <button
+              onClick={() => handleNavigate('albums')}
+              style={{
+                width: '100%', padding: '24px 0',
+                background: '#0a0d14', border: '1.5px dashed rgba(255,255,255,0.08)', borderRadius: 8,
+                display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
+                gap: 8, cursor: 'pointer',
+              }}
+            >
+              <Album style={{ width: 28, height: 28, color: '#334455', opacity: 0.4 }} strokeWidth={1.2} />
+              <div style={{ textAlign: 'center' as const }}>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#9ab0c0' }}>Create Your First Album</span>
+                <span style={{ display: 'block', fontSize: 11, color: '#556677', marginTop: 3 }}>Organize your car photos into collections</span>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* 5. LIFETIME RIDES */}
         <div style={{
           fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700,
           letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#445566',

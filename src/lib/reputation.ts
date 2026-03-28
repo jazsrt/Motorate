@@ -27,7 +27,6 @@ export interface Badge {
   name: string;
   description: string;
   category: string;
-  rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
   icon_name: string;
   level: number;
   level_name: string;
@@ -487,7 +486,6 @@ export async function getAllBadges(): Promise<Badge[]> {
       .from('badges')
       .select('*')
       .order('category', { ascending: true })
-      .order('rarity', { ascending: false })
       .order('level', { ascending: true });
 
     if (error) throw error;

@@ -80,7 +80,7 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
 
       const { data: vehicle, error: queryError } = await supabase
         .from('vehicles')
-        .select('id, owner_id, is_claimed, make, model, year, color, stock_image_url')
+        .select('id, owner_id, is_claimed, make, model, year, color, stock_image_url, profile_image_url')
         .eq('plate_hash', plateHash)
         .maybeSingle();
 
@@ -275,10 +275,10 @@ export default function UnclaimedProfilePage({ plateNumber, onNavigate }: Unclai
 
         {/* Hero Section - 220px */}
         <div style={{ position: 'relative', width: '100%', height: 220, overflow: 'hidden' }}>
-          {vehicleDetails.stock_image_url ? (
+          {(vehicleDetails.profile_image_url || vehicleDetails.stock_image_url) ? (
             <>
               <img
-                src={vehicleDetails.stock_image_url}
+                src={(vehicleDetails.profile_image_url || vehicleDetails.stock_image_url)!}
                 alt={vehicleDisplay}
                 style={{
                   position: 'absolute',

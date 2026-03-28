@@ -10,8 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "vitest --run",
-    "test:ui": "vitest --ui",
-    "test:storage": "node test-storage.cjs"
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@sentry/react": "^10.38.0",

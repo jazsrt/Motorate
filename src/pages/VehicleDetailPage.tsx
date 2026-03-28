@@ -211,8 +211,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   useEffect(() => {
     if (vehicle && !vehicleImages[0]?.image_url && !vehicle.stock_image_url && !vehicle.profile_image_url) {
-      getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined).then(url => {
-        if (url) setCarImageryUrl(url);
+      getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined, vehicle.color || undefined).then(url => {
+        if (url) {
+          setCarImageryUrl(url);
+          supabase.from('vehicles').update({ stock_image_url: url }).eq('id', vehicle.id).then(() => {});
+        }
       });
     }
   }, [vehicle, vehicleImages]);
@@ -673,7 +676,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   if (loading) {
     return (
-      <Layout currentPage="profile" onNavigate={onNavigate}>
+      <Layout currentPage="vehicle-detail" onNavigate={onNavigate}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
           <div
             style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${C.carbon2}`, borderTopColor: C.accent, animation: 'spin 1s linear infinite' }}
@@ -685,7 +688,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   if (!vehicle) {
     return (
-      <Layout currentPage="profile" onNavigate={onNavigate}>
+      <Layout currentPage="vehicle-detail" onNavigate={onNavigate}>
         <div style={{ textAlign: 'center', padding: '64px 16px' }}>
           <p style={{ fontSize: 15, color: C.dim }}>Vehicle not found</p>
           <button
@@ -700,7 +703,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   }
 
   return (
-    <Layout currentPage="profile" onNavigate={onNavigate}>
+    <Layout currentPage="vehicle-detail" onNavigate={onNavigate}>
       {vehicle && (
         <Helmet>
           <title>{`${vehicle.year} ${vehicle.make} ${vehicle.model} - MotoRate`}</title>

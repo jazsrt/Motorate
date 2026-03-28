@@ -261,7 +261,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
         if (apiResult && apiResult.make && apiResult.model) {
           // Auto.dev returned vehicle data — fetch stock image in parallel, show confirm screen
-          const stockImageUrl = await getVehicleImageUrl(apiResult.make, apiResult.model, apiResult.year ? parseInt(apiResult.year) : undefined);
+          const stockImageUrl = await getVehicleImageUrl(apiResult.make, apiResult.model, apiResult.year ? parseInt(apiResult.year) : undefined, apiResult.color || undefined);
           const wizardData: SpotWizardData = {
             plateState: code,
             plateNumber: searchPlate.trim().toUpperCase(),
@@ -296,7 +296,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     setLoading(true);
     try {
       // Fetch stock image in parallel with vehicle creation
-      const stockImagePromise = getVehicleImageUrl(vehicleData.make, vehicleData.model, vehicleData.year ?? undefined);
+      const stockImagePromise = getVehicleImageUrl(vehicleData.make, vehicleData.model, vehicleData.year ?? undefined, vehicleData.color || undefined);
 
       const { data: newVehicle, error: createError } = await supabase
         .from('vehicles')

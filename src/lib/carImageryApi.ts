@@ -1,19 +1,22 @@
+const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY;
+
 export async function getVehicleImageUrl(
   make: string,
   model: string,
-  year?: number
+  year?: number,
+  color?: string
 ): Promise<string | null> {
+  if (!PEXELS_API_KEY) return null;
   try {
-    const searchTerm = year ? `${year} ${make} ${model}` : `${make} ${model}`;
-    const response = await fetch(
-      `https://www.carimagery.com/api.asmx/GetImageUrl?searchTerm=${encodeURIComponent(searchTerm)}`
+    const parts = [year, make, model, color].filter(Boolean);
+    const query = encodeURIComponent(parts.join(' '));
+    const res = await fetch(
+      `https://api.pexels.com/v1/search?query=${query}&per_page=1&orientation=landscape`,
+      { headers: { Authorization: PEXELS_API_KEY } }
     );
-    const text = await response.text();
-    const match = text.match(/<string[^>]*>(.*?)<\/string>/);
-    if (match?.[1]) {
-      return match[1].replace('http://', 'https://');
-    }
-    return null;
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.photos?.[0]?.src?.large2x ?? null;
   } catch {
     return null;
   }

@@ -106,21 +106,18 @@ export function calculateBadgesScore(stats: UserStats): number {
 
   if (stats.badges && stats.badges.length > 0) {
     stats.badges.forEach(badge => {
-      switch ((badge as unknown as { rarity?: string }).rarity || badge.tier) {
-        case 'Common':
+      switch (badge.tier) {
+        case 'bronze':
           score += 50;
           break;
-        case 'Uncommon':
+        case 'silver':
           score += 100;
           break;
-        case 'Rare':
+        case 'gold':
           score += 250;
           break;
-        case 'Epic':
+        case 'platinum':
           score += 500;
-          break;
-        case 'Legendary':
-          score += 1000;
           break;
       }
     });

@@ -1,9 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Share2, Users, Lock, CheckCircle } from 'lucide-react';
+import { useEffect } from 'react';
 import { Confetti } from './Confetti';
-import { Badge, shareBadgeUnlock } from '../lib/badges';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
+import { Badge } from '../lib/badges';
 import { BadgeIcon } from './BadgeIcon';
 import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
@@ -41,14 +38,9 @@ function getTierMessage(levelName?: string): string {
 }
 
 export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  const [sharing, setSharing] = useState(false);
-  const [shared, setShared] = useState(false);
-
   const tierName = badge.level_name?.toLowerCase() || '';
   const isTiered = ['bronze', 'silver', 'gold', 'platinum'].includes(tierName);
-  const isNegativeBadge = badge.rarity === 'Common' && badge.category === 'negative';
+  const isNegativeBadge = badge.category === 'negative';
   const tierColor = getTierColor(badge.level_name);
 
   useEffect(() => {
@@ -62,20 +54,6 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
-
-  const handleShare = async (privacySetting: 'public' | 'friends' | 'private') => {
-    if (!user || sharing) return;
-    setSharing(true);
-    try {
-      const postId = await shareBadgeUnlock(user.id, badge, privacySetting);
-      showToast(postId ? 'Badge shared to your feed!' : 'Badge saved privately', 'success');
-      setShared(true);
-      setTimeout(() => onClose(), 1500);
-    } catch {
-      showToast('Failed to share badge', 'error');
-      setSharing(false);
-    }
-  };
 
   return (
     <>
@@ -95,7 +73,6 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
         {/* Close */}
         <button
           onClick={onClose}
-          disabled={sharing}
           style={{
             position: 'absolute', top: 20, right: 20,
             width: 32, height: 32, borderRadius: 8,
@@ -149,7 +126,7 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
 
           {/* Tier pills */}
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            {[badge.category, isTiered ? badge.level_name : null, badge.rarity].filter(Boolean).map(label => (
+            {[badge.category, isTiered ? badge.level_name : null].filter(Boolean).map(label => (
               <span key={label} style={{
                 fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
                 letterSpacing: '0.1em', textTransform: 'uppercase' as const,
@@ -161,56 +138,6 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
             ))}
           </div>
 
-          {/* Share actions */}
-          {!shared ? (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column' as const, gap: 8, paddingTop: 8 }}>
-              <div style={{
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#445566',
-                marginBottom: 4,
-              }}>
-                Share your achievement
-              </div>
-              <button onClick={() => handleShare('public')} disabled={sharing} style={{
-                width: '100%', padding: 12, borderRadius: 8,
-                background: '#F97316', border: 'none',
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508',
-                cursor: 'pointer', opacity: sharing ? 0.5 : 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-                <Share2 style={{ width: 14, height: 14 }} strokeWidth={2} />
-                Share Publicly
-              </button>
-              <button onClick={() => handleShare('friends')} disabled={sharing} style={{
-                width: '100%', padding: 12, borderRadius: 8,
-                background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#7a8e9e',
-                cursor: 'pointer', opacity: sharing ? 0.5 : 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-                <Users style={{ width: 14, height: 14 }} strokeWidth={1.5} />
-                Friends Only
-              </button>
-              <button onClick={() => handleShare('private')} disabled={sharing} style={{
-                width: '100%', padding: 12, borderRadius: 8,
-                background: 'transparent', border: '1px solid rgba(255,255,255,0.06)',
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#445566',
-                cursor: 'pointer', opacity: sharing ? 0.5 : 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-                <Lock style={{ width: 14, height: 14 }} strokeWidth={1.5} />
-                Keep Private
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8 }}>
-              <CheckCircle style={{ width: 20, height: 20, color: '#20c060' }} />
-              <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#a8bcc8' }}>Badge saved</span>
-            </div>
-          )}
         </div>
       </div>
     </>

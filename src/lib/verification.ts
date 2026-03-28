@@ -24,6 +24,23 @@ export async function verifyDocument(
   expectedVIN: string,
   userId: string
 ): Promise<VerificationResult> {
+  // Rate limit: max 3 verification attempts per vehicle per user in 24 hours
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from('verification_claims')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('vehicle_id', vehicleId)
+    .gte('created_at', twentyFourHoursAgo);
+
+  if ((count ?? 0) >= 3) {
+    return {
+      success: false,
+      message: 'Too many verification attempts. Please try again in 24 hours.',
+      reason: 'rate_limited',
+    };
+  }
+
   // 1. Upload document to private storage
   const proofUrl = await uploadVerificationProof(file, vehicleId, userId);
 
