@@ -55,15 +55,25 @@ export function NearMissBadgeNudge({ userId }: NearMissBadgeNudgeProps) {
   if (!nudge) return null;
 
   return (
-    <div className="mx-4 mb-3 px-3 py-2.5 rounded-xl flex items-center gap-3"
-         style={{ background: 'var(--s1)', border: '1px solid var(--border)' }}>
-      <div className="flex-1">
-        <div className="tach-bar">
-          <div className="tach-fill" style={{ width: `${nudge.percent}%` }} />
-        </div>
+    <div style={{
+      margin: '0 18px', padding: '10px 14px', borderRadius: 10,
+      background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+      display: 'flex', alignItems: 'center', gap: 12,
+    }}>
+      <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+        <div style={{
+          width: `${nudge.percent}%`, height: '100%', borderRadius: 2,
+          background: 'linear-gradient(90deg, #F97316, #fb923c)',
+          transition: 'width 0.5s ease',
+        }} />
       </div>
-      <span className="text-[10px] font-mono whitespace-nowrap" style={{ color: 'var(--t3)' }}>
-        <span style={{ color: 'var(--orange)' }}>{nudge.remaining}</span> spot{nudge.remaining !== 1 ? 's' : ''} to <span className="font-semibold text-primary">{nudge.name}</span>
+      <span style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 500,
+        color: '#5a6e7e', whiteSpace: 'nowrap' as const,
+      }}>
+        <span style={{ color: '#F97316', fontWeight: 700 }}>{nudge.remaining}</span>
+        {' '}spot{nudge.remaining !== 1 ? 's' : ''} to{' '}
+        <span style={{ color: '#eef4f8', fontWeight: 600 }}>{nudge.name}</span>
       </span>
     </div>
   );

@@ -25,6 +25,7 @@ import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
 import { TIER_COLORS } from '../config/badgeConfig';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
+import { NearMissBadgeNudge } from '../components/NearMissBadgeNudge';
 
 /** Owner columns + avg_rating + joins needed by garage */
 const GARAGE_VEHICLE_SELECT = VEHICLE_OWNER_COLUMNS + `, avg_rating, photos:vehicle_images(*), modifications(*)`;
@@ -707,6 +708,13 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* BADGE NUDGE */}
+        {user && (
+          <div style={{ paddingTop: 12 }}>
+            <NearMissBadgeNudge userId={user.id} />
           </div>
         )}
 
