@@ -735,6 +735,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                 The Fleet {'\u00B7'} {vehicles.length}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span onClick={() => handleNavigate('glovebox')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
+                  Glovebox
+                </span>
                 <span onClick={() => onNavigate?.('create-post')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
                   + New Post
                 </span>

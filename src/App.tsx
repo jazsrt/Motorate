@@ -52,8 +52,9 @@ const BadgeTestingPage = lazy(() => import('./pages/BadgeTestingPage').then(m =>
 const BrowseVehiclesPage = lazy(() => import('./pages/BrowseVehiclesPage').then(m => ({ default: m.BrowseVehiclesPage })));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const GloveboxPage = lazy(() => import('./pages/GloveboxPage').then(m => ({ default: m.GloveboxPage })));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'detailed-review' | 'completed-review';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'detailed-review' | 'completed-review' | 'glovebox';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -513,6 +514,9 @@ function AppContent() {
       break;
     case 'post-detail':
       pageContent = <NewFeedPage onNavigate={handleNavigate} focusPostId={selectedPostId} />;
+      break;
+    case 'glovebox':
+      pageContent = <GloveboxPage onNavigate={handleNavigate} />;
       break;
     default:
       pageContent = (
