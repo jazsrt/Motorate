@@ -26,6 +26,7 @@ import type { GarageVehicle } from '../types/garage';
 import { TIER_COLORS } from '../config/badgeConfig';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
 import { NearMissBadgeNudge } from '../components/NearMissBadgeNudge';
+import { ProfileInsights } from '../components/ProfileInsights';
 
 /** Owner columns + avg_rating + joins needed by garage */
 const GARAGE_VEHICLE_SELECT = VEHICLE_OWNER_COLUMNS + `, avg_rating, photos:vehicle_images(*), modifications(*)`;
@@ -708,6 +709,13 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* PROFILE INSIGHTS */}
+        {user && (
+          <div style={{ padding: '12px 18px 0' }}>
+            <ProfileInsights profileId={user.id} />
           </div>
         )}
 
