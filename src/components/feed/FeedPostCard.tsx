@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ReactionButton } from '../ReactionButton';
 import { CommentsModal } from '../CommentsModal';
 import { LicensePlate } from '../LicensePlate';
 import { buildSpotFeedSignals } from '../../lib/feed';
+import { trackPostView } from '../../lib/postViews';
 
 interface FeedPostCardProps {
   post: {
@@ -80,8 +81,28 @@ function TrackButton({ vehicleId }: { vehicleId: string | null }) {
   );
 }
 
-export function FeedPostCard({ post, vehicleRank, onNavigate }: FeedPostCardProps) {
+export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
+  const [viewCount, setViewCount] = useState(post.view_count ?? 0);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const viewTracked = useRef(false);
+
+  useEffect(() => {
+    if (!cardRef.current || viewTracked.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !viewTracked.current) {
+          viewTracked.current = true;
+          trackPostView(post.id, currentUserId);
+          setViewCount(v => v + 1);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [post.id, currentUserId]);
 
   const vehicles = post.vehicles;
   const ownerHandle = post.author?.handle || post.author_handle || post.profiles?.handle || 'owner';
@@ -122,7 +143,7 @@ export function FeedPostCard({ post, vehicleRank, onNavigate }: FeedPostCardProp
 
   return (
     <>
-      <div style={{ marginTop: 4, borderTop: '1px solid rgba(249,115,22,0.12)' }}>
+      <div ref={cardRef} style={{ marginTop: 4, borderTop: '1px solid rgba(249,115,22,0.12)' }}>
         {/* SPOT SIGNAL STRIP — only for spot/review posts */}
         {isSpot && spotSignals && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px', background: '#070a0f' }}>
@@ -252,6 +273,15 @@ export function FeedPostCard({ post, vehicleRank, onNavigate }: FeedPostCardProp
           </button>
           <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px 0 0' }} />
           <TrackButton vehicleId={vehicles?.id ?? null} />
+          {viewCount > 0 && (
+            <>
+              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px 0 0' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#3a4e60', padding: '6px 8px 6px 0' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.04em' }}>{formatCount(viewCount)}</span>
+              </div>
+            </>
+          )}
           <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#3a4e60', whiteSpace: 'nowrap' }}>
             by <b style={{ color: '#5a6e7e', fontWeight: 600 }}>@{ownerHandle}</b>
           </span>
