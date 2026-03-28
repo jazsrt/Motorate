@@ -31,7 +31,7 @@ export function useFeed(userId?: string): UseFeedReturn {
       setLoading(true);
       setError(null);
 
-      const result = await loadFeedCursor(userId, 20, reset ? undefined : cursor);
+      const result = await loadFeedCursor(userId, 10, reset ? undefined : cursor);
 
       // Map posts with existing view_count from database (already included in feed query)
       const postsWithViews = result.posts.map(post => {

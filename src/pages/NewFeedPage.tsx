@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { SlidersHorizontal, X, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
@@ -9,6 +9,7 @@ import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
 import { SuggestedUsers } from '../components/SuggestedUsers';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 interface NewFeedPageProps {
   onNavigate: OnNavigate;
@@ -27,7 +28,7 @@ const pillStyle = (active: boolean): React.CSSProperties => ({
 export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const { user, loading: authLoading } = useAuth();
   const { posts, loading, error, refreshFeed, hasMore, loadMore } = useFeed(user?.id);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useInfiniteScroll({ loading, hasMore, onLoadMore: loadMore, rootMargin: '300px' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterMake, setFilterMake] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'spots' | 'posts'>('all');
@@ -72,17 +73,6 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
         setFocusLoading(false);
       });
   }, [focusPostId]);
-
-  // Infinite scroll
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasMore || loading) return;
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) loadMore(); },
-      { threshold: 0, rootMargin: '400px' }
-    );
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, loading, loadMore]);
 
   // Extract available makes from loaded posts
   const availableMakes = useMemo(() => {
@@ -279,8 +269,8 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
           ))}
 
           {/* Infinite scroll sentinel */}
-          <div ref={loadMoreRef} style={{ padding: '16px 0', display: 'flex', justifyContent: 'center' }}>
-            {hasMore && (
+          <div ref={sentinelRef} style={{ padding: '16px 0', display: 'flex', justifyContent: 'center' }}>
+            {loading && posts.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 16, height: 16, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5a6e7e' }}>Loading</span>
