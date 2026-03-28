@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
+import { SuggestedUsers } from '../components/SuggestedUsers';
 
 interface NewFeedPageProps {
   onNavigate: OnNavigate;
@@ -265,14 +266,16 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       {/* Feed posts */}
       {displayPosts.length > 0 && (
         <div>
-          {displayPosts.map((post) => (
-            <FeedPostCard
-              key={post.id}
-              post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
-              vehicleRank={null}
-              currentUserId={user?.id}
-              onNavigate={onNavigate}
-            />
+          {displayPosts.map((post, index) => (
+            <div key={post.id}>
+              <FeedPostCard
+                post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
+                vehicleRank={null}
+                currentUserId={user?.id}
+                onNavigate={onNavigate}
+              />
+              {index === 2 && <SuggestedUsers onNavigate={onNavigate} />}
+            </div>
           ))}
 
           {/* Infinite scroll sentinel */}
