@@ -465,7 +465,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
               fontFamily: 'Barlow, sans-serif', fontSize: 12, color: '#445566', lineHeight: 1.5,
             }}>
               {filter === 'all'
-                ? 'Activity from your vehicles will appear here'
+                ? 'Spots, follows, and reactions on your vehicles will show up here.'
                 : 'Try a different filter'}
             </div>
           </div>

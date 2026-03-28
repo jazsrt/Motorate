@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { shareToSocial } from '../ShareCardGenerator';
+import { sounds } from '../../lib/sounds';
+import { haptics } from '../../lib/haptics';
 
 interface BadgeCelebrationProps {
   badgeName: string;
@@ -47,7 +49,7 @@ export function BadgeCelebration({
     });
     setParticles(newParticles);
 
-    if (navigator.vibrate) navigator.vibrate([15, 50, 25, 50, 40]);
+    try { sounds.badge(); haptics.celebration(); } catch { /* intentionally empty */ }
   }, []);
 
   return (

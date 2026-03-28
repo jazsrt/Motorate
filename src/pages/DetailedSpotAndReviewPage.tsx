@@ -10,6 +10,8 @@ import { type OnNavigate } from '../types/navigation';
 import type { SpotWizardData } from '../types/spot';
 import { StickerSelector } from '../components/StickerSelector';
 import { giveSticker } from '../lib/stickerService';
+import { sounds } from '../lib/sounds';
+import { haptics } from '../lib/haptics';
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
@@ -361,6 +363,7 @@ export function DetailedSpotAndReviewPage({
         vehicleId,
       });
       setShowReward(true);
+      try { sounds.revEngine(); haptics.medium(); } catch { /* intentionally empty */ }
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Failed to submit review', 'error');
     } finally {

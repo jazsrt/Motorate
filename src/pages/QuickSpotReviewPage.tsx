@@ -13,6 +13,7 @@ import { LicensePlate } from '../components/LicensePlate';
 import { StickerSelector } from '../components/StickerSelector';
 import { giveSticker } from '../lib/stickerService';
 import { sounds } from '../lib/sounds';
+import { haptics } from '../lib/haptics';
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 6, display: 'block' };
@@ -185,7 +186,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         throw new Error('Failed to record spot: ' + spotError.message);
       }
 
-      try { sounds.revEngine(); } catch { /* intentionally empty */ }
+      try { sounds.revEngine(); haptics.medium(); } catch { /* intentionally empty */ }
 
       // STEP 2: Record the review in reviews table
       const { data: reviewData, error: reviewError } = await supabase

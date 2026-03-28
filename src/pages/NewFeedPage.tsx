@@ -247,9 +247,18 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
           <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>
             {hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
           </p>
-          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>
-            {hasActiveFilters ? 'Try changing your filters.' : 'Own a car? Claim it and start posting.'}
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', marginBottom: 20 }}>
+            {hasActiveFilters ? 'Try changing your filters.' : 'Spot a car or claim yours to get started.'}
           </p>
+          {!hasActiveFilters && (
+            <button onClick={() => onNavigate('scan')} style={{
+              padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+              letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer',
+            }}>
+              Spot a Car
+            </button>
+          )}
         </div>
       )}
 

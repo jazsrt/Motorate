@@ -236,7 +236,14 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         {!loading && ranked.length === 0 && (
           <div style={{ padding: '64px 24px', textAlign: 'center' as const }}>
             <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: C.white, marginBottom: 8 }}>No Vehicles Ranked Yet</p>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.dim }}>Spot vehicles to start building the leaderboard.</p>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.dim, marginBottom: 20 }}>Spot vehicles to start building the leaderboard.</p>
+            <button onClick={() => onNavigate('scan')} style={{
+              padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+              letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer',
+            }}>
+              Spot a Car
+            </button>
           </div>
         )}
 
