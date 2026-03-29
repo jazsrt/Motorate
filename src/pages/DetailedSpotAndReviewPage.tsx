@@ -24,6 +24,7 @@ interface DetailedSpotAndReviewPageProps {
   vehicleRating: number;
   sentiment: 'love' | 'hate';
   comment?: string;
+  selectedStickerIds?: string[];
   upgradeFromQuickSpot?: boolean;
   existingReviewId?: string;
 }
@@ -100,6 +101,7 @@ export function DetailedSpotAndReviewPage({
   vehicleRating,
   sentiment,
   comment: initialComment = '',
+  selectedStickerIds: initialStickerIds = [],
   upgradeFromQuickSpot = false,
   existingReviewId,
 }: DetailedSpotAndReviewPageProps) {
@@ -110,7 +112,7 @@ export function DetailedSpotAndReviewPage({
   const [soundRating, setSoundRating] = useState(0);
   const [conditionRating, setConditionRating] = useState(0);
   const [comment, setComment] = useState(initialComment);
-  const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
+  const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>(initialStickerIds);
   const [submitting, setSubmitting] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [rewardData, setRewardData] = useState<{ rp: number; vehicleName: string; spotCount: number; vehicleId: string } | null>(null);
@@ -531,7 +533,7 @@ export function DetailedSpotAndReviewPage({
             {submitting ? (
               <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             ) : null}
-            Submit Full Spot +15 RP
+            {upgradeFromQuickSpot ? 'Submit Full Spot +5 RP' : 'Submit Full Spot +15 RP'}
           </button>
         </div>
       </div>

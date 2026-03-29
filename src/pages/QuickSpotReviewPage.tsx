@@ -417,6 +417,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
                   vehicleRating,
                   sentiment,
                   comment,
+                  selectedStickerIds,
                   upgradeFromQuickSpot: true,
                   existingReviewId: reviewId,
                 });

@@ -406,6 +406,7 @@ function AppContent() {
           vehicleRating={wizardReviewData.vehicleRating || 0}
           sentiment={wizardReviewData.sentiment || 'love'}
           comment={wizardReviewData.comment}
+          selectedStickerIds={wizardReviewData.selectedStickerIds}
           upgradeFromQuickSpot={wizardReviewData.upgradeFromQuickSpot}
           existingReviewId={wizardReviewData.existingReviewId}
         />
