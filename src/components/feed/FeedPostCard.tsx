@@ -114,9 +114,10 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     || vehicles?.stock_image_url
     || null;
 
-  // Hard rule: no image = no card render for spot/review posts
+  // Hard rule: no image = no card render for spot/review/badge posts
   const isSpotType = post.post_type === 'spot' || post.post_type === 'review';
-  if (!imageUrl && isSpotType) return null;
+  const isBadgePost = post.post_type === 'badge_given';
+  if (!imageUrl && (isSpotType || isBadgePost)) return null;
 
   const hasPhoto = !!imageUrl;
 
@@ -288,13 +289,18 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
         </div>
 
         {/* CAPTION — only if user-written, skip generic defaults */}
-        {post.caption && post.caption !== 'Spotted this ride!' && post.caption !== 'Full spot on this ride!' && (
-          <div style={{ padding: '0 14px 8px', background: '#070a0f' }}>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.5, margin: 0 }}>
-              {post.caption.length > 140 ? `${post.caption.slice(0, 140)}...` : post.caption}
-            </p>
-          </div>
-        )}
+        {(() => {
+          if (!post.caption) return null;
+          const cleaned = post.caption.replace(/\bnull\b/g, '').replace(/\s{2,}/g, ' ').trim();
+          if (!cleaned || cleaned === 'Spotted this ride!' || cleaned === 'Full spot on this ride!') return null;
+          return (
+            <div style={{ padding: '0 14px 8px', background: '#070a0f' }}>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.5, margin: 0 }}>
+                {cleaned.length > 140 ? `${cleaned.slice(0, 140)}...` : cleaned}
+              </p>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Comments modal */}

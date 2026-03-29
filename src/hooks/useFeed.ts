@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadFeedCursor, FeedPost, FeedCursor } from '../lib/feed';
 
 interface UseFeedReturn {
@@ -14,24 +14,30 @@ interface UseFeedReturn {
   loadMore: () => void;
 }
 
+const PAGE_SIZE = 10;
+
 export function useFeed(userId?: string): UseFeedReturn {
   const [posts, setPosts] = useState<UseFeedReturn['posts']>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [cursor, setCursor] = useState<FeedCursor | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
+  const cursorRef = useRef<FeedCursor | undefined>(undefined);
+  const loadingRef = useRef(false);
 
   const loadPosts = useCallback(async (reset = false) => {
-    if (!userId) {
-      setLoading(false);
+    if (!userId || loadingRef.current) {
+      if (!userId) setLoading(false);
       return;
     }
 
     try {
+      loadingRef.current = true;
       setLoading(true);
       setError(null);
 
-      const result = await loadFeedCursor(userId, 10, reset ? undefined : cursor);
+      if (reset) cursorRef.current = undefined;
+
+      const result = await loadFeedCursor(userId, PAGE_SIZE, cursorRef.current);
 
       // Map posts with existing view_count from database (already included in feed query)
       const postsWithViews = result.posts.map(post => {
@@ -83,34 +89,36 @@ export function useFeed(userId?: string): UseFeedReturn {
         return true;
       });
 
-      setPosts(reset ? postsWithViews as any : [...posts, ...postsWithViews] as any);
-      setCursor(result.nextCursor || undefined);
-      setHasMore(!!result.nextCursor);
+      setPosts(prev => reset ? postsWithViews as any : [...prev, ...postsWithViews] as any);
+      cursorRef.current = result.nextCursor || undefined;
+      const noMoreData = postsWithViews.length < PAGE_SIZE || !result.nextCursor;
+      setHasMore(!noMoreData);
     } catch (err) {
       console.error('Error loading feed:', err);
       setError(err instanceof Error ? err : new Error('Failed to load feed'));
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  }, [userId, cursor, posts]);
+  }, [userId]);
 
   const refreshFeed = useCallback(async () => {
-    setCursor(undefined);
     setHasMore(true);
     await loadPosts(true);
   }, [loadPosts]);
 
   const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
+    if (!loadingRef.current && hasMore) {
       loadPosts(false);
     }
-  }, [loading, hasMore, loadPosts]);
+  }, [hasMore, loadPosts]);
 
   useEffect(() => {
     if (userId) {
       loadPosts(true);
     }
-  }, [userId, loadPosts]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   return { posts, loading, error, refreshFeed, hasMore, loadMore };
 }
