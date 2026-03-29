@@ -12,6 +12,7 @@ import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { type VerificationTier } from '../components/TierBadge';
+import { parseVehicleSpecs } from '../lib/vehicleSpecs';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, User, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, MapPin, Camera, BookOpen, ChevronRight, Heart } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
@@ -80,6 +81,7 @@ interface Vehicle {
   plate_number?: string | null;
   is_private?: boolean;
   trim?: string | null;
+  vin_raw_data?: Record<string, unknown> | null;
   owner?: {
     id: string;
     handle: string | null;
@@ -239,7 +241,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     const { data: vehicleData } = await supabase
       .from('vehicles')
       // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
-      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', owners_manual_url, claimed_at, profiles!owner_id(id, handle, avatar_url)')
+      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', owners_manual_url, claimed_at, vin_raw_data, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 
@@ -872,6 +874,49 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         {/* Hidden file inputs */}
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
         <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
+
+        {/* ── 1b. SPECS STRIP (claimed vehicles with vin_raw_data) ── */}
+        {vehicle.is_claimed && (() => {
+          const specs = parseVehicleSpecs(vehicle.vin_raw_data);
+          if (!specs) return null;
+          const items: { value: string; label: string }[] = [];
+          if (specs.horsepower) items.push({ value: `${specs.horsepower}`, label: 'HP' });
+          if (specs.engine) items.push({ value: specs.engine, label: 'Engine' });
+          if (specs.displacement) items.push({ value: specs.displacement, label: 'Displacement' });
+          if (specs.drivetrain) items.push({ value: specs.drivetrain, label: 'Drivetrain' });
+          if (specs.transmission) items.push({ value: specs.transmission, label: 'Transmission' });
+          if (specs.fuelType) items.push({ value: specs.fuelType, label: 'Fuel' });
+          if (items.length < 2) return null;
+          return (
+            <div style={{
+              display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' as const,
+              background: '#0d1117', borderTop: '1px solid rgba(249,115,22,0.12)',
+              borderBottom: '1px solid rgba(249,115,22,0.12)',
+            }}>
+              {items.map((item, i) => (
+                <div key={item.label} style={{
+                  display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
+                  padding: '10px 16px', flexShrink: 0,
+                  borderRight: i < items.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                }}>
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600,
+                    color: '#ffffff', whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums',
+                  }}>
+                    {item.value}
+                  </span>
+                  <span style={{
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e',
+                    marginTop: 2,
+                  }}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* ── 2. STAT STRIP ── */}
         <div style={{ display: 'flex', background: C.carbon1, borderBottom: `1px solid rgba(255,255,255,0.05)` }}>
