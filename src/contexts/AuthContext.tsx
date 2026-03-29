@@ -40,13 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (!data) {
-        const baseHandle = userEmail
-          ? userEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 20)
-          : `user_${userId.substring(0, 8)}`;
-
         await supabase.from('profiles').upsert({
           id: userId,
-          handle: baseHandle,
+          handle: null,
           onboarding_completed: false,
           reputation_score: 0,
         }, { onConflict: 'id', ignoreDuplicates: true });

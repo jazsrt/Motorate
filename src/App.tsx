@@ -16,6 +16,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 import { CompletedReviewModal } from './components/CompletedReviewModal';
 import { useBadgeChecker } from './hooks/useBadgeChecker';
+import { SetHandleModal } from './components/SetHandleModal';
 import './index.css';
 
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then(m => ({ default: m.CreatePostPage })));
@@ -106,7 +107,7 @@ function parseUrl(): { page: Page | null; params: Record<string, string> } {
 }
 
 function AppContent() {
-  const { user, loading, profile } = useAuth();
+  const { user, loading, profile, refreshProfile } = useAuth();
   const { unlockedBadge, dismissBadge } = useBadges();
   useBadgeChecker();
 
@@ -343,6 +344,11 @@ function AppContent() {
         <VerifyEmailPage />
       </Suspense>
     );
+  }
+
+  // Handle gate — OAuth users must pick a handle before using the app
+  if (user && profile && !profile.handle) {
+    return <SetHandleModal userId={user.id} onComplete={() => refreshProfile()} />;
   }
 
   // Onboarding gate — new users (especially OAuth) must complete setup before using the app
