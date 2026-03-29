@@ -9,6 +9,7 @@ import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
 import { SuggestedUsers } from '../components/SuggestedUsers';
+import { AchievementCarousel } from '../components/feed/AchievementCarousel';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 interface NewFeedPageProps {
@@ -147,6 +148,9 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
       {/* Story rail — vehicles the user tracks */}
       {user && <StoryRail onNavigate={onNavigate} />}
+
+      {/* Achievement carousel */}
+      <AchievementCarousel />
 
       {/* Filter bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
