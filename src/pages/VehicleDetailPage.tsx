@@ -910,10 +910,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               {[...vBadges]
                 .sort((a, b) => {
                   const order: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
-                  return (order[b.tier] || 0) - (order[a.tier] || 0);
+                  return (order[b.tier ?? ''] || 0) - (order[a.tier ?? ''] || 0);
                 })
                 .map(badge => {
-                  const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
+                  const colors = TIER_COLORS[(badge.tier ?? 'Bronze') as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
                   return (
                     <div key={badge.badge_id} style={{
                       display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -990,9 +990,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             <div style={{ padding: '0 18px 14px', display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
               {[...vehicleBadges].sort((a, b) => {
                 const order: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
-                return (order[b.tier] || 0) - (order[a.tier] || 0);
+                return (order[b.tier ?? ''] || 0) - (order[a.tier ?? ''] || 0);
               }).map(badge => {
-                const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
+                const colors = TIER_COLORS[(badge.tier ?? 'Bronze') as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
                 return (
                   <div key={badge.id} style={{
                     display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -1003,9 +1003,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                       fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
                       letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
                     }}>
-                      {badge.name}
+                      {badge.name ?? 'Badge'}
                     </span>
-                    {badge.sticker_count && (
+                    {badge.sticker_count != null && badge.sticker_count > 0 && (
                       <span style={{
                         fontFamily: 'JetBrains Mono, monospace', fontSize: 7,
                         color: colors.text, opacity: 0.7, fontVariantNumeric: 'tabular-nums',

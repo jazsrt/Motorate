@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,14 +9,17 @@ interface ModListProps {
   onUpdate: () => void;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', boxSizing: 'border-box',
+  background: '#0e1320', border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 8, outline: 'none',
+  fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#eef4f8',
+};
+
 export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    part_name: '',
-    brand: '',
-    cost_usd: ''
-  });
+  const [formData, setFormData] = useState({ part_name: '', brand: '', cost_usd: '' });
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,44 +56,50 @@ export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
       .delete()
       .eq('id', modId);
 
-    if (!error) {
-      onUpdate();
-    }
+    if (!error) onUpdate();
   }
 
   return (
     <div>
       {mods.length === 0 ? (
-        <p className="text-gray-500 text-sm italic mb-4">
+        <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#3a4e60', fontStyle: 'italic', margin: '0 0 12px' }}>
           No modifications in this category yet
         </p>
       ) : (
-        <div className="space-y-2 mb-4">
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6, marginBottom: 12 }}>
           {mods.map((mod) => (
             <div
               key={mod.id}
-              className="flex items-start justify-between p-3 bg-surface border border-surfacehighlight rounded-lg"
+              style={{
+                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                padding: '10px 12px', background: '#0e1320',
+                border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
+              }}
             >
-              <div className="flex-1">
-                <div className="font-semibold text-primary">{mod.part_name}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>{mod.part_name}</div>
                 {mod.brand && (
-                  <div className="text-sm text-secondary">Brand: {mod.brand}</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>
+                    {mod.brand}
+                  </div>
                 )}
                 {mod.cost_usd && (
-                  <div className="text-sm text-green-600 font-medium">
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#20c060', fontWeight: 600, marginTop: 2 }}>
                     ${parseFloat(mod.cost_usd).toFixed(2)}
                   </div>
                 )}
                 {mod.notes && (
-                  <div className="text-sm text-gray-500 mt-1">{mod.notes}</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginTop: 4 }}>{mod.notes}</div>
                 )}
               </div>
               <button
                 onClick={() => handleDelete(mod.id)}
-                className="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: '#ef4444' }}
                 title="Remove modification"
               >
-                <Trash2 size={18} />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
               </button>
             </div>
           ))}
@@ -101,52 +109,47 @@ export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
       {!showForm ? (
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 text-accent-primary hover:text-accent-primary font-semibold text-sm"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
+          }}
         >
-          <Plus size={18} />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Modification
         </button>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-orange/10 rounded-lg border-2 border-orange/30">
-          <input
-            type="text"
-            placeholder="Part Name *"
-            required
-            value={formData.part_name}
+        <form onSubmit={handleSubmit} style={{
+          display: 'flex', flexDirection: 'column' as const, gap: 10,
+          padding: 14, background: 'rgba(249,115,22,0.05)',
+          borderRadius: 8, border: '1px solid rgba(249,115,22,0.2)',
+        }}>
+          <input type="text" placeholder="Part Name *" required value={formData.part_name}
             onChange={(e) => setFormData({ ...formData, part_name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
-          />
-          <input
-            type="text"
-            placeholder="Brand (optional)"
-            value={formData.brand}
+            style={inputStyle} />
+          <input type="text" placeholder="Brand (optional)" value={formData.brand}
             onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
-          />
-          <input
-            type="number"
-            step="0.01"
-            placeholder="Cost USD (optional)"
-            value={formData.cost_usd}
+            style={inputStyle} />
+          <input type="number" step="0.01" placeholder="Cost USD (optional)" value={formData.cost_usd}
             onChange={(e) => setFormData({ ...formData, cost_usd: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
-          />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 px-4 py-2 bg-orange text-white rounded-lg hover:bg-orange disabled:opacity-50 font-medium"
-            >
+            style={inputStyle} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="submit" disabled={saving} style={{
+              flex: 1, padding: '10px 16px', borderRadius: 8, border: 'none',
+              background: '#F97316', fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+              color: '#030508', cursor: 'pointer', opacity: saving ? 0.5 : 1,
+            }}>
               {saving ? 'Adding...' : 'Add Mod'}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowForm(false);
-                setFormData({ part_name: '', brand: '', cost_usd: '' });
-              }}
-              className="px-4 py-2 bg-surfacehighlight text-secondary rounded-lg hover:bg-surfacehighlight/80 font-medium"
-            >
+            <button type="button" onClick={() => { setShowForm(false); setFormData({ part_name: '', brand: '', cost_usd: '' }); }}
+              style={{
+                padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
+                background: 'transparent', fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                color: '#7a8e9e', cursor: 'pointer',
+              }}>
               Cancel
             </button>
           </div>

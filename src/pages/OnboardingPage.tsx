@@ -257,9 +257,12 @@ export default function OnboardingPage() {
               </p>
             </div>
 
-            <button onClick={handleHandleSubmit} disabled={isProcessing || !handle.trim()} style={{ ...primaryBtnStyle, opacity: (isProcessing || !handle.trim()) ? 0.4 : 1 }}>
-              {isProcessing ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <>Continue <ArrowRight size={16} /></>}
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setStep('welcome')} style={{ ...ghostBtnStyle, flex: 0 }}>Back</button>
+              <button onClick={handleHandleSubmit} disabled={isProcessing || !handle.trim()} style={{ ...primaryBtnStyle, flex: 1, opacity: (isProcessing || !handle.trim()) ? 0.4 : 1 }}>
+                {isProcessing ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <>Continue <ArrowRight size={16} /></>}
+              </button>
+            </div>
           </div>
         )}
 
