@@ -61,21 +61,32 @@ async function fetchTickerItems(): Promise<TickerItem[]> {
       });
     }
 
-    // Recent badge unlocks
-    const { data: badges } = await supabase
+    // Recent badge unlocks — separate queries to avoid FK join issues
+    const { data: recentBadges } = await supabase
       .from('user_badges')
-      .select('badge_id, badges:badge_id(name), user_id, profiles:user_id(handle)')
+      .select('badge_id, user_id')
       .order('earned_at', { ascending: false })
       .limit(3);
 
-    if (badges) {
-      for (const b of badges) {
-        const badge = Array.isArray(b.badges) ? b.badges[0] : b.badges;
-        const profile = Array.isArray(b.profiles) ? b.profiles[0] : b.profiles;
-        if (badge?.name && profile?.handle) {
+    if (recentBadges && recentBadges.length > 0) {
+      const badgeIds = [...new Set(recentBadges.map(b => b.badge_id))];
+      const userIds = [...new Set(recentBadges.map(b => b.user_id))];
+
+      const [{ data: badgeNames }, { data: profileNames }] = await Promise.all([
+        supabase.from('badges').select('id, name').in('id', badgeIds),
+        supabase.from('profiles').select('id, handle').in('id', userIds),
+      ]);
+
+      const badgeMap = new Map((badgeNames || []).map(b => [b.id, b.name]));
+      const profileMap = new Map((profileNames || []).map(p => [p.id, p.handle]));
+
+      for (const b of recentBadges) {
+        const name = badgeMap.get(b.badge_id);
+        const handle = profileMap.get(b.user_id);
+        if (name && handle) {
           items.push({
             dot: '#3888ee',
-            text: <><b style={{ color: '#eef4f8' }}>@{profile.handle}</b> earned <em style={{ fontStyle: 'normal', color: '#3888ee' }}>{badge.name}</em></>,
+            text: <><b style={{ color: '#eef4f8' }}>@{handle}</b> earned <em style={{ fontStyle: 'normal', color: '#3888ee' }}>{name}</em></>,
           });
         }
       }

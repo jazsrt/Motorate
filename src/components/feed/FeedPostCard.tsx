@@ -114,9 +114,10 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     || vehicles?.stock_image_url
     || null;
 
-  // Hard rule: no image = no card render for spot/review posts
+  // Hard rule: no image = no card render for spot/review/badge posts
   const isSpotType = post.post_type === 'spot' || post.post_type === 'review';
   if (!imageUrl && isSpotType) return null;
+  if (!imageUrl && post.post_type === 'badge_given') return null;
 
   const hasPhoto = !!imageUrl;
 
