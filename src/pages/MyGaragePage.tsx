@@ -381,161 +381,66 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       }
     };
 
+    const claimedTag = isClaimed || isVerified;
+    const tagLabel = isPending ? 'Pending' : isVerified ? 'Verified' : isClaimed ? 'Claimed' : 'Unclaimed';
+    const tagBg = claimedTag ? 'rgba(32,192,96,0.10)' : 'rgba(249,115,22,0.10)';
+    const tagBorder = claimedTag ? '1px solid rgba(32,192,96,0.20)' : '1px solid rgba(249,115,22,0.20)';
+    const tagColor = claimedTag ? '#20c060' : '#F97316';
+
     return (
       <div
         style={{
-          flexShrink: 0, width: 195, borderRadius: 8, overflow: 'hidden',
-          background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
-          cursor: 'pointer', scrollSnapAlign: 'start' as const,
+          background: '#0d1117', borderRadius: 10, overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.05)',
+          cursor: 'pointer',
         }}
         onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })}
       >
-        {/* Photo area */}
-        <div style={{ height: 134, position: 'relative', overflow: 'hidden' }}>
-          {photoUrl ? (
-            <img
-              src={photoUrl}
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <div style={{ width: '100%', height: '100%', background: '#0e1320', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Car style={{ width: 28, height: 28, color: '#334455' }} strokeWidth={1.2} />
-            </div>
-          )}
-          {/* Bottom gradient */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%', background: 'linear-gradient(to top, rgba(10,13,20,0.95) 0%, transparent 100%)' }} />
-
-          {/* Rank badge top right */}
-          {(vehicle as any).city_rank && (
-            <div style={{
-              position: 'absolute', top: 7, right: 8, zIndex: 4,
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
-              color: 'rgba(255,255,255,0.35)',
-            }}>
-              #{(vehicle as any).city_rank}
-            </div>
-          )}
-
-          {/* Status badge top left */}
-          <div style={{
-            position: 'absolute', top: 7, left: 8, zIndex: 4,
-            display: 'inline-flex', alignItems: 'center', gap: 3,
-            background: statusBg, border: `1px solid ${statusBorder}`,
-            borderRadius: 3, padding: '2px 7px',
-          }}>
-            {isVerified && (
-              <svg width="9" height="9" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                <path d="M8 0L10.2 2.5L13.5 2L13.8 5.3L16 7.5L14 10L14.5 13.3L11.3 14L9 16.2L7 14L3.7 14.5L3 11.3L0 9.5L2 7L1.5 3.7L4.7 3L7 0.5L8 0Z" fill="#22c55e" />
-                <path d="M6.5 10.5L4.5 8.5L5.5 7.5L6.5 8.5L10 5L11 6L6.5 10.5Z" fill="#0a0d14" />
-              </svg>
-            )}
-            <span style={{
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
-              letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: statusColor,
-            }}>
-              {statusLabel}
-            </span>
-          </div>
-
-          {/* Top badge overlay */}
-          {(vehicle as any).topBadge && (() => {
-            const tb = (vehicle as any).topBadge;
-            const colors = TIER_COLORS[tb.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
-            return (
-              <div style={{
-                position: 'absolute', bottom: 44, left: 8, zIndex: 4,
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                background: colors.bg, border: `1px solid ${colors.border}`,
-                borderRadius: 5, padding: '3px 7px',
-              }}>
-                <span style={{
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 8, fontWeight: 700,
-                  letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: colors.text,
-                }}>
-                  {tb.badge_id}
-                </span>
-              </div>
-            );
-          })()}
-
-          {/* Text overlay at bottom of photo */}
-          <div style={{ position: 'absolute', bottom: 6, left: 8, right: 8, zIndex: 4 }}>
-            <div style={{
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-              letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316',
-            }}>
-              {vehicle.make}
-            </div>
-            <div style={{
-              fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700,
-              color: '#eef4f8', lineHeight: 1.1,
-              whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
-              {vehicle.model || vehicle.make}
-            </div>
-          </div>
-        </div>
-
-        {/* Info below photo */}
-        <div style={{ padding: '8px 10px 10px' }}>
-          <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600,
-            letterSpacing: '0.04em', color: '#7a8e9e',
-            fontVariantNumeric: 'tabular-nums',
-          }}>
-            {spotCount} Spots · {(vehicle as any)._vehicleFollowerCount ?? 0} Followers · {(vehicle as any).reputation_score > 0 ? `${((vehicle as any).reputation_score).toLocaleString()} RP` : 'No RP yet'}
-          </div>
-        </div>
-
-        {/* Photo thumbnail strip */}
-        {(vehiclePhotos.length > 0 || isClaimed) && (
-          <div
-            style={{ display: 'flex', gap: 4, padding: '0 8px 8px', overflowX: 'auto' as const, scrollbarWidth: 'none' as const }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {vehiclePhotos.map((photo, index) => (
-              <button
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxIndex(index);
-                  setLightboxOpen(true);
-                }}
-                style={{
-                  width: 32, height: 32, borderRadius: 5, overflow: 'hidden', flexShrink: 0,
-                  border: '1px solid rgba(255,255,255,0.08)', background: 'none', padding: 0, cursor: 'pointer',
-                }}
-              >
-                <img src={photo.url} alt={`Photo ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </button>
-            ))}
-            {isClaimed && vehiclePhotos.length < 10 && (
-              <label style={{
-                width: 32, height: 32, borderRadius: 5, flexShrink: 0, cursor: 'pointer',
-                border: '1.5px dashed rgba(255,255,255,0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  style={{ display: 'none' }}
-                  disabled={uploading}
-                />
-                {uploading ? (
-                  <div style={{
-                    width: 12, height: 12, border: '2px solid #F97316', borderTopColor: 'transparent',
-                    borderRadius: '50%', animation: 'spin 1s linear infinite',
-                  }} />
-                ) : (
-                  <Plus style={{ width: 14, height: 14, color: '#556677' }} strokeWidth={1.5} />
-                )}
-              </label>
-            )}
+        {/* Image */}
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+            style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div style={{ width: '100%', height: 100, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2">
+              <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
           </div>
         )}
+
+        {/* Card body */}
+        <div style={{ padding: '10px 12px 12px' }}>
+          {/* Make */}
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
+            {vehicle.make}
+          </div>
+          {/* Model + year */}
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 6 }}>
+            {vehicle.year ? `${vehicle.year} ` : ''}{vehicle.model || vehicle.make}
+          </div>
+          {/* Stats row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
+              {((vehicle as any).reputation_score ?? 0).toLocaleString()} RP
+            </span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#5a6e7e', letterSpacing: '0.08em' }}>
+              {spotCount} SPOTS
+            </span>
+            <span style={{
+              marginLeft: 'auto',
+              background: tagBg, border: tagBorder, color: tagColor,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+              textTransform: 'uppercase' as const, padding: '2px 7px', borderRadius: 4,
+            }}>
+              {tagLabel}
+            </span>
+          </div>
+        </div>
 
         {lightboxOpen && photoUrls.length > 0 && (
           <PhotoLightbox
@@ -624,100 +529,54 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       <div style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
 
         {/* 1. GARAGE HERO */}
-        <div style={{ position: 'relative', height: 175, overflow: 'hidden', flexShrink: 0 }}>
-          {heroPhoto ? (
-            <img src={heroPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.42) saturate(0.5)' }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', background: '#0a0d14' }} />
-          )}
+        <div style={{ background: '#0a0d14', padding: '52px 16px 20px' }}>
+          {/* Avatar */}
           <div style={{
-            position: 'absolute', inset: 0, zIndex: 1,
-            backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 8px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 8px)`,
-          }} />
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 2,
-            background: 'linear-gradient(to bottom, rgba(3,5,8,0.3) 0%, rgba(3,5,8,0.86) 100%)',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5,
-            padding: '0 18px 12px',
-            display: 'flex', alignItems: 'flex-end', gap: 13,
+            width: 52, height: 52, borderRadius: '50%', overflow: 'hidden',
+            background: '#1e2a38', border: '2px solid rgba(249,115,22,0.30)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 10,
           }}>
-            <div style={{
-              width: 54, height: 54, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-              border: '2px solid #F97316', boxShadow: '0 0 18px rgba(249,115,22,0.28)',
-            }}>
-              {avatarUrl
-                ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <div style={{ width: '100%', height: '100%', background: '#0e1320', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <User style={{ width: 24, height: 24, color: '#445566' }} strokeWidth={1.5} />
-                  </div>
-              }
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
-                {displayName}
-              </div>
-              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', color: '#7a8e9e', marginTop: 2 }}>
-                @{handle}
-              </div>
-              {tier && (
-                <div style={{
-                  display: 'inline-block', marginTop: 4,
-                  background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)',
-                  borderRadius: 3, padding: '2px 8px',
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
-                }}>
-                  {tier}
-                </div>
-              )}
-            </div>
-            {totalRP > 0 && (
-              <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 22, fontWeight: 700, color: '#F97316', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-                  {totalRP.toLocaleString()}
-                </div>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#445566' }}>
-                  Fleet RP
-                </div>
-              </div>
-            )}
+            {avatarUrl
+              ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8' }}>
+                  {(displayName || '?')[0].toUpperCase()}
+                </span>
+            }
           </div>
-        </div>
-
-        {/* 2. STAT BAR */}
-        {vehicles.length > 0 && (
-          <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {/* Handle */}
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3 }}>
+            {displayName}
+          </div>
+          {/* Tier line */}
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 14 }}>
+            {tier ? `${tier} Tier` : 'Unranked'} · {totalRP.toLocaleString()} RP
+          </div>
+          {/* Stats row */}
+          <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', margin: '0 -16px' }}>
             {[
-              { label: 'Vehicles', value: fleetStats.vehicleCount },
               { label: 'Spots', value: fleetStats.totalSpots },
-              { label: 'Followers', value: followerCount ?? '\u2014' },
-              { label: 'Badges', value: badgeCount ?? '\u2014' },
+              { label: 'Badges', value: badgeCount ?? 0 },
+              { label: 'Friends', value: followerCount ?? 0 },
+              { label: 'Vehicles', value: fleetStats.vehicleCount },
             ].map((stat, i, arr) => (
               <div key={stat.label} style={{
-                flex: 1, padding: '12px 0',
-                display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 2,
-                borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                cursor: 'pointer',
+                flex: 1, padding: '10px 0', textAlign: 'center' as const,
+                borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
               }}>
-                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 17, fontWeight: 700, color: '#eef4f8', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>
                   {stat.value}
-                </div>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#445566' }}>
+                </span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>
                   {stat.label}
-                </div>
+                </span>
               </div>
             ))}
           </div>
-        )}
+        </div>
 
         {/* PROFILE INSIGHTS */}
-        {user && (
-          <div style={{ padding: '12px 18px 0' }}>
-            <ProfileInsights profileId={user.id} />
-          </div>
-        )}
+        {user && <ProfileInsights profileId={user.id} />}
 
         {/* BADGE NUDGE */}
         {user && (
@@ -730,38 +589,23 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         {vehicles.length > 0 ? (
           <>
             {/* Fleet header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 10px' }}>
-              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#445566' }}>
-                The Fleet {'\u00B7'} {vehicles.length}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px', marginTop: 16 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                The Fleet · {vehicles.length}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <span onClick={() => handleNavigate('glovebox')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
-                  Glovebox
-                </span>
-                <span onClick={() => onNavigate?.('create-post')} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', gap: 14 }}>
+                <span onClick={() => onNavigate?.('create-post')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
                   + New Post
                 </span>
-                <span onClick={() => setShowClaimSearch(true)} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                  + Claim Vehicle
+                <span onClick={() => setShowClaimSearch(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                  + Claim
                 </span>
               </div>
             </div>
 
-            {/* Fleet carousel */}
-            <div style={{ display: 'flex', gap: 10, padding: '0 18px 18px', overflowX: 'auto', scrollSnapType: 'x mandatory' as const, scrollbarWidth: 'none' as const }}>
+            {/* Fleet cards */}
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, padding: '0 14px 14px' }}>
               {vehicles.map(vehicle => <FleetTile key={vehicle.id} vehicle={vehicle} />)}
-              {/* Add tile */}
-              <div onClick={() => setShowClaimSearch(true)} style={{
-                flexShrink: 0, width: 130, height: 134, borderRadius: 8,
-                border: '1.5px dashed rgba(249,115,22,0.22)',
-                display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
-                gap: 7, cursor: 'pointer', scrollSnapAlign: 'start' as const,
-              }}>
-                <Plus style={{ width: 22, height: 22, color: '#F97316' }} strokeWidth={1.5} />
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', textAlign: 'center' as const, whiteSpace: 'pre-line' as const }}>
-                  Claim a{'\n'}Vehicle
-                </span>
-              </div>
             </div>
           </>
         ) : (

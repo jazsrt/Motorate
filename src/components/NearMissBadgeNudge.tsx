@@ -56,19 +56,18 @@ export function NearMissBadgeNudge({ userId }: NearMissBadgeNudgeProps) {
 
   return (
     <div style={{
-      margin: '0 18px', padding: '10px 14px', borderRadius: 10,
+      margin: '0 16px', padding: '10px 14px', borderRadius: 10,
       background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
       display: 'flex', alignItems: 'center', gap: 12,
     }}>
       <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
         <div style={{
           width: `${nudge.percent}%`, height: '100%', borderRadius: 2,
-          background: 'linear-gradient(90deg, #F97316, #fb923c)',
-          transition: 'width 0.5s ease',
+          background: '#F97316',
         }} />
       </div>
       <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 500,
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 500,
         color: '#5a6e7e', whiteSpace: 'nowrap' as const,
       }}>
         <span style={{ color: '#F97316', fontWeight: 700 }}>{nudge.remaining}</span>
