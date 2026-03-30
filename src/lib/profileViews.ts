@@ -15,9 +15,54 @@ export interface RecentVisitor {
   visit_count: number;
 }
 
-export async function trackProfileView(_viewedProfileId: string, _viewerId: string) {
-  // profile_views table not yet created in Supabase — skip to avoid 400 errors
-  // Once the migration is applied, restore the insert query here
+function getOrCreateSessionId(): string {
+  const SESSION_KEY = 'motorate_pv_session';
+  try {
+    let sid = localStorage.getItem(SESSION_KEY);
+    if (!sid) {
+      sid = `pv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      localStorage.setItem(SESSION_KEY, sid);
+    }
+    return sid;
+  } catch {
+    return `pv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  }
+}
+
+export async function trackProfileView(viewedProfileId: string, viewerId?: string | null) {
+  try {
+    if (!viewedProfileId) return;
+    // Don't track self-views
+    if (viewerId && viewerId === viewedProfileId) return;
+
+    const sessionId = getOrCreateSessionId();
+    const today = new Date().toISOString().split('T')[0];
+
+    // Deduplicate: one view per viewer/session per profile per day
+    const dedupeQuery = supabase
+      .from('profile_views')
+      .select('id', { count: 'exact', head: true })
+      .eq('profile_id', viewedProfileId)
+      .eq('view_date', today);
+
+    if (viewerId) {
+      dedupeQuery.eq('viewer_id', viewerId);
+    } else {
+      dedupeQuery.eq('session_id', sessionId).is('viewer_id', null);
+    }
+
+    const { count } = await dedupeQuery;
+    if ((count ?? 0) > 0) return;
+
+    await supabase.from('profile_views').insert({
+      profile_id: viewedProfileId,
+      viewer_id: viewerId || null,
+      session_id: sessionId,
+      view_date: today,
+    });
+  } catch {
+    // Silent — profile view tracking must never break the UI
+  }
 }
 
 export async function getProfileViewStats(profileId: string): Promise<ProfileViewStats | null> {
