@@ -203,6 +203,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [_uploadingManual, setUploadingManual] = useState(false);
   const [_expandedCategory, _setExpandedCategory] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState<'photos' | 'stickers' | 'modifications' | 'reviews'>('stickers');
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
   const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);
@@ -731,57 +732,32 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 1. HERO (310px) ── */}
-        <div style={{ position: 'relative', width: '100%', height: 310, overflow: 'hidden', background: C.black }}>
+        {/* ── 1. HERO ── */}
+        <div style={{ position: 'relative', width: '100%', height: 200, overflow: 'hidden' }}>
           {(() => {
             const heroUrl = vehicle.profile_image_url || vehicle.stock_image_url || carImageryUrl;
             return heroUrl && !heroImgError ? (
               <img
                 src={heroUrl}
                 alt="Vehicle"
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 onError={() => setHeroImgError(true)}
               />
             ) : (
-              /* Dark HUD fallback */
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: `radial-gradient(ellipse at 50% 60%, ${C.carbon2} 0%, ${C.black} 70%)`,
-              }}>
-                <div style={{
-                  position: 'absolute', inset: 0, opacity: 0.06,
-                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
-                  backgroundSize: '40px 40px',
-                }} />
-                <Car size={80} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', color: C.steel, opacity: 0.3 }} />
-              </div>
+              <div style={{ width: '100%', height: '100%', background: '#111720' }} />
             );
           })()}
 
-          {/* Gradient overlay */}
-          <div style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'linear-gradient(to bottom, rgba(3,5,8,0.48) 0%, transparent 28%, transparent 42%, rgba(3,5,8,1) 100%), linear-gradient(to right, rgba(3,5,8,0.2) 0%, transparent 55%)',
-          }} />
+          {/* Overlay */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.95) 0%, rgba(3,5,8,0.4) 50%, transparent 100%)' }} />
 
           {/* Back button */}
           <button
             onClick={goBack}
-            style={{ position: 'absolute', top: 14, left: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
+            style={{ position: 'absolute', top: 14, left: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
           >
-            <ArrowLeft size={16} color={C.white} strokeWidth={1.5} />
+            <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />
           </button>
-
-          {/* Verification badge */}
-          <div style={{ position: 'absolute', top: 14, left: 60, display: 'flex', alignItems: 'center', gap: 5, zIndex: 2 }}>
-            <Shield size={13} color={verBadgeColor} strokeWidth={2} />
-            <span style={{
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-              letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: verBadgeColor,
-            }}>
-              {vehicle.verification_tier === 'vin_verified' ? 'Verified' : vehicle.is_claimed ? 'Claimed' : 'Unclaimed'}
-            </span>
-          </div>
 
           {/* Share button */}
           <button
@@ -795,80 +771,24 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicle.id}`,
               }, user?.id);
             }}
-            style={{ position: 'absolute', top: 14, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(7,10,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
+            style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
             title="Share this vehicle"
           >
-            <Share2 size={16} color={C.white} strokeWidth={1.5} />
+            <Share2 size={14} color="#eef4f8" strokeWidth={2} />
           </button>
 
-          {/* Hero bottom content */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 18px 16px', zIndex: 2 }}>
-            {/* Make eyebrow */}
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.26em', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 2 }}>
+          {/* Content bottom-left */}
+          <div style={{ position: 'absolute', bottom: 14, left: 16, right: 16, zIndex: 2 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 2 }}>
               {vehicle.make || 'Unknown'}
             </div>
-            {/* Model */}
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 32, fontWeight: 700, color: C.white, textTransform: 'uppercase' as const, lineHeight: 0.92, marginBottom: 4 }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
               {vehicle.model || 'Vehicle'}
             </div>
-            {/* Year + powertrain */}
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 600, color: C.light, marginBottom: 10 }}>
-              {[vehicle.year, vehicle.trim].filter(Boolean).join(' / ')}
-            </div>
-
-            {/* RP score + City Rank row */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 34, fontWeight: 700, color: C.white, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{rpScore}</span>
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: C.accent }}>RP</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.dim, marginRight: 4 }}>City</span>
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 30, fontWeight: 700, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-                  {cityRank != null ? `#${cityRank}` : '\u2014'}
-                </span>
-              </div>
-            </div>
-
-            {/* CTAs: VehicleFollowButton + Log Enc. */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <VehicleFollowButton
-                  vehicleId={vehicleId}
-                  vehicleOwnerId={vehicle?.owner_id}
-                  isPrivateVehicle={vehicle?.is_private || false}
-                  onFollowChange={() => loadVehicleData()}
-                />
-              </div>
-              <button
-                onClick={() => {
-                  if (guestMode) { setGuestJoinAction('log a spot'); setShowGuestJoinModal(true); }
-                  else onNavigate('scan', { vehicleId });
-                }}
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '10px 0', borderRadius: 8,
-                  background: 'transparent', border: `1px solid ${C.accent}`,
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
-                  letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer',
-                }}
-              >
-                <MapPin size={13} strokeWidth={2} />
-                Log Enc.
-              </button>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>
+              {[vehicle.year, vehicle.trim, vehicle.color].filter(Boolean).join(' · ')}
             </div>
           </div>
-
-          {/* Owner edit photos button */}
-          {isOwner && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{ position: 'absolute', top: 14, right: 60, background: 'rgba(7,10,15,0.7)', backdropFilter: 'blur(8px)', padding: '6px 10px', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', zIndex: 2 }}
-            >
-              <Camera size={12} strokeWidth={1.5} color={C.dim} />
-              <span style={{ fontSize: 10, color: C.dim, fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>Edit</span>
-            </button>
-          )}
         </div>
 
         {/* Hidden file inputs */}
@@ -882,33 +802,31 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           const items: { value: string; label: string }[] = [];
           if (specs.horsepower) items.push({ value: `${specs.horsepower}`, label: 'HP' });
           if (specs.engine) items.push({ value: specs.engine, label: 'Engine' });
-          if (specs.displacement) items.push({ value: specs.displacement, label: 'Displacement' });
-          if (specs.drivetrain) items.push({ value: specs.drivetrain, label: 'Drivetrain' });
-          if (specs.transmission) items.push({ value: specs.transmission, label: 'Transmission' });
-          if (specs.fuelType) items.push({ value: specs.fuelType, label: 'Fuel' });
+          if (specs.displacement) items.push({ value: specs.displacement, label: 'Config' });
+          if (specs.drivetrain) items.push({ value: specs.drivetrain, label: 'Drive' });
+          if (specs.transmission) items.push({ value: specs.transmission, label: 'Trans' });
           if (items.length < 2) return null;
           return (
             <div style={{
               display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' as const,
-              background: '#0d1117', borderTop: '1px solid rgba(249,115,22,0.12)',
-              borderBottom: '1px solid rgba(249,115,22,0.12)',
+              background: '#0d1117', borderTop: '1px solid rgba(249,115,22,0.10)',
+              borderBottom: '1px solid rgba(249,115,22,0.10)',
             }}>
               {items.map((item, i) => (
                 <div key={item.label} style={{
-                  display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
-                  padding: '10px 16px', flexShrink: 0,
-                  borderRight: i < items.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  flexShrink: 0, padding: '10px 16px', textAlign: 'center' as const,
+                  borderRight: i < items.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                 }}>
                   <span style={{
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600,
-                    color: '#ffffff', whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums',
+                    color: '#ffffff', display: 'block', fontVariantNumeric: 'tabular-nums',
                   }}>
                     {item.value}
                   </span>
                   <span style={{
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
-                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e',
-                    marginTop: 2,
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+                    letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e',
+                    display: 'block', marginTop: 2,
                   }}>
                     {item.label}
                   </span>
@@ -919,27 +837,21 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         })()}
 
         {/* ── 2. STAT STRIP ── */}
-        <div style={{ display: 'flex', background: C.carbon1, borderBottom: `1px solid rgba(255,255,255,0.05)` }}>
-          {/* Trackers */}
-          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.accent, fontVariantNumeric: 'tabular-nums' }}>{followerCount}</div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(249,115,22,0.6)' }}>Trackers</div>
-          </div>
-          {/* Spots */}
-          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{spotCount}</div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.muted }}>Spots</div>
-          </div>
-          {/* Encounters */}
-          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{encounterCount}</div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.muted }}>Encounters</div>
-          </div>
-          {/* City Rank */}
-          <div style={{ flex: 1, padding: '12px 0', textAlign: 'center' as const }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{cityRank != null ? `#${cityRank}` : '\u2014'}</div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.muted }}>City Rank</div>
-          </div>
+        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {[
+            { label: 'RP', value: rpScore },
+            { label: 'Spots', value: spotCount },
+            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
+            { label: 'Followers', value: followerCount },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} style={{
+              flex: 1, padding: '10px 0', textAlign: 'center' as const,
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+            }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
+            </div>
+          ))}
         </div>
 
         {/* ── VEHICLE BADGE RACK ── */}
@@ -986,213 +898,235 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
         {/* ── 3. OWNER STRIP ── */}
         {vehicle.is_claimed && vehicle.owner && (
-          <div
-            onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
-              background: C.carbon0, borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer',
-            }}
-          >
-            <UserAvatar
-              avatarUrl={vehicle.owner.avatar_url}
-              handle={vehicle.owner.handle || 'unknown'}
-              size="md"
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: C.white }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+            borderBottom: '1px solid rgba(255,255,255,0.04)',
+          }}>
+            <div
+              onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}
+              style={{
+                width: 32, height: 32, borderRadius: '50%', background: '#1e2a38', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              {vehicle.owner.avatar_url ? (
+                <img src={vehicle.owner.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#7a8e9e' }}>
+                  {(vehicle.owner.handle || '?')[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
                 @{vehicle.owner.handle || 'anonymous'}
               </div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, color: C.dim, letterSpacing: '0.08em' }}>
-                Owner {vehicle.verification_tier === 'vin_verified' ? '· Verified' : '· Claimed'}
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                Owner · {vehicle.verification_tier === 'vin_verified' ? 'Verified' : 'Claimed'}
               </div>
             </div>
             <div onClick={(e) => e.stopPropagation()}>
-              <FollowButton targetUserId={vehicle.owner.id} size="sm" />
+              <VehicleFollowButton
+                vehicleId={vehicleId}
+                vehicleOwnerId={vehicle?.owner_id}
+                isPrivateVehicle={vehicle?.is_private || false}
+                onFollowChange={() => loadVehicleData()}
+              />
             </div>
           </div>
         )}
 
-        {/* ── 4. FOLLOW NOTE ── */}
-        {vehicle.is_claimed && vehicle.owner && (
-          <div style={{
-            display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 18px',
-            background: C.accentDim, borderBottom: '1px solid rgba(249,115,22,0.15)',
-          }}>
-            <Info size={14} style={{ color: C.accent, flexShrink: 0, marginTop: 2 }} strokeWidth={1.5} />
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.accent, lineHeight: 1.4 }}>
-              Track this vehicle for spot & RP alerts. Follow the owner to see their whole fleet.
-            </p>
-          </div>
-        )}
-
-        {/* ── 5. BADGE RACK ── */}
-        {vehicleBadges.length > 0 && (
-          <div style={{ background: C.carbon0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Badges Earned</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: C.steel, fontVariantNumeric: 'tabular-nums' }}>{vehicleBadges.length}</span>
-            </div>
-            <div style={{ padding: '0 18px 14px', display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-              {[...vehicleBadges].sort((a, b) => {
-                const order: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
-                return (order[b.tier ?? ''] || 0) - (order[a.tier ?? ''] || 0);
-              }).map(badge => {
-                const colors = TIER_COLORS[(badge.tier ?? 'Bronze') as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
-                return (
-                  <div key={badge.id} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    background: colors.bg, border: `1px solid ${colors.border}`,
-                    borderRadius: 5, padding: '4px 9px',
-                  }}>
-                    <span style={{
-                      fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                      letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
-                    }}>
-                      {badge.name ?? 'Badge'}
-                    </span>
-                    {badge.sticker_count != null && badge.sticker_count > 0 && (
-                      <span style={{
-                        fontFamily: 'JetBrains Mono, monospace', fontSize: 7,
-                        color: colors.text, opacity: 0.7, fontVariantNumeric: 'tabular-nums',
-                      }}>
-                        x{badge.sticker_count}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── 6. PHOTO GALLERY ── */}
-        {vehicleImages.length > 0 && (
-          <div style={{ padding: '16px 0 16px 18px' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
-              Photos
-            </div>
-            <div style={{ display: 'flex', gap: 0, overflowX: 'auto', paddingRight: 18 }}>
-              {vehicleImages.map((img, i) => (
-                <div key={img.id} style={{ position: 'relative', flexShrink: 0, width: i === 0 ? 160 : 90, height: 110 }}>
-                  <img
-                    src={img.image_url}
-                    alt="Vehicle"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
-                  {img.is_primary && (
-                    <div style={{ position: 'absolute', top: 6, left: 6, background: C.accent, color: C.black, fontSize: 8, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>
-                      Primary
-                    </div>
-                  )}
-                  {isOwner && (
-                    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
-                      {!img.is_primary && (
-                        <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Star size={11} color={C.accent} />
-                        </button>
-                      )}
-                      <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <X size={11} color="#fca5a5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+        {/* ── 5. TAB SYSTEM (claimed) / DIRECT CONTENT (unclaimed) ── */}
+        {vehicle.is_claimed ? (
+          <>
+            {/* Tab bar */}
+            <div style={{ display: 'flex', borderBottom: '2px solid rgba(255,255,255,0.05)', background: '#070a0f' }}>
+              {(['photos', 'stickers', 'modifications', 'reviews'] as const).map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                  flex: 1, padding: '10px 0', textAlign: 'center' as const, background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+                  color: activeTab === tab ? '#F97316' : '#5a6e7e',
+                  borderBottom: activeTab === tab ? '2px solid #F97316' : '2px solid transparent',
+                  marginBottom: -2,
+                }}>
+                  {tab}
+                </button>
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Upload button for owner when no images */}
-        {isOwner && vehicleImages.length === 0 && (
-          <div style={{ padding: '16px 18px' }}>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              style={{
-                width: '100%', padding: '14px', borderRadius: 8,
-                background: C.carbon1, border: `1px dashed ${C.steel}`,
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.dim,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}
-            >
-              <Upload size={14} />
-              {uploading ? 'Uploading...' : 'Add First Photo'}
-            </button>
-          </div>
-        )}
-
-        {/* ── 7. SPECS GRID ── */}
-        {vinSpecs.length > 0 && (
-          <div style={{ padding: '0 18px 16px' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
-              Specs
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
-              {vinSpecs.map(spec => (
-                <div key={spec.label} style={{ background: C.carbon1, padding: '10px 12px' }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.steel, marginBottom: 4 }}>
-                    {spec.label}
+            {/* Photos tab */}
+            {activeTab === 'photos' && (
+              <div>
+                {isOwner && (
+                  <div style={{ margin: '12px 16px' }}>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      style={{
+                        width: '100%', padding: '10px 0', borderRadius: 6, cursor: 'pointer',
+                        background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
+                        fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      }}
+                    >
+                      <Upload size={12} />
+                      {uploading ? 'Uploading...' : '+ Add Photo'}
+                    </button>
                   </div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: C.white, fontVariantNumeric: 'tabular-nums' }}>
-                    {spec.value}
+                )}
+                {vehicleImages.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, padding: 0 }}>
+                    {vehicleImages.map((img) => (
+                      <div key={img.id} style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: '#111720' }}>
+                        <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {img.is_primary && (
+                          <div style={{ position: 'absolute', top: 6, left: 6, background: '#F97316', color: '#030508', fontSize: 7, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>Primary</div>
+                        )}
+                        {isOwner && (
+                          <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
+                            {!img.is_primary && (
+                              <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Star size={11} color="#F97316" />
+                              </button>
+                            )}
+                            <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <X size={11} color="#fca5a5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── 8. BUMPER STICKERS ── */}
-        <div style={{ padding: '0 18px 16px' }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
-            Bumper Stickers
-          </div>
-          <StickerSlab vehicleId={vehicleId} />
-          {!isOwner && user && !guestMode && (
-            <div style={{ marginTop: 10 }}>
-              <VehicleStickerSelector vehicleId={vehicleId} onStickerGiven={loadVehicleData} />
-            </div>
-          )}
-        </div>
-
-        {/* ── 9. RATING BREAKDOWN ── */}
-        {ratingCategories.length > 0 && (
-          <div style={{ padding: '0 18px 16px' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 10 }}>
-              Ratings
-            </div>
-            <div style={{ background: C.carbon1, borderRadius: 10, padding: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-              {/* Sentiment counts */}
-              {(loveCount > 0 || hateCount > 0) && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fb7185' }}>
-                    <Heart size={14} fill="currentColor" />
-                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{loveCount}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(251,113,133,0.7)' }}>Love It</span>
+                ) : (
+                  <div style={{ textAlign: 'center' as const, padding: '32px 16px', color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", fontSize: 12 }}>
+                    No photos yet
                   </div>
-                  <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)' }} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f87171' }}>
-                    <X size={14} />
-                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{hateCount}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(248,113,113,0.7)' }}>Hate It</span>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
-              {/* Category grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 16, rowGap: 8 }}>
-                {ratingCategories.map(cat => (
-                  <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: C.steel, textTransform: 'uppercase' as const, letterSpacing: '0.12em' }}>{cat.label}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ color: C.accent, fontSize: 12 }}>{'\u2605'}</span>
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
+            {/* Stickers tab */}
+            {activeTab === 'stickers' && (
+              <div style={{ padding: '16px 16px' }}>
+                <StickerSlab vehicleId={vehicleId} />
+                {!isOwner && user && !guestMode && (
+                  <div style={{ marginTop: 10 }}>
+                    <VehicleStickerSelector vehicleId={vehicleId} onStickerGiven={loadVehicleData} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Modifications tab */}
+            {activeTab === 'modifications' && (
+              <div>
+                {Object.entries(modsByCategory).filter(([, mods]) => mods.length > 0).map(([category, mods]) => (
+                  <div key={category} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ background: '#0e1320', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>{category}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#5a6e7e' }}>{mods.length}</span>
                     </div>
+                    {mods.map((mod: any) => (
+                      <div key={mod.id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <div>
+                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>{mod.part_name}</div>
+                          {mod.brand && <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>{mod.brand}</div>}
+                        </div>
+                        {mod.cost != null && mod.cost > 0 && (
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${mod.cost}</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ))}
+                {modifications.length === 0 && (
+                  <div style={{ textAlign: 'center' as const, padding: '32px 16px', color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", fontSize: 12 }}>
+                    No modifications logged yet
+                  </div>
+                )}
+                {isOwner && (
+                  <div style={{ padding: '12px 16px' }}>
+                    <GarageSection title="Add Modification" icon={<Wrench size={14} />} modCount={0} defaultOpen>
+                      <ModList mods={[]} category="Exterior" vehicleId={vehicleId} onUpdate={loadVehicleData} />
+                    </GarageSection>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Reviews tab */}
+            {activeTab === 'reviews' && (
+              <div style={{ padding: '16px 16px' }}>
+                {ratingCategories.length > 0 && (
+                  <div style={{ background: '#0a0d14', borderRadius: 10, padding: 14, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 16, rowGap: 8 }}>
+                      {ratingCategories.map(cat => (
+                        <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#1e2a38', textTransform: 'uppercase' as const, letterSpacing: '0.12em' }}>{cat.label}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ color: '#F97316', fontSize: 12 }}>{'\u2605'}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {reviews.length === 0 ? (
+                  <div style={{ textAlign: 'center' as const, padding: '32px 0', background: '#0a0d14', borderRadius: 10 }}>
+                    <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#1e2a38' }}>No encounters yet. Spot this plate to leave the first review.</p>
+                  </div>
+                ) : (
+                  <div id="reviews" style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+                    {reviews.map((review) => {
+                      const isPreClaim = canModerateReview(review);
+                      const canDelete = review.author_id === user?.id || (isOwner && isPreClaim);
+                      const canHide = isOwner && !isPreClaim;
+                      return (
+                        <div key={review.id} style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: 14 }}>
+                          {review.author_id === user?.id && review.moderation_status !== 'approved' && (
+                            <div style={{ marginBottom: 10 }}><ModerationStatus status={review.moderation_status as 'pending' | 'approved' | 'rejected'} rejectionReason={review.rejection_reason ?? undefined} isOwnContent={true} /></div>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#0e1320', overflow: 'hidden', flexShrink: 0 }}>
+                              {review.author.avatar_url ? <img src={review.author.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={14} color="#1e2a38" /></div>}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#F97316' }}>@{review.author.handle || 'Anonymous'}</span>
+                              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#1e2a38', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{new Date(review.created_at).toLocaleDateString()}</div>
+                            </div>
+                            {(canDelete || canHide) && (
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                {canHide && <button onClick={() => handleToggleHidden(review)} style={{ fontSize: 10, padding: '4px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: '#5a6e7e', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>{review.is_hidden_by_owner ? 'Unhide' : 'Hide'}</button>}
+                                {canDelete && <button onClick={() => handleDeleteReview(review.id)} style={{ fontSize: 10, padding: '4px 8px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}><Trash2 size={10} /></button>}
+                              </div>
+                            )}
+                          </div>
+                          {review.comment && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#9aaebc', lineHeight: 1.5, marginBottom: 8 }}>{review.comment}</p>}
+                          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                            {review.rating_vehicle != null && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: '#f0a030', fontVariantNumeric: 'tabular-nums' }}>{'\u2605'} Vehicle {review.rating_vehicle}/5</span>}
+                            {review.rating_driver != null && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: '#f0a030', fontVariantNumeric: 'tabular-nums' }}>{'\u2605'} Driver {review.rating_driver}/5</span>}
+                            {review.rating_driving != null && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: '#f0a030', fontVariantNumeric: 'tabular-nums' }}>{'\u2605'} Driving {review.rating_driving}/5</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Unclaimed: show stickers directly, no tabs */
+          <div style={{ padding: '16px 16px' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>Bumper Stickers</div>
+            <StickerSlab vehicleId={vehicleId} />
+            {user && !guestMode && (
+              <div style={{ marginTop: 10 }}>
+                <VehicleStickerSelector vehicleId={vehicleId} onStickerGiven={loadVehicleData} />
+              </div>
+            )}
           </div>
         )}
 
@@ -1255,166 +1189,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 11. ENCOUNTER LOG ── */}
-        <div id="reviews" style={{ padding: '0 18px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>
-              Encounter Log
-            </span>
-            {reviews.length > 0 && (
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
-                background: C.accentDim, color: C.accent, borderRadius: 10, padding: '2px 8px',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {reviews.length}
-              </span>
-            )}
-          </div>
-
-          {reviews.length === 0 ? (
-            <div style={{ textAlign: 'center' as const, padding: '32px 0', background: C.carbon1, borderRadius: 10 }}>
-              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.steel }}>
-                No encounters yet. Spot this plate to leave the first review.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {reviews.map((review) => {
-                const isPreClaim = canModerateReview(review);
-                const canDelete = review.author_id === user?.id || (isOwner && isPreClaim);
-                const canHide = isOwner && !isPreClaim;
-
-                return (
-                  <div
-                    key={review.id}
-                    style={{ background: C.carbon1, border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: 14 }}
-                  >
-                    {/* Moderation status for own reviews */}
-                    {review.author_id === user?.id && review.moderation_status !== 'approved' && (
-                      <div style={{ marginBottom: 10 }}>
-                        <ModerationStatus
-                          status={review.moderation_status as 'pending' | 'approved' | 'rejected'}
-                          rejectionReason={review.rejection_reason ?? undefined}
-                          isOwnContent={true}
-                        />
-                      </div>
-                    )}
-
-                    {/* Review header: avatar + handle + date */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: C.carbon2, overflow: 'hidden', flexShrink: 0 }}>
-                        {review.author.avatar_url && (
-                          <img src={review.author.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                        )}
-                        {!review.author.avatar_url && (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <User size={14} color={C.steel} />
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: C.accent }}>
-                          @{review.author.handle || 'Anonymous'}
-                        </span>
-                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.steel, marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>
-                          {new Date(review.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-
-                      {/* Hide/Delete controls */}
-                      {(canDelete || canHide) && (
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          {canHide && (
-                            <button
-                              onClick={() => handleToggleHidden(review)}
-                              style={{ fontSize: 10, padding: '4px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: C.dim, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const }}
-                            >
-                              {review.is_hidden_by_owner ? 'Unhide' : 'Hide'}
-                            </button>
-                          )}
-                          {canDelete && (
-                            <button
-                              onClick={() => handleDeleteReview(review.id)}
-                              style={{ fontSize: 10, padding: '4px 8px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
-                            >
-                              <Trash2 size={10} />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Comment */}
-                    {review.comment && (
-                      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.light, lineHeight: 1.5, marginBottom: 8 }}>{review.comment}</p>
-                    )}
-
-                    {/* Rating chips */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {review.rating_vehicle != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
-                          {'\u2605'} Vehicle {review.rating_vehicle}/5
-                        </span>
-                      )}
-                      {review.rating_driver != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
-                          {'\u2605'} Driver {review.rating_driver}/5
-                        </span>
-                      )}
-                      {review.rating_driving != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
-                          {'\u2605'} Driving {review.rating_driving}/5
-                        </span>
-                      )}
-                      {review.looks_rating != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
-                          {'\u2605'} Looks {review.looks_rating}/5
-                        </span>
-                      )}
-                      {review.sound_rating != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
-                          {'\u2605'} Sound {review.sound_rating}/5
-                        </span>
-                      )}
-                      {review.condition_rating != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.1)', color: C.gold, fontVariantNumeric: 'tabular-nums' }}>
-                          {'\u2605'} Condition {review.condition_rating}/5
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Sentiment + spot type */}
-                    {review.sentiment && (
-                      <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: '2px 8px', borderRadius: 10,
-                          background: review.sentiment === 'love' ? 'rgba(251,113,133,0.12)' : review.sentiment === 'hate' ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.05)',
-                          color: review.sentiment === 'love' ? '#fb7185' : review.sentiment === 'hate' ? '#f87171' : C.dim,
-                        }}>
-                          {review.sentiment === 'love' ? 'Love It' : review.sentiment === 'hate' ? 'Hate It' : review.sentiment}
-                        </span>
-                        {review.spot_type && (
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', color: C.dim }}>
-                            {review.spot_type === 'full' ? 'Full Spot' : 'Quick Spot'}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Pre-claim indicator */}
-                    {canModerateReview(review) && (
-                      <div style={{ marginTop: 8, fontSize: 10, color: C.accent, display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em' }}>
-                        <AlertCircle size={11} /> Pre-claim review
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         {/* ── 12. OWNER GARAGE ── */}
         {isOwner && (
           <div style={{ padding: '0 18px 24px' }}>
@@ -1459,11 +1233,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               )}
             </div>
 
-            {/* Build timeline */}
+            {/* Modifications timeline */}
             {vehicle.is_claimed && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: C.steel, marginBottom: 8 }}>
-                  Build Timeline
+                  Modifications
                 </div>
                 {modifications.length > 0 ? modifications.map((mod, i) => (
                   <div key={mod.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0' }}>
@@ -1519,14 +1293,14 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             {/* Followers panel */}
             <VehicleFollowersPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />
 
-            {/* The Garage (Mods) */}
+            {/* Modifications */}
             <div style={{ background: C.carbon1, borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Wrench size={14} strokeWidth={1.5} color={C.dim} />
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>The Garage</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Modifications</span>
               </div>
 
-              {/* Build status progress */}
+              {/* Modification status progress */}
               <div style={{ marginBottom: 16, padding: 14, background: `linear-gradient(to right, rgba(249,115,22,0.15), rgba(251,146,60,0.15))`, borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div>
@@ -1534,11 +1308,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                       {(() => {
                         const totalMods = modifications.length;
                         const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
-                        if (totalMods >= thresholds.Platinum) return 'Platinum Build';
-                        if (totalMods >= thresholds.Gold) return 'Gold Build';
-                        if (totalMods >= thresholds.Silver) return 'Silver Build';
-                        if (totalMods >= thresholds.Bronze) return 'Bronze Build';
-                        return 'No Mods Yet';
+                        if (totalMods >= thresholds.Platinum) return 'Platinum Mods';
+                        if (totalMods >= thresholds.Gold) return 'Gold Mods';
+                        if (totalMods >= thresholds.Silver) return 'Silver Mods';
+                        if (totalMods >= thresholds.Bronze) return 'Bronze Mods';
+                        return 'No Modifications';
                       })()}
                     </span>
                     <p style={{ fontSize: 10, color: C.steel, fontFamily: "'Barlow', sans-serif" }}>
