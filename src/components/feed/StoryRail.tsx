@@ -50,45 +50,44 @@ export function StoryRail({ onNavigate }: StoryRailProps) {
 
   return (
     <div style={{
-      padding: '10px 16px 6px', display: 'flex', gap: 14,
+      display: 'flex', gap: 10, padding: '10px 14px',
       overflowX: 'auto', scrollbarWidth: 'none' as const,
-      background: '#030508',
       borderBottom: '1px solid rgba(255,255,255,0.04)',
     }}>
       {vehicles.map(v => {
         const img = v.profile_image_url || v.stock_image_url;
         const initial = (v.make || '?')[0].toUpperCase();
-        const hasActivity = (v.reputation_score ?? 0) > 500;
 
         return (
           <button
             key={v.id}
             onClick={() => onNavigate('vehicle-detail', v.id)}
             style={{
-              width: 64, flexShrink: 0, display: 'flex', flexDirection: 'column',
+              flexShrink: 0, display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: 4, background: 'none', border: 'none',
               cursor: 'pointer', padding: 0,
             }}
           >
             <div style={{
-              width: 56, height: 56, borderRadius: '50%', overflow: 'hidden',
-              border: hasActivity
-                ? '2px solid rgba(249,115,22,0.5)'
-                : '2px solid rgba(255,255,255,0.08)',
-              background: '#0a0d14',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 52, height: 52, borderRadius: 14, overflow: 'hidden',
+              border: '2px solid rgba(249,115,22,0.40)',
+              padding: 2,
+              background: '#0d1117',
             }}>
               {img ? (
-                <img src={img} alt={v.make || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src={img} alt={v.make || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 10 }} />
               ) : (
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#F97316' }}>{initial}</span>
+                <div style={{ width: '100%', height: '100%', borderRadius: 10, background: '#0a0d14', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#F97316' }}>{initial}</span>
+                </div>
               )}
             </div>
             <span style={{
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 600,
-              color: '#5a6e7e', maxWidth: 56, overflow: 'hidden',
-              textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center',
-              textTransform: 'uppercase', letterSpacing: '0.06em',
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#5a6e7e', maxWidth: 54, overflow: 'hidden',
+              textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {v.make || '---'}
             </span>

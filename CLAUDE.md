@@ -87,7 +87,7 @@ Every vehicle query should have a comment: `// PLATE: hidden — public surface`
 ### VIN Rule
 
 VIN fields (`vin`, `vin_raw_data`, `vin_*`) are **write-only** from the frontend. They are written during the claim flow in `VinClaimModal.tsx` and NEVER read back or displayed. Do not add VIN fields to any SELECT query.
-
+The VIN number string itself must never be read or displayed anywhere in the UI. However, vin_raw_data contains only decoded specs (horsepower, engine size, drivetrain, transmission) and does not contain the VIN string itself. vin_raw_data MAY be read and displayed on claimed vehicle pages and achievement cards.
 ## Sticker System
 
 - `giveSticker()` in `src/lib/stickerService.ts` is the SINGLE write path for stickers

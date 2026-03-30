@@ -144,21 +144,22 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
 
   return (
     <>
-      <div ref={cardRef} style={{ marginTop: 4, borderTop: '1px solid rgba(249,115,22,0.12)' }}>
+      <div ref={cardRef} style={{ background: '#0a0d14', borderTop: '1px solid rgba(249,115,22,0.08)', marginBottom: 2 }}>
         {/* SPOT SIGNAL STRIP — only for spot/review posts */}
         {isSpot && spotSignals && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px', background: '#070a0f' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: '#070a0f' }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>
               {spotSignals.primarySignal}
             </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: '#7a8e9e', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 600, color: '#F97316' }}>
               {spotSignals.impactSignal}
             </span>
           </div>
         )}
 
         {/* MEDIA ZONE — image is the hero */}
-        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: hasPhoto ? 300 : 220 }}>
+        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: hasPhoto ? 180 : 180 }}>
           {hasPhoto ? (
             <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -261,30 +262,25 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
         )}
 
         {/* ACTION ROW */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '7px 14px 6px', background: '#070a0f', gap: 0 }}>
-          <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px' }} />
-          <button onClick={() => setShowComments(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#5a6e7e', padding: '6px 8px 6px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0, padding: 0, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 12px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
+            <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+          </div>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)' }} />
+          <button onClick={() => setShowComments(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            {(post.comment_count ?? 0) > 0 && <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.04em' }}>{formatCount(post.comment_count)}</span>}
+            {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
           </button>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px 0 0' }} />
-          <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#5a6e7e', padding: '6px 8px 6px 0' }}>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)' }} />
+          <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px 0 0' }} />
-          <TrackButton vehicleId={vehicles?.id ?? null} />
-          {viewCount > 0 && (
-            <>
-              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', flexShrink: 0, margin: '0 8px 0 0' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#3a4e60', padding: '6px 8px 6px 0' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.04em' }}>{formatCount(viewCount)}</span>
-              </div>
-            </>
-          )}
-          <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#3a4e60', whiteSpace: 'nowrap' }}>
-            by <b style={{ color: '#5a6e7e', fontWeight: 600 }}>@{ownerHandle}</b>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 12px' }}>
+            <TrackButton vehicleId={vehicles?.id ?? null} />
+          </div>
+          <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60', paddingRight: 12 }}>
+            by @{ownerHandle}
           </span>
         </div>
 
@@ -294,8 +290,8 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
           const cleaned = post.caption.replace(/\bnull\b/g, '').replace(/\s{2,}/g, ' ').trim();
           if (!cleaned || cleaned === 'Spotted this ride!' || cleaned === 'Full spot on this ride!') return null;
           return (
-            <div style={{ padding: '0 14px 8px', background: '#070a0f' }}>
-              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.5, margin: 0 }}>
+            <div style={{ padding: '0 14px 10px', background: '#070a0f' }}>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.5, margin: 0 }}>
                 {cleaned.length > 140 ? `${cleaned.slice(0, 140)}...` : cleaned}
               </p>
             </div>

@@ -114,47 +114,48 @@ export function CompetitionStrip() {
   return (
     <div
       style={{
-        height: 34,
+        height: 32,
         background: 'rgba(6,9,14,0.98)',
-        borderBottom: '1px solid rgba(249,115,22,0.18)',
+        borderBottom: '1px solid rgba(249,115,22,0.14)',
+        display: 'flex',
+        alignItems: 'center',
         overflow: 'hidden',
         position: 'relative',
       }}
       onMouseEnter={() => { if (trackRef.current) trackRef.current.style.animationPlayState = 'paused'; }}
       onMouseLeave={() => { if (trackRef.current) trackRef.current.style.animationPlayState = 'running'; }}
     >
-      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 32, zIndex: 2, background: 'linear-gradient(to right, rgba(6,9,14,0.98), transparent)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, zIndex: 2, background: 'linear-gradient(to left, rgba(6,9,14,0.98), transparent)', pointerEvents: 'none' }} />
-
       <div
         ref={trackRef}
         style={{
-          display: 'inline-flex',
+          display: 'flex',
           alignItems: 'center',
-          height: '100%',
+          gap: 24,
+          padding: '0 16px',
           whiteSpace: 'nowrap',
-          animation: 'motorate-ticker 28s linear infinite',
+          animation: 'ticker 20s linear infinite',
         }}
       >
         {items.map((item, i) => (
           <div key={i} style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            gap: 5,
-            padding: '0 16px',
-            borderRight: '1px solid rgba(255,255,255,0.04)',
-            height: '100%',
+            gap: 6,
+            flexShrink: 0,
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: 8,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#7a8e9e',
           }}>
             <div style={{ width: 4, height: 4, borderRadius: '50%', background: item.dot, flexShrink: 0 }} />
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#7a8e9e' }}>
-              {item.text}
-            </span>
+            <span>{item.text}</span>
           </div>
         ))}
       </div>
 
       <style>{`
-        @keyframes motorate-ticker {
+        @keyframes ticker {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }

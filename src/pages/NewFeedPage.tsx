@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
-import { SuggestedUsers } from '../components/SuggestedUsers';
+
 import { AchievementCarousel } from '../components/feed/AchievementCarousel';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
@@ -18,12 +18,12 @@ interface NewFeedPageProps {
 }
 
 const pillStyle = (active: boolean): React.CSSProperties => ({
-  flexShrink: 0, padding: '5px 13px', borderRadius: 20,
-  background: active ? 'rgba(249,115,22,0.12)' : 'rgba(10,13,20,0.9)',
-  border: `1px solid ${active ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.06)'}`,
-  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-  color: active ? '#F97316' : '#445566', cursor: 'pointer', whiteSpace: 'nowrap' as const,
+  flexShrink: 0, padding: '4px 12px', borderRadius: 20,
+  background: active ? 'rgba(249,115,22,0.10)' : 'transparent',
+  border: `1px solid ${active ? 'rgba(249,115,22,0.40)' : 'rgba(255,255,255,0.06)'}`,
+  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+  letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+  color: active ? '#F97316' : '#3a4e60', cursor: 'pointer', whiteSpace: 'nowrap' as const,
 });
 
 export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
@@ -153,7 +153,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       <AchievementCarousel />
 
       {/* Filter bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <button
           onClick={() => setFilterOpen(!filterOpen)}
           style={{
@@ -244,20 +244,20 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
       {/* Empty state */}
       {displayPosts.length === 0 && !loading && (
-        <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1" style={{ margin: '0 auto 16px', display: 'block' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1" style={{ marginBottom: 16, display: 'block' }}>
             <circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
           </svg>
-          <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>
+          <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>
             {hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
           </p>
-          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', marginBottom: 20 }}>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>
             {hasActiveFilters ? 'Try changing your filters.' : 'Spot a car or claim yours to get started.'}
           </p>
           {!hasActiveFilters && (
             <button onClick={() => onNavigate('scan')} style={{
               padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
               letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer',
             }}>
               Spot a Car
@@ -269,16 +269,14 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       {/* Feed posts */}
       {displayPosts.length > 0 && (
         <div>
-          {displayPosts.map((post, index) => (
-            <div key={post.id}>
-              <FeedPostCard
-                post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
-                vehicleRank={null}
-                currentUserId={user?.id}
-                onNavigate={onNavigate}
-              />
-              {index === 2 && <SuggestedUsers onNavigate={onNavigate} />}
-            </div>
+          {displayPosts.map((post) => (
+            <FeedPostCard
+              key={post.id}
+              post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
+              vehicleRank={null}
+              currentUserId={user?.id}
+              onNavigate={onNavigate}
+            />
           ))}
 
           {/* Infinite scroll sentinel */}

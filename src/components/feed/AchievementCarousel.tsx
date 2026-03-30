@@ -94,12 +94,12 @@ export function AchievementCarousel() {
   if (cards.length === 0) return null;
 
   const tierColors = {
-    gold: { border: '#f0a030', bg: 'rgba(240,160,48,0.12)', text: '#f0a030' },
-    platinum: { border: '#f5cc55', bg: 'rgba(245,204,85,0.12)', text: '#f5cc55' },
+    gold: { border: '#f0a030', pillBg: 'rgba(240,160,48,0.20)', pillText: '#f0a030', pillBorder: 'rgba(240,160,48,0.30)' },
+    platinum: { border: '#c8d8e8', pillBg: 'rgba(200,216,232,0.15)', pillText: '#c8d8e8', pillBorder: 'rgba(200,216,232,0.30)' },
   };
 
   return (
-    <div style={{ paddingBottom: 4 }}>
+    <div>
       <div style={{
         padding: '10px 14px 6px',
         fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
@@ -109,72 +109,57 @@ export function AchievementCarousel() {
       </div>
       <div style={{
         display: 'flex', gap: 10, padding: '0 14px 10px',
-        overflowX: 'auto', scrollSnapType: 'x mandatory' as const,
+        overflowX: 'auto',
         scrollbarWidth: 'none' as const,
       }}>
         {cards.map(card => {
           const colors = tierColors[card.tier];
           return (
             <div key={card.id} style={{
-              flexShrink: 0, width: 180, height: 220, borderRadius: 10,
+              flexShrink: 0, width: 140, height: 180, borderRadius: 10,
               overflow: 'hidden', position: 'relative',
               borderLeft: `2px solid ${colors.border}`,
-              scrollSnapAlign: 'start' as const,
+              background: '#0d1117',
             }}>
               {/* Vehicle photo background */}
               <img
                 src={card.photoUrl}
                 alt=""
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }}
               />
               {/* Dark overlay */}
               <div style={{
                 position: 'absolute', inset: 0,
-                background: 'linear-gradient(to top, #030508 0%, rgba(3,5,8,0.6) 50%, transparent 100%)',
+                background: 'linear-gradient(to top, rgba(3,5,8,0.95) 40%, transparent 100%)',
               }} />
 
-              {/* Tier pill */}
-              <div style={{
-                position: 'absolute', top: 10, left: 10, zIndex: 2,
-                padding: '3px 8px', borderRadius: 4,
-                background: colors.bg, border: `1px solid ${colors.border}`,
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
-                letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: colors.text,
-              }}>
-                {card.tier}
+              {/* Tier pill top-left */}
+              <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                <div style={{
+                  padding: '2px 7px', borderRadius: 4,
+                  background: colors.pillBg, border: `1px solid ${colors.pillBorder}`,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.pillText,
+                }}>
+                  {card.tier}
+                </div>
               </div>
 
               {/* Bottom content */}
               <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 10px 12px',
-                zIndex: 2,
+                position: 'absolute', bottom: 10, left: 10, right: 10,
               }}>
                 <div style={{
-                  fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700,
-                  color: '#ffffff', textTransform: 'uppercase' as const, lineHeight: 1.1,
-                  marginBottom: 4,
+                  fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700,
+                  color: '#eef4f8', textTransform: 'uppercase' as const, lineHeight: 1,
                 }}>
                   {card.badgeName}
                 </div>
                 <div style={{
-                  fontFamily: "'Barlow', sans-serif", fontSize: 10,
-                  color: 'rgba(255,255,255,0.5)', marginBottom: 2,
+                  fontFamily: "'Barlow', sans-serif", fontSize: 9,
+                  color: 'rgba(255,255,255,0.4)', marginTop: 2,
                 }}>
                   {card.vehicleMakeModel}
-                </div>
-                {card.specs && (
-                  <div style={{
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-                    color: 'rgba(249,115,22,0.7)', marginBottom: 2,
-                  }}>
-                    {card.specs}
-                  </div>
-                )}
-                <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600,
-                  letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)',
-                }}>
-                  @{card.userHandle}
                 </div>
               </div>
             </div>
