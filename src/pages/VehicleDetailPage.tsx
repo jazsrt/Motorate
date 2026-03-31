@@ -978,8 +978,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 {vehicleImages.length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, padding: 0 }}>
                     {vehicleImages.map((img) => (
-                      <div key={img.id} style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: '#111720' }}>
-                        <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div key={img.id} style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: '#0a0d14' }}>
+                        <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0a0d14' }} />
                         {img.is_primary && (
                           <div style={{ position: 'absolute', top: 6, left: 6, background: '#F97316', color: '#030508', fontSize: 7, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>Primary</div>
                         )}

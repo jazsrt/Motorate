@@ -159,9 +159,9 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
         )}
 
         {/* MEDIA ZONE — image is the hero */}
-        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#0a0d14', height: hasPhoto ? 180 : 180 }}>
+        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: '#070a0f', aspectRatio: '16/9' }}>
           {hasPhoto ? (
-            <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            <img src={imageUrl!} alt="" style={{ width: '100%', aspectRatio: '16/9', objectFit: 'contain', background: '#070a0f', display: 'block' }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           ) : (
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #070a0f 0%, #0a0d14 40%, #070a0f 100%)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, position: 'relative', overflow: 'hidden' }}>
