@@ -108,10 +108,12 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
   return (
     <>
       <div ref={cardRef} style={{ background: '#0a0d14', borderTop: '1px solid rgba(249,115,22,0.08)', marginBottom: 2 }}>
-        {/* MEDIA ZONE — clean image, no overlays per mockup */}
+        {/* MEDIA ZONE — 4:3 cover, no borders */}
         {hasPhoto && (
-          <img src={imageUrl!} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <div style={{ width: '100%', aspectRatio: '4/3', overflow: 'hidden', background: '#070a0f' }}>
+            <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
+          </div>
         )}
 
         {/* SIGNAL STRIP — vehicle make/model + RP score */}
