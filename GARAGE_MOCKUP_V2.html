@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MotoRate — Garage Page V2 Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #010204; font-family: 'Barlow', sans-serif; color: #eef4f8; display: flex; justify-content: center; padding: 48px 24px 80px; gap: 48px; flex-wrap: wrap; }
+
+.label { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: #5a6e7e; text-align: center; margin-bottom: 12px; }
+
+.phone {
+  width: 320px;
+  height: 680px;
+  background: #070a0f;
+  border-radius: 32px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(249,115,22,0.06);
+  flex-shrink: 0;
+}
+.scroll { height: calc(100% - 72px); overflow-y: auto; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 72px;
+  background: rgba(7,10,15,0.96); border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: space-around;
+  padding-bottom: 8px; backdrop-filter: blur(12px);
+}
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.nav-icon { width: 20px; height: 20px; color: #3a4e60; }
+.nav-icon.active { color: #F97316; }
+.nav-label { font-family: 'Barlow Condensed', sans-serif; font-size: 7px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #3a4e60; }
+.nav-label.active { color: #F97316; }
+.nav-fab { width: 52px; height: 52px; border-radius: 16px; background: #F97316; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(249,115,22,0.4); margin-top: -10px; }
+
+/* ── HERO VEHICLE CARD ── */
+.hero-vehicle {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  background: #0a0d14;
+}
+.hero-vehicle img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  display: block;
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(3,5,8,0.15) 0%, rgba(3,5,8,0.0) 30%, rgba(3,5,8,0.85) 80%, rgba(3,5,8,0.98) 100%);
+}
+.hero-top-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px;
+}
+.hero-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #1e2a38; border: 2px solid rgba(249,115,22,0.40);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: #eef4f8;
+  overflow: hidden;
+}
+.hero-top-right { display: flex; gap: 10px; align-items: center; }
+.icon-btn { width: 18px; height: 18px; color: #eef4f8; opacity: 0.7; }
+
+.hero-content {
+  position: absolute; bottom: 14px; left: 16px; right: 16px;
+}
+.hero-make {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.3em; text-transform: uppercase; color: #F97316; margin-bottom: 2px;
+}
+.hero-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
+  color: #eef4f8; line-height: 1; margin-bottom: 4px;
+}
+.hero-sub {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; color: #7a8e9e;
+  letter-spacing: 0.05em;
+}
+.hero-rp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25);
+  border-radius: 20px; padding: 3px 10px; margin-top: 6px;
+}
+.hero-rp-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+  color: #F97316; font-variant-numeric: tabular-nums;
+}
+.hero-rp-label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 8px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; color: #7a8e9e;
+}
+.verified-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #20c060; flex-shrink: 0;
+}
+
+/* ── STAT STRIP ── */
+.stat-strip {
+  display: flex; background: #0a0d14;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.stat-item {
+  flex: 1; padding: 10px 0; text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.04);
+}
+.stat-item:last-child { border-right: none; }
+.stat-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600;
+  color: #eef4f8; display: block; font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 7px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase; color: #5a6e7e;
+  display: block; margin-top: 2px;
+}
+
+/* ── INSIGHTS STRIP ── */
+.insights-strip {
+  background: #0d1117; border: 1px solid rgba(249,115,22,0.10);
+  border-radius: 8px; margin: 10px 14px; display: flex;
+}
+.insight-item {
+  flex: 1; padding: 10px 0; text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+.insight-item:last-child { border-right: none; }
+.insight-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600;
+  color: #F97316; display: block; font-variant-numeric: tabular-nums;
+}
+.insight-label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 7px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; color: #5a6e7e;
+  display: block; margin-top: 2px;
+}
+
+/* ── NUDGE BAR ── */
+.nudge-bar {
+  margin: 0 14px 10px; padding: 10px 14px;
+  background: #0a0d14; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; display: flex; align-items: center; gap: 12px;
+}
+.nudge-progress { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.nudge-fill { height: 100%; border-radius: 2px; background: #F97316; }
+.nudge-text { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; color: #5a6e7e; white-space: nowrap; }
+.nudge-text b { color: #F97316; font-weight: 700; }
+
+/* ── SECTION HEADER ── */
+.section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+.section-hdr-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase; color: #5a6e7e;
+}
+.section-hdr-actions { display: flex; gap: 14px; }
+.section-hdr-action {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: #F97316; cursor: pointer;
+}
+
+/* ── VEHICLE CARD (secondary vehicles) ── */
+.vehicle-card {
+  background: #0d1117; border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.vehicle-card-img { width: 100%; height: 100px; object-fit: cover; display: block; }
+.vehicle-card-img-placeholder {
+  width: 100%; height: 100px; background: #111720;
+  display: flex; align-items: center; justify-content: center;
+}
+.vehicle-card-body { padding: 10px 12px 12px; }
+.vehicle-card-make {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 8px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase; color: #F97316; margin-bottom: 1px;
+}
+.vehicle-card-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700;
+  color: #eef4f8; line-height: 1; margin-bottom: 6px;
+}
+.vehicle-card-stats { display: flex; align-items: center; gap: 8px; }
+.vehicle-card-rp {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+  color: #F97316; font-variant-numeric: tabular-nums;
+}
+.vehicle-card-spots {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 8px; font-weight: 700;
+  color: #5a6e7e; letter-spacing: 0.08em;
+}
+.tag {
+  margin-left: auto; padding: 2px 7px; border-radius: 4px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 7px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.tag-verified { background: rgba(32,192,96,0.10); border: 1px solid rgba(32,192,96,0.20); color: #20c060; }
+.tag-unclaimed { background: rgba(249,115,22,0.10); border: 1px solid rgba(249,115,22,0.20); color: #F97316; }
+
+/* ── VEHICLE SWITCHER DOTS ── */
+.vehicle-dots {
+  display: flex; justify-content: center; gap: 5px; padding: 8px 0 4px;
+}
+.v-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+.v-dot.active { background: #F97316; width: 14px; border-radius: 3px; }
+
+/* ── QUICK ACTIONS ── */
+.quick-actions {
+  display: flex; gap: 8px; padding: 0 14px 10px;
+}
+.quick-action {
+  flex: 1; padding: 10px 0; border-radius: 8px; text-align: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.quick-action-primary {
+  background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25); color: #F97316;
+}
+.quick-action-secondary {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); color: #7a8e9e;
+}
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: rgba(255,255,255,0.04); margin: 4px 0; }
+
+svg { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ═══ PHONE 1: PRIMARY VEHICLE HERO VIEW ═══ -->
+<div>
+  <div class="label">My Garage — Primary Vehicle Hero</div>
+  <div class="phone">
+    <div class="scroll">
+
+      <!-- HERO VEHICLE — full bleed, car is the star -->
+      <div class="hero-vehicle">
+        <img src="https://source.unsplash.com/featured/640x520/?dodge,durango,suv" alt="">
+        <div class="hero-overlay"></div>
+
+        <!-- Top bar overlaid on image -->
+        <div class="hero-top-bar">
+          <div class="hero-avatar">J</div>
+          <div class="hero-top-right">
+            <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </div>
+        </div>
+
+        <!-- Vehicle identity at bottom of hero -->
+        <div class="hero-content">
+          <div class="hero-make">Dodge · 2024</div>
+          <div class="hero-name">Durango</div>
+          <div class="hero-sub">SRT 392 · Midnight Blue · Verified Owner</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <div class="hero-rp-badge">
+              <div class="verified-dot"></div>
+              <span class="hero-rp-num">116</span>
+              <span class="hero-rp-label">RP</span>
+            </div>
+            <div class="hero-rp-badge" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.10);">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;color:#7a8e9e;letter-spacing:0.1em;text-transform:uppercase;">8 Spots</span>
+            </div>
+            <div class="hero-rp-badge" style="background:rgba(32,192,96,0.10);border-color:rgba(32,192,96,0.22);">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;color:#20c060;letter-spacing:0.1em;text-transform:uppercase;">#1 City</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle dot switcher (if multiple vehicles) -->
+      <div class="vehicle-dots">
+        <div class="v-dot active"></div>
+        <div class="v-dot"></div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="quick-actions" style="padding-top:8px;">
+        <div class="quick-action quick-action-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New Post
+        </div>
+        <div class="quick-action quick-action-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Claim
+        </div>
+        <div class="quick-action quick-action-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </div>
+      </div>
+
+      <!-- STAT STRIP -->
+      <div class="stat-strip">
+        <div class="stat-item"><span class="stat-value">12</span><span class="stat-label">Spots</span></div>
+        <div class="stat-item"><span class="stat-value">4</span><span class="stat-label">Badges</span></div>
+        <div class="stat-item"><span class="stat-value">3</span><span class="stat-label">Friends</span></div>
+        <div class="stat-item"><span class="stat-value">2</span><span class="stat-label">Vehicles</span></div>
+      </div>
+
+      <!-- PROFILE INSIGHTS -->
+      <div class="insights-strip">
+        <div class="insight-item"><span class="insight-value">847</span><span class="insight-label">Views</span></div>
+        <div class="insight-item"><span class="insight-value">124</span><span class="insight-label">Likes</span></div>
+        <div class="insight-item"><span class="insight-value">31</span><span class="insight-label">Comments</span></div>
+      </div>
+
+      <!-- NUDGE BAR -->
+      <div class="nudge-bar">
+        <div class="nudge-progress"><div class="nudge-fill" style="width:80%"></div></div>
+        <span class="nudge-text"><b>2 spots</b> to Eagle Eye</span>
+      </div>
+
+      <!-- FLEET HEADER -->
+      <div class="section-hdr" style="margin-top:6px;">
+        <div class="section-hdr-title">The Fleet · 2</div>
+        <div class="section-hdr-actions">
+          <span class="section-hdr-action">+ New Post</span>
+          <span class="section-hdr-action">+ Claim</span>
+        </div>
+      </div>
+
+      <!-- SECONDARY VEHICLE CARD (smaller, stacked below hero) -->
+      <div style="padding:0 14px 16px;">
+        <div class="vehicle-card">
+          <div class="vehicle-card-img-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="1.2"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="vehicle-card-body">
+            <div class="vehicle-card-make">Dodge</div>
+            <div class="vehicle-card-name">Stealth</div>
+            <div class="vehicle-card-stats">
+              <span class="vehicle-card-rp">28 RP</span>
+              <span class="vehicle-card-spots">· 4 spots</span>
+              <span class="tag tag-unclaimed">Unclaimed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nav-label">Feed</span></div>
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nav-label">Explore</span></div>
+      <div class="nav-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nav-label">Rankings</span></div>
+      <div class="nav-item"><svg class="nav-icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label active">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHONE 2: SCROLLED STATE ═══ -->
+<div>
+  <div class="label">My Garage — Scrolled / Empty Vehicle State</div>
+  <div class="phone">
+    <div class="scroll">
+
+      <!-- HERO with no photo — dark cinematic placeholder -->
+      <div class="hero-vehicle" style="background:linear-gradient(135deg,#0a0f1a 0%,#111a28 50%,#0a0f1a 100%);">
+        <!-- Grid texture overlay -->
+        <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 40px);"></div>
+        <!-- Orange corner accent -->
+        <div style="position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,rgba(249,115,22,0.15) 0%,transparent 70%);"></div>
+
+        <div class="hero-top-bar">
+          <div class="hero-avatar">J</div>
+          <div class="hero-top-right">
+            <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+        </div>
+
+        <!-- Big car icon centered -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="rgba(249,115,22,0.15)" stroke-width="0.8"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+
+        <div class="hero-overlay" style="background:linear-gradient(to bottom,transparent 40%,rgba(3,5,8,0.98) 100%);"></div>
+
+        <div class="hero-content">
+          <div class="hero-make">No Vehicle Claimed</div>
+          <div class="hero-name" style="font-size:22px;">Your Garage</div>
+          <div class="hero-sub">Claim your vehicle to get started</div>
+          <div style="margin-top:10px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#F97316;border-radius:6px;padding:7px 14px;cursor:pointer;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#030508;">Claim Your Ride</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- dot indicator -->
+      <div class="vehicle-dots">
+        <div class="v-dot active" style="background:rgba(255,255,255,0.2);width:5px;"></div>
+      </div>
+
+      <!-- STAT STRIP -->
+      <div class="stat-strip">
+        <div class="stat-item"><span class="stat-value">0</span><span class="stat-label">Spots</span></div>
+        <div class="stat-item"><span class="stat-value">0</span><span class="stat-label">Badges</span></div>
+        <div class="stat-item"><span class="stat-value">0</span><span class="stat-label">Friends</span></div>
+        <div class="stat-item"><span class="stat-value">0</span><span class="stat-label">Vehicles</span></div>
+      </div>
+
+      <!-- INSIGHTS -->
+      <div class="insights-strip">
+        <div class="insight-item"><span class="insight-value">0</span><span class="insight-label">Views</span></div>
+        <div class="insight-item"><span class="insight-value">0</span><span class="insight-label">Likes</span></div>
+        <div class="insight-item"><span class="insight-value">0</span><span class="insight-label">Comments</span></div>
+      </div>
+
+      <!-- EMPTY FLEET -->
+      <div class="section-hdr" style="margin-top:6px;">
+        <div class="section-hdr-title">The Fleet · 0</div>
+        <div class="section-hdr-actions">
+          <span class="section-hdr-action">+ Claim</span>
+        </div>
+      </div>
+
+      <div style="margin:0 14px;padding:32px 16px;background:#0d1117;border-radius:10px;border:1px dashed rgba(249,115,22,0.18);display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="1.2"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#eef4f8;">No Vehicles Yet</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:11px;color:#5a6e7e;line-height:1.5;">Claim your vehicle to build your garage and start earning RP.</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#F97316;padding:8px 20px;border:1px solid rgba(249,115,22,0.25);border-radius:6px;cursor:pointer;">+ Claim a Vehicle</div>
+      </div>
+
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nav-label">Feed</span></div>
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nav-label">Explore</span></div>
+      <div class="nav-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nav-label">Rankings</span></div>
+      <div class="nav-item"><svg class="nav-icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label active">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHONE 3: MULTI-VEHICLE SWIPE VIEW ═══ -->
+<div>
+  <div class="label">My Garage — Multi-Vehicle (Vehicle 2 Active)</div>
+  <div class="phone">
+    <div class="scroll">
+
+      <!-- HERO — second vehicle active -->
+      <div class="hero-vehicle">
+        <img src="https://source.unsplash.com/featured/640x520/?dodge,stealth,coupe" alt="">
+        <div class="hero-overlay"></div>
+
+        <div class="hero-top-bar">
+          <div class="hero-avatar">J</div>
+          <div class="hero-top-right">
+            <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+        </div>
+
+        <!-- Unclaimed badge top right -->
+        <div style="position:absolute;top:52px;right:14px;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.25);border-radius:4px;padding:3px 8px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#F97316;">Unclaimed</span>
+        </div>
+
+        <div class="hero-content">
+          <div class="hero-make">Dodge</div>
+          <div class="hero-name">Stealth</div>
+          <div class="hero-sub">Spotted 3 times · Not Claimed</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <div class="hero-rp-badge">
+              <span class="hero-rp-num">28</span>
+              <span class="hero-rp-label">RP</span>
+            </div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#F97316;border-radius:6px;padding:5px 12px;cursor:pointer;margin-left:4px;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#030508;">Claim This Vehicle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- dot indicator — second dot active -->
+      <div class="vehicle-dots">
+        <div class="v-dot"></div>
+        <div class="v-dot active"></div>
+      </div>
+
+      <!-- QUICK ACTIONS for unclaimed vehicle -->
+      <div class="quick-actions" style="padding-top:8px;">
+        <div class="quick-action quick-action-primary" style="flex:2;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Claim Vehicle
+        </div>
+        <div class="quick-action quick-action-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Details
+        </div>
+      </div>
+
+      <!-- STAT STRIP — this vehicle's stats -->
+      <div class="stat-strip">
+        <div class="stat-item"><span class="stat-value">3</span><span class="stat-label">Spots</span></div>
+        <div class="stat-item"><span class="stat-value">0</span><span class="stat-label">Badges</span></div>
+        <div class="stat-item"><span class="stat-value">28</span><span class="stat-label">RP</span></div>
+        <div class="stat-item"><span class="stat-value">4.1</span><span class="stat-label">Rating</span></div>
+      </div>
+
+      <!-- Recent spots of this vehicle -->
+      <div class="section-hdr" style="margin-top:8px;">
+        <div class="section-hdr-title">Recent Spots</div>
+        <div class="section-hdr-action">See All</div>
+      </div>
+
+      <div style="display:flex;gap:6px;padding:0 14px 14px;overflow-x:auto;scrollbar-width:none;">
+        <div style="flex-shrink:0;width:100px;height:70px;border-radius:8px;overflow:hidden;background:#111720;border:1px solid rgba(255,255,255,0.05);">
+          <img src="https://source.unsplash.com/featured/200x140/?sports,car" style="width:100%;height:100%;object-fit:cover;opacity:0.8;" alt="">
+        </div>
+        <div style="flex-shrink:0;width:100px;height:70px;border-radius:8px;overflow:hidden;background:#111720;border:1px solid rgba(255,255,255,0.05);">
+          <img src="https://source.unsplash.com/featured/200x140/?coupe,car" style="width:100%;height:100%;object-fit:cover;opacity:0.8;" alt="">
+        </div>
+        <div style="flex-shrink:0;width:100px;height:70px;border-radius:8px;overflow:hidden;background:#111720;border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stickers on this vehicle -->
+      <div class="section-hdr">
+        <div class="section-hdr-title">Bumper Stickers</div>
+      </div>
+      <div style="display:flex;gap:6px;padding:0 14px 16px;overflow-x:auto;scrollbar-width:none;">
+        <div style="flex-shrink:0;padding:5px 10px;border-radius:20px;background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.25);font-family:'Barlow',sans-serif;font-size:10px;color:#F97316;">🔥 Daily Driver</div>
+        <div style="flex-shrink:0;padding:5px 10px;border-radius:20px;background:rgba(58,78,96,0.30);border:1px solid rgba(255,255,255,0.06);font-family:'Barlow',sans-serif;font-size:10px;color:#7a8e9e;">⚡ Fast AF</div>
+        <div style="flex-shrink:0;padding:5px 10px;border-radius:20px;background:rgba(58,78,96,0.30);border:1px solid rgba(255,255,255,0.06);font-family:'Barlow',sans-serif;font-size:10px;color:#7a8e9e;">🏁 Track Ready</div>
+      </div>
+
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nav-label">Feed</span></div>
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nav-label">Explore</span></div>
+      <div class="nav-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nav-label">Rankings</span></div>
+      <div class="nav-item"><svg class="nav-icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label active">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

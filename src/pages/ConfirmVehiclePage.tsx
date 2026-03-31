@@ -1,9 +1,8 @@
-import { ArrowLeft, ChevronRight, Edit2, Car } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Camera } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { type OnNavigate } from '../types/navigation';
 import type { SpotWizardData } from '../types/spot';
-
-const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
 
 interface ConfirmVehiclePageProps {
   onNavigate: OnNavigate;
@@ -11,119 +10,80 @@ interface ConfirmVehiclePageProps {
 }
 
 export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePageProps) {
-  const vehicleName = [wizardData.year, wizardData.make, wizardData.model]
-    .filter(Boolean)
-    .join(' ');
+  const [imgError, setImgError] = useState(false);
+  const photoUrl = !imgError ? (wizardData.stockImageUrl || null) : null;
 
   const handleNext = () => {
     onNavigate('quick-spot-review', { wizardData });
   };
 
-  const handleEdit = () => {
-    onNavigate('quick-spot', { wizardData });
-  };
-
-  const colorMap: Record<string, string> = {
-    black: '#1a1a1a', white: '#f5f5f5', silver: '#c0c0c0', gray: '#808080',
-    red: '#dc2626', blue: '#F97316', green: '#16a34a', yellow: '#eab308',
-    orange: '#ea580c', brown: '#92400e', gold: '#d97706', beige: '#d2b48c',
-    purple: '#7c3aed', pink: '#ec4899', teal: '#0d9488', burgundy: '#800020',
-    tan: '#d2b48c', bronze: '#cd7f32', copper: '#b87333', chrome: '#dce0e5',
-  };
-
-  const _colorHex = colorMap[wizardData.color?.toLowerCase() || ''] || '#888';
+  const isClaimed = false; // New vehicles from API lookup are always unclaimed
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <button
-            onClick={handleEdit}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 20, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e' }}
-          >
-            <ArrowLeft style={{ width: 16, height: 16 }} />
-            <span>Edit Details</span>
+      {/* Header */}
+      <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <button onClick={() => onNavigate('scan')} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />
           </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {[1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  style={{
-                    height: 6,
-                    borderRadius: 9999,
-                    width: i <= 2 ? 32 : 16,
-                    background: i <= 2 ? '#F97316' : 'rgba(255,255,255,0.06)',
-                  }}
-                />
-              ))}
-            </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e' }}>Step 2 of 3 — 66%</span>
-          </div>
-
-          <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '4px 0' }}>
-            Does this look right?
-          </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>Confirm the vehicle before rating</p>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>Step 2 of 3</span>
         </div>
+        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 12 }}>Confirm Vehicle</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(249,115,22,0.40)' }} />
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
+        </div>
+      </div>
 
-        <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ position: 'relative', aspectRatio: '16/9', background: 'linear-gradient(135deg, #0e1320, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            {wizardData.stockImageUrl ? (
-              <img
-                src={wizardData.stockImageUrl}
-                alt={vehicleName}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <Car style={{ width: 48, height: 48, color: '#5a6e7e', marginBottom: 8 }} />
-                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#3a4e60', margin: 0 }}>No image available</p>
-              </div>
-            )}
+      {/* Plate display */}
+      <div style={{ background: '#0d1117', border: '1px solid rgba(249,115,22,0.12)', borderRadius: 8, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, margin: '14px 16px' }}>
+        <div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: '#7a8e9e', letterSpacing: '0.1em' }}>{wizardData.plateState || '—'}</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.15em' }}>{wizardData.plateNumber || '—'}</div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          {isClaimed ? (
+            <span style={{ background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.25)', color: '#20c060', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: 4 }}>Claimed</span>
+          ) : (
+            <span style={{ background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.20)', color: '#F97316', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: 4 }}>Unclaimed</span>
+          )}
+        </div>
+      </div>
+
+      {/* Vehicle card */}
+      <div style={{ background: '#0d1117', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', margin: '0 16px 14px' }}>
+        {photoUrl ? (
+          <img src={photoUrl} alt="" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} onError={() => setImgError(true)} />
+        ) : (
+          <div style={{ width: '100%', height: 100, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </div>
-
-          <div style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 16, marginTop: 0 }}>
-              {vehicleName || 'Unknown Vehicle'}
-            </h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {[
-                { label: 'Make', value: wizardData.make },
-                { label: 'Model', value: wizardData.model },
-                { label: 'Color', value: wizardData.color },
-                { label: 'Year', value: wizardData.year || '—' },
-                ...(wizardData.trim ? [{ label: 'Trim', value: wizardData.trim }] : []),
-                { label: 'State', value: wizardData.plateState || '—' },
-                { label: 'Plate', value: wizardData.plateNumber || '—' },
-              ].map(item => (
-                <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 12 }}>
-                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 4, marginTop: 0 }}>{item.label}</p>
-                  <p style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, color: '#eef4f8', textTransform: 'capitalize', margin: 0, fontSize: 15 }}>{item.value}</p>
-                </div>
-              ))}
-            </div>
+        )}
+        <div style={{ padding: '10px 12px 12px' }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>{wizardData.make}</div>
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 6 }}>
+            {[wizardData.year, wizardData.model].filter(Boolean).join(' ') || 'Vehicle'}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {wizardData.color && <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#5a6e7e', letterSpacing: '0.08em' }}>{wizardData.color.toUpperCase()}</span>}
+            {wizardData.trim && <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#5a6e7e', letterSpacing: '0.08em' }}>{wizardData.trim}</span>}
           </div>
         </div>
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <button
-            onClick={handleEdit}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e', cursor: 'pointer' }}
-          >
-            <Edit2 style={{ width: 16, height: 16 }} />
-            Edit
-          </button>
-          <button
-            onClick={handleNext}
-            style={{ ...primaryBtnStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-          >
-            Looks Good
-            <ChevronRight style={{ width: 16, height: 16 }} />
-          </button>
-        </div>
+      {/* Photo section placeholder */}
+      <div style={{ margin: '0 16px 14px', padding: 14, background: '#0d1117', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' as const }}>
+        <Camera size={28} color="#3a4e60" style={{ margin: '0 auto 8px', display: 'block' }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Add a Photo (optional)</span>
+      </div>
+
+      {/* Submit button */}
+      <div style={{ margin: '0 16px' }}>
+        <button onClick={handleNext} style={{ width: '100%', padding: 13, background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}>
+          Confirm & Continue
+        </button>
       </div>
     </Layout>
   );

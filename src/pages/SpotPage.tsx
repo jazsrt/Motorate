@@ -173,11 +173,13 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
               year,
               color,
               plate_state,
-              plate_number
+              plate_number,
+              profile_image_url,
+              stock_image_url
             )
           `)
           .order('created_at', { ascending: false })
-          .limit(8);
+          .limit(10);
 
         if (data) {
           setRecentSpots(data.filter(s => s.vehicle));
@@ -403,181 +405,74 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
       {viewState === 'search' && (
-        <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }} className="page-enter">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 32 }} className="stg">
-            <button
-              onClick={() => setShowCameraModal(true)}
-              style={{
-                ...cardStyle,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 12,
-                padding: 20,
-                cursor: 'pointer',
-              }}
-            >
-              <Camera style={{ width: 28, height: 28, color: '#F97316' }} />
-              <div style={{ textAlign: 'center' }}>
-                <p style={cardTitleStyle}>Scan a Plate</p>
-                <p style={{ ...cardSubtitleStyle, marginTop: 2 }}>Camera + OCR</p>
-              </div>
-            </button>
-
-            <button
-              onClick={handleUploadPhoto}
-              style={{
-                ...cardStyle,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 12,
-                padding: 20,
-                cursor: 'pointer',
-              }}
-            >
-              <Upload style={{ width: 28, height: 28, color: '#F97316' }} />
-              <div style={{ textAlign: 'center' }}>
-                <p style={cardTitleStyle}>Upload Photo</p>
-                <p style={{ ...cardSubtitleStyle, marginTop: 2 }}>Auto-fill with OCR</p>
-              </div>
-            </button>
+        <div>
+          {/* Header */}
+          <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <button onClick={() => onNavigate('feed')} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />
+              </button>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>Step 1 of 3</span>
+            </div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 12 }}>Find the Vehicle</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(249,115,22,0.40)' }} />
+              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
+            </div>
           </div>
 
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
-
-          {user && (
-            <div
-              className="stg"
-              style={{
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 24,
-                background: 'linear-gradient(180deg, #1c1814 0%, rgba(28,24,20,0.5) 100%)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <span style={sectionHeaderStyle}>This Week's Run</span>
-                <span style={{ fontSize: 8, color: '#6a7486' }}>
-                  Personal best: <span style={{ color: '#F97316' }}>{weeklyMetrics.bestWeekSpots > 0 ? weeklyMetrics.bestWeekSpots : '—'}</span>
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 60, marginBottom: 8 }}>
-                {weeklySpots.map((count, i) => {
-                  const maxCount = Math.max(...weeklySpots, 1);
-                  const height = count > 0 ? Math.max(15, (count / maxCount) * 100) : 4;
-                  const currentDayIdx = (new Date().getDay() + 6) % 7;
-                  const isToday = i === currentDayIdx;
-                  const isPast = i < currentDayIdx;
-                  return (
-                    <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                      <div
-                        style={{
-                          width: '100%',
-                          height: `${height}%`,
-                          minHeight: 4,
-                          background: isToday ? '#F97316' : isPast ? 'rgba(249,115,22,0.4)' : '#302c24',
-                          borderRadius: 3,
-                          transition: 'all 0.3s',
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
-                  const currentDayIdx = (new Date().getDay() + 6) % 7;
-                  return (
-                    <span
-                      key={i}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        fontSize: 7,
-                        color: i === currentDayIdx ? '#F97316' : '#6a7486',
-                        fontWeight: i === currentDayIdx ? 600 : 300,
-                      }}
-                    >
-                      {d}
-                    </span>
-                  );
-                })}
-              </div>
-              <p style={{ fontSize: 9, textAlign: 'center', color: '#909aaa' }}>
-                <strong style={{ color: '#f2f4f7' }}>{weeklySpots[(new Date().getDay() + 6) % 7]}</strong> spots today · <strong style={{ color: '#f2f4f7' }}>{weekTotal}</strong> this week
-              </p>
-            </div>
-          )}
-
-          <PlateSearch
-            initialPlate={plateNumber}
-            onSearch={handleSearch}
-            onCameraScan={() => setShowCameraModal(true)}
-            onNavigateToVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
-          />
-
-          <div style={{ marginTop: 48 }} className="stg">
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-              <span style={sectionHeaderStyle}>
-                Recent Spots
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-            </div>
-
-            {recentSpots.length > 0 ? (
-              <div>
-                {recentSpots.map((spot) => {
+          {/* Recently spotted strip */}
+          {(() => {
+            const spotsWithImages = recentSpots.filter(s => {
+              const v = s.vehicle;
+              return v && (v.profile_image_url || v.stock_image_url);
+            });
+            if (spotsWithImages.length === 0) return null;
+            return (
+              <div style={{ display: 'flex', gap: 8, padding: '10px 16px', overflowX: 'auto', scrollbarWidth: 'none' as const, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                {spotsWithImages.map((spot: any) => {
                   const v = spot.vehicle;
-                  if (!v || !v.make || !v.model) return null;
+                  const imgUrl = v.profile_image_url || v.stock_image_url;
                   return (
-                    <button
-                      key={spot.id}
-                      onClick={() => onNavigate('vehicle-detail', v.id)}
-                      style={{
-                        ...recentRowStyle,
-                        width: '100%',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                        <div style={vehicleNameStyle}>
-                          {v.year} {v.make} {v.model}
-                        </div>
-                        <div style={{ ...plateTextStyle, marginTop: 2 }}>
-                          {v.plate_state} • {v.plate_number}
-                        </div>
+                    <button key={spot.id} onClick={() => onNavigate('vehicle-detail', v.id)} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      <div style={{ width: 70, height: 52, borderRadius: 6, overflow: 'hidden', background: '#111720' }}>
+                        <img src={imgUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={spotCountStyle}>1</div>
-                        <div style={{ fontSize: 9, textTransform: 'uppercase' as const, color: '#4a5568', letterSpacing: '0.5px' }}>
-                          spot
-                        </div>
-                      </div>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, textTransform: 'uppercase' as const, color: '#5a6e7e' }}>{v.make}</span>
                     </button>
                   );
                 })}
               </div>
-            ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '32px 16px',
-                borderRadius: 12,
-                background: '#0a0d14',
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}>
-                <Car style={{ width: 32, height: 32, margin: '0 auto 12px', color: '#3a4e60' }} strokeWidth={1.5} />
-                <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4, color: '#8a9aaa' }}>
-                  No recent spots yet
-                </p>
-                <p style={{ fontSize: 12, color: '#5a6e7e' }}>
-                  Be the first to spot a ride in your area
-                </p>
-              </div>
-            )}
+            );
+          })()}
+
+          {/* Form area */}
+          <div style={{ padding: 16 }}>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+
+            <PlateSearch
+              initialPlate={plateNumber}
+              onSearch={handleSearch}
+              onCameraScan={() => setShowCameraModal(true)}
+              onNavigateToVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
+            />
+
+            {/* "or" divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>or</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
+            </div>
+
+            {/* Camera button */}
+            <button
+              onClick={() => setShowCameraModal(true)}
+              style={{ padding: '12px 16px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, background: 'transparent', cursor: 'pointer', width: '100%' }}
+            >
+              <Camera size={18} color="#5a6e7e" />
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>Scan plate with camera</span>
+            </button>
           </div>
         </div>
       )}

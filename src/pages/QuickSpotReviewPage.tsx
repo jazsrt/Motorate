@@ -36,26 +36,23 @@ function StarRow({
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', width: 80 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>{label}</span>
+      <div style={{ display: 'flex', gap: 3 }}>
         {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
             onClick={() => onChange(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
           >
             <Star
-              style={{ width: 32, height: 32, fill: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)', color: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)' }}
+              style={{ width: 14, height: 14, fill: star <= (hovered || value) ? '#f0a030' : 'none', color: star <= (hovered || value) ? '#f0a030' : '#3a4e60' }}
             />
           </button>
         ))}
       </div>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', width: 32, textAlign: 'right', color: value ? '#eef4f8' : '#3a3a3a' }}>
-        {value ? `${value}.0` : '—'}
-      </span>
     </div>
   );
 }
@@ -433,180 +430,136 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
     );
   }
 
+  const heroImageUrl = photoPreview || wizardData.stockImageUrl || null;
+
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      <div style={{ maxWidth: 512, margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <button
-            onClick={() => onNavigate('scan')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 20, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e' }}
-          >
-            <ArrowLeft style={{ width: 16, height: 16 }} />
-            <span>Back</span>
+      {/* Header */}
+      <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <button onClick={() => onNavigate('scan')} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />
           </button>
-
-          <h1 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: '4px 0' }}>
-            Quick Spot
-          </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: 0 }}>{vehicleName || 'Rate the vehicle'}</p>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>Step 3 of 3</span>
         </div>
+        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 12 }}>Rate It</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
+        </div>
+      </div>
 
-        {/* Vehicle Identity Card */}
-        <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <LicensePlate plateNumber={wizardData.plateNumber} plateState={wizardData.plateState} size="md" />
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {vehicleName || 'Unknown Vehicle'}
-              </p>
-              {wizardData.color && (
-                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', margin: '4px 0 0' }}>{wizardData.color}{wizardData.trim ? ` \u2022 ${wizardData.trim}` : ''}</p>
-              )}
+      {/* Vehicle hero image */}
+      <div style={{ position: 'relative', width: '100%', height: 180, overflow: 'hidden', background: '#111720' }}>
+        {heroImageUrl ? (
+          <>
+            <img src={heroImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.85) 0%, transparent 60%)' }} />
+            <div style={{ position: 'absolute', bottom: 12, left: 16 }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, color: '#F97316' }}>{wizardData.make}</div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{wizardData.model || 'Vehicle'}</div>
             </div>
+          </>
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 2 }}>{wizardData.make}</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{wizardData.model || 'Vehicle'}</div>
           </div>
-        </div>
+        )}
+      </div>
 
-        <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '4px 20px', marginBottom: 16 }}>
-          <StarRow label="Driver" value={driverRating} onChange={setDriverRating} />
-          <StarRow label="Driving" value={drivingRating} onChange={setDrivingRating} />
-          <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
-        </div>
+      {/* Rating rows */}
+      <div>
+        <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
+        <StarRow label="Driver" value={driverRating} onChange={setDriverRating} />
+        <StarRow label="Driving" value={drivingRating} onChange={setDrivingRating} />
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-          <button
-            onClick={() => setSentiment('love')}
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '11px',
-              borderRadius: 8,
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              ...(loveActive
-                ? { background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.4)', color: '#F97316' }
-                : { background: '#0a0d14', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
-            }}
-          >
-            <Heart style={{ width: 18, height: 18, fill: loveActive ? '#F97316' : 'none' }} />
-            Love It
-          </button>
-          <button
-            onClick={() => setSentiment('hate')}
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '11px',
-              borderRadius: 8,
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              ...(hateActive
-                ? { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }
-                : { background: '#0a0d14', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
-            }}
-          >
-            <ThumbsDown style={{ width: 18, height: 18, fill: hateActive ? '#ef4444' : 'none' }} />
-            Hate It
-          </button>
-        </div>
+      {/* Sentiment buttons */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '12px 16px' }}>
+        <button onClick={() => setSentiment('love')} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8,
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, cursor: 'pointer',
+          ...(loveActive ? { background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.4)', color: '#F97316' } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
+        }}>
+          <Heart style={{ width: 16, height: 16, fill: loveActive ? '#F97316' : 'none' }} /> Love It
+        </button>
+        <button onClick={() => setSentiment('hate')} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8,
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, cursor: 'pointer',
+          ...(hateActive ? { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
+        }}>
+          <ThumbsDown style={{ width: 16, height: 16, fill: hateActive ? '#ef4444' : 'none' }} /> Hate It
+        </button>
+      </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Comment</label>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="What caught your eye? How was the driver?"
-            rows={3}
-            style={{ ...inputStyle, resize: 'none' as const, lineHeight: 1.55 }}
-          />
-        </div>
+      {/* Bumper Stickers */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Bumper Stickers</span>
+      </div>
+      <div style={{ paddingBottom: 10 }}>
+        <StickerSelector
+          selectedStickers={selectedStickerIds}
+          onToggleSticker={(id) => {
+            setSelectedStickerIds(prev =>
+              prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+            );
+          }}
+        />
+      </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handlePhotoSelect}
-            style={{ display: 'none' }}
-          />
-          {photoPreview ? (
-            <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <img
-                src={photoPreview}
-                alt="Spot photo"
-                style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
-              />
-              <button
-                onClick={clearPhoto}
-                style={{ position: 'absolute', top: 8, right: 8, padding: 6, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <X style={{ width: 16, height: 16, color: '#fff' }} />
-              </button>
-              <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: 6 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, color: '#fff' }}>Photo attached</span>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', background: '#0a0d14', border: '1px dashed rgba(255,255,255,0.07)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5a6e7e', cursor: 'pointer' }}
-            >
-              <Camera style={{ width: 16, height: 16 }} />
-              Add a Photo
-              <span style={{ color: '#3a3a3a' }}>(optional)</span>
-              <Image style={{ width: 16, height: 16, marginLeft: 4 }} />
+      {/* Caption input */}
+      <div style={{ margin: '0 16px 10px' }}>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Add a caption..."
+          rows={2}
+          style={{ width: '100%', padding: '10px 12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none', resize: 'none' as const }}
+        />
+      </div>
+
+      {/* Photo upload */}
+      <div style={{ padding: '0 16px 12px' }}>
+        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoSelect} style={{ display: 'none' }} />
+        {photoPreview ? (
+          <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <img src={photoPreview} alt="Spot photo" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+            <button onClick={clearPhoto} style={{ position: 'absolute', top: 6, right: 6, padding: 4, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <X style={{ width: 14, height: 14, color: '#fff' }} />
             </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <button onClick={() => fileInputRef.current?.click()} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', background: 'transparent', border: '1px dashed rgba(255,255,255,0.07)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
+            <Camera style={{ width: 14, height: 14 }} /> Add a Photo (optional)
+          </button>
+        )}
+      </div>
 
-        {/* Bumper Stickers */}
-        <div style={{ marginBottom: 20 }}>
-          <StickerSelector
-            selectedStickers={selectedStickerIds}
-            onToggleSticker={(id) => {
-              setSelectedStickerIds(prev =>
-                prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-              );
-            }}
-          />
-        </div>
-
+      {/* Submit button */}
+      <div style={{ margin: '0 16px 16px' }}>
         <button
           onClick={handleSubmitQuick}
           disabled={!canSubmit || submitting || uploadingPhoto}
-          style={{ ...primaryBtnStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12, opacity: (!canSubmit || submitting || uploadingPhoto) ? 0.4 : 1 }}
+          style={{ width: '100%', padding: 13, background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', opacity: (!canSubmit || submitting || uploadingPhoto) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
-          {(submitting || uploadingPhoto) ? (
-            <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          ) : null}
-          {uploadingPhoto ? 'Uploading photo...' : 'Submit Quick Spot (+10 RP)'}
+          {(submitting || uploadingPhoto) ? <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : null}
+          {uploadingPhoto ? 'Uploading...' : 'Submit Spot +10 RP'}
         </button>
+      </div>
 
-        <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 8, padding: '12px 14px' }}>
-          <button
-            onClick={handleGoDetailed}
-            disabled={!canSubmit}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '11px', background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: !canSubmit ? '#5a6e7e' : '#F97316', cursor: !canSubmit ? 'not-allowed' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
-          >
-            <Zap style={{ width: 16, height: 16 }} />
-            Full Spot — +15 RP
-            <ChevronRight style={{ width: 16, height: 16 }} />
-          </button>
-        </div>
+      {/* Full spot upgrade link */}
+      <div style={{ margin: '0 16px 24px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 8, padding: '10px 14px' }}>
+        <button
+          onClick={handleGoDetailed}
+          disabled={!canSubmit}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '8px', background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: !canSubmit ? '#5a6e7e' : '#F97316', cursor: !canSubmit ? 'not-allowed' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
+        >
+          <Zap style={{ width: 14, height: 14 }} />
+          Full Spot — +15 RP
+          <ChevronRight style={{ width: 14, height: 14 }} />
+        </button>
       </div>
     </Layout>
   );
