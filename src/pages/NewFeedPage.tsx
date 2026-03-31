@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { SlidersHorizontal, X, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
@@ -30,8 +30,6 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const { user, loading: authLoading } = useAuth();
   const { posts, loading, error, refreshFeed, hasMore, loadMore } = useFeed(user?.id);
   const sentinelRef = useInfiniteScroll({ loading, hasMore, onLoadMore: loadMore, rootMargin: '300px' });
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterMake, setFilterMake] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'spots' | 'posts'>('all');
   const [focusPost, setFocusPost] = useState<any>(null);
   const [focusLoading, setFocusLoading] = useState(!!focusPostId);
@@ -75,26 +73,16 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       });
   }, [focusPostId]);
 
-  // Extract available makes from loaded posts
-  const availableMakes = useMemo(() => {
-    const makes = new Set<string>();
-    posts.forEach((p: any) => {
-      if (p.vehicles?.make) makes.add(p.vehicles.make);
-    });
-    return Array.from(makes).sort();
-  }, [posts]);
-
   // Client-side filtering
   const displayPosts = useMemo(() => {
     return posts.filter((p: any) => {
-      if (filterMake && p.vehicles?.make !== filterMake) return false;
       if (filterType === 'spots' && p.post_type !== 'spot') return false;
       if (filterType === 'posts' && p.post_type === 'spot') return false;
       return true;
     });
-  }, [posts, filterMake, filterType]);
+  }, [posts, filterType]);
 
-  const hasActiveFilters = filterMake !== null || filterType !== 'all';
+  const hasActiveFilters = filterType !== 'all';
 
   // Auth loading skeleton
   if (authLoading) {
@@ -152,25 +140,8 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       {/* Achievement carousel */}
       <AchievementCarousel />
 
-      {/* Filter bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <button
-          onClick={() => setFilterOpen(!filterOpen)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20,
-            background: hasActiveFilters ? 'rgba(249,115,22,0.08)' : 'rgba(7,10,15,0.82)',
-            border: `1px solid ${hasActiveFilters ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.07)'}`,
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: hasActiveFilters ? '#F97316' : '#5a6e7e', cursor: 'pointer',
-          }}
-        >
-          <SlidersHorizontal size={12} />
-          <span>Filter</span>
-          {hasActiveFilters && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />}
-        </button>
-
-        {/* Type pills */}
+      {/* Filter bar — pills only, matching mockup */}
+      <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
         {(['All', 'Spots', 'Posts'] as const).map((label) => {
           const key = label.toLowerCase() as 'all' | 'spots' | 'posts';
           return (
@@ -179,36 +150,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
             </button>
           );
         })}
-
-        {/* Active make pill with clear */}
-        {filterMake && (
-          <button onClick={() => setFilterMake(null)} style={{ ...pillStyle(true), display: 'flex', alignItems: 'center', gap: 4 }}>
-            {filterMake} <X size={10} />
-          </button>
-        )}
       </div>
-
-      {/* Filter drawer */}
-      {filterOpen && (
-        <div style={{ padding: '12px 16px 14px', background: 'rgba(7,10,15,0.97)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#445566' }}>Filter by Make</span>
-            {hasActiveFilters && (
-              <button onClick={() => { setFilterMake(null); setFilterType('all'); }} style={{ background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#F97316', cursor: 'pointer' }}>
-                Clear All
-              </button>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 5, overflowX: 'auto', scrollbarWidth: 'none' as const, paddingBottom: 2 }}>
-            <button onClick={() => setFilterMake(null)} style={pillStyle(filterMake === null)}>All</button>
-            {availableMakes.map(make => (
-              <button key={make} onClick={() => setFilterMake(make)} style={pillStyle(filterMake === make)}>
-                {make}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Focused post (from shared link) */}
       {focusPostId && focusLoading && (
@@ -245,14 +187,14 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       {/* Empty state */}
       {displayPosts.length === 0 && !loading && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1" style={{ marginBottom: 16, display: 'block' }}>
-            <circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1.5" style={{ marginBottom: 16, display: 'block' }}>
+            <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="13" rx="2"/>
           </svg>
           <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>
             {hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
           </p>
           <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>
-            {hasActiveFilters ? 'Try changing your filters.' : 'Spot a car or claim yours to get started.'}
+            {hasActiveFilters ? 'Try changing your filters.' : <>Spot a car or claim yours<br />to get started.</>}
           </p>
           {!hasActiveFilters && (
             <button onClick={() => onNavigate('scan')} style={{
