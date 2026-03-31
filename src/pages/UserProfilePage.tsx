@@ -292,11 +292,15 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
     }
   }, [activeTab, userId, canViewContent, loadVehicles, loadUserPosts, loadRatings, vehiclesLoaded, postsLoaded, ratingsLoaded]);
 
+  const featuredVehicle = vehicles[0] || null;
+  const featuredPhoto = featuredVehicle?.profile_image_url || featuredVehicle?.stock_image_url || null;
+  const userTier = getTierFromScore(profile?.reputation_score || 0);
+
   if (loading) {
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-secondary">Loading profile...</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
+          <div style={{ width: 24, height: 24, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       </Layout>
     );
@@ -305,9 +309,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   if (!profile) {
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
-        <div className="text-center py-12">
-          <p className="text-secondary">Profile not found</p>
-          <button onClick={onBack} className="mt-4 text-accent-primary hover:text-accent-hover">
+        <div style={{ textAlign: 'center' as const, padding: '48px 24px' }}>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Profile not found</p>
+          <button onClick={onBack} style={{ marginTop: 12, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, color: '#F97316', background: 'none', border: 'none', cursor: 'pointer' }}>
             Go Back
           </button>
         </div>
@@ -317,543 +321,163 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="space-y-6 animate-page-enter">
-        <div className="flex items-center gap-3 stg">
-          <button
-            onClick={onBack}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-white/[0.06] hover:bg-surface-2 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
+      <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 100 }}>
+        {/* ── 1. HERO ── */}
+        <div style={{ background: '#0a0d14', position: 'relative' }}>
+          {/* Cover strip */}
+          <div style={{ height: 80, background: '#0d1117', overflow: 'hidden', position: 'relative' }}>
+            {featuredPhoto && <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />}
+          </div>
+
+          {/* Back button */}
+          <button onClick={onBack} style={{ position: 'absolute', top: 14, left: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}>
+            <ArrowLeft size={14} color="#eef4f8" />
           </button>
-          <h1 className="text-xl font-heading font-bold" style={{ fontFamily: 'var(--font-display)' }}>Profile</h1>
-        </div>
 
-        <div className="bg-surface border border-white/[0.06] rounded-xl p-6 stg">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-start gap-4">
-              <div className="relative">
-                {profile?.avatar_url ? (
-                  <div
-                    className="w-20 h-20 rounded-full overflow-hidden"
-                    style={{
-                      background: 'linear-gradient(135deg, #F97316, #fb923c)',
-                      padding: '3px'
-                    }}
-                  >
-                    <img
-                      src={profile.avatar_url}
-                      alt={`@${profile.handle}`}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold"
-                    style={{
-                      background: 'linear-gradient(135deg, #F97316, #fb923c)'
-                    }}
-                  >
-                    {profile?.handle?.[0]?.toUpperCase() || '?'}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>@{profile?.handle || 'Anonymous'}</h2>
-                  {profile?.role === 'owner' && <VerifiedBadge size="md" />}
-                  {isPrivate && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-surfacehighlight rounded-lg">
-                      <Lock className="w-4 h-4 text-secondary" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-secondary">Private</span>
-                    </div>
-                  )}
-                </div>
-
-                {profile?.location && (
-                  <div className="flex items-center gap-1.5 text-sm text-secondary mt-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{profile.location}</span>
-                  </div>
-                )}
-
-                {profile?.bio && (
-                  <p className="text-sm text-secondary mt-2 max-w-md">{profile.bio}</p>
-                )}
-
-                {/* Profile Views */}
-
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center gap-1.5 text-xs text-secondary">
-                    <Eye className="w-4 h-4" />
-                    <span className="font-bold">{profileViewCount.toLocaleString()}</span>
-                    <span>views</span>
-                  </div>
-                </div>
-
-                {/* Achievements section — replaces Trophy Case */}
-                {canViewContent && (badges.length > 0 || lockedBadges.length > 0) && (
-                  <div style={{ marginTop: 14 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#7a8e9e' }}>Achievements</span>
-                      {(badges.length + lockedBadges.length) > 10 && (
-                        <button onClick={() => setActiveTab('badges')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#F97316', background: 'none', border: 'none', cursor: 'pointer' }}>See all</button>
-                      )}
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-                      {/* Earned badges */}
-                      {badges.slice(0, 7).map((item: any) => {
-                        const badge = item.badge || item.badges || item;
-                        const badgeType = getBadgeType(badge);
-                        const labelColor = badgeType === 'prestige' ? '#f0a030' : badgeType === 'milestone' ? '#F97316' : '#7a8e9e';
-                        const tier = (badge.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat';
-                        return (
-                          <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                            <BadgeCoin tier={tier} name={badge.name} icon_path={getBadgeImagePath(badge)} size="sm" />
-                            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: labelColor, textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{badge.name}</span>
-                          </div>
-                        );
-                      })}
-                      {/* Locked upcoming badges with real names */}
-                      {lockedBadges.slice(0, 10 - Math.min(badges.length, 7)).map((badge: any) => (
-                        <div key={`locked-${badge.id}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(10,13,20,0.9)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'grayscale(1)', opacity: 0.4 }}>
-                            <span style={{ fontSize: 14 }}>🔒</span>
-                          </div>
-                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#445566', textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{badge.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {!canViewContent && badges.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs text-secondary">
-                      <span className="font-bold">{badges.length}</span> badge{badges.length !== 1 ? 's' : ''} earned
-                    </p>
-                  </div>
-                )}
-
-                {profile?.role === 'owner' && (profile?.instagram_handle || profile?.tiktok_handle) && (
-                  <div className="flex items-center gap-3 mt-2">
-                    {profile?.instagram_handle && (
-                      <a
-                        href={`https://instagram.com/${profile.instagram_handle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-accent-primary hover:text-accent-hover transition-colors"
-                      >
-                        <Instagram className="w-4 h-4" />
-                        @{profile.instagram_handle}
-                      </a>
-                    )}
-                    {profile?.tiktok_handle && (
-                      <a
-                        href={`https://tiktok.com/@${profile.tiktok_handle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-accent-primary hover:text-accent-hover transition-colors"
-                      >
-                        <Music className="w-4 h-4" />
-                        @{profile.tiktok_handle}
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-            {!isOwnProfile && currentUser && (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <FollowButton
-                    targetUserId={userId}
-                    onFollowChange={(isFollowing) => {
-                      if (isFollowing) {
-                        setFollowStatus('accepted');
-                        setIsFollowing(true);
-                      } else {
-                        setFollowStatus('none');
-                        setIsFollowing(false);
-                      }
-                    }}
-                  />
-                  <button
-                    disabled
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold uppercase tracking-wider text-sm bg-surfacehighlight/50 text-secondary/50 cursor-not-allowed"
-                    title="Coming soon"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Message
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BlockUserButton
-                    userId={userId}
-                    userName={profile?.handle || 'user'}
-                    variant="button"
-                  />
-                  <button
-                    onClick={() => setShowReportModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all active:scale-95 font-bold uppercase tracking-wider text-sm bg-status-danger/20 hover:bg-status-danger/30 text-status-danger"
-                  >
-                    <Flag className="w-4 h-4" />
-                    Report
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-4 gap-3 mt-6 stg">
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-bold text-accent-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
-                {spotsCount.toLocaleString()}
-              </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Spots Given</div>
-            </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-bold text-accent-2" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
-                {followerCount.toLocaleString()}
-              </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Friends</div>
-            </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-bold text-positive" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
-                {vehicles.length.toLocaleString()}
-              </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Vehicles</div>
-            </div>
-            <div className="bg-surface border border-white/[0.06] rounded-xl p-4 text-center">
-              <div className="text-[22px] font-bold text-orange" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
-                {badges.length.toLocaleString()}
-              </div>
-              <div className="text-xs text-secondary uppercase tracking-wider mt-1" style={{ fontFamily: 'var(--font-cond)' }}>Badges</div>
-            </div>
-          </div>
-        </div>
-
-        {!canViewContent && (
-          <PrivacyGate
-            profileUserId={userId}
-            profileHandle={profile?.handle || 'this user'}
-            isFollowing={isFollowing}
-            onFollowChange={checkFollowStatus}
-          />
-        )}
-
-        {isOwnProfile && <ProfileInsights profileId={userId} />}
-
-        {canViewContent && (() => {
-          const tier = getTierFromScore(profile?.reputation_score || 0);
-          return (
-            <div className="card-v3 p-4 mb-4 stg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] uppercase tracking-wider" style={{ fontFamily: 'var(--font-cond)', color: 'var(--t4)' }}>Progress</span>
-                <span className="text-[14px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: '#F97316' }}>
-                  {tier.name}
-                </span>
-              </div>
-              <div className="w-full bg-surfacehighlight rounded-full h-2.5 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${tier.progress}%`,
-                    background: 'linear-gradient(90deg, #F97316, #fb923c)'
-                  }}
-                />
-              </div>
-              {tier.nextTier && (
-                <div className="flex items-center justify-end mt-1.5">
-                  <span className="text-[12px] font-semibold" style={{ fontFamily: 'var(--font-mono)', color: '#F97316' }}>
-                    Progress to {tier.nextTier}
-                  </span>
-                </div>
+          {/* Avatar */}
+          <div style={{ marginTop: -28, position: 'relative', zIndex: 2, padding: '0 16px' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#1e2a38', border: '3px solid #0a0d14', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8' }}>{(profile?.handle || '?')[0].toUpperCase()}</span>
               )}
             </div>
-          );
-        })()}
+          </div>
 
-        {canViewContent && (
-          <div className="stg">
-            <div className="flex items-center gap-4 mb-4">
-              <button
-                onClick={() => setActiveTab('garage')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
-                  activeTab === 'garage'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
-                }`}
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                Garage
-              </button>
-              <button
-                onClick={() => setActiveTab('posts')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
-                  activeTab === 'posts'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
-                }`}
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                Activity
-              </button>
-              <button
-                onClick={() => setActiveTab('badges')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
-                  activeTab === 'badges'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
-                }`}
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                Badges
-              </button>
-              <button
-                onClick={() => setActiveTab('reviews')}
-                className={`text-xl font-bold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
-                  activeTab === 'reviews'
-                    ? 'border-accent-primary text-primary'
-                    : 'border-transparent text-secondary hover:text-primary'
-                }`}
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                Spots
-              </button>
+          {/* Name + Handle */}
+          <div style={{ padding: '8px 16px 0' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+              {profile?.handle || 'Anonymous'}
             </div>
-
-            {activeTab === 'garage' ? (
-              <div className="space-y-4">
-                {loadingVehicles ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-secondary">Loading vehicles...</div>
-                  </div>
-                ) : vehicles.length === 0 ? (
-                  <div className="bg-surface border border-white/[0.06] rounded-[14px] p-8 text-center">
-                    <Car className="w-12 h-12 text-secondary/50 mx-auto mb-3" />
-                    <p className="text-secondary">No claimed vehicles yet</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {vehicles.map((vehicle) => (
-                      <div
-                        key={vehicle.id}
-                        className="bg-surface border border-white/[0.06] rounded-[14px] overflow-hidden cursor-pointer hover:border-orange-500 transition-colors"
-                        onClick={() => onViewVehicle(vehicle.id)}
-                      >
-                        {vehicle.photos && vehicle.photos.length > 0 ? (
-                          <div className="aspect-video bg-surfacehighlight">
-                            <img
-                              src={vehicle.photos[0]}
-                              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="aspect-video bg-surfacehighlight flex items-center justify-center">
-                            <Car className="w-12 h-12 text-secondary/50" />
-                          </div>
-                        )}
-                        <div className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1">
-                              <h4 className="text-base font-heading font-bold">
-                                {vehicle.year} {vehicle.make}
-                              </h4>
-                              <p className="text-sm text-secondary">{vehicle.model}</p>
-                              {vehicle.color && (
-                                <p className="text-xs uppercase tracking-wider font-bold text-secondary mt-1">
-                                  {vehicle.color}
-                                </p>
-                              )}
-                            </div>
-                            {vehicle.verification_tier && ['shadow', 'standard', 'verified'].includes(vehicle.verification_tier) && (
-                              <TierBadge tier={vehicle.verification_tier} size="small" />
-                            )}
-                          </div>
-                          {vehicle.is_claimed && vehicle.plate_hash && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-green-900/20 border border-green-700/30 rounded text-xs text-green-400 w-fit">
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                              <span className="font-bold">VERIFIED</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : activeTab === 'posts' ? (
-              <div>
-                {isOwnProfile && !weeklyMetrics.loading && (
-                  <div className="flex gap-2 mb-4">
-                    {[
-                      { label: 'Spots', value: weeklyMetrics.spotsThisWeek, delta: weeklyMetrics.spotsThisWeek - weeklyMetrics.spotsLastWeek },
-                      { label: 'Likes', value: weeklyMetrics.likesReceivedThisWeek },
-                    ].map(m => (
-                      <div key={m.label} className="flex-1 rounded-xl px-3 py-2.5 text-center"
-                        style={{ background: 'var(--s1)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <div className="font-heading text-[18px] font-bold leading-none" style={{ color: '#f2f4f7' }}>{m.value}</div>
-                        <div className="text-[7px] font-semibold uppercase mt-1" style={{ color: '#909aaa', letterSpacing: '1.5px' }}>{m.label}</div>
-                        {'delta' in m && m.delta !== undefined && m.delta !== 0 && (
-                          <div className="text-[7px] font-medium mt-0.5" style={{ color: m.delta > 0 ? '#5aaa7a' : '#aa5a5a' }}>
-                            {m.delta > 0 ? '+' : ''}{m.delta} wow
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {loadingPosts ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-secondary">Loading posts...</div>
-                  </div>
-                ) : userPosts.length === 0 ? (
-                  <div className="bg-surface border border-white/[0.06] rounded-xl">
-                    <EmptyState
-                      icon={Image}
-                      title="No posts yet"
-                      description={isOwnProfile ? "Share your first ride!" : "This user hasn't posted anything yet."}
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {userPosts.map((post) => (
-                      <div
-                        key={post.id}
-                        className="bg-surface border border-white/[0.06] rounded-[14px] overflow-hidden"
-                      >
-                        {post.image_url && (
-                          <div className="relative aspect-square bg-surfacehighlight max-h-64">
-                            <img
-                              src={post.image_url}
-                              alt={post.caption || 'Post'}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="p-4 space-y-3">
-                          {post.caption && (
-                            <p className="text-sm">{post.caption}</p>
-                          )}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <ReactionButton postId={post.id} />
-                              <div className="flex items-center gap-1.5 text-sm text-secondary">
-                                <MessageCircle className="w-4 h-4" />
-                                <span className="font-bold">{post.comment_count}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-secondary">
-                              <Calendar className="w-3.5 h-3.5" />
-                              <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          {post.location_label && (
-                            <div className="text-xs text-secondary">
-                              {post.location_label}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : activeTab === 'badges' ? (
-              <div className="space-y-4">
-                {badges.length === 0 ? (
-                  <div className="bg-surface border border-white/[0.06] rounded-[14px] p-8 text-center">
-                    <Award className="w-12 h-12 text-secondary/50 mx-auto mb-3" />
-                    <p className="text-secondary">No badges yet</p>
-                  </div>
-                ) : (
-                  <div className="bg-surface border border-white/[0.06] rounded-xl p-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Award className="w-5 h-5 text-accent-primary" />
-                      <h3 className="text-xl font-bold uppercase tracking-wider">Badges</h3>
-                      <span className="text-xs text-secondary">({badges.length})</span>
-                    </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                      {badges.map((item) => (
-                        <div key={item.id} className="flex flex-col items-center gap-2" title={item.badge.description}>
-                          <BadgeCoin
-                            tier={(item.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
-                            name={item.badge.name}
-                            icon_path={getBadgeImagePath(item.badge)}
-                            size="lg"
-                          />
-                          <div className="text-[10px] text-center text-tertiary line-clamp-2">
-                            {item.badge.name}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Photos Section */}
-                {canViewContent && allPhotos.length > 0 && (
-                  <div className="bg-surface border border-white/[0.06] rounded-xl p-6 mt-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <ImageIcon className="w-5 h-5 text-accent-primary" />
-                      <h3 className="text-xl font-bold uppercase tracking-wider">Photos</h3>
-                      <span className="text-xs text-secondary">({allPhotos.length})</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {allPhotos.map((photo, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setLightboxIndex(index);
-                            setLightboxOpen(true);
-                          }}
-                          className="aspect-square rounded-lg overflow-hidden border border-border hover:border-accent-primary transition-colors"
-                        >
-                          <img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {lightboxOpen && allPhotos.length > 0 && (
-                  <PhotoLightbox
-                    photos={allPhotos}
-                    initialIndex={lightboxIndex}
-                    onClose={() => setLightboxOpen(false)}
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="mt-8">
-                {loadingRatings ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-secondary">Loading reviews...</div>
-                  </div>
-                ) : (
-                  <ReviewProfileSection
-                    userId={userId}
-                    showRecentReviews={true}
-                    maxReviews={20}
-                    showEditDelete={false}
-                  />
-                )}
-              </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2, letterSpacing: '0.05em' }}>
+              @{profile?.handle || 'user'} · {userTier.name} Tier
+              {isPrivate && <span style={{ color: '#3a4e60', marginLeft: 6 }}>Private</span>}
+            </div>
+            {profile?.bio && (
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 4, lineHeight: 1.4 }}>{profile.bio}</div>
             )}
           </div>
+
+          {/* Featured badges */}
+          {badges.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, padding: '8px 16px 0', flexWrap: 'wrap' as const }}>
+              {badges.slice(0, 3).map((item: any) => {
+                const badge = item.badge || item;
+                return (
+                  <div key={badge.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.10)', border: '1px solid rgba(240,160,48,0.25)' }}>
+                    <BadgeCoin tier={((item.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat')} name={badge.name} icon_path={getBadgeImagePath(badge)} size="sm" />
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#f0a030' }}>{badge.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Actions */}
+          {!isOwnProfile && currentUser && (
+            <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0' }}>
+              <FollowButton targetUserId={userId} onFollowChange={(f) => { setFollowStatus(f ? 'accepted' : 'none'); setIsFollowing(f); }} />
+              <button onClick={() => onNavigate('messages', userId)} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <MessageCircle size={10} /> Message
+              </button>
+              <button onClick={() => setShowReportModal(true)} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#3a4e60', cursor: 'pointer' }}>
+                <Flag size={10} />
+              </button>
+            </div>
+          )}
+
+          {/* Stat strip */}
+          <div style={{ display: 'flex', gap: 20, padding: '12px 16px 14px' }}>
+            {[
+              { label: 'Spots', value: spotsCount },
+              { label: 'Badges', value: badges.length },
+              { label: 'Friends', value: followerCount },
+              { label: 'Vehicles', value: vehicles.length },
+            ].map(stat => (
+              <div key={stat.label}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8' }}>{stat.value}</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#5a6e7e', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginLeft: 5 }}>{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Privacy gate */}
+        {!canViewContent && (
+          <PrivacyGate profileUserId={userId} profileHandle={profile?.handle || 'this user'} isFollowing={isFollowing} onFollowChange={checkFollowStatus} />
+        )}
+
+        {canViewContent && (
+          <>
+            {/* ── 2. FEATURED VEHICLE ── */}
+            {featuredVehicle ? (
+              <div onClick={() => onViewVehicle(featuredVehicle.id)} style={{ position: 'relative', width: '100%', height: 160, overflow: 'hidden', background: '#0d1117', cursor: 'pointer', borderTop: '1px solid rgba(249,115,22,0.08)' }}>
+                {featuredPhoto ? (
+                  <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7, display: 'block' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </div>
+                )}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 60%)' }} />
+                <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14 }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>{featuredVehicle.make}</div>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{featuredVehicle.model}</div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* ── 3. FLEET ── */}
+            {vehicles.length > 1 && (
+              <div>
+                <div style={{ padding: '12px 16px 8px' }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Fleet · {vehicles.length}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 10, padding: '0 14px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+                  {vehicles.slice(1).map(v => {
+                    const vPhoto = v.profile_image_url || v.stock_image_url;
+                    return (
+                      <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 130, borderRadius: 10, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                        {vPhoto ? <img src={vPhoto} alt="" style={{ width: '100%', height: 80, objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: 80, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>}
+                        <div style={{ padding: '6px 8px' }}>
+                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>{v.make}</div>
+                          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{v.model}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── 4. BADGES ── */}
+            {badges.length > 0 && (
+              <div>
+                <div style={{ padding: '12px 16px 8px' }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Badges · {badges.length}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 14px 14px' }}>
+                  {badges.slice(0, 8).map((item: any) => {
+                    const badge = item.badge || item;
+                    return (
+                      <div key={badge.id} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
+                        <BadgeCoin tier={((item.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat')} name={badge.name} icon_path={getBadgeImagePath(badge)} size="md" />
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e', textAlign: 'center' as const, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{badge.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {showReportModal && (
-        <ReportModal
-          contentType="profile"
-          contentId={userId}
-          onClose={() => setShowReportModal(false)}
-        />
-      )}
+      {showReportModal && <ReportModal contentType="profile" contentId={userId} onClose={() => setShowReportModal(false)} />}
+      {lightboxOpen && allPhotos.length > 0 && <PhotoLightbox photos={allPhotos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Layout>
   );
 }
