@@ -106,7 +106,7 @@ export default function ExplorePage({ onNavigate }: ExplorePageProps) {
   const gridVehicles = visible.slice(1);
 
   return (
-    <Layout currentPage="search" onNavigate={onNavigate}>
+    <Layout currentPage="explore" onNavigate={onNavigate}>
       {/* Page header */}
       <div style={{ padding: '52px 0 0', background: '#070a0f' }}>
         <div style={{ padding: '0 14px 10px' }}>

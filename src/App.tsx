@@ -54,8 +54,9 @@ const BrowseVehiclesPage = lazy(() => import('./pages/BrowseVehiclesPage').then(
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const GloveboxPage = lazy(() => import('./pages/GloveboxPage').then(m => ({ default: m.GloveboxPage })));
+const ExplorePage = lazy(() => import('./pages/ExplorePage'));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'detailed-review' | 'completed-review' | 'glovebox';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'detailed-review' | 'completed-review' | 'glovebox';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -160,7 +161,7 @@ function AppContent() {
       } else if (hash && !page) {
         // Handle simple page routes (feed, scan, rankings, etc.)
         const simplePage = hash.split('?')[0].split('/')[0];
-        const validPages: Page[] = ['feed', 'rankings', 'scan', 'safety', 'profile', 'create-post', 'challenges', 'search', 'messages', 'followers', 'albums', 'privacy', 'terms', 'admin', 'init-admin', 'events', 'premium', 'my-garage', 'badges', 'badge-testing', 'browse-vehicles', 'notifications'];
+        const validPages: Page[] = ['feed', 'rankings', 'scan', 'safety', 'profile', 'create-post', 'challenges', 'search', 'explore', 'messages', 'followers', 'albums', 'privacy', 'terms', 'admin', 'init-admin', 'events', 'premium', 'my-garage', 'badges', 'badge-testing', 'browse-vehicles', 'notifications'];
         if (validPages.includes(simplePage as Page)) {
           setCurrentPage(simplePage as Page);
         }
@@ -419,6 +420,9 @@ function AppContent() {
       break;
     case 'search':
       pageContent = <UnifiedSearchPage onNavigate={handleNavigate} onViewVehicle={handleViewVehicle} initialQuery={searchQuery} />;
+      break;
+    case 'explore':
+      pageContent = <ExplorePage onNavigate={handleNavigate} />;
       break;
     case 'messages':
       pageContent = <MessagesPage onNavigate={handleNavigate} recipientId={messageRecipientId} />;

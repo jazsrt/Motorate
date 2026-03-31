@@ -6,7 +6,7 @@ import { LiveStatsBar } from './LiveStatsBar';
 
 interface LayoutProps {
   children: ReactNode;
-  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications' | 'search' | 'badges';
+  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications' | 'search' | 'explore' | 'badges';
   onNavigate: (page: string, data?: unknown) => void;
 }
 
@@ -15,7 +15,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const navLeft = [
     { id: 'feed' as const, icon: LayoutGrid, label: 'Feed' },
-    { id: 'search' as const, icon: Compass, label: 'Explore' },
+    { id: 'explore' as const, icon: Compass, label: 'Explore' },
   ];
   const navRight = [
     { id: 'rankings' as const, icon: Activity, label: 'Rankings' },
