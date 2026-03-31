@@ -126,6 +126,70 @@ interface PendingPost {
   vehicle_year: number | null;
 }
 
+// -- Shared inline style constants --
+const FONT = {
+  display: 'Rajdhani, sans-serif',
+  condensed: 'Barlow Condensed, sans-serif',
+  body: 'Barlow, sans-serif',
+  mono: 'JetBrains Mono, monospace',
+};
+
+const C = {
+  bg: '#030508',
+  surface: '#0a0d14',
+  surface2: '#0e1320',
+  borderDim: 'rgba(255,255,255,0.06)',
+  orange: '#F97316',
+  text: '#eef4f8',
+  sub: '#7a8e9e',
+  dim: '#5a6e7e',
+  muted: '#3a4e60',
+  gold: '#f0a030',
+  green: '#20c060',
+  red: '#ef4444',
+  yellow: '#eab308',
+};
+
+const modalOverlay: React.CSSProperties = {
+  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16,
+};
+const modalBox: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 12,
+  maxWidth: 420, width: '100%', padding: 24,
+};
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 13, fontFamily: FONT.condensed, fontWeight: 600,
+  color: C.text, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
+};
+const selectStyle: React.CSSProperties = {
+  width: '100%', padding: '8px 12px', background: C.surface2, border: `1px solid ${C.borderDim}`,
+  color: C.text, borderRadius: 8, fontFamily: FONT.body, fontSize: 14, outline: 'none',
+};
+const btnCancel: React.CSSProperties = {
+  flex: 1, padding: '8px 16px', border: `1px solid ${C.borderDim}`, color: C.sub,
+  background: C.surface2, borderRadius: 10, fontFamily: FONT.condensed, fontSize: 14,
+  textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer',
+};
+const btnDanger: React.CSSProperties = {
+  flex: 1, padding: '8px 16px', background: C.red, color: '#fff', borderRadius: 10, border: 'none',
+  fontFamily: FONT.condensed, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer',
+};
+const btnPrimary: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px',
+  background: C.orange, color: '#fff', border: 'none', borderRadius: 10,
+  fontFamily: FONT.condensed, fontSize: 14, textTransform: 'uppercase',
+  letterSpacing: '0.04em', cursor: 'pointer',
+};
+const btnSuccess: React.CSSProperties = {
+  ...btnPrimary, background: C.green,
+};
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '8px 12px 8px 36px', background: C.surface2,
+  border: `1px solid ${C.borderDim}`, color: C.text, borderRadius: 8,
+  fontFamily: FONT.body, fontSize: 14, outline: 'none',
+};
+
 interface BanModalProps {
   user: User;
   onClose: () => void;
@@ -152,25 +216,18 @@ function BanUserModal({ user, onClose, onBan }: BanModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6">
-        <h2 className="text-xl font-bold text-primary mb-4">Ban User</h2>
-        <div className="mb-4 p-3 bg-status-danger/10 border border-status-danger/30 rounded-lg">
-          <p className="text-sm text-status-danger">
-            You are about to ban <span className="font-semibold">@{user.handle}</span>
+    <div style={modalOverlay}>
+      <div style={modalBox}>
+        <h2 style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 16 }}>Ban User</h2>
+        <div style={{ marginBottom: 16, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8 }}>
+          <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.red }}>
+            You are about to ban <span style={{ fontWeight: 600 }}>@{user.handle}</span>
           </p>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-primary mb-2">
-              Reason for Ban
-            </label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary focus:border-transparent"
-              required
-            >
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Reason for Ban</label>
+            <select value={reason} onChange={(e) => setReason(e.target.value)} style={selectStyle} required>
               <option value="">Select a reason</option>
               <option value="spam">Spam</option>
               <option value="harassment">Harassment</option>
@@ -180,34 +237,18 @@ function BanUserModal({ user, onClose, onBan }: BanModalProps) {
               <option value="other">Other</option>
             </select>
           </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-primary mb-2">
-              Ban Duration
-            </label>
-            <select
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-3 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary focus:border-transparent"
-            >
+          <div style={{ marginBottom: 24 }}>
+            <label style={labelStyle}>Ban Duration</label>
+            <select value={duration} onChange={(e) => setDuration(e.target.value)} style={selectStyle}>
               <option value="1">1 Day</option>
               <option value="7">7 Days</option>
               <option value="30">30 Days</option>
               <option value="permanent">Permanent</option>
             </select>
           </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-surfacehighlight text-secondary bg-surfacehighlight rounded-xl hover:bg-surface transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-status-danger text-white rounded-xl hover:bg-status-danger/90 disabled:opacity-50 transition-all"
-            >
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button type="button" onClick={onClose} style={btnCancel}>Cancel</button>
+            <button type="submit" disabled={loading} style={{ ...btnDanger, opacity: loading ? 0.5 : 1 }}>
               {loading ? 'Banning...' : 'Ban User'}
             </button>
           </div>
@@ -241,20 +282,13 @@ function RejectContentModal({ report, onClose, onReject }: RejectModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6">
-        <h2 className="text-xl font-bold text-primary mb-4">Reject & Remove Content</h2>
+    <div style={modalOverlay}>
+      <div style={modalBox}>
+        <h2 style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 16 }}>Reject &amp; Remove Content</h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-primary mb-2">
-              Reason for Rejection
-            </label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary focus:border-transparent"
-              required
-            >
+          <div style={{ marginBottom: 24 }}>
+            <label style={labelStyle}>Reason for Rejection</label>
+            <select value={reason} onChange={(e) => setReason(e.target.value)} style={selectStyle} required>
               <option value="">Select a reason</option>
               <option value="spam">Spam</option>
               <option value="harassment">Harassment or Bullying</option>
@@ -266,19 +300,9 @@ function RejectContentModal({ report, onClose, onReject }: RejectModalProps) {
               <option value="other">Other Violation</option>
             </select>
           </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-surfacehighlight text-secondary bg-surfacehighlight rounded-xl hover:bg-surface transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-status-danger text-white rounded-xl hover:bg-status-danger/90 disabled:opacity-50 transition-all"
-            >
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button type="button" onClick={onClose} style={btnCancel}>Cancel</button>
+            <button type="submit" disabled={loading} style={{ ...btnDanger, opacity: loading ? 0.5 : 1 }}>
               {loading ? 'Rejecting...' : 'Reject & Remove'}
             </button>
           </div>
@@ -312,25 +336,18 @@ function RejectPostModal({ post, onClose, onReject }: RejectPostModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6">
-        <h2 className="text-xl font-bold text-primary mb-4">Reject Post</h2>
-        <div className="mb-4 p-3 bg-status-danger/10 border border-status-danger/30 rounded-lg">
-          <p className="text-sm text-status-danger">
-            You are about to reject this post by <span className="font-semibold">@{post.author_handle}</span>
+    <div style={modalOverlay}>
+      <div style={modalBox}>
+        <h2 style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 16 }}>Reject Post</h2>
+        <div style={{ marginBottom: 16, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8 }}>
+          <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.red }}>
+            You are about to reject this post by <span style={{ fontWeight: 600 }}>@{post.author_handle}</span>
           </p>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-primary mb-2">
-              Reason for Rejection
-            </label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary focus:border-transparent"
-              required
-            >
+          <div style={{ marginBottom: 24 }}>
+            <label style={labelStyle}>Reason for Rejection</label>
+            <select value={reason} onChange={(e) => setReason(e.target.value)} style={selectStyle} required>
               <option value="">Select a reason</option>
               <option value="no_vehicle">No Vehicle Visible</option>
               <option value="inappropriate_content">Inappropriate Content</option>
@@ -341,19 +358,9 @@ function RejectPostModal({ post, onClose, onReject }: RejectPostModalProps) {
               <option value="other">Other Violation</option>
             </select>
           </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-surfacehighlight text-secondary bg-surfacehighlight rounded-xl hover:bg-surface transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-status-danger text-white rounded-xl hover:bg-status-danger/90 disabled:opacity-50 transition-all"
-            >
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button type="button" onClick={onClose} style={btnCancel}>Cancel</button>
+            <button type="submit" disabled={loading} style={{ ...btnDanger, opacity: loading ? 0.5 : 1 }}>
               {loading ? 'Rejecting...' : 'Reject Post'}
             </button>
           </div>
@@ -374,70 +381,55 @@ interface VehicleCardProps {
 
 function VehicleCard({ vehicle, onTransfer, onRevoke, onDelete, onInstantClaim }: VehicleCardProps) {
   return (
-    <div className="bg-surface border border-surfacehighlight rounded-xl p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-surfacehighlight rounded-lg">
-            <Car className="w-6 h-6 text-accent-primary" />
+    <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ padding: 12, background: C.surface2, borderRadius: 8 }}>
+            <Car style={{ width: 24, height: 24, color: C.orange }} />
           </div>
           <div>
-            <p className="font-semibold text-primary">
+            <p style={{ fontFamily: FONT.body, fontWeight: 600, color: C.text }}>
               {vehicle.year} {vehicle.make} {vehicle.model}
             </p>
-            <p className="text-sm text-secondary">
+            <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub }}>
               Plate: {vehicle.plate_hash} {vehicle.plate_state && `(${vehicle.plate_state})`}
             </p>
             {vehicle.owner_handle ? (
-              <p className="text-sm text-accent-primary">Owner: @{vehicle.owner_handle}</p>
+              <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.orange }}>Owner: @{vehicle.owner_handle}</p>
             ) : (
-              <p className="text-sm text-status-warning">Unclaimed</p>
+              <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.yellow }}>Unclaimed</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {vehicle.is_verified && (
-            <span className="px-2 py-1 bg-status-success/20 text-status-success text-xs rounded-full">Verified</span>
+            <span style={{ padding: '2px 8px', background: 'rgba(32,192,96,0.2)', color: C.green, fontSize: 11, fontFamily: FONT.condensed, borderRadius: 10 }}>Verified</span>
           )}
           {vehicle.is_claimed && (
-            <span className="px-2 py-1 bg-accent-primary/20 text-accent-primary text-xs rounded-full">Claimed</span>
+            <span style={{ padding: '2px 8px', background: 'rgba(249,115,22,0.2)', color: C.orange, fontSize: 11, fontFamily: FONT.condensed, borderRadius: 10 }}>Claimed</span>
           )}
         </div>
       </div>
 
-      <div className="flex gap-2 mt-4 pt-4 border-t border-surfacehighlight">
+      <div style={{ display: 'flex', gap: 8, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.borderDim}` }}>
         {!vehicle.is_claimed && (
-          <button
-            onClick={onInstantClaim}
-            className="flex-1 px-3 py-2 bg-status-success text-white text-sm rounded-lg hover:opacity-90 transition flex items-center justify-center gap-1"
-          >
-            <UserPlus className="w-4 h-4" />
-            Assign Owner
+          <button onClick={onInstantClaim} style={{ ...btnSuccess, flex: 1, justifyContent: 'center', fontSize: 12 }}>
+            <UserPlus style={{ width: 14, height: 14 }} /> Assign Owner
           </button>
         )}
         {vehicle.is_claimed && (
-          <button
-            onClick={onTransfer}
-            className="flex-1 px-3 py-2 bg-accent-primary text-white text-sm rounded-lg hover:opacity-90 transition flex items-center justify-center gap-1"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Transfer
+          <button onClick={onTransfer} style={{ ...btnPrimary, flex: 1, justifyContent: 'center', fontSize: 12 }}>
+            <RefreshCw style={{ width: 14, height: 14 }} /> Transfer
           </button>
         )}
         {vehicle.is_claimed && (
-          <button
-            onClick={onRevoke}
-            className="flex-1 px-3 py-2 bg-status-warning text-white text-sm rounded-lg hover:opacity-90 transition flex items-center justify-center gap-1"
-          >
-            <XCircle className="w-4 h-4" />
-            Revoke
+          <button onClick={onRevoke} style={{ ...btnPrimary, flex: 1, justifyContent: 'center', fontSize: 12, background: C.yellow }}>
+            <XCircle style={{ width: 14, height: 14 }} /> Revoke
           </button>
         )}
-        <button
-          onClick={onDelete}
-          className="px-3 py-2 bg-status-danger text-white text-sm rounded-lg hover:opacity-90 transition flex items-center justify-center gap-1"
-        >
-          <Trash2 className="w-4 h-4" />
+        <button onClick={onDelete} style={{ ...btnDanger, flex: 'none', padding: '8px 12px' }}>
+          <Trash2 style={{ width: 14, height: 14 }} />
         </button>
       </div>
     </div>
@@ -484,34 +476,30 @@ function VehicleActionModal({ vehicle, action, users, onClose, onInstantClaim, o
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-surfacehighlight rounded-xl max-w-md w-full p-6">
-        <h2 className="text-xl font-bold text-primary mb-4">{getTitle()}</h2>
+  const confirmBg = action === 'delete' ? C.red : action === 'revoke' ? C.yellow : C.orange;
 
-        <div className="mb-4 p-3 bg-surfacehighlight rounded-lg">
-          <p className="font-semibold text-primary">
+  return (
+    <div style={modalOverlay}>
+      <div style={modalBox}>
+        <h2 style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 16 }}>{getTitle()}</h2>
+
+        <div style={{ marginBottom: 16, padding: 12, background: C.surface2, borderRadius: 8 }}>
+          <p style={{ fontFamily: FONT.body, fontWeight: 600, color: C.text }}>
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
-          <p className="text-sm text-secondary">Plate: {vehicle.plate_hash}</p>
+          <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub }}>Plate: {vehicle.plate_hash}</p>
           {vehicle.owner_handle && (
-            <p className="text-sm text-accent-primary">Current owner: @{vehicle.owner_handle}</p>
+            <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.orange }}>Current owner: @{vehicle.owner_handle}</p>
           )}
         </div>
 
         {(action === 'transfer' || action === 'instant') && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-primary mb-2">
-              Select New Owner
-            </label>
+          <div style={{ marginBottom: 24 }}>
+            <label style={labelStyle}>Select New Owner</label>
             {users.length === 0 ? (
-              <p className="text-sm text-secondary">Search for users first using the search box above.</p>
+              <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub }}>Search for users first using the search box above.</p>
             ) : (
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="w-full px-3 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary"
-              >
+              <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} style={selectStyle}>
                 <option value="">Select a user...</option>
                 {users.map(u => (
                   <option key={u.user_id} value={u.user_id}>
@@ -524,37 +512,31 @@ function VehicleActionModal({ vehicle, action, users, onClose, onInstantClaim, o
         )}
 
         {action === 'revoke' && (
-          <div className="mb-6 p-3 bg-status-warning/10 border border-status-warning/30 rounded-lg">
-            <p className="text-sm text-status-warning">
+          <div style={{ marginBottom: 24, padding: 12, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', borderRadius: 8 }}>
+            <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.yellow }}>
               This will remove ownership from the current owner. The vehicle will become unclaimed and can be claimed by anyone.
             </p>
           </div>
         )}
 
         {action === 'delete' && (
-          <div className="mb-6 p-3 bg-status-danger/10 border border-status-danger/30 rounded-lg">
-            <p className="text-sm text-status-danger">
+          <div style={{ marginBottom: 24, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8 }}>
+            <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.red }}>
               This will permanently delete the vehicle and all associated data (claims, stickers, modifications, images, reviews). This action cannot be undone.
             </p>
           </div>
         )}
 
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2 border border-surfacehighlight text-secondary bg-surfacehighlight rounded-xl hover:bg-surface transition-all"
-          >
-            Cancel
-          </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button type="button" onClick={onClose} style={btnCancel}>Cancel</button>
           <button
             onClick={handleConfirm}
             disabled={(action === 'transfer' || action === 'instant') && !selectedUserId}
-            className={`flex-1 px-4 py-2 text-white rounded-xl transition-all disabled:opacity-50 ${
-              action === 'delete' ? 'bg-status-danger hover:bg-status-danger/90' :
-              action === 'revoke' ? 'bg-status-warning hover:bg-status-warning/90' :
-              'bg-accent-primary hover:bg-accent-hover'
-            }`}
+            style={{
+              ...btnDanger,
+              background: confirmBg,
+              opacity: ((action === 'transfer' || action === 'instant') && !selectedUserId) ? 0.5 : 1,
+            }}
           >
             {action === 'delete' ? 'Delete' :
              action === 'revoke' ? 'Revoke' :
@@ -688,30 +670,25 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Total Users
     const { count: totalUsers } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true });
 
-    // Daily Active Users
     const { count: dau } = await supabase
       .from('user_sessions')
       .select('user_id', { count: 'exact', head: true })
       .gte('last_active_at', today);
 
-    // Weekly Active Users
     const { count: wau } = await supabase
       .from('user_sessions')
       .select('user_id', { count: 'exact', head: true })
       .gte('last_active_at', sevenDaysAgo);
 
-    // Monthly Active Users
     const { count: mau } = await supabase
       .from('user_sessions')
       .select('user_id', { count: 'exact', head: true })
       .gte('last_active_at', thirtyDaysAgo);
 
-    // New Signups
     const { count: newUsers7d } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
@@ -722,7 +699,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       .select('*', { count: 'exact', head: true })
       .gte('created_at', thirtyDaysAgo);
 
-    // Daily Signups for Chart
     const { data: signupData } = await supabase
       .from('profiles')
       .select('created_at')
@@ -739,7 +715,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       .map(([date, signups]) => ({ date, signups }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // Engagement Metrics
     const { count: postsToday } = await supabase
       .from('posts')
       .select('*', { count: 'exact', head: true })
@@ -765,7 +740,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       .select('*', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo);
 
-    // Engagement Rate (simplified calculation)
     const { data: activeUserIds } = await supabase
       .from('posts')
       .select('author_id')
@@ -774,10 +748,8 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     const uniqueActiveUsers = new Set(activeUserIds?.map(p => p.author_id) || []).size;
     const engagementRate = totalUsers ? Math.round((uniqueActiveUsers / totalUsers) * 100) : 0;
 
-    // Average Posts Per User
     const avgPostsPerUser = totalUsers && posts30d ? parseFloat((posts30d / totalUsers).toFixed(2)) : 0;
 
-    // Feature Usage
     const { count: totalVehicles } = await supabase
       .from('vehicles')
       .select('id', { count: 'exact', head: true });
@@ -795,7 +767,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       .from('post_images')
       .select('*', { count: 'exact', head: true });
 
-    // Profile Completion Rate
     const { count: completedProfiles } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
@@ -805,16 +776,13 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
     const profileCompletionRate = totalUsers ? Math.round((completedProfiles! / totalUsers) * 100) : 0;
 
-    // Retention (simplified - would need more complex queries for accurate calculation)
-    const day1Retention = 0; // Placeholder
-    const day7Retention = 0; // Placeholder
+    const day1Retention = 0;
+    const day7Retention = 0;
 
-    // Churned Users
     const { count: _churnedUsers } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true });
 
-    // Top Users (Last 7 Days)
     const { data: topUsers } = await supabase
       .rpc('get_top_users', { days: 7 })
       .limit(10);
@@ -850,11 +818,9 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch metrics
       const dashboardMetrics = await fetchDashboardMetrics();
       setMetrics(dashboardMetrics);
 
-      // Load users
       const { data: authUsers } = await supabase.auth.admin.listUsers();
       const usersData = await supabase
         .from('profiles')
@@ -884,7 +850,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
       setUsers(usersWithBanStatus);
 
-      // Load reports
       const moderationQueueData = await supabase
         .from('reports')
         .select(`
@@ -919,7 +884,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
       setReports(reportsWithContent as any);
 
-      // Load logs
       const logsData = await supabase
         .from('admin_actions')
         .select(`
@@ -937,11 +901,9 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
       setLogs((logsData.data || []) as unknown as AdminLog[]);
 
-      // Load pending posts
       const { data: pendingPostsData } = await supabase.rpc('get_pending_posts');
       setPendingPosts(pendingPostsData || []);
 
-      // Load pending claims
       const claims = await getPendingClaims();
       setPendingClaims(claims);
 
@@ -1167,306 +1129,161 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     u.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // -- Stat card helper --
+  const StatCard = ({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) => (
+    <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+      <Icon style={{ width: 28, height: 28, color, opacity: 0.6 }} />
+      <div>
+        <p style={{ fontFamily: FONT.mono, fontSize: 26, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>{value}</p>
+        <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2 }}>{label}</p>
+      </div>
+    </div>
+  );
+
   const renderOverview = () => {
     if (!metrics) {
       return (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-4"></div>
-            <p className="text-secondary">Loading dashboard metrics...</p>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
+          <p style={{ fontFamily: FONT.body, color: C.sub }}>Loading dashboard metrics...</p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Header with Refresh */}
-        <div className="flex items-center justify-between">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h2 className="text-2xl font-bold text-primary">Dashboard Overview</h2>
-            <p className="text-sm text-secondary mt-1">
+            <h2 style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 700, color: C.text }}>Dashboard Overview</h2>
+            <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub, marginTop: 4 }}>
               Last updated: {metrics.lastUpdated.toLocaleTimeString()}
             </p>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-xl hover:bg-accent-hover transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+          <button onClick={handleRefresh} disabled={refreshing} style={{ ...btnPrimary, opacity: refreshing ? 0.5 : 1 }}>
+            <RefreshCw style={{ width: 14, height: 14 }} />
+            REFRESH
           </button>
         </div>
 
         {/* Top Row - 4 Big Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-accent-primary/20 to-accent-hover/20 border border-accent-primary/30 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-sm text-secondary mb-1">Total Users</p>
-                <h3 className="text-4xl font-bold text-primary">{metrics.totalUsers}</h3>
-              </div>
-              <Users className="w-12 h-12 text-accent-primary opacity-50" />
-            </div>
-            <div className="flex items-center gap-1 text-sm mt-2">
-              <ArrowUp className="w-4 h-4 text-status-success" />
-              <span className="text-status-success font-semibold">+{metrics.newUsers30d}</span>
-              <span className="text-secondary ml-1">this month</span>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-status-success/20 to-status-success/10 border border-status-success/30 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-sm text-secondary mb-1">Daily Active Users</p>
-                <h3 className="text-4xl font-bold text-primary">{metrics.dau}</h3>
-              </div>
-              <Activity className="w-12 h-12 text-status-success opacity-50" />
-            </div>
-            <div className="text-sm text-secondary mt-2">
-              {metrics.totalUsers > 0 ? Math.round((metrics.dau / metrics.totalUsers) * 100) : 0}% of total users
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-[#F97316]/20 to-[#fb923c]/10 border border-orange/30 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-sm text-secondary mb-1">Weekly Active Users</p>
-                <h3 className="text-4xl font-bold text-primary">{metrics.wau}</h3>
-              </div>
-              <TrendingUp className="w-12 h-12 text-accent-primary opacity-50" />
-            </div>
-            <div className="text-sm text-secondary mt-2">
-              {metrics.totalUsers > 0 ? Math.round((metrics.wau / metrics.totalUsers) * 100) : 0}% of total users
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-[#fb923c]/20 to-[#fb923c]/10 border border-[#fb923c]/30 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-sm text-secondary mb-1">Monthly Active Users</p>
-                <h3 className="text-4xl font-bold text-primary">{metrics.mau}</h3>
-              </div>
-              <UserCheck className="w-12 h-12 text-accent-2 opacity-50" />
-            </div>
-            <div className="text-sm text-secondary mt-2">
-              {metrics.totalUsers > 0 ? Math.round((metrics.mau / metrics.totalUsers) * 100) : 0}% of total users
-            </div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+          <StatCard label="Total Users" value={metrics.totalUsers} icon={Users} color={C.orange} />
+          <StatCard label="DAU" value={metrics.dau} icon={Activity} color={C.green} />
+          <StatCard label="WAU" value={metrics.wau} icon={TrendingUp} color={C.orange} />
+          <StatCard label="MAU" value={metrics.mau} icon={UserCheck} color={C.gold} />
         </div>
 
         {/* Growth Section */}
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-primary mb-4">User Growth (Last 30 Days)</h3>
+        <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 24 }}>
+          <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>User Growth (Last 30 Days)</h3>
           {metrics.dailySignups.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={metrics.dailySignups}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#9CA3AF"
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis stroke="#9CA3AF" />
+                <CartesianGrid strokeDasharray="3 3" stroke={C.muted} />
+                <XAxis dataKey="date" stroke={C.dim} tick={{ fontSize: 12 }} />
+                <YAxis stroke={C.dim} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#111827',
-                    border: '1px solid #1E293B',
-                    borderRadius: '0.5rem',
-                    color: '#f8f9fb'
+                    backgroundColor: C.surface2,
+                    border: `1px solid ${C.borderDim}`,
+                    borderRadius: 8,
+                    color: C.text,
+                    fontFamily: FONT.body,
                   }}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="signups"
-                  stroke="#fb923c"
-                  strokeWidth={2}
-                  dot={{ fill: '#fb923c', r: 4 }}
-                  name="Signups"
-                />
+                <Line type="monotone" dataKey="signups" stroke={C.orange} strokeWidth={2} dot={{ fill: C.orange, r: 4 }} name="Signups" />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-center py-12 text-secondary">
+            <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: FONT.body, color: C.sub }}>
               No signup data available
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-surfacehighlight rounded-lg p-4">
-              <p className="text-sm text-secondary mb-1">New Signups (7d)</p>
-              <p className="text-2xl font-bold text-primary">{metrics.newUsers7d}</p>
-            </div>
-            <div className="bg-surfacehighlight rounded-lg p-4">
-              <p className="text-sm text-secondary mb-1">New Signups (30d)</p>
-              <p className="text-2xl font-bold text-primary">{metrics.newUsers30d}</p>
-            </div>
-            <div className="bg-surfacehighlight rounded-lg p-4">
-              <p className="text-sm text-secondary mb-1">Growth Rate</p>
-              <p className="text-2xl font-bold text-primary">
-                {metrics.totalUsers > 0 ? Math.round((metrics.newUsers30d / metrics.totalUsers) * 100) : 0}%
-              </p>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 24 }}>
+            {[
+              { label: 'New Signups (7d)', value: metrics.newUsers7d },
+              { label: 'New Signups (30d)', value: metrics.newUsers30d },
+              { label: 'Growth Rate', value: `${metrics.totalUsers > 0 ? Math.round((metrics.newUsers30d / metrics.totalUsers) * 100) : 0}%` },
+            ].map((item, i) => (
+              <div key={i} style={{ background: C.surface2, borderRadius: 8, padding: 16 }}>
+                <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{item.label}</p>
+                <p style={{ fontFamily: FONT.mono, fontSize: 22, fontWeight: 700, color: C.text }}>{item.value}</p>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Engagement Section */}
         <div>
-          <h3 className="text-lg font-semibold text-primary mb-4">Engagement Metrics</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-accent-primary/20 rounded-lg">
-                  <Image className="w-6 h-6 text-accent-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Posts (7d)</p>
-                  <p className="text-xs text-secondary">Last 7 days</p>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-primary">{metrics.posts7d}</h3>
-            </div>
-
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-status-success/20 rounded-lg">
-                  <MessageSquare className="w-6 h-6 text-status-success" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Comments (7d)</p>
-                  <p className="text-xs text-secondary">Last 7 days</p>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-primary">{metrics.comments7d}</h3>
-            </div>
-
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-pink-500/20 rounded-lg">
-                  <Heart className="w-6 h-6 text-pink-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Likes (7d)</p>
-                  <p className="text-xs text-secondary">Last 7 days</p>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-primary">{metrics.likes7d}</h3>
-            </div>
+          <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>Engagement Metrics</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
+            <StatCard label="Posts (7d)" value={metrics.posts7d} icon={Image} color={C.orange} />
+            <StatCard label="Comments (7d)" value={metrics.comments7d} icon={MessageSquare} color={C.green} />
+            <StatCard label="Likes (7d)" value={metrics.likes7d} icon={Heart} color="#e879a0" />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <p className="text-sm text-secondary mb-2">Engagement Rate</p>
-              <h3 className="text-4xl font-bold text-primary">{metrics.engagementRate}%</h3>
-              <p className="text-xs text-secondary mt-2">Users who posted/commented/liked today</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Engagement Rate</p>
+              <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{metrics.engagementRate}%</p>
+              <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>Users who posted/commented/liked today</p>
             </div>
-
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <p className="text-sm text-secondary mb-2">Avg Posts Per User</p>
-              <h3 className="text-4xl font-bold text-primary">{metrics.avgPostsPerUser}</h3>
-              <p className="text-xs text-secondary mt-2">Average posts per user (30 days)</p>
+            <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Avg Posts Per User</p>
+              <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{metrics.avgPostsPerUser}</p>
+              <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>Average posts per user (30 days)</p>
             </div>
           </div>
         </div>
 
         {/* Feature Usage Section */}
         <div>
-          <h3 className="text-lg font-semibold text-primary mb-4">Feature Usage</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-orange-500/20 rounded-lg">
-                  <Car className="w-6 h-6 text-orange-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Vehicles</p>
-                  <p className="text-xs text-secondary">Total registered</p>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-primary">{metrics.totalVehicles}</h3>
-              <p className="text-xs text-secondary mt-2">+{metrics.vehicles7d} in last 7 days</p>
-            </div>
-
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-yellow-500/20 rounded-lg">
-                  <Award className="w-6 h-6 text-yellow-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Badges Earned</p>
-                  <p className="text-xs text-secondary">Total awarded</p>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-primary">{metrics.totalBadgesEarned}</h3>
-            </div>
-
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-green-500/20 rounded-lg">
-                  <Image className="w-6 h-6 text-green-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Photos</p>
-                  <p className="text-xs text-secondary">Total uploaded</p>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-primary">{metrics.totalPhotos}</h3>
-            </div>
+          <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>Feature Usage</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
+            <StatCard label="Vehicles" value={metrics.totalVehicles} icon={Car} color={C.orange} />
+            <StatCard label="Badges Earned" value={metrics.totalBadgesEarned} icon={Award} color={C.gold} />
+            <StatCard label="Photos" value={metrics.totalPhotos} icon={Image} color={C.green} />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <p className="text-sm text-secondary mb-2">Profile Completion</p>
-              <h3 className="text-4xl font-bold text-primary">{metrics.profileCompletionRate}%</h3>
-              <p className="text-xs text-secondary mt-2">Users with avatar and bio</p>
-              <div className="mt-4 h-2 bg-surfacehighlight rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent-primary transition-all"
-                  style={{ width: `${metrics.profileCompletionRate}%` }}
-                />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Profile Completion</p>
+              <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{metrics.profileCompletionRate}%</p>
+              <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>Users with avatar and bio</p>
+              <div style={{ marginTop: 12, height: 6, background: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: C.orange, width: `${metrics.profileCompletionRate}%` }} />
               </div>
             </div>
-
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-              <p className="text-sm text-secondary mb-2">Posts Per Day</p>
-              <h3 className="text-4xl font-bold text-primary">
-                {Math.round(metrics.posts30d / 30)}
-              </h3>
-              <p className="text-xs text-secondary mt-2">Average daily posts (30 days)</p>
+            <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Posts Per Day</p>
+              <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{Math.round(metrics.posts30d / 30)}</p>
+              <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>Average daily posts (30 days)</p>
             </div>
           </div>
         </div>
 
         {/* Top Users Section */}
         {metrics.topUsers.length > 0 && (
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-primary mb-4">Top Users (Last 7 Days)</h3>
-            <div className="space-y-3">
+          <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 24 }}>
+            <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>Top Users (Last 7 Days)</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {metrics.topUsers.slice(0, 10).map((topUser, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-surfacehighlight rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold text-secondary w-8">#{index + 1}</span>
-                    <UserAvatar
-                      avatarUrl={topUser.avatar_url}
-                      userName={topUser.username}
-                      size="small"
-                    />
-                    <span className="font-medium text-primary">@{topUser.username}</span>
+                <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: C.surface2, borderRadius: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontFamily: FONT.mono, fontSize: 18, fontWeight: 700, color: C.dim, width: 28 }}>#{index + 1}</span>
+                    <UserAvatar avatarUrl={topUser.avatar_url} userName={topUser.username} size="small" />
+                    <span style={{ fontFamily: FONT.body, fontWeight: 500, color: C.text }}>@{topUser.username}</span>
                   </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="text-center">
-                      <p className="font-bold text-primary">{topUser.post_count}</p>
-                      <p className="text-xs text-secondary">posts</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-primary">{topUser.comment_count}</p>
-                      <p className="text-xs text-secondary">comments</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-primary">{topUser.like_count}</p>
-                      <p className="text-xs text-secondary">likes</p>
-                    </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                    {[
+                      { v: topUser.post_count, l: 'posts' },
+                      { v: topUser.comment_count, l: 'comments' },
+                      { v: topUser.like_count, l: 'likes' },
+                    ].map((stat, si) => (
+                      <div key={si} style={{ textAlign: 'center' }}>
+                        <p style={{ fontFamily: FONT.mono, fontWeight: 700, color: C.text, fontSize: 14 }}>{stat.v}</p>
+                        <p style={{ fontFamily: FONT.condensed, fontSize: 10, color: C.dim, textTransform: 'uppercase' }}>{stat.l}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -1477,176 +1294,160 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     );
   };
 
+  const thStyle: React.CSSProperties = {
+    padding: '10px 16px', textAlign: 'left', fontSize: 11, fontFamily: FONT.condensed,
+    fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.06em',
+  };
+  const tdStyle: React.CSSProperties = {
+    padding: '10px 16px', whiteSpace: 'nowrap', fontFamily: FONT.body, fontSize: 13,
+  };
+
   const renderUserManagement = () => (
-    <div className="space-y-6">
-      <div className="bg-surface border border-surfacehighlight rounded-xl p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-          <input
-            type="text"
-            placeholder="Search by username or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary focus:border-transparent"
-          />
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ position: 'relative' }}>
+        <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: C.dim }} />
+        <input
+          type="text"
+          placeholder="Search by username or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={inputStyle}
+        />
       </div>
 
-      <div className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-surfacehighlight border-b border-surfacehighlight">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  Last Login
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  Reputation
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                  Actions
-                </th>
+      <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: C.surface2, borderBottom: `1px solid ${C.borderDim}` }}>
+                <th style={thStyle}>User</th>
+                <th style={thStyle}>Email</th>
+                <th style={thStyle}>Last Login</th>
+                <th style={thStyle}>Role</th>
+                <th style={thStyle}>Reputation</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surfacehighlight">
+            <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-secondary">
+                  <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 32, color: C.sub }}>
                     No users found
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-surfacehighlight">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar
-                          avatarUrl={u.avatar_url}
-                          userName={u.handle}
-                          size="small"
-                        />
-                        <span className="font-medium text-primary">@{u.handle}</span>
+                  <tr key={u.id} style={{ borderBottom: `1px solid ${C.borderDim}` }}>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <UserAvatar avatarUrl={u.avatar_url} userName={u.handle} size="small" />
+                        <span style={{ fontWeight: 500, color: C.text }}>@{u.handle}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-primary font-medium">{u.email}</div>
-                      <div className="text-xs text-secondary">
+                    <td style={tdStyle}>
+                      <div style={{ color: C.text, fontWeight: 500 }}>{u.email}</div>
+                      <div style={{ fontSize: 11, color: C.dim }}>
                         Joined {new Date(u.created_at).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td style={tdStyle}>
                       {u.last_sign_in_at ? (
                         <div>
-                          <div className="text-sm text-primary font-medium">
+                          <div style={{ color: C.text, fontWeight: 500 }}>
                             {new Date(u.last_sign_in_at).toLocaleDateString()}
                           </div>
-                          <div className="text-xs text-secondary">
+                          <div style={{ fontSize: 11, color: C.dim }}>
                             {new Date(u.last_sign_in_at).toLocaleTimeString()}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-sm text-secondary italic">Never logged in</span>
+                        <span style={{ color: C.dim, fontStyle: 'italic' }}>Never logged in</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        u.role === 'admin' ? 'bg-accent-primary/20 text-accent-primary' :
-                        u.role === 'moderator' ? 'bg-accent-primary/20 text-accent-primary' :
-                        'bg-surfacehighlight text-secondary'
-                      }`}>
+                    <td style={tdStyle}>
+                      <span style={{
+                        display: 'inline-flex', padding: '2px 8px', fontSize: 11, fontFamily: FONT.condensed,
+                        fontWeight: 600, borderRadius: 10,
+                        background: (u.role === 'admin' || u.role === 'moderator') ? 'rgba(249,115,22,0.2)' : C.surface2,
+                        color: (u.role === 'admin' || u.role === 'moderator') ? C.orange : C.sub,
+                      }}>
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-accent-primary" />
-                        <span className="text-sm font-mono font-bold text-accent-primary">
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <TrendingUp style={{ width: 14, height: 14, color: C.orange }} />
+                        <span style={{ fontFamily: FONT.mono, fontWeight: 700, color: C.orange, fontSize: 13 }}>
                           {u.reputation_score || 0}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        u.is_banned ? 'bg-status-danger/20 text-status-danger' : 'bg-status-success/20 text-status-success'
-                      }`}>
+                    <td style={tdStyle}>
+                      <span style={{
+                        display: 'inline-flex', padding: '2px 8px', fontSize: 11, fontFamily: FONT.condensed,
+                        fontWeight: 600, borderRadius: 10,
+                        background: u.is_banned ? 'rgba(239,68,68,0.2)' : 'rgba(32,192,96,0.2)',
+                        color: u.is_banned ? C.red : C.green,
+                      }}>
                         {u.is_banned ? 'Banned' : 'Active'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="relative">
+                    <td style={tdStyle}>
+                      <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setActiveMenu(activeMenu === u.id ? null : u.id)}
-                          className="p-2 hover:bg-surfacehighlight rounded-lg"
+                          style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', borderRadius: 6 }}
                         >
-                          <MoreVertical className="w-5 h-5 text-secondary" />
+                          <MoreVertical style={{ width: 18, height: 18, color: C.sub }} />
                         </button>
                         {activeMenu === u.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-surface rounded-lg shadow-lg border border-surfacehighlight py-1 z-10">
+                          <div style={{
+                            position: 'absolute', right: 0, marginTop: 8, width: 192,
+                            background: C.surface, borderRadius: 8, border: `1px solid ${C.borderDim}`,
+                            padding: 4, zIndex: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                          }}>
                             <button
                               onClick={() => {
                                 setActiveMenu(null);
                                 showToast('Password reset email sent', 'success');
                               }}
-                              className="w-full px-4 py-2 text-left text-sm text-primary hover:bg-surfacehighlight flex items-center gap-2"
+                              style={{ width: '100%', padding: '8px 12px', textAlign: 'left', fontSize: 13, fontFamily: FONT.body, color: C.text, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6 }}
                             >
-                              <Key className="w-4 h-4" />
+                              <Key style={{ width: 14, height: 14 }} />
                               Reset Password
                             </button>
                             {u.is_banned ? (
                               <button
-                                onClick={() => {
-                                  setActiveMenu(null);
-                                  handleUnbanUser(u.id);
-                                }}
-                                className="w-full px-4 py-2 text-left text-sm text-status-success hover:bg-surfacehighlight flex items-center gap-2"
+                                onClick={() => { setActiveMenu(null); handleUnbanUser(u.id); }}
+                                style={{ width: '100%', padding: '8px 12px', textAlign: 'left', fontSize: 13, fontFamily: FONT.body, color: C.green, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6 }}
                               >
-                                <Check className="w-4 h-4" />
+                                <Check style={{ width: 14, height: 14 }} />
                                 Unban User
                               </button>
                             ) : (
                               <button
-                                onClick={() => {
-                                  setActiveMenu(null);
-                                  setBanModalUser(u);
-                                }}
-                                className="w-full px-4 py-2 text-left text-sm text-status-danger hover:bg-surfacehighlight flex items-center gap-2"
+                                onClick={() => { setActiveMenu(null); setBanModalUser(u); }}
+                                style={{ width: '100%', padding: '8px 12px', textAlign: 'left', fontSize: 13, fontFamily: FONT.body, color: C.red, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6 }}
                               >
-                                <Ban className="w-4 h-4" />
+                                <Ban style={{ width: 14, height: 14 }} />
                                 Ban User
                               </button>
                             )}
                             {u.role !== 'admin' && (
                               <button
-                                onClick={() => {
-                                  setActiveMenu(null);
-                                  handlePromoteUser(u.id, u.role);
-                                }}
-                                className="w-full px-4 py-2 text-left text-sm text-accent-primary hover:bg-surfacehighlight flex items-center gap-2"
+                                onClick={() => { setActiveMenu(null); handlePromoteUser(u.id, u.role); }}
+                                style={{ width: '100%', padding: '8px 12px', textAlign: 'left', fontSize: 13, fontFamily: FONT.body, color: C.orange, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6 }}
                               >
-                                <UserPlus className="w-4 h-4" />
+                                <UserPlus style={{ width: 14, height: 14 }} />
                                 {u.role === 'moderator' ? 'Demote to User' : 'Promote to Moderator'}
                               </button>
                             )}
                             <button
-                              onClick={() => {
-                                setActiveMenu(null);
-                                handleDeleteUser(u.id);
-                              }}
-                              className="w-full px-4 py-2 text-left text-sm text-status-danger hover:bg-surfacehighlight flex items-center gap-2"
+                              onClick={() => { setActiveMenu(null); handleDeleteUser(u.id); }}
+                              style={{ width: '100%', padding: '8px 12px', textAlign: 'left', fontSize: 13, fontFamily: FONT.body, color: C.red, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 6 }}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 style={{ width: 14, height: 14 }} />
                               Delete User
                             </button>
                           </div>
@@ -1664,88 +1465,74 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   );
 
   const renderPendingPosts = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 className="text-xl font-bold text-primary">Pending Posts</h2>
-          <p className="text-sm text-secondary mt-1">Review and approve user-submitted content</p>
+          <h2 style={{ fontFamily: FONT.display, fontSize: 22, fontWeight: 700, color: C.text }}>Pending Posts</h2>
+          <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub, marginTop: 4 }}>Review and approve user-submitted content</p>
         </div>
-        <div className="bg-surfacehighlight px-4 py-2 rounded-xl">
-          <span className="text-2xl font-bold text-primary">{pendingPosts.length}</span>
-          <span className="text-sm text-secondary ml-2">pending</span>
+        <div style={{ background: C.surface2, padding: '8px 16px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: FONT.mono, fontSize: 22, fontWeight: 700, color: C.text }}>{pendingPosts.length}</span>
+          <span style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase' }}>pending</span>
         </div>
       </div>
 
       {pendingPosts.length === 0 ? (
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-12 text-center">
-          <Check className="w-12 h-12 text-status-success mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-primary mb-2">All Caught Up!</h3>
-          <p className="text-secondary">No posts pending moderation</p>
+        <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 48, textAlign: 'center' }}>
+          <Check style={{ width: 48, height: 48, color: C.green, margin: '0 auto 16px' }} />
+          <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>All Caught Up!</h3>
+          <p style={{ fontFamily: FONT.body, color: C.sub }}>No posts pending moderation</p>
         </div>
       ) : (
         pendingPosts.map((post) => (
-          <div key={post.post_id} className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
-            <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-surfacehighlight">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <UserAvatar
-                    avatarUrl={post.author_avatar_url}
-                    userName={post.author_handle}
-                    size="small"
-                  />
+          <div key={post.post_id} style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+              <div style={{ padding: 24, borderRight: `1px solid ${C.borderDim}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <UserAvatar avatarUrl={post.author_avatar_url} userName={post.author_handle} size="small" />
                   <div>
-                    <p className="font-medium text-primary">@{post.author_handle}</p>
-                    <p className="text-sm text-secondary">
+                    <p style={{ fontFamily: FONT.body, fontWeight: 500, color: C.text }}>@{post.author_handle}</p>
+                    <p style={{ fontSize: 12, fontFamily: FONT.body, color: C.sub }}>
                       {new Date(post.created_at).toLocaleDateString()} {new Date(post.created_at).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-status-warning/20 text-status-warning mb-2">
+                <div style={{ marginBottom: 16 }}>
+                  <span style={{ display: 'inline-flex', padding: '2px 8px', fontSize: 11, fontFamily: FONT.condensed, fontWeight: 600, borderRadius: 10, background: 'rgba(234,179,8,0.2)', color: C.yellow, marginBottom: 8 }}>
                     {post.post_type === 'photo' ? 'Photo Post' : post.post_type === 'spotting' ? 'Spotting' : 'Badge Given'}
                   </span>
                   {post.vehicle_make && post.vehicle_model && (
-                    <p className="text-sm font-medium text-primary mb-2">
+                    <p style={{ fontSize: 13, fontFamily: FONT.body, fontWeight: 500, color: C.text, marginBottom: 8 }}>
                       {post.vehicle_year} {post.vehicle_make} {post.vehicle_model}
                     </p>
                   )}
                   {post.location_label && (
-                    <p className="text-xs text-secondary mb-2"><MapPin className="w-3 h-3 inline" /> {post.location_label}</p>
+                    <p style={{ fontSize: 11, fontFamily: FONT.body, color: C.sub, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <MapPin style={{ width: 12, height: 12 }} /> {post.location_label}
+                    </p>
                   )}
                   {post.caption && (
-                    <p className="text-primary mt-2">{post.caption}</p>
+                    <p style={{ fontFamily: FONT.body, color: C.text, marginTop: 8 }}>{post.caption}</p>
                   )}
                 </div>
 
                 {post.image_url && (
-                  <div className="border border-surfacehighlight rounded-lg overflow-hidden">
-                    <img
-                      src={post.image_url}
-                      alt="Post content"
-                      className="w-full h-64 object-cover"
-                    />
+                  <div style={{ border: `1px solid ${C.borderDim}`, borderRadius: 8, overflow: 'hidden' }}>
+                    <img src={post.image_url} alt="Post content" style={{ width: '100%', height: 256, objectFit: 'cover' }} />
                   </div>
                 )}
               </div>
 
-              <div className="p-6 flex flex-col justify-center gap-4">
-                <h3 className="text-lg font-semibold text-primary mb-2">Moderation Actions</h3>
-                <button
-                  onClick={() => handleApprovePost(post.post_id)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-status-success text-white rounded-xl hover:bg-status-success/90 font-medium transition-all"
-                >
-                  <Check className="w-5 h-5" />
-                  Approve Post
+              <div style={{ padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12 }}>
+                <h3 style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 8 }}>Moderation Actions</h3>
+                <button onClick={() => handleApprovePost(post.post_id)} style={{ ...btnSuccess, width: '100%', justifyContent: 'center', padding: '10px 16px' }}>
+                  <Check style={{ width: 18, height: 18 }} /> APPROVE POST
                 </button>
-                <button
-                  onClick={() => setRejectModalPost(post)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-status-danger text-white rounded-xl hover:bg-status-danger/90 font-medium transition-all"
-                >
-                  <X className="w-5 h-5" />
-                  Reject Post
+                <button onClick={() => setRejectModalPost(post)} style={{ ...btnDanger, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 16px' }}>
+                  <X style={{ width: 18, height: 18 }} /> REJECT POST
                 </button>
-                <p className="text-xs text-secondary text-center mt-2">
+                <p style={{ fontFamily: FONT.mono, fontSize: 11, color: C.dim, textAlign: 'center', marginTop: 8 }}>
                   Post ID: {post.post_id.slice(0, 8)}
                 </p>
               </div>
@@ -1757,72 +1544,54 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   );
 
   const renderModeration = () => (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {reports.length === 0 ? (
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-12 text-center">
-          <Shield className="w-12 h-12 text-secondary mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-primary mb-2">No Pending Reports</h3>
-          <p className="text-secondary">All reports have been reviewed</p>
+        <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 48, textAlign: 'center' }}>
+          <Shield style={{ width: 48, height: 48, color: C.sub, margin: '0 auto 16px' }} />
+          <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>No Pending Reports</h3>
+          <p style={{ fontFamily: FONT.body, color: C.sub }}>All reports have been reviewed</p>
         </div>
       ) : (
         reports.map((report) => (
-          <div key={report.id} className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
-            <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-surfacehighlight">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <UserAvatar
-                    avatarUrl={report.reporter.avatar_url}
-                    userName={report.reporter.handle}
-                    size="small"
-                  />
+          <div key={report.id} style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+              <div style={{ padding: 24, borderRight: `1px solid ${C.borderDim}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <UserAvatar avatarUrl={report.reporter.avatar_url} userName={report.reporter.handle} size="small" />
                   <div>
-                    <p className="font-medium text-primary">@{report.reporter.handle}</p>
-                    <p className="text-sm text-secondary">
-                      {new Date(report.created_at).toLocaleDateString()}
-                    </p>
+                    <p style={{ fontFamily: FONT.body, fontWeight: 500, color: C.text }}>@{report.reporter.handle}</p>
+                    <p style={{ fontSize: 12, fontFamily: FONT.body, color: C.sub }}>{new Date(report.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-status-danger/20 text-status-danger mb-2">
+                <div style={{ marginBottom: 16 }}>
+                  <span style={{ display: 'inline-flex', padding: '2px 8px', fontSize: 11, fontFamily: FONT.condensed, fontWeight: 600, borderRadius: 10, background: 'rgba(239,68,68,0.2)', color: C.red, marginBottom: 8 }}>
                     {report.reason.replace('_', ' ')}
                   </span>
-                  <p className="text-primary">{report.description}</p>
+                  <p style={{ fontFamily: FONT.body, color: C.text }}>{report.description}</p>
                 </div>
 
                 {report.content && (
-                  <div className="border border-surfacehighlight rounded-lg p-4 bg-surfacehighlight">
+                  <div style={{ border: `1px solid ${C.borderDim}`, borderRadius: 8, padding: 16, background: C.surface2 }}>
                     {report.content.image_url && (
-                      <img
-                        src={report.content.image_url}
-                        alt="Reported content"
-                        className="w-full h-48 object-cover rounded-lg mb-3"
-                      />
+                      <img src={report.content.image_url} alt="Reported content" style={{ width: '100%', height: 192, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
                     )}
                     {report.content.caption && (
-                      <p className="text-sm text-primary">{report.content.caption}</p>
+                      <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.text }}>{report.content.caption}</p>
                     )}
                   </div>
                 )}
               </div>
 
-              <div className="p-6 flex flex-col justify-center gap-4">
-                <h3 className="text-lg font-semibold text-primary mb-2">Moderation Actions</h3>
-                <button
-                  onClick={() => handleApproveReport(report.id)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-status-success text-white rounded-xl hover:bg-status-success/90 font-medium transition-all"
-                >
-                  <Check className="w-5 h-5" />
-                  Approve (No Action)
+              <div style={{ padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12 }}>
+                <h3 style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 8 }}>Moderation Actions</h3>
+                <button onClick={() => handleApproveReport(report.id)} style={{ ...btnSuccess, width: '100%', justifyContent: 'center', padding: '10px 16px' }}>
+                  <Check style={{ width: 18, height: 18 }} /> APPROVE (NO ACTION)
                 </button>
-                <button
-                  onClick={() => setRejectModalReport(report)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-status-danger text-white rounded-xl hover:bg-status-danger/90 font-medium transition-all"
-                >
-                  <X className="w-5 h-5" />
-                  Reject & Remove Content
+                <button onClick={() => setRejectModalReport(report)} style={{ ...btnDanger, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 16px' }}>
+                  <X style={{ width: 18, height: 18 }} /> REJECT &amp; REMOVE
                 </button>
-                <p className="text-xs text-secondary text-center mt-2">
+                <p style={{ fontFamily: FONT.mono, fontSize: 11, color: C.dim, textAlign: 'center', marginTop: 8 }}>
                   Report ID: {report.id.slice(0, 8)}
                 </p>
               </div>
@@ -1870,87 +1639,69 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
     return (
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Vehicle Ownership Claims</h2>
-          <button
-            onClick={loadDashboardData}
-            className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-hover transition"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <h2 style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 700, color: C.text }}>Vehicle Ownership Claims</h2>
+          <button onClick={loadDashboardData} style={btnPrimary}>
+            <RefreshCw style={{ width: 14, height: 14 }} /> REFRESH
           </button>
         </div>
 
         {pendingClaims.length === 0 ? (
-          <div className="text-center py-12 bg-surface border border-surfacehighlight rounded-lg">
-            <CheckCircle className="w-16 h-16 text-status-success mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold text-primary mb-2">All caught up!</h3>
-            <p className="text-secondary">No pending vehicle ownership claims to review.</p>
+          <div style={{ textAlign: 'center', padding: 48, background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10 }}>
+            <CheckCircle style={{ width: 64, height: 64, color: C.green, margin: '0 auto 16px', opacity: 0.5 }} />
+            <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>All caught up!</h3>
+            <p style={{ fontFamily: FONT.body, color: C.sub }}>No pending vehicle ownership claims to review.</p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {pendingClaims.map(claim => (
-              <div
-                key={claim.id}
-                className="bg-surface border border-surfacehighlight rounded-xl p-6"
-              >
-                <div className="flex items-start gap-4">
-                  {/* Vehicle Image */}
+              <div key={claim.id} style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                   {claim.vehicle?.stock_image_url && (
-                    <div className="flex-shrink-0">
+                    <div style={{ flexShrink: 0 }}>
                       <img
                         src={claim.vehicle.stock_image_url}
                         alt={`${claim.vehicle.make} ${claim.vehicle.model}`}
-                        className="w-32 h-24 object-cover rounded-lg border border-surfacehighlight"
+                        style={{ width: 128, height: 96, objectFit: 'cover', borderRadius: 8, border: `1px solid ${C.borderDim}` }}
                       />
                     </div>
                   )}
 
-                  <div className="flex-1 min-w-0">
-                    {/* User Info - Clickable */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <UserAvatar
-                        userId={claim.user?.id || ''}
-                        src={claim.user?.avatar_url}
-                        size="md"
-                      />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <UserAvatar userId={claim.user?.id || ''} src={claim.user?.avatar_url} size="md" />
                       <div>
                         <button
                           onClick={() => claim.user?.id && onNavigate?.('user-profile', claim.user.id)}
-                          className="font-semibold text-primary hover:text-accent-primary transition"
+                          style={{ fontFamily: FONT.body, fontWeight: 600, color: C.text, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                         >
                           @{claim.user?.handle || 'Unknown'}
                         </button>
                         {claim.user?.location && (
-                          <p className="text-xs text-secondary flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {claim.user.location}
+                          <p style={{ fontSize: 11, fontFamily: FONT.body, color: C.sub, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <MapPin style={{ width: 12, height: 12 }} /> {claim.user.location}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    {/* Vehicle Details */}
                     {claim.vehicle && (
-                      <div className="bg-surfacehighlight/50 rounded-lg p-3 mb-4">
-                        <p className="font-semibold text-primary mb-1">
+                      <div style={{ background: C.surface2, borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                        <p style={{ fontFamily: FONT.body, fontWeight: 600, color: C.text, marginBottom: 4 }}>
                           {claim.vehicle.year} {claim.vehicle.make} {claim.vehicle.model}
                         </p>
                         {claim.vehicle.color && (
-                          <p className="text-sm text-secondary">
-                            Color: {claim.vehicle.color}
-                          </p>
+                          <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub }}>Color: {claim.vehicle.color}</p>
                         )}
                       </div>
                     )}
 
-                    {/* Documents */}
                     {claim.document_urls && claim.document_urls.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--t3)' }}>
+                      <div style={{ marginBottom: 16 }}>
+                        <p style={{ fontSize: 11, fontFamily: FONT.condensed, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                           Submitted Documents ({claim.document_urls.length})
                         </p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                           {claim.document_urls.map((url: string, index: number) => {
                             const docType = (claim as unknown as Record<string, string[]>).document_types?.[index] || `Document ${index + 1}`;
                             const icon = docType === 'registration' || docType === 'insurance' ? FileText :
@@ -1966,18 +1717,16 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
                                 href={docUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-3 py-2 bg-surfacehighlight rounded-lg hover:bg-accent-primary/10 transition text-sm"
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.surface2, borderRadius: 8, fontSize: 13, fontFamily: FONT.body, color: C.text, textDecoration: 'none' }}
                               >
-                                <Icon className="w-4 h-4" />
-                                {label}
+                                <Icon style={{ width: 14, height: 14 }} /> {label}
                               </a>
                             ) : (
                               <span
                                 key={index}
-                                className="flex items-center gap-2 px-3 py-2 bg-surfacehighlight rounded-lg text-sm opacity-50 cursor-not-allowed"
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.surface2, borderRadius: 8, fontSize: 13, fontFamily: FONT.body, color: C.dim, opacity: 0.5 }}
                               >
-                                <Icon className="w-4 h-4" />
-                                {label}
+                                <Icon style={{ width: 14, height: 14 }} /> {label}
                               </span>
                             );
                           })}
@@ -1985,29 +1734,23 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
                       </div>
                     )}
 
-                    <p className="text-xs text-secondary">
+                    <p style={{ fontSize: 11, fontFamily: FONT.body, color: C.sub }}>
                       Submitted {new Date(claim.created_at).toLocaleString()}
                     </p>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => handleApproveClaim(claim)}
-                      className="px-4 py-2 bg-status-success text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
-                    >
-                      <Check className="w-4 h-4" />
-                      Approve
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <button onClick={() => handleApproveClaim(claim)} style={{ ...btnSuccess, padding: '8px 16px' }}>
+                      <Check style={{ width: 14, height: 14 }} /> Approve
                     </button>
                     <button
                       onClick={() => {
                         const reason = prompt('Reason for rejection (will be shown to user):');
                         if (reason) handleRejectClaim(claim, reason);
                       }}
-                      className="px-4 py-2 bg-status-danger text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
+                      style={{ ...btnDanger, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}
                     >
-                      <X className="w-4 h-4" />
-                      Reject
+                      <X style={{ width: 14, height: 14 }} /> Reject
                     </button>
                   </div>
                 </div>
@@ -2119,73 +1862,62 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     };
 
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h2 className="text-2xl font-bold text-primary">Vehicle Management</h2>
-            <p className="text-sm text-secondary mt-1">Search, transfer, and manage vehicle ownership</p>
+            <h2 style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 700, color: C.text }}>Vehicle Management</h2>
+            <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub, marginTop: 4 }}>Search, transfer, and manage vehicle ownership</p>
           </div>
-          <button
-            onClick={handleLoadClaimedVehicles}
-            className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-hover transition"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Load All Claimed
+          <button onClick={handleLoadClaimedVehicles} style={btnPrimary}>
+            <RefreshCw style={{ width: 14, height: 14 }} /> LOAD ALL CLAIMED
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <h3 className="font-semibold text-primary mb-4">Search Vehicles</h3>
-            <div className="flex gap-2">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 24 }}>
+            <h3 style={{ fontFamily: FONT.display, fontWeight: 600, color: C.text, marginBottom: 16 }}>Search Vehicles</h3>
+            <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="text"
                 placeholder="Search by plate, make, model, or owner..."
                 value={vehicleSearchQuery}
                 onChange={(e) => setVehicleSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchVehicles()}
-                className="flex-1 px-4 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary"
+                style={{ ...inputStyle, paddingLeft: 12, flex: 1 }}
               />
-              <button
-                onClick={handleSearchVehicles}
-                disabled={vehiclesLoading}
-                className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-hover transition disabled:opacity-50"
-              >
-                <Search className="w-4 h-4" />
+              <button onClick={handleSearchVehicles} disabled={vehiclesLoading} style={{ ...btnPrimary, opacity: vehiclesLoading ? 0.5 : 1 }}>
+                <Search style={{ width: 14, height: 14 }} />
               </button>
             </div>
           </div>
 
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <h3 className="font-semibold text-primary mb-4">Search Users (for Transfer/Assign)</h3>
-            <div className="flex gap-2">
+          <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 24 }}>
+            <h3 style={{ fontFamily: FONT.display, fontWeight: 600, color: C.text, marginBottom: 16 }}>Search Users (for Transfer/Assign)</h3>
+            <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="text"
                 placeholder="Search by username or email..."
                 value={userSearchQuery}
                 onChange={(e) => setUserSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchUsers()}
-                className="flex-1 px-4 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary"
+                style={{ ...inputStyle, paddingLeft: 12, flex: 1 }}
               />
-              <button
-                onClick={handleSearchUsers}
-                className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-hover transition"
-              >
-                <Search className="w-4 h-4" />
+              <button onClick={handleSearchUsers} style={btnPrimary}>
+                <Search style={{ width: 14, height: 14 }} />
               </button>
             </div>
             {userSearchResults.length > 0 && (
-              <div className="mt-4 max-h-48 overflow-y-auto space-y-2">
+              <div style={{ marginTop: 16, maxHeight: 192, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {userSearchResults.map(u => (
-                  <div key={u.user_id} className="flex items-center justify-between p-2 bg-surfacehighlight rounded-lg">
-                    <div className="flex items-center gap-2">
+                  <div key={u.user_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 8, background: C.surface2, borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <UserAvatar userId={u.user_id} src={u.avatar_url} size="sm" />
                       <div>
-                        <p className="font-medium text-primary text-sm">@{u.handle}</p>
-                        <p className="text-xs text-secondary">{u.vehicle_count} vehicles</p>
+                        <p style={{ fontFamily: FONT.body, fontWeight: 500, color: C.text, fontSize: 13 }}>@{u.handle}</p>
+                        <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.sub }}>{u.vehicle_count} vehicles</p>
                       </div>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-surface rounded text-secondary">{u.role}</span>
+                    <span style={{ fontSize: 11, fontFamily: FONT.condensed, padding: '2px 8px', background: C.surface, borderRadius: 6, color: C.sub }}>{u.role}</span>
                   </div>
                 ))}
               </div>
@@ -2194,15 +1926,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
         </div>
 
         {vehiclesLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="w-8 h-8 text-accent-primary animate-spin" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
+            <RefreshCw style={{ width: 32, height: 32, color: C.orange }} />
           </div>
         ) : (
           <>
             {vehicleSearchResults.length > 0 && (
               <div>
-                <h3 className="font-semibold text-primary mb-4">Search Results ({vehicleSearchResults.length})</h3>
-                <div className="grid gap-4">
+                <h3 style={{ fontFamily: FONT.display, fontWeight: 600, color: C.text, marginBottom: 16 }}>Search Results ({vehicleSearchResults.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {vehicleSearchResults.map(vehicle => (
                     <VehicleCard
                       key={vehicle.vehicle_id}
@@ -2220,8 +1952,8 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
             {claimedVehicles.length > 0 && vehicleSearchResults.length === 0 && (
               <div>
-                <h3 className="font-semibold text-primary mb-4">All Claimed Vehicles ({claimedVehicles.length})</h3>
-                <div className="grid gap-4">
+                <h3 style={{ fontFamily: FONT.display, fontWeight: 600, color: C.text, marginBottom: 16 }}>All Claimed Vehicles ({claimedVehicles.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {claimedVehicles.map(vehicle => (
                     <VehicleCard
                       key={vehicle.vehicle_id}
@@ -2238,10 +1970,10 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
             )}
 
             {vehicleSearchResults.length === 0 && claimedVehicles.length === 0 && (
-              <div className="text-center py-12 bg-surface border border-surfacehighlight rounded-lg">
-                <Car className="w-16 h-16 text-secondary mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold text-primary mb-2">No vehicles to display</h3>
-                <p className="text-secondary">Search for a vehicle or click "Load All Claimed" to view claimed vehicles.</p>
+              <div style={{ textAlign: 'center', padding: 48, background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10 }}>
+                <Car style={{ width: 64, height: 64, color: C.sub, margin: '0 auto 16px', opacity: 0.5 }} />
+                <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>No vehicles to display</h3>
+                <p style={{ fontFamily: FONT.body, color: C.sub }}>Search for a vehicle or click "Load All Claimed" to view claimed vehicles.</p>
               </div>
             )}
           </>
@@ -2269,8 +2001,8 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       b.description?.toLowerCase().includes(badgeSearchQuery.toLowerCase())
     );
 
-    const totalUsers = badges.reduce((sum, b) => sum + (b.user_count || 0), 0);
-    const avgBadgesPerUser = badges.length > 0 ? (totalUsers / badges.length).toFixed(1) : '0';
+    const totalBadgeUsers = badges.reduce((sum, b) => sum + (b.user_count || 0), 0);
+    const avgBadgesPerUser = badges.length > 0 ? (totalBadgeUsers / badges.length).toFixed(1) : '0';
 
     const tierCounts = {
       bronze: badges.filter(b => b.tier === 'bronze').length,
@@ -2279,175 +2011,84 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       platinum: badges.filter(b => b.tier === 'platinum').length
     };
 
+    const tierColors: Record<string, string> = { bronze: '#cd7f32', silver: '#9ca3af', gold: '#eab308', platinum: C.orange };
+
     return (
-      <div className="space-y-6">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div>
-          <h2 className="text-2xl font-bold text-primary">Badge System Dashboard</h2>
-          <p className="text-sm text-secondary mt-1">Manage badge definitions and track distribution</p>
+          <h2 style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 700, color: C.text }}>Badge System Dashboard</h2>
+          <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub, marginTop: 4 }}>Manage badge definitions and track distribution</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <Award className="w-5 h-5 text-orange-400" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          {(['bronze', 'silver', 'gold', 'platinum'] as const).map(tier => (
+            <div key={tier} style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <Award style={{ width: 20, height: 20, color: tierColors[tier] }} />
+                <div>
+                  <p style={{ fontFamily: FONT.condensed, fontSize: 11, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{tier}</p>
+                  <p style={{ fontFamily: FONT.mono, fontSize: 22, fontWeight: 700, color: C.text }}>{tierCounts[tier]}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-secondary uppercase tracking-wider">Bronze</p>
-                <p className="text-2xl font-bold text-primary">{tierCounts.bronze}</p>
-              </div>
-            </div>
-            <div className="mt-4 h-2 bg-surfacehighlight rounded-full overflow-hidden">
-              <div
-                className="h-full bg-orange-500 transition-all duration-500"
-                style={{ width: `${badges.length > 0 ? (tierCounts.bronze / badges.length) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-gray-400/20 rounded-lg">
-                <Award className="w-5 h-5 text-gray-300" />
-              </div>
-              <div>
-                <p className="text-xs text-secondary uppercase tracking-wider">Silver</p>
-                <p className="text-2xl font-bold text-primary">{tierCounts.silver}</p>
+              <div style={{ height: 6, background: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: tierColors[tier], width: `${badges.length > 0 ? (tierCounts[tier] / badges.length) * 100 : 0}%` }} />
               </div>
             </div>
-            <div className="mt-4 h-2 bg-surfacehighlight rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gray-400 transition-all duration-500"
-                style={{ width: `${badges.length > 0 ? (tierCounts.silver / badges.length) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-yellow-500/20 rounded-lg">
-                <Award className="w-5 h-5 text-yellow-400" />
-              </div>
-              <div>
-                <p className="text-xs text-secondary uppercase tracking-wider">Gold</p>
-                <p className="text-2xl font-bold text-primary">{tierCounts.gold}</p>
-              </div>
-            </div>
-            <div className="mt-4 h-2 bg-surfacehighlight rounded-full overflow-hidden">
-              <div
-                className="h-full bg-yellow-500 transition-all duration-500"
-                style={{ width: `${badges.length > 0 ? (tierCounts.gold / badges.length) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-orange/20 rounded-lg">
-                <Award className="w-5 h-5 text-accent-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-secondary uppercase tracking-wider">Platinum</p>
-                <p className="text-2xl font-bold text-primary">{tierCounts.platinum}</p>
-              </div>
-            </div>
-            <div className="mt-4 h-2 bg-surfacehighlight rounded-full overflow-hidden">
-              <div
-                className="h-full bg-orange transition-all duration-500"
-                style={{ width: `${badges.length > 0 ? (tierCounts.platinum / badges.length) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-accent-primary/20 to-accent-hover/20 border border-accent-primary/30 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-secondary mb-1">Total Badges</p>
-                <p className="text-4xl font-bold text-primary">{badges.length}</p>
-              </div>
-              <Award className="w-12 h-12 text-accent-primary opacity-50" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-status-success/20 to-status-success/10 border border-status-success/30 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-secondary mb-1">Total Awards</p>
-                <p className="text-4xl font-bold text-primary">{totalUsers}</p>
-              </div>
-              <Users className="w-12 h-12 text-status-success opacity-50" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-status-warning/20 to-status-warning/10 border border-status-warning/30 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-secondary mb-1">Avg Per Badge</p>
-                <p className="text-4xl font-bold text-primary">{avgBadgesPerUser}</p>
-              </div>
-              <TrendingUp className="w-12 h-12 text-status-warning opacity-50" />
-            </div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <StatCard label="Total Badges" value={badges.length} icon={Award} color={C.orange} />
+          <StatCard label="Total Awards" value={totalBadgeUsers} icon={Users} color={C.green} />
+          <StatCard label="Avg Per Badge" value={avgBadgesPerUser} icon={TrendingUp} color={C.gold} />
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-            <input
-              type="text"
-              placeholder="Search badges by name or description..."
-              value={badgeSearchQuery}
-              onChange={(e) => setBadgeSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-surfacehighlight border border-surfacehighlight text-primary rounded-lg focus:ring-2 focus:ring-accent-primary focus:border-transparent"
-            />
-          </div>
+        <div style={{ position: 'relative' }}>
+          <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: C.dim }} />
+          <input
+            type="text"
+            placeholder="Search badges by name or description..."
+            value={badgeSearchQuery}
+            onChange={(e) => setBadgeSearchQuery(e.target.value)}
+            style={inputStyle}
+          />
         </div>
 
         {filteredBadges.length === 0 ? (
-          <div className="bg-surface border border-surfacehighlight rounded-xl p-12 text-center">
-            <Award className="w-12 h-12 text-secondary mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-primary mb-2">No Badges Found</h3>
-            <p className="text-secondary">
+          <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 48, textAlign: 'center' }}>
+            <Award style={{ width: 48, height: 48, color: C.sub, margin: '0 auto 16px' }} />
+            <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>No Badges Found</h3>
+            <p style={{ fontFamily: FONT.body, color: C.sub }}>
               {badges.length === 0 ? 'No badges have been created yet.' : 'No badges match your search.'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
             {filteredBadges.map((badge) => (
-              <div
-                key={badge.id}
-                className="bg-surface border border-surfacehighlight rounded-xl p-6 hover:border-accent-primary/50 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="text-4xl">{badge.icon || <Award className="w-10 h-10 text-orange" />}</div>
-                    <div>
-                      <h3 className="font-bold text-primary">{badge.name}</h3>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${
-                        badge.tier === 'bronze' ? 'bg-orange-500/20 text-orange-400' :
-                        badge.tier === 'silver' ? 'bg-gray-400/20 text-gray-300' :
-                        badge.tier === 'gold' ? 'bg-yellow-500/20 text-yellow-400' :
-                        badge.tier === 'platinum' ? 'bg-orange/20 text-accent-primary' :
-                        'bg-surfacehighlight text-secondary'
-                      }`}>
-                        {badge.tier}
-                      </span>
-                    </div>
+              <div key={badge.id} style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+                  <div style={{ fontSize: 32 }}>{badge.icon || <Award style={{ width: 36, height: 36, color: C.orange }} />}</div>
+                  <div>
+                    <h3 style={{ fontFamily: FONT.body, fontWeight: 700, color: C.text }}>{badge.name}</h3>
+                    <span style={{
+                      display: 'inline-flex', padding: '2px 8px', fontSize: 10, fontFamily: FONT.condensed,
+                      fontWeight: 600, borderRadius: 10, marginTop: 4,
+                      background: `${tierColors[badge.tier] || C.surface2}33`,
+                      color: tierColors[badge.tier] || C.sub,
+                    }}>
+                      {badge.tier}
+                    </span>
                   </div>
                 </div>
 
-                <p className="text-sm text-secondary mb-4">{badge.description}</p>
+                <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub, marginBottom: 16 }}>{badge.description}</p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-surfacehighlight">
-                  <div className="text-sm">
-                    <span className="text-accent-primary font-bold">{badge.user_count}</span>
-                    <span className="text-secondary ml-1">users</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: `1px solid ${C.borderDim}` }}>
+                  <div>
+                    <span style={{ fontFamily: FONT.mono, fontWeight: 700, color: C.orange }}>{badge.user_count}</span>
+                    <span style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, marginLeft: 4 }}>users</span>
                   </div>
-                  <div className="text-xs text-secondary">
-                    ID: {badge.id.slice(0, 8)}
-                  </div>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 11, color: C.dim }}>ID: {badge.id.slice(0, 8)}</span>
                 </div>
               </div>
             ))}
@@ -2458,30 +2099,30 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
   };
 
   const renderSystemLogs = () => (
-    <div className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
-      <div className="p-6 border-b border-surfacehighlight">
-        <h3 className="text-lg font-semibold text-primary">Recent Admin Actions</h3>
+    <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ padding: 24, borderBottom: `1px solid ${C.borderDim}` }}>
+        <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text }}>Recent Admin Actions</h3>
       </div>
-      <div className="divide-y divide-surfacehighlight">
+      <div>
         {logs.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileText className="w-12 h-12 text-secondary mx-auto mb-4" />
-            <p className="text-secondary">No admin actions recorded</p>
+          <div style={{ padding: 48, textAlign: 'center' }}>
+            <FileText style={{ width: 48, height: 48, color: C.sub, margin: '0 auto 16px' }} />
+            <p style={{ fontFamily: FONT.body, color: C.sub }}>No admin actions recorded</p>
           </div>
         ) : (
           logs.map((log) => (
-            <div key={log.id} className="p-4 hover:bg-surfacehighlight">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-primary">@{log.admin.handle}</span>
-                    <span className="text-sm text-secondary">
+            <div key={log.id} style={{ padding: 16, borderBottom: `1px solid ${C.borderDim}` }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontFamily: FONT.body, fontWeight: 500, color: C.text }}>@{log.admin.handle}</span>
+                    <span style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub }}>
                       {log.action_type.replace('_', ' ')}
                     </span>
                   </div>
-                  <p className="text-sm text-secondary">{log.description}</p>
+                  <p style={{ fontSize: 13, fontFamily: FONT.body, color: C.sub }}>{log.description}</p>
                 </div>
-                <span className="text-xs text-secondary whitespace-nowrap ml-4">
+                <span style={{ fontSize: 11, fontFamily: FONT.mono, color: C.dim, whiteSpace: 'nowrap', marginLeft: 16 }}>
                   {new Date(log.created_at).toLocaleString()}
                 </span>
               </div>
@@ -2494,29 +2135,26 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: FONT.body, color: C.sub }}>Loading...</p>
       </div>
     );
   }
 
   if (!hasAccess) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-8 max-w-md text-center shadow-lg">
-          <div className="bg-status-danger/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-status-danger" />
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 12, padding: 32, maxWidth: 400, textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Shield style={{ width: 32, height: 32, color: C.red }} />
           </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">Access Denied</h2>
-          <p className="text-secondary mb-6">
+          <h2 style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 8 }}>Access Denied</h2>
+          <p style={{ fontFamily: FONT.body, color: C.sub, marginBottom: 24 }}>
             You do not have permission to access the admin dashboard.
           </p>
           {onNavigate && (
-            <button
-              onClick={() => onNavigate('feed')}
-              className="bg-gradient-to-r from-accent-primary to-accent-hover text-white px-6 py-2 rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              Return to Feed
+            <button onClick={() => onNavigate('feed')} style={{ ...btnPrimary, padding: '10px 24px' }}>
+              RETURN TO FEED
             </button>
           )}
         </div>
@@ -2524,138 +2162,73 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     );
   }
 
+  const navBtn = (tab: Tab, icon: React.ElementType, label: string, badge?: number) => {
+    const Icon = icon;
+    const active = activeTab === tab;
+    return (
+      <button
+        onClick={() => setActiveTab(tab)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+          borderRadius: 8, marginBottom: 4, border: 'none', cursor: 'pointer',
+          background: active ? 'rgba(249,115,22,0.15)' : 'transparent',
+          color: active ? C.orange : C.sub,
+          fontFamily: FONT.condensed, fontSize: 14, fontWeight: active ? 600 : 400,
+          textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left',
+        }}
+      >
+        <Icon style={{ width: 18, height: 18 }} />
+        {label}
+        {badge !== undefined && badge > 0 && (
+          <span style={{
+            marginLeft: 'auto', background: C.orange, color: '#fff', fontSize: 10,
+            fontFamily: FONT.mono, fontWeight: 700, padding: '2px 6px', borderRadius: 10,
+          }}>
+            {badge}
+          </span>
+        )}
+      </button>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
-        <div className="w-64 bg-surface border-r border-surfacehighlight flex flex-col">
-          <div className="p-6 border-b border-surfacehighlight">
-            <h1 className="text-xl font-bold text-primary">Admin Dashboard</h1>
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <div style={{ display: 'flex', height: '100vh' }}>
+        {/* Sidebar */}
+        <div style={{ width: 240, background: C.surface, borderRight: `1px solid ${C.borderDim}`, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '52px 16px 14px', background: '#0a0d14', borderBottom: `1px solid ${C.borderDim}` }}>
+            <h1 style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 700, color: C.text }}>Admin Dashboard</h1>
           </div>
 
-          <nav className="flex-1 p-4">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'overview'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'users'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              User Management
-            </button>
-            <button
-              onClick={() => setActiveTab('posts')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'posts'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <Car className="w-5 h-5" />
-              Pending Posts
-              {pendingPosts.length > 0 && (
-                <span className="ml-auto bg-status-warning text-white text-xs font-bold px-2 py-1 rounded-full">
-                  {pendingPosts.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('moderation')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'moderation'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <Shield className="w-5 h-5" />
-              Reports
-              {reports.length > 0 && (
-                <span className="ml-auto bg-status-danger text-white text-xs font-bold px-2 py-1 rounded-full">
-                  {reports.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('claims')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'claims'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <CheckCircle className="w-5 h-5" />
-              Vehicle Claims
-              {pendingClaims.length > 0 && (
-                <span className="ml-auto bg-status-warning text-white text-xs font-bold px-2 py-1 rounded-full">
-                  {pendingClaims.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('vehicles')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'vehicles'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <Car className="w-5 h-5" />
-              Vehicle Management
-            </button>
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'logs'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <FileText className="w-5 h-5" />
-              System Logs
-            </button>
-            <button
-              onClick={() => setActiveTab('badges')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
-                activeTab === 'badges'
-                  ? 'bg-accent-primary/20 text-accent-primary font-medium'
-                  : 'text-secondary hover:bg-surfacehighlight'
-              }`}
-            >
-              <Award className="w-5 h-5" />
-              Badges
-              {badges.length > 0 && (
-                <span className="ml-auto bg-accent-primary/20 text-accent-primary text-xs font-bold px-2 py-1 rounded-full">
-                  {badges.length}
-                </span>
-              )}
-            </button>
+          <nav style={{ flex: 1, padding: 12 }}>
+            {navBtn('overview', LayoutDashboard, 'Overview')}
+            {navBtn('users', Users, 'User Management')}
+            {navBtn('posts', Car, 'Pending Posts', pendingPosts.length)}
+            {navBtn('moderation', Shield, 'Reports', reports.length)}
+            {navBtn('claims', CheckCircle, 'Vehicle Claims', pendingClaims.length)}
+            {navBtn('vehicles', Car, 'Vehicle Mgmt')}
+            {navBtn('logs', FileText, 'System Logs')}
+            {navBtn('badges', Award, 'Badges', badges.length || undefined)}
           </nav>
 
-          <div className="p-4 border-t border-surfacehighlight">
+          <div style={{ padding: 12, borderTop: `1px solid ${C.borderDim}` }}>
             <button
               onClick={() => onNavigate && onNavigate('feed')}
-              className="w-full px-4 py-2 text-secondary hover:bg-surfacehighlight rounded-lg flex items-center gap-2 transition-all"
+              style={{
+                width: '100%', padding: '8px 14px', background: 'transparent', border: 'none',
+                color: C.sub, fontFamily: FONT.condensed, fontSize: 14, textTransform: 'uppercase',
+                letterSpacing: '0.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                borderRadius: 8, textAlign: 'left',
+              }}
             >
-              <ChevronLeft className="w-4 h-4" />
-              Back to App
+              <ChevronLeft style={{ width: 14, height: 14 }} /> Back to App
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-8">
+        {/* Main Content */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ padding: 32 }}>
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'users' && renderUserManagement()}
             {activeTab === 'posts' && renderPendingPosts()}
