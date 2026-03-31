@@ -563,14 +563,15 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const spotCount = userPosts.filter(p => p.post_type === 'spot').length;
 
 
+  // Featured vehicle = first owned vehicle
+  const featuredVehicle = vehicles[0] || null;
+  const featuredPhoto = featuredVehicle?.profile_image_url || featuredVehicle?.stock_image_url || null;
+
   if (loading) {
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
-        <div className="flex items-center justify-center py-16">
-          <div
-            className="w-8 h-8 rounded-full border-2 animate-spin"
-            style={{ borderColor: 'var(--border-3)', borderTopColor: 'var(--accent)' }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
+          <div style={{ width: 24, height: 24, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       </Layout>
     );
@@ -578,585 +579,180 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="pb-24 page-enter">
+      <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 100 }}>
 
-        {/* ═══ Hero Card ═══ */}
-        <div className="px-4 pt-4 pb-2 v3-stagger v3-stagger-1">
-          <div className="card-v3 p-4">
-            {/* Top: Avatar + Info + Actions */}
-            <div className="flex items-start gap-4">
-              {/* Avatar with tier ring */}
-              <div className="relative flex-shrink-0">
-                <div
-                  className="w-16 h-16 rounded-full overflow-hidden"
-                  style={{
-                    border: `3px solid ${tierColor.border}`,
-                    boxShadow: `0 0 16px ${tierColor.glow}`,
-                  }}
-                >
-                  {(profile?.avatar_url || profile?.profile_car_image) ? (
-                    <img src={profile?.avatar_url || profile?.profile_car_image} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--s2)' }}>
-                      <Car className="w-7 h-7" style={{ color: 'var(--t4)' }} strokeWidth={1} />
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingPhoto}
-                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--s2)', border: '1px solid var(--border-2)' }}
-                >
-                  {uploadingPhoto ? (
-                    <div className="w-3 h-3 border border-current rounded-full animate-spin" style={{ borderTopColor: 'transparent' }} />
-                  ) : (
-                    <Upload className="w-3 h-3" style={{ color: 'var(--t3)' }} strokeWidth={1.5} />
-                  )}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                />
-              </div>
-
-              {/* Handle + Location */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-display)' }}>
-                    {profile?.handle || 'Anonymous'}
-                  </h2>
-                  {profile?.role === 'owner' && (
-                    <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--orange)' }} strokeWidth={2} />
-                  )}
-                </div>
-                {profile?.bio && (
-                  <p style={{ fontSize: 12, color: 'var(--dim)', lineHeight: 1.5, fontFamily: 'var(--font-body)' }} className="mb-1 line-clamp-2">
-                    {profile.bio}
-                  </p>
-                )}
-                {profile?.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" strokeWidth={1.2} style={{ color: 'var(--t4)' }} />
-                    <span style={{ fontSize: 12, color: 'var(--dim)', fontFamily: 'var(--font-body)' }}>{profile.location}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-1.5 flex-shrink-0">
-                {profile?.role === 'admin' && (
-                  <button
-                    onClick={() => onNavigate('admin')}
-                    className="w-8 h-8 rounded-[8px] flex items-center justify-center btn-press"
-                    style={{ background: 'var(--s2)', border: '1px solid var(--border-2)' }}
-                    title="Admin Dashboard"
-                  >
-                    <Shield className="w-5 h-5" style={{ color: 'var(--orange)' }} strokeWidth={1.5} />
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    if (!user) return;
-                    shareToSocial({
-                      type: 'profile',
-                      title: `@${profile?.handle || 'user'}`,
-                      userHandle: profile?.handle || 'user',
-                      userRep: repScore,
-                      deepLinkUrl: `${window.location.origin}/#/user-profile/${user.id}`,
-                    }, user.id);
-                  }}
-                  className="w-8 h-8 rounded-[8px] flex items-center justify-center btn-press"
-                  style={{ background: 'var(--s2)', border: '1px solid var(--border-2)' }}
-                  title="Share Profile"
-                >
-                  <Share2 className="w-3.5 h-3.5" style={{ color: 'var(--t3)' }} strokeWidth={1.5} />
-                </button>
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="w-8 h-8 rounded-[8px] flex items-center justify-center btn-press"
-                  style={{ background: 'var(--s2)', border: '1px solid var(--border-2)' }}
-                >
-                  <Edit className="w-3.5 h-3.5" style={{ color: 'var(--t3)' }} strokeWidth={1.5} />
-                </button>
-                <button
-                  onClick={signOut}
-                  className="w-8 h-8 rounded-[8px] flex items-center justify-center btn-press"
-                  style={{ background: 'var(--s2)', border: '1px solid var(--border-2)' }}
-                >
-                  <LogOut className="w-3.5 h-3.5" style={{ color: 'var(--t3)' }} strokeWidth={1.5} />
-                </button>
-              </div>
-            </div>
-
-            {/* City Rank */}
-            {cityRank && (
-              <div className="flex items-center gap-2 mt-3 px-1">
-                <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t2)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
-                  #{cityRank}
-                </span>
-                <span style={{ fontSize: 10, fontWeight: 300, color: 'var(--t3)' }}>
-                  in {profile?.location || 'your city'}
-                </span>
-              </div>
+        {/* ── 1. HERO — Identity Block ── */}
+        <div style={{ background: '#0a0d14', position: 'relative' }}>
+          {/* Cover strip — use featured vehicle image or dark fallback */}
+          <div style={{ height: 80, background: '#0d1117', overflow: 'hidden', position: 'relative' }}>
+            {featuredPhoto && (
+              <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
             )}
-
-            {/* Pinned Badges Trophy Shelf */}
-            {pinnedBadges.length > 0 && (
-              <div className="mt-3 flex gap-2 flex-wrap">
-                {pinnedBadges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-[6px]"
-                    style={{ background: 'var(--s2)', border: '1px solid var(--border)', fontSize: 10, color: 'var(--t2)' }}
-                  >
-                    <Award className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--gold-h)' }} strokeWidth={1.5} />
-                    {badge.name}
-                  </div>
-                ))}
-              </div>
-            )}
-
           </div>
-        </div>
 
-        {/* ═══ Stats Bar ═══ */}
-        {(() => {
-          const stats = [
-            { label: 'Spots Given', value: spotCount, onClick: async () => { await loadSpotsGiven(); setShowSpotsGivenModal(true); } },
-            { label: 'Friends', value: followerCount, onClick: async () => { await loadFollowersList(); setShowFollowersModal(true); } },
-            { label: 'Vehicles', value: vehicles.length, onClick: () => {} },
-            { label: 'Badges', value: userBadges.length, onClick: () => setShowBadgesModal(true) },
-          ];
-          return (
-            <div style={{ display: 'flex', margin: '0 20px 16px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', overflow: 'hidden' }}>
-              {stats.map((stat, i) => (
-                <button key={stat.label} onClick={stat.onClick} style={{ flex: 1, padding: '12px 0', textAlign: 'center', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.06)' : undefined, background: 'transparent', cursor: 'pointer' }} className="btn-press">
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700, color: 'var(--white)' }}>{stat.value}</div>
-                  <div style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>{stat.label}</div>
-                </button>
+          {/* Avatar overlapping cover */}
+          <div style={{ marginTop: -28, position: 'relative', zIndex: 2, padding: '0 16px' }}>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', background: '#1e2a38',
+                border: '3px solid #0a0d14', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8' }}>
+                    {(profile?.handle || '?')[0].toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: '50%', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <Upload size={10} color="#7a8e9e" />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+            </div>
+          </div>
+
+          {/* Name + Handle + Tier */}
+          <div style={{ padding: '8px 16px 0' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+              {profile?.handle || 'Anonymous'}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2, letterSpacing: '0.05em' }}>
+              @{profile?.handle || 'user'} · {tierInfo.name} Tier
+            </div>
+            {profile?.bio && (
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 4, lineHeight: 1.4 }}>
+                {profile.bio}
+              </div>
+            )}
+          </div>
+
+          {/* Featured badges in hero */}
+          {userBadges.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, padding: '8px 16px 0', flexWrap: 'wrap' }}>
+              {userBadges.slice(0, 3).map((ub) => (
+                <div key={ub.badge.id} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '3px 8px', borderRadius: 4,
+                  background: 'rgba(240,160,48,0.10)', border: '1px solid rgba(240,160,48,0.25)',
+                }}>
+                  <BadgeCoin
+                    tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
+                    name={ub.badge.name}
+                    icon_path={getBadgeImagePath(ub.badge)}
+                    size="sm"
+                  />
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#f0a030' }}>
+                    {ub.badge.name}
+                  </span>
+                </div>
               ))}
             </div>
-          );
-        })()}
+          )}
 
-        {/* ═══ Tab Bar ═══ */}
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.04)', marginBottom: 0 }}>
-          {(['Fleet', 'Spots', 'Badges', 'Activity'] as const).map(label => {
-            const key = label.toLowerCase() as typeof activeTab;
-            const isOn = activeTab === key;
-            return (
-              <button key={label} onClick={() => { setActiveTab(key); if (key === 'spots' && !spotsLoaded) { loadSpotsGiven(); setSpotsLoaded(true); } }} style={{
-                flex: 1, padding: '10px 0', textAlign: 'center',
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase',
-                color: isOn ? '#F97316' : '#445566',
-                background: 'none', border: 'none', cursor: 'pointer',
-                borderBottom: isOn ? '2px solid #F97316' : '2px solid transparent',
-              }}>
-                {label}
+          {/* Actions row */}
+          <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0' }}>
+            <button onClick={() => setShowEditModal(true)} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.25)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+              Edit Profile
+            </button>
+            <button onClick={() => { if (user) shareToSocial({ type: 'profile', title: `@${profile?.handle || 'user'}`, userHandle: profile?.handle || 'user', userRep: repScore, deepLinkUrl: `${window.location.origin}/#/user-profile/${user.id}` }, user.id); }} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
+              Share
+            </button>
+            {profile?.role === 'admin' && (
+              <button onClick={() => onNavigate('admin')} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.25)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                Admin
               </button>
-            );
-          })}
-        </div>
-
-        {/* ═══ Weekly Pulse ═══ */}
-        <div className="px-4 mt-4 v3-stagger v3-stagger-2">
-          <div className="flex items-center gap-1.5 mb-3">
-            <Zap className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>
-              Weekly Pulse
-            </span>
+            )}
+            <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#3a4e60', cursor: 'pointer' }}>
+              <LogOut size={12} />
+            </button>
           </div>
-          <div className="card-v3 overflow-hidden">
+
+          {/* Stat strip — inline in hero per mockup */}
+          <div style={{ display: 'flex', gap: 20, padding: '12px 16px 14px' }}>
             {[
-              { icon: <Crosshair className="w-4 h-4" strokeWidth={1.2} />, label: 'Spots Given', value: weeklySpots, change: weeklySpots },
-              { icon: <Users className="w-4 h-4" strokeWidth={1.2} />, label: 'New Friends', value: followerCount, change: 0 },
-              { icon: <Car className="w-4 h-4" strokeWidth={1.2} />, label: 'Vehicles Active', value: vehicles.length, change: 0 },
-            ].map((row, i) => (
-              <div
-                key={row.label}
-                className="flex items-center gap-3 px-4 py-3"
-                style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}
-              >
-                <span style={{ color: 'var(--t4)' }}>{row.icon}</span>
-                <span className="flex-1" style={{ fontSize: 13, fontWeight: 300, color: 'var(--t2)' }}>{row.label}</span>
-                <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginRight: 8, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{row.value}</span>
-                <ChangeArrow value={row.change} />
+              { label: 'Spots', value: spotCount },
+              { label: 'Badges', value: userBadges.length },
+              { label: 'Friends', value: followerCount },
+            ].map(stat => (
+              <div key={stat.label}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8' }}>{stat.value}</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#5a6e7e', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginLeft: 5 }}>{stat.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ═══ Tier Progress ═══ */}
-        <div style={{ margin: '0 20px 16px', padding: '12px 14px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontFamily: 'var(--font-cond)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent)' }}>{tierInfo.name}</span>
-            <span style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)' }}>Progress to {tierInfo.nextTier || 'Max'}</span>
-          </div>
-          <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px' }}>
-            <div style={{ height: '100%', background: 'var(--accent)', borderRadius: '2px', width: `${tierInfo.progress}%` }} />
-          </div>
-        </div>
-
-        {/* ═══ Next Milestone ═══ */}
-        {tierInfo.nextTier && (
-          <div className="px-4 mt-4 v3-stagger v3-stagger-4">
-            <div className="rare-card-v3 card-v3 p-4" style={{ position: 'relative', overflow: 'hidden' }}>
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, var(--orange), var(--gold-h))' }}
-                >
-                  <Target className="w-5 h-5" strokeWidth={1.5} style={{ color: '#1a1400' }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 8, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2px', color: 'var(--t4)', fontFamily: 'var(--font-display)' }}>
-                    Next Milestone
-                  </div>
-                  <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginTop: 2, fontFamily: 'var(--font-display)' }}>
-                    Progress to {tierInfo.nextTier}
-                  </div>
-                </div>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,.06)' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    borderRadius: 3,
-                    width: `${tierInfo.progress}%`,
-                    background: 'linear-gradient(90deg, var(--orange), #fb923c)',
-                    boxShadow: '0 0 8px rgba(249,115,22,0.4)',
-                    transition: 'width 1s cubic-bezier(.22,.68,0,1.2)',
-                  }}
-                />
-              </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="mono" style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{tierInfo.name}</span>
-                <span className="mono" style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{tierInfo.nextTier}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'spots' && (
-          <div style={{ padding: '16px 16px' }}>
-            {spotsGiven.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No Spots Yet</p>
-                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Spot your first vehicle to see it here.</p>
-              </div>
+        {/* ── 2. FEATURED VEHICLE — cinematic card ── */}
+        {featuredVehicle ? (
+          <div
+            onClick={() => onViewVehicle(featuredVehicle.id)}
+            style={{ position: 'relative', width: '100%', height: 180, overflow: 'hidden', background: '#0d1117', cursor: 'pointer', borderTop: '1px solid rgba(249,115,22,0.08)' }}
+          >
+            {featuredPhoto ? (
+              <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7, display: 'block' }} />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {spotsGiven.map((spot: any) => {
-                  const v = spot.vehicle;
-                  if (!v) return null;
-                  return (
-                    <button key={spot.id} onClick={() => onViewVehicle(v.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8' }}>{v.year} {v.make} {v.model}</div>
-                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginTop: 2 }}>
-                          {new Date(spot.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: '#F97316' }}>
-                        +{spot.reputation_earned || 10} RP
-                      </div>
-                    </button>
-                  );
-                })}
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </div>
             )}
-          </div>
-        )}
-
-        {activeTab === 'badges' && (<>
-        {/* ═══ Badges Preview ═══ */}
-        <div className="px-4 mt-4 v3-stagger v3-stagger-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5">
-              <Award className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>
-                Badges
-              </span>
-              <span style={{ fontSize: 10, color: 'var(--t4)', marginLeft: 4 }}>{userBadges.length} Earned</span>
-            </div>
-            <button
-              onClick={() => onNavigate('badges')}
-              className="btn-press"
-              style={{ fontSize: 11, color: 'var(--orange)', letterSpacing: '0.5px' }}
-            >
-              View All Badges
-            </button>
-          </div>
-          {userBadges.length > 0 ? (
-            <div className="card-v3 p-4">
-              <div className="grid grid-cols-5 gap-3">
-                {userBadges.slice(0, 10).map((userBadge) => (
-                  <div key={userBadge.badge.id} className="flex flex-col items-center gap-1" title={userBadge.badge.name}>
-                    <BadgeCoin
-                      tier={((userBadge as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
-                      name={userBadge.badge.name}
-                      icon_path={getBadgeImagePath(userBadge.badge)}
-                      size="md"
-                    />
-                    <div style={{ fontSize: 9, color: 'var(--t4)', textAlign: 'center', lineHeight: 1.3 }} className="line-clamp-2">
-                      {userBadge.badge.name}
-                    </div>
-                  </div>
-                ))}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 60%)' }} />
+            <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14 }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
+                {featuredVehicle.make || 'Vehicle'}
               </div>
-              {userBadges.length > 10 && (
-                <p style={{ fontSize: 11, color: 'var(--t4)', textAlign: 'center', marginTop: 12 }}>
-                  +{userBadges.length - 10} more
-                </p>
-              )}
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+                  {featuredVehicle.model || '—'}
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
+                  {(featuredVehicle.reputation_score ?? 0).toLocaleString()} RP
+                </div>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#5a6e7e', letterSpacing: '0.08em', marginTop: 2 }}>
+                {[featuredVehicle.year, featuredVehicle.trim, featuredVehicle.color].filter(Boolean).join(' · ')}
+              </div>
             </div>
-          ) : (
-            <div className="card-v3 p-6 text-center">
-              <Award className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--t4)' }} strokeWidth={1} />
-              <p style={{ fontSize: 13, color: 'var(--t2)' }}>No badges yet</p>
-              <p style={{ fontSize: 11, color: 'var(--t4)', marginTop: 4 }}>Earn badges by participating in the community</p>
-            </div>
-          )}
-        </div>
-
-        </>)}
-
-        {activeTab === 'fleet' && (<>
-        {/* ═══ Fleet Badges ═══ */}
-        {fleetBadges.length > 0 && (
-          <div style={{ margin: '0 20px 16px' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10,
-            }}>
-              <span style={{
-                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#7a8e9e',
-              }}>Fleet Badges</span>
-              <span style={{
-                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, color: '#445566',
-              }}>{fleetBadges.length} earned</span>
-            </div>
-            <div style={{
-              padding: 14, background: '#0a0d14',
-              border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8,
-              display: 'flex', flexWrap: 'wrap' as const, gap: 6,
-            }}>
-              {fleetBadges.slice(0, 12).map(badge => {
-                const colors = TIER_COLORS[badge.tier as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
-                return (
-                  <div key={`${badge.vehicle_id}-${badge.badge_id}`} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    background: colors.bg, border: `1px solid ${colors.border}`,
-                    borderRadius: 5, padding: '4px 9px',
-                  }}>
-                    <span style={{
-                      fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                      letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
-                    }}>
-                      {badge.badge_id}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{
-              marginTop: 6, fontFamily: 'Barlow, sans-serif', fontSize: 10,
-              color: '#445566', fontStyle: 'italic' as const,
-            }}>
-              Badges earned by your vehicles from community bumper stickers
-            </div>
+          </div>
+        ) : (
+          <div style={{ padding: '24px 16px', textAlign: 'center' as const, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No Vehicle Yet</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginBottom: 12 }}>Claim your first vehicle to anchor your profile.</div>
+            <button onClick={() => onNavigate('scan')} style={{ padding: '8px 20px', background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}>
+              Spot a Car
+            </button>
           </div>
         )}
 
-        {/* ═══ My Garage ═══ */}
-        <div className="px-4 mt-4 v3-stagger v3-stagger-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5">
-              <Car className="w-3 h-3" strokeWidth={1.4} style={{ color: 'var(--orange)' }} />
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>
-                My Garage
+        {/* ── 3. FLEET — horizontal scroll ── */}
+        {vehicles.length > 1 && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                Fleet · {vehicles.length}
               </span>
             </div>
-            <span style={{ fontSize: 11, color: 'var(--t4)' }}>{vehicles.length} plate{vehicles.length !== 1 ? 's' : ''}</span>
-          </div>
-          {vehicles.length === 0 ? (
-            <div className="card-v3 p-6 text-center">
-              <Car className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--t4)' }} strokeWidth={1} />
-              <p style={{ fontSize: 13, color: 'var(--t2)' }}>No claimed plates yet</p>
-              <p style={{ fontSize: 11, color: 'var(--t4)', marginTop: 4 }}>Scan a plate to get started</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {vehicles.map((vehicle) => (
-                <div
-                  key={vehicle.id}
-                  className="card-v3 card-v3-lift p-4 cursor-pointer"
-                  onClick={() => onViewVehicle(vehicle.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--t1)' }}>
-                        {vehicle.year} {vehicle.make} {vehicle.model}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{vehicle.color}</div>
-                    </div>
-                    {vehicle.verification_tier && (
-                      <span className="mono text-[9px] px-2 py-0.5 rounded-full"
-                            style={{ background: 'var(--orange-dim)', color: 'var(--orange)' }}>
-                        {vehicle.verification_tier}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        </>)}
-
-        {activeTab === 'activity' && (<>
-        {/* ═══ Activity ═══ */}
-        <div className="px-4 mt-4 v3-stagger v3-stagger-7">
-          <div className="flex items-center justify-between mb-3">
-            <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>Activity</span>
-          </div>
-          {loadingPosts ? (
-            <div className="flex justify-center py-8">
-              <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--border-3)', borderTopColor: 'var(--accent)' }} />
-            </div>
-          ) : userPosts.length === 0 ? (
-            <div className="card-v3 p-6 text-center">
-              <p style={{ fontSize: 13, color: 'var(--t2)' }}>No activity yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {userPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="card-v3 overflow-hidden"
-                  style={{
-                    borderColor: post.moderation_status === 'rejected' ? 'var(--status-rejected-border)' : post.moderation_status === 'pending' ? 'var(--status-pending-border)' : undefined,
-                    opacity: post.moderation_status === 'rejected' ? 0.6 : 1,
-                  }}
-                >
-                  {post.image_url && (
-                    <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-                      <img src={post.image_url} alt={post.caption || 'Post'} className="w-full h-full object-cover" />
-                      {post.moderation_status === 'pending' && (
-                        <div className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--status-pending)', color: 'var(--status-pending-text)', border: '1px solid var(--status-pending-border)' }}>
-                          Pending Review
-                        </div>
-                      )}
-                      {post.moderation_status === 'rejected' && (
-                        <div className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--status-rejected)', color: 'var(--status-rejected-text)', border: '1px solid var(--status-rejected-border)' }}>
-                          Rejected
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="p-3 space-y-2">
-                    {post.caption && (
-                      <p style={{ fontSize: 13, color: 'var(--t2)' }}>{post.caption}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <ReactionButton postId={post.id} />
-                        <div className="flex items-center gap-1" style={{ fontSize: 12, color: 'var(--t3)' }}>
-                          <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
-                          <span>{post.comment_count}</span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--t4)' }}>
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ═══ Photos ═══ */}
-        {allPhotos.length > 0 && (
-          <div className="px-4 mt-4">
-            <div className="flex items-center justify-between mb-3">
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>Photos</span>
-              <span style={{ fontSize: 11, color: 'var(--t4)' }}>{allPhotos.length} total</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {allPhotos.slice(0, 9).map((photo, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setLightboxIndex(index);
-                    setLightboxOpen(true);
-                  }}
-                  className="aspect-square rounded-lg overflow-hidden card-v3-lift btn-press"
-                  style={{ border: '1px solid var(--border)' }}
-                >
-                  <img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-              {allPhotos.length < 9 && (
-                <label className="aspect-square rounded-lg border-2 border-dashed cursor-pointer flex items-center justify-center transition-colors btn-press" style={{ borderColor: 'var(--border-2)' }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProfilePhotoUpload}
-                    className="hidden"
-                    disabled={uploadingPhoto}
-                  />
-                  {uploadingPhoto ? (
-                    <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border-3)', borderTopColor: 'var(--orange)' }} />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1">
-                      <Plus className="w-6 h-6" style={{ color: 'var(--t4)' }} strokeWidth={1.5} />
-                      <span style={{ fontSize: 9, color: 'var(--t4)' }}>Add Photo</span>
-                    </div>
-                  )}
-                </label>
-              )}
-            </div>
-          </div>
-        )}
-
-        {lightboxOpen && allPhotos.length > 0 && (
-          <PhotoLightbox
-            photos={allPhotos}
-            initialIndex={lightboxIndex}
-            onClose={() => setLightboxOpen(false)}
-          />
-        )}
-
-        {/* ═══ Bumper Stickers ═══ */}
-        {userStickers.length > 0 && (
-          <div className="px-4 mt-4">
-            <div className="flex items-center justify-between mb-3">
-              <span style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '2.5px', color: 'var(--t3)', fontFamily: 'var(--font-display)' }}>Bumper Stickers</span>
-              <span style={{ fontSize: 11, color: 'var(--t4)' }}>{userStickers.length} received</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {userStickers.map((sticker) => {
-                const isPositive = sticker.category === 'Positive';
-                const isNegative = sticker.category === 'Negative';
+            <div style={{ display: 'flex', gap: 10, padding: '0 14px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+              {vehicles.slice(1).map(v => {
+                const vPhoto = v.profile_image_url || v.stock_image_url;
                 return (
-                  <div
-                    key={sticker.id}
-                    className="rounded-[10px] p-3 text-center card-v3-lift"
-                    style={{
-                      background: isPositive ? 'rgba(74,138,74,0.08)' : isNegative ? 'rgba(138,74,74,0.08)' : 'var(--s2)',
-                      border: `1px solid ${isPositive ? 'rgba(74,138,74,0.2)' : isNegative ? 'rgba(138,74,74,0.2)' : 'var(--border)'}`,
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 500, color: isPositive ? 'var(--positive)' : isNegative ? 'var(--negative)' : 'var(--t2)', marginBottom: 2 }}>{sticker.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--t4)' }}>x{sticker.count}</div>
+                  <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 140, borderRadius: 10, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                    {vPhoto ? (
+                      <img src={vPhoto} alt="" style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: 90, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </div>
+                    )}
+                    <div style={{ padding: '8px 10px' }}>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>{v.make}</div>
+                      <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{v.model}</div>
+                    </div>
                   </div>
                 );
               })}
@@ -1164,244 +760,82 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           </div>
         )}
 
-        </>)}
+        {/* ── 4. BADGES — visual showcase ── */}
+        {userBadges.length > 0 && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                Badges · {userBadges.length}
+              </span>
+              <span onClick={() => onNavigate('badges')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                View All
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 14px 14px' }}>
+              {userBadges.slice(0, 8).map((ub) => (
+                <div key={ub.badge.id} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
+                  <BadgeCoin
+                    tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
+                    name={ub.badge.name}
+                    icon_path={getBadgeImagePath(ub.badge)}
+                    size="md"
+                  />
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e', textAlign: 'center' as const, lineHeight: 1.2, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                    {ub.badge.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* ═══ Footer Links ═══ */}
-        <div className="px-4 pt-4 pb-2 flex gap-3 flex-wrap">
-          {profile?.role === 'admin' && (
-            <button
-              onClick={() => onNavigate('admin')}
-              className="flex items-center gap-1"
-              style={{ fontSize: 11, color: 'var(--t3)' }}
-            >
-              <Shield className="w-3 h-3" strokeWidth={1.5} />
-              Admin
-            </button>
-          )}
-          <button onClick={() => onNavigate('privacy')} style={{ fontSize: 11, color: 'var(--t4)' }}>
-            Privacy
-          </button>
-          <button onClick={() => onNavigate('terms')} style={{ fontSize: 11, color: 'var(--t4)' }}>
-            Terms
-          </button>
+        {/* ── 5. ACTIVITY — compact recent posts ── */}
+        {userPosts.length > 0 && (
+          <div>
+            <div style={{ padding: '12px 16px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                Recent Activity
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
+              {userPosts.slice(0, 5).map(post => (
+                <div key={post.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  {post.image_url && (
+                    <div style={{ width: 40, height: 30, borderRadius: 4, overflow: 'hidden', flexShrink: 0, background: '#111720' }}>
+                      <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {post.caption || (post.post_type === 'spot' ? 'Spotted a vehicle' : 'Posted')}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#3a4e60', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                    {new Date(post.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── FOOTER ── */}
+        <div style={{ display: 'flex', gap: 12, padding: '16px 16px 8px' }}>
+          <button onClick={() => onNavigate('privacy')} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#3a4e60', background: 'none', border: 'none', cursor: 'pointer' }}>Privacy</button>
+          <button onClick={() => onNavigate('terms')} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#3a4e60', background: 'none', border: 'none', cursor: 'pointer' }}>Terms</button>
         </div>
       </div>
 
+      {/* Modals — preserved from existing */}
       {showEditModal && profile && (
-        <EditProfileModal
-          profile={profile}
-          onClose={() => setShowEditModal(false)}
-          onSave={loadProfile}
-        />
+        <EditProfileModal profile={profile} onClose={() => setShowEditModal(false)} onSave={loadProfile} />
       )}
 
-      {showSpotsGivenModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSpotsGivenModal(false)}>
-          <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Spots Given</h3>
-              <button onClick={() => setShowSpotsGivenModal(false)} className="text-secondary hover:text-primary btn-press">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              {spotsGiven.length === 0 ? (
-                <p className="text-sm text-secondary text-center py-8">No spots given yet</p>
-              ) : (
-                spotsGiven.map((spot) => (
-                  <button
-                    key={spot.id}
-                    onClick={() => {
-                      setShowSpotsGivenModal(false);
-                      onViewVehicle(spot.vehicle.id);
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surfacehighlight transition-colors btn-press"
-                  >
-                    <Car className="w-5 h-5 text-accent-primary flex-shrink-0" />
-                    <div className="flex-1 text-left">
-                      <div className="text-sm font-semibold text-primary">
-                        {spot.vehicle.year} {spot.vehicle.make} {spot.vehicle.model}
-                      </div>
-                      <div className="text-xs text-tertiary">
-                        {spot.vehicle.plate_state} {spot.vehicle.plate_number}
-                      </div>
-                    </div>
-                    <div className="text-xs text-quaternary">
-                      {new Date(spot.created_at).toLocaleDateString()}
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+      {lightboxOpen && allPhotos.length > 0 && (
+        <PhotoLightbox photos={allPhotos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />
       )}
 
-      {showSpotsReceivedModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSpotsReceivedModal(false)}>
-          <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Spots Received</h3>
-              <button onClick={() => setShowSpotsReceivedModal(false)} className="text-secondary hover:text-primary btn-press">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              {spotsReceived.length === 0 ? (
-                <p className="text-sm text-secondary text-center py-8">No spots received yet</p>
-              ) : (
-                spotsReceived.map((spot) => (
-                  <div
-                    key={spot.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-surfacehighlight"
-                  >
-                    <Car className="w-5 h-5 text-accent-primary flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-primary">
-                        {spot.vehicle.year} {spot.vehicle.make} {spot.vehicle.model}
-                      </div>
-                      <div className="text-xs text-tertiary">
-                        Spotted by @{spot.spotter?.handle || 'Unknown'}
-                      </div>
-                    </div>
-                    <div className="text-xs text-quaternary">
-                      {new Date(spot.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showBadgesModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowBadgesModal(false)}>
-          <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">My Badges ({userBadges.length})</h3>
-              <button onClick={() => setShowBadgesModal(false)} className="text-secondary hover:text-primary btn-press">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-            <div className="p-4">
-              {userBadges.length === 0 ? (
-                <p className="text-sm text-secondary text-center py-8">No badges earned yet</p>
-              ) : (
-                <>
-                  <div className="grid grid-cols-4 gap-4 mb-4">
-                    {userBadges.map((userBadge) => (
-                      <div key={userBadge.badge.id} className="flex flex-col items-center gap-2" title={userBadge.badge.description}>
-                        <BadgeCoin
-                          tier={((userBadge as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
-                          name={userBadge.badge.name}
-                          icon_path={getBadgeImagePath(userBadge.badge)}
-                          size="lg"
-                        />
-                        <div className="text-[10px] text-center text-tertiary line-clamp-2">
-                          {userBadge.badge.name}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowBadgesModal(false);
-                      onNavigate('badges');
-                    }}
-                    className="w-full py-2 text-sm font-semibold rounded-lg transition-colors btn-press"
-                    style={{ background: 'var(--orange)', color: 'var(--bg)' }}
-                  >
-                    View All Badges
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showFollowersModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFollowersModal(false)}>
-          <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Friends ({followerCount})</h3>
-              <button onClick={() => setShowFollowersModal(false)} className="text-secondary hover:text-primary btn-press">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              {followers.length === 0 ? (
-                <p className="text-sm text-secondary text-center py-8">No friends yet</p>
-              ) : (
-                followers.map((follower: any) => (
-                  <button
-                    key={follower.id}
-                    onClick={() => {
-                      setShowFollowersModal(false);
-                      onNavigate('user-profile', follower.id);
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surfacehighlight transition-colors btn-press"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-surfacehighlight flex items-center justify-center font-bold text-sm text-primary">
-                      {follower.avatar_url ? (
-                        <img src={follower.avatar_url} alt={follower.handle} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        follower.handle?.[0]?.toUpperCase() || '?'
-                      )}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-sm font-semibold text-primary">@{follower.handle}</div>
-                      <div className="text-xs text-tertiary">Friend</div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showFollowingModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFollowingModal(false)}>
-          <div className="card-v3 w-full max-w-lg max-h-[70vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-surface border-b border-surfacehighlight px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-heading font-bold text-primary">Friends ({followingCount})</h3>
-              <button onClick={() => setShowFollowingModal(false)} className="text-secondary hover:text-primary btn-press">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              {following.length === 0 ? (
-                <p className="text-sm text-secondary text-center py-8">Not following anyone yet</p>
-              ) : (
-                following.map((followed: any) => (
-                  <button
-                    key={followed.id}
-                    onClick={() => {
-                      setShowFollowingModal(false);
-                      onNavigate('user-profile', followed.id);
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surfacehighlight transition-colors btn-press"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-surfacehighlight flex items-center justify-center font-bold text-sm text-primary">
-                      {followed.avatar_url ? (
-                        <img src={followed.avatar_url} alt={followed.handle} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        followed.handle?.[0]?.toUpperCase() || '?'
-                      )}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-sm font-semibold text-primary">@{followed.handle}</div>
-                      <div className="text-xs text-tertiary">Friend</div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Layout>
   );
 }
