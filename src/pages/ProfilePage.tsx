@@ -17,6 +17,7 @@ import { getTierFromScore } from '../lib/tierConfig';
 import { getBadgeImagePath } from '../lib/badgeUtils';
 import { TIER_COLORS } from '../config/badgeConfig';
 import { MotoFansSection } from '../components/MotoFansSection';
+import { AlbumsModal } from '../components/AlbumsModal';
 
 interface ProfilePageProps {
   onNavigate: OnNavigate;
@@ -55,6 +56,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAlbumsModal, setShowAlbumsModal] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [_tagBreakdown, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
@@ -790,7 +792,15 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           </div>
         )}
 
-        {/* ── 5. MOTOFANS — vehicles this user is a fan of ── */}
+        {/* ── 5. ALBUMS ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Albums</span>
+          <span onClick={() => setShowAlbumsModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+            Manage
+          </span>
+        </div>
+
+        {/* ── 6. MOTOFANS — vehicles this user is a fan of ── */}
         {user && <MotoFansSection userId={user.id} onNavigate={onNavigate} />}
 
         {/* ── 6. ACTIVITY — compact recent posts ── */}
@@ -831,6 +841,10 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       </div>
 
       {/* Modals — preserved from existing */}
+      {showAlbumsModal && (
+        <AlbumsModal onClose={() => setShowAlbumsModal(false)} />
+      )}
+
       {showEditModal && profile && (
         <EditProfileModal profile={profile} onClose={() => setShowEditModal(false)} onSave={loadProfile} />
       )}

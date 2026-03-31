@@ -28,6 +28,7 @@ import { BADGE_TIER_THRESHOLDS, TIER_COLORS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
 import { MotoFanButton } from '../components/MotoFanButton';
 import { MotoFansModal } from '../components/MotoFansModal';
+import { AlbumsModal } from '../components/AlbumsModal';
 import { FollowButton } from '../components/FollowButton';
 // BadgeChip and getBadgeType imports removed - unused
 
@@ -186,6 +187,12 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [spotCount, setSpotCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [showMotoFansModal, setShowMotoFansModal] = useState(false);
+  const [showAlbumsModal, setShowAlbumsModal] = useState(false);
+  const [showAddModForm, setShowAddModForm] = useState(false);
+  const [newModName, setNewModName] = useState('');
+  const [newModCategory, setNewModCategory] = useState('Exterior');
+  const [newModBrand, setNewModBrand] = useState('');
+  const [newModCost, setNewModCost] = useState('');
   const [_viewCount, _setViewCount] = useState(0);
   const [cityRank, _setCityRank] = useState<number | null>(null);
   const [_showSpotReviewModal, _setShowSpotReviewModal] = useState(false);
@@ -1051,31 +1058,97 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── MODIFICATIONS (claimed only, if any) ── */}
-        {vehicle.is_claimed && modifications.length > 0 && (
+        {/* ── MODIFICATIONS ── */}
+        {vehicle.is_claimed && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Modifications · {modifications.length}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                Modifications{modifications.length > 0 ? ` · ${modifications.length}` : ''}
+              </span>
+              {isOwner && (
+                <span onClick={() => setShowAddModForm(!showAddModForm)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                  {showAddModForm ? 'Cancel' : '+ Add Mod'}
+                </span>
+              )}
             </div>
-            {Object.entries(modsByCategory).filter(([, mods]) => mods.length > 0).map(([category, mods]) => (
-              <div key={category} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{ background: '#0e1320', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>{category}</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#5a6e7e' }}>{mods.length}</span>
-                </div>
-                {mods.map((mod: any) => (
-                  <div key={mod.id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                    <div>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>{mod.part_name}</div>
-                      {mod.brand && <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>{mod.brand}</div>}
-                    </div>
-                    {mod.cost != null && mod.cost > 0 && (
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${mod.cost}</span>
-                    )}
+
+            {/* Add mod form (owner only) */}
+            {showAddModForm && isOwner && (
+              <div style={{ padding: '0 16px 12px' }}>
+                <div style={{ background: '#0d1117', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', padding: 12, display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+                  <input value={newModName} onChange={e => setNewModName(e.target.value)} placeholder="Part name" style={{ width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <select value={newModCategory} onChange={e => setNewModCategory(e.target.value)} style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }}>
+                      {['Exterior', 'Interior', 'Engine', 'Suspension', 'Wheels', 'Exhaust', 'Electronics', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input value={newModBrand} onChange={e => setNewModBrand(e.target.value)} placeholder="Brand" style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                   </div>
-                ))}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input value={newModCost} onChange={e => setNewModCost(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="Cost (optional)" style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
+                    <button
+                      disabled={!newModName.trim()}
+                      onClick={async () => {
+                        if (!newModName.trim()) return;
+                        await supabase.from('vehicle_modifications').insert({
+                          vehicle_id: vehicleId,
+                          part_name: newModName.trim(),
+                          category: newModCategory,
+                          brand: newModBrand.trim() || null,
+                          cost_usd: newModCost ? parseFloat(newModCost) : null,
+                        });
+                        setNewModName(''); setNewModBrand(''); setNewModCost('');
+                        setShowAddModForm(false);
+                        loadVehicleData();
+                      }}
+                      style={{ padding: '8px 16px', background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', opacity: !newModName.trim() ? 0.4 : 1 }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Mod list */}
+            {modifications.length === 0 && !showAddModForm ? (
+              <div style={{ padding: '0 16px 12px' }}>
+                <div style={{ textAlign: 'center' as const, padding: '16px', color: '#3a4e60', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
+                  {isOwner ? 'No modifications logged yet' : 'Stock'}
+                </div>
+              </div>
+            ) : (
+              Object.entries(modsByCategory).filter(([, mods]) => mods.length > 0).map(([category, mods]) => (
+                <div key={category} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ background: '#0e1320', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>{category}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#5a6e7e' }}>{mods.length}</span>
+                  </div>
+                  {mods.map((mod: any) => (
+                    <div key={mod.id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <div>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>{mod.part_name}</div>
+                        {mod.brand && <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>{mod.brand}</div>}
+                      </div>
+                      {mod.cost != null && mod.cost > 0 && (
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${mod.cost}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* ── ALBUMS (owner only) ── */}
+        {vehicle.is_claimed && isOwner && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Albums</span>
+              <span onClick={() => setShowAlbumsModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                Manage Albums
+              </span>
+            </div>
           </div>
         )}
 
@@ -1363,6 +1436,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           action={guestJoinAction}
           onClose={() => setShowGuestJoinModal(false)}
         />
+      )}
+
+      {showAlbumsModal && (
+        <AlbumsModal vehicleId={vehicleId} onClose={() => setShowAlbumsModal(false)} />
       )}
 
       {showMotoFansModal && vehicle && (
