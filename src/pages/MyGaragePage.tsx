@@ -468,8 +468,8 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   borderRadius: '50%', background: '#070a0f', border: '2px solid #F97316', zIndex: 10,
                 }} />
                 <div style={{
-                  background: '#0a0d14', border: '1px solid rgba(255,255,255,0.05)',
-                  borderRadius: 8, overflow: 'hidden',
+                  background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)',
+                  borderRadius: 10, overflow: 'hidden',
                 }}>
                   {(vehicle.photo_url_1 || vehicle.photo_url_2) ? (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: '#0e1320' }}>
@@ -493,20 +493,22 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                       <Car style={{ width: 40, height: 40, color: '#334455', opacity: 0.3 }} strokeWidth={1.2} />
                     </div>
                   )}
-                  <div style={{ padding: 12 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#eef4f8' }}>
-                      {vehicle.year} {vehicle.make} {vehicle.model}
-                      {vehicle.trim && <span style={{ fontSize: 12, color: '#7a8e9e', fontWeight: 400, marginLeft: 4 }}>{vehicle.trim}</span>}
+                  <div style={{ padding: '10px 12px' }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
+                      {vehicle.make}
+                    </div>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>
+                      {vehicle.year ? `${vehicle.year} ` : ''}{vehicle.model || vehicle.make}
+                      {vehicle.trim && <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', fontWeight: 600, marginLeft: 6 }}>{vehicle.trim}</span>}
                     </div>
                     {vehicle.ownership_period && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12, color: '#F97316' }}>
-                        <Calendar style={{ width: 12, height: 12 }} />
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e', marginTop: 2 }}>
                         {vehicle.ownership_period}
                       </div>
                     )}
                     {vehicle.notes && (
                       <p style={{
-                        fontSize: 13, color: '#9ab0c0', marginTop: 8, lineHeight: 1.6,
+                        fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 6, lineHeight: 1.4,
                         display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
                       }}>{vehicle.notes}</p>
                     )}
@@ -560,24 +562,6 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           </div>
         </div>
 
-        {/* 2. INSIGHTS + NUDGE — kept from existing */}
-        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          {[
-            { label: 'Spots', value: fleetStats.totalSpots },
-            { label: 'Badges', value: badgeCount ?? 0 },
-            { label: 'Friends', value: followerCount ?? 0 },
-            { label: 'Vehicles', value: fleetStats.vehicleCount },
-          ].map((stat, i, arr) => (
-            <div key={stat.label} style={{
-              flex: 1, padding: '10px 0', textAlign: 'center' as const,
-              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-            }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-
         {/* PROFILE INSIGHTS */}
         {user && <ProfileInsights profileId={user.id} />}
 
@@ -627,147 +611,88 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         )}
 
         {/* 4. ALBUMS */}
-        <div style={{ padding: '16px 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#445566' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
             Albums{garageAlbums.length > 0 ? ` \u00B7 ${garageAlbums.length}` : ''}
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 14 }}>
             {garageAlbums.length > 0 && (
-              <span
-                onClick={() => handleNavigate('albums')}
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}
-              >
+              <span onClick={() => handleNavigate('albums')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
                 View All
-                <ChevronRight style={{ width: 12, height: 12 }} />
               </span>
             )}
-            <span
-              onClick={() => handleNavigate('albums')}
-              style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}
-            >
+            <span onClick={() => handleNavigate('albums')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
               + New Album
             </span>
           </div>
         </div>
 
         {garageAlbums.length > 0 ? (
-          <div style={{ display: 'flex', gap: 10, padding: '0 18px 18px', overflowX: 'auto', scrollSnapType: 'x mandatory' as const, scrollbarWidth: 'none' as const }}>
+          <div style={{ display: 'flex', gap: 10, padding: '0 14px 16px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
             {garageAlbums.map(album => (
-              <div
-                key={album.id}
-                onClick={() => handleNavigate('albums')}
-                style={{
-                  flexShrink: 0, width: 140, borderRadius: 8, overflow: 'hidden',
-                  background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
-                  cursor: 'pointer', scrollSnapAlign: 'start' as const,
-                }}
-              >
+              <div key={album.id} onClick={() => handleNavigate('albums')} style={{ flexShrink: 0, width: 140, borderRadius: 10, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
                 <div style={{ height: 100, position: 'relative', overflow: 'hidden' }}>
                   {album.cover_image_url ? (
                     <img src={album.cover_image_url} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', background: '#0e1320', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Album style={{ width: 24, height: 24, color: '#334455' }} strokeWidth={1.2} />
+                    <div style={{ width: '100%', height: '100%', background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Album style={{ width: 24, height: 24, color: '#3a4e60' }} strokeWidth={1.2} />
                     </div>
                   )}
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top, rgba(10,13,20,0.9), transparent)' }} />
-                  <div style={{ position: 'absolute', bottom: 6, left: 8, right: 8, zIndex: 2 }}>
-                    <div style={{
-                      fontFamily: "'Rajdhani', sans-serif", fontSize: 12, fontWeight: 700,
-                      color: '#eef4f8', lineHeight: 1.1,
-                      whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
-                    }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.8) 0%, transparent 60%)' }} />
+                  <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10 }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', lineHeight: 1, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {album.title}
                     </div>
                   </div>
                 </div>
-                <div style={{ padding: '6px 8px' }}>
-                  <div style={{
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600,
-                    letterSpacing: '0.04em', color: '#7a8e9e',
-                  }}>
+                <div style={{ padding: '6px 10px' }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e' }}>
                     {album.photo_count} {album.photo_count === 1 ? 'photo' : 'photos'}
-                  </div>
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ margin: '0 18px 18px' }}>
-            <button
-              onClick={() => handleNavigate('albums')}
-              style={{
-                width: '100%', padding: '24px 0',
-                background: '#0a0d14', border: '1.5px dashed rgba(255,255,255,0.08)', borderRadius: 8,
-                display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
-                gap: 8, cursor: 'pointer',
-              }}
-            >
-              <Album style={{ width: 28, height: 28, color: '#334455', opacity: 0.4 }} strokeWidth={1.2} />
-              <div style={{ textAlign: 'center' as const }}>
-                <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#9ab0c0' }}>Create Your First Album</span>
-                <span style={{ display: 'block', fontSize: 11, color: '#556677', marginTop: 3 }}>Organize your car photos into collections</span>
-              </div>
+          <div style={{ margin: '0 14px 16px', padding: '20px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
+            <Album style={{ width: 24, height: 24, color: '#3a4e60', marginBottom: 8 }} strokeWidth={1.2} />
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>No Albums Yet</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginBottom: 10 }}>Organize your car photos into collections</div>
+            <button onClick={() => handleNavigate('albums')} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              + New Album
             </button>
           </div>
         )}
 
         {/* 5. LIFETIME RIDES */}
-        <div style={{
-          fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700,
-          letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#445566',
-          padding: '16px 18px 10px',
-        }}>
-          Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+            Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
+          </span>
+          <div style={{ display: 'flex', gap: 14 }}>
+            {retiredVehicles.length > 2 && (
+              <span onClick={() => setShowAllRetiredModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
+                View All
+              </span>
+            )}
+            <span onClick={() => setShowAddRetiredVehicle(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+              + Add Ride
+            </span>
+          </div>
         </div>
 
         {retiredVehicles.length > 0 ? (
-          <div style={{ margin: '0 16px 16px' }}>
-            {retiredVehicles.length > 2 && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                <button
-                  onClick={() => setShowAllRetiredModal(true)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 4,
-                    fontSize: 11, fontWeight: 600, color: '#F97316',
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  }}
-                >
-                  View All
-                  <ChevronRight style={{ width: 12, height: 12 }} />
-                </button>
-              </div>
-            )}
+          <div style={{ margin: '0 14px 16px' }}>
             <RetiredTimeline vehicles={retiredVehicles} limit={2} />
-            <button
-              onClick={() => setShowAddRetiredVehicle(true)}
-              style={{
-                width: '100%', marginTop: 12, padding: '16px 0',
-                background: '#0a0d14', border: '1.5px dashed rgba(255,255,255,0.08)', borderRadius: 8,
-                display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
-                gap: 6, cursor: 'pointer',
-              }}
-            >
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#9ab0c0' }}>Remember Your Past Rides</span>
-              <span style={{ fontSize: 11, color: '#556677' }}>Add vehicles you've owned to build your automotive history</span>
-            </button>
           </div>
         ) : (
-          <div style={{ margin: '0 16px 16px' }}>
-            <button
-              onClick={() => setShowAddRetiredVehicle(true)}
-              style={{
-                width: '100%', padding: '32px 0',
-                background: '#0a0d14', border: '1.5px dashed rgba(255,255,255,0.08)', borderRadius: 8,
-                display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
-                gap: 12, cursor: 'pointer',
-              }}
-            >
-              <Car style={{ width: 32, height: 32, color: '#334455', opacity: 0.4 }} strokeWidth={1.2} />
-              <div style={{ textAlign: 'center' as const }}>
-                <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#9ab0c0' }}>Remember Your Past Rides</span>
-                <span style={{ display: 'block', fontSize: 11, color: '#556677', marginTop: 4 }}>Add vehicles you've owned to build your automotive history</span>
-              </div>
+          <div style={{ margin: '0 14px 16px', padding: '20px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2" style={{ marginBottom: 8 }}><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>No Past Rides</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginBottom: 10 }}>Remember vehicles you've owned</div>
+            <button onClick={() => setShowAddRetiredVehicle(true)} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              + Add Ride
             </button>
           </div>
         )}
