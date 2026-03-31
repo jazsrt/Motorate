@@ -57,6 +57,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [_userBadgesForGarage, setUserBadgesForGarage] = useState<any[]>([]);
   const [retiredStockImages, setRetiredStockImages] = useState<Record<string, string>>({});
+  const [activeVehicleIndex, setActiveVehicleIndex] = useState(0);
 
   // Albums
   const [garageAlbums, setGarageAlbums] = useState<{ id: string; title: string; cover_image_url: string | null; photo_count: number }[]>([]);
@@ -315,13 +316,16 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   }
 
   // Hero derived data
-  const heroVehicle = vehicles[0];
-  const heroPhoto = heroVehicle ? (heroVehicle.photos?.[0]?.url || heroVehicle.photo_url || heroVehicle.stock_image_url || stockImages[heroVehicle.id]) : null;
-  const displayName = userProfile?.full_name || user?.user_metadata?.full_name || 'My Garage';
+  const safeIdx = vehicles.length > 0 ? Math.min(activeVehicleIndex, vehicles.length - 1) : -1;
+  const heroVehicle = safeIdx >= 0 ? vehicles[safeIdx] : null;
+  const heroPhoto = heroVehicle ? (heroVehicle.profile_image_url || heroVehicle.photos?.[0]?.url || heroVehicle.photo_url || heroVehicle.stock_image_url || stockImages[heroVehicle.id] || null) : null;
   const handle = userProfile?.handle || user?.user_metadata?.handle || 'driver';
   const avatarUrl = userProfile?.avatar_url || user?.user_metadata?.avatar_url;
-  const tier = userProfile?.reputation_tier;
   const totalRP = vehicles.reduce((sum, v) => sum + ((v as unknown as Record<string, number>).reputation_score ?? 0), 0);
+  const heroRP = heroVehicle ? ((heroVehicle as any).reputation_score ?? 0) : 0;
+  const heroSpots = heroVehicle ? (heroVehicle.spot_count ?? heroVehicle.spots_count ?? 0) : 0;
+  const heroIsClaimed = heroVehicle ? (heroVehicle.owner_id || heroVehicle.is_claimed) : false;
+  const heroIsVerified = heroVehicle ? (heroVehicle.verification_tier === 'verified' || heroVehicle.verification_tier === 'vin_verified') : false;
 
   // FleetTile component
   const FleetTile = ({ vehicle }: { vehicle: GarageVehicle & { [key: string]: any } }) => {
@@ -528,51 +532,127 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     <Layout currentPage="my-garage" onNavigate={handleNavigate}>
       <div style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
 
-        {/* 1. GARAGE HERO */}
-        <div style={{ background: '#0a0d14', padding: '52px 16px 20px' }}>
-          {/* Avatar */}
-          <div style={{
-            width: 52, height: 52, borderRadius: '50%', overflow: 'hidden',
-            background: '#1e2a38', border: '2px solid rgba(249,115,22,0.30)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 10,
-          }}>
-            {avatarUrl
-              ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8' }}>
-                  {(displayName || '?')[0].toUpperCase()}
-                </span>
-            }
+        {/* 1. FULL-BLEED VEHICLE HERO */}
+        <div style={{ position: 'relative', width: '100%', height: 260, overflow: 'hidden', background: '#0a0d14' }}>
+          {heroPhoto ? (
+            <img src={heroPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(135deg, #0a0f1a 0%, #111a28 50%, #0a0f1a 100%)', backgroundImage: 'repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 40px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, background: 'radial-gradient(circle at top right, rgba(249,115,22,0.15) 0%, transparent 70%)' }} />
+              <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="rgba(249,115,22,0.12)" strokeWidth="0.8"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+          )}
+          {/* Gradient overlay */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(3,5,8,0.15) 0%, rgba(3,5,8,0.0) 30%, rgba(3,5,8,0.85) 80%, rgba(3,5,8,0.98) 100%)' }} />
+          {/* Top bar */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', zIndex: 2 }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1e2a38', border: '2px solid rgba(249,115,22,0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {avatarUrl
+                ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8' }}>{(handle || '?')[0].toUpperCase()}</span>
+              }
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eef4f8" strokeWidth="1.5" style={{ opacity: 0.7 }}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eef4f8" strokeWidth="1.5" style={{ opacity: 0.7 }}><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </div>
           </div>
-          {/* Handle */}
-          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3 }}>
-            {displayName}
-          </div>
-          {/* Tier line */}
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 14 }}>
-            {tier ? `${tier} Tier` : 'Unranked'} · {totalRP.toLocaleString()} RP
-          </div>
-          {/* Stats row */}
-          <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', margin: '0 -16px' }}>
-            {[
-              { label: 'Spots', value: fleetStats.totalSpots },
-              { label: 'Badges', value: badgeCount ?? 0 },
-              { label: 'Friends', value: followerCount ?? 0 },
-              { label: 'Vehicles', value: fleetStats.vehicleCount },
-            ].map((stat, i, arr) => (
-              <div key={stat.label} style={{
-                flex: 1, padding: '10px 0', textAlign: 'center' as const,
-                borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-              }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>
-                  {stat.value}
-                </span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>
-                  {stat.label}
-                </span>
+          {/* Vehicle identity bottom */}
+          <div style={{ position: 'absolute', bottom: 14, left: 16, right: 16, zIndex: 2 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 2 }}>
+              {heroVehicle ? [heroVehicle.make, heroVehicle.year].filter(Boolean).join(' · ') : 'NO VEHICLE CLAIMED'}
+            </div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>
+              {heroVehicle?.model || 'Your Garage'}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#7a8e9e', letterSpacing: '0.05em' }}>
+              {heroVehicle ? [heroVehicle.trim, heroVehicle.color, heroIsVerified ? 'Verified Owner' : heroIsClaimed ? 'Claimed' : 'Not Claimed'].filter(Boolean).join(' · ') : ''}
+            </div>
+            {/* Pill badges */}
+            {heroVehicle ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 20, padding: '3px 10px' }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#20c060', flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{heroRP.toLocaleString()}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>RP</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 20, padding: '3px 10px' }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#7a8e9e' }}>{heroSpots} Spots</span>
+                </div>
               </div>
+            ) : (
+              <button onClick={() => setShowClaimSearch(true)} style={{ marginTop: 6, background: '#F97316', borderRadius: 6, padding: '7px 14px', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#030508' }}>
+                Claim Your Ride
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Dot switcher */}
+        {vehicles.length > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 5, padding: '8px 0 4px' }}>
+            {vehicles.map((_, i) => (
+              <button key={i} onClick={() => setActiveVehicleIndex(i)} style={{
+                width: i === safeIdx ? 14 : 5, height: 5, borderRadius: i === safeIdx ? 3 : '50%',
+                background: i === safeIdx ? '#F97316' : 'rgba(255,255,255,0.12)',
+                border: 'none', cursor: 'pointer', padding: 0,
+              }} />
             ))}
           </div>
+        )}
+
+        {/* Quick action buttons */}
+        <div style={{ display: 'flex', gap: 8, padding: '8px 14px 10px' }}>
+          {vehicles.length === 0 ? (
+            <button onClick={() => setShowClaimSearch(true)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Claim Your Ride
+            </button>
+          ) : heroIsClaimed ? (
+            <>
+              <button onClick={() => onNavigate?.('create-post')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Post
+              </button>
+              <button onClick={() => setShowClaimSearch(true)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                Claim
+              </button>
+              <button onClick={() => heroVehicle && handleNavigate('vehicle-detail', { vehicleId: heroVehicle.id })} style={{ flex: 1, padding: '10px 0', borderRadius: 8, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setShowClaimSearch(true)} style={{ flex: 2, padding: '10px 0', borderRadius: 8, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                Claim Vehicle
+              </button>
+              <button onClick={() => heroVehicle && handleNavigate('vehicle-detail', { vehicleId: heroVehicle.id })} style={{ flex: 1, padding: '10px 0', borderRadius: 8, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Details
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* 2. STAT STRIP */}
+        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {[
+            { label: 'Spots', value: fleetStats.totalSpots },
+            { label: 'Badges', value: badgeCount ?? 0 },
+            { label: 'Friends', value: followerCount ?? 0 },
+            { label: 'Vehicles', value: fleetStats.vehicleCount },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} style={{
+              flex: 1, padding: '10px 0', textAlign: 'center' as const,
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+            }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
+            </div>
+          ))}
         </div>
 
         {/* PROFILE INSIGHTS */}
@@ -586,10 +666,10 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         )}
 
         {/* 3. FLEET SECTION or EMPTY STATE */}
-        {vehicles.length > 0 ? (
+        {vehicles.length > 1 ? (
           <>
             {/* Fleet header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px', marginTop: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
                 The Fleet · {vehicles.length}
               </span>
@@ -603,41 +683,22 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               </div>
             </div>
 
-            {/* Fleet cards */}
-            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, padding: '0 14px 14px' }}>
-              {vehicles.map(vehicle => <FleetTile key={vehicle.id} vehicle={vehicle} />)}
+            {/* Fleet cards — only non-active vehicles */}
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, padding: '0 14px 16px' }}>
+              {vehicles.filter((_, i) => i !== safeIdx).map(vehicle => <FleetTile key={vehicle.id} vehicle={vehicle} />)}
             </div>
           </>
-        ) : (
+        ) : vehicles.length === 0 ? (
           /* EMPTY STATE */
-          <div style={{ padding: '64px 16px', textAlign: 'center' as const }}>
-            <div style={{
-              width: 64, height: 64, margin: '0 auto', borderRadius: 12,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: '#0e1320', border: '1px solid rgba(255,255,255,0.05)',
-            }}>
-              <Car style={{ width: 28, height: 28, color: '#334455' }} strokeWidth={1.2} />
-            </div>
-            <div style={{ marginTop: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, color: '#eef4f8' }}>Garage Empty</h2>
-              <p style={{ fontSize: 13, marginTop: 8, lineHeight: 1.65, color: '#9ab0c0' }}>
-                Claim your first vehicle to start tracking spots, ratings, and bumper stickers from the community.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowClaimSearch(true)}
-              style={{
-                marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '12px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                fontSize: 11, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.1em',
-                color: '#ffffff', background: '#F97316',
-              }}
-            >
-              <Crosshair style={{ width: 14, height: 14 }} strokeWidth={2} />
-              Claim a Plate
+          <div style={{ margin: '0 14px', padding: '32px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(249,115,22,0.18)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2" style={{ marginBottom: 12 }}><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No Vehicles Yet</div>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 12 }}>Claim your first vehicle to start tracking spots and ratings.</p>
+            <button onClick={() => setShowClaimSearch(true)} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              + Claim a Vehicle
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* 4. ALBUMS */}
         <div style={{ padding: '16px 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
