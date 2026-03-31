@@ -22,11 +22,33 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export async function lookupPlate(
   plate: string,
-  state: string
+  state: string,
+  userId?: string
 ): Promise<VehicleLookupResult | null> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.warn('Supabase not configured — falling back to manual entry');
     return null;
+  }
+
+  // Pro paywall gate: only Pro users get plate-to-VIN lookups
+  if (userId) {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!profile?.is_pro) {
+        // Free user — return null, fall back to manual entry
+        return null;
+      }
+    } catch {
+      // If pro check fails, fall back to manual entry
+      return null;
+    }
   }
 
   try {

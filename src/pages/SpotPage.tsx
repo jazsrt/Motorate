@@ -259,7 +259,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         setRevealPhase(1);
       } else {
         // Not in DB — try Auto.dev plate lookup
-        const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code);
+        const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code, user?.id);
 
         if (apiResult && apiResult.make && apiResult.model) {
           // Auto.dev returned vehicle data — fetch stock image in parallel, show confirm screen
@@ -450,6 +450,15 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           {/* Form area */}
           <div style={{ padding: 16 }}>
             <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+
+            {/* Pro upgrade hint */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 8 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, textTransform: 'uppercase', color: '#5a6e7e' }}>Auto-identify from plate · </span>
+              <span
+                onClick={() => onNavigate('premium')}
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, textTransform: 'uppercase', color: '#F97316', cursor: 'pointer' }}
+              >Upgrade to Pro</span>
+            </div>
 
             <PlateSearch
               initialPlate={plateNumber}

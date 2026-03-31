@@ -203,7 +203,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
         setPlateViewState(vehicle.is_claimed ? 'claimed' : 'unclaimed');
       } else {
         // Not in DB — try Auto.dev plate lookup
-        const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code);
+        const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code, user?.id);
 
         if (apiResult && apiResult.make && apiResult.model) {
           // Auto.dev returned vehicle data — navigate to spot review with pre-filled data

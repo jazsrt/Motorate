@@ -71,6 +71,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
@@ -143,6 +144,35 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
 
   const handleSubmitQuick = async () => {
     if (!user || !canSubmit || submitting) return;
+
+    // Weekly spot limit check
+    try {
+      const { data: spotProfile } = await supabase
+        .from('profiles')
+        .select('is_pro, weekly_spots_used, weekly_spots_reset_at')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (spotProfile) {
+        const resetAt = new Date(spotProfile.weekly_spots_reset_at);
+        const now = new Date();
+        const daysSinceReset = (now.getTime() - resetAt.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (daysSinceReset >= 7) {
+          await supabase.from('profiles')
+            .update({ weekly_spots_used: 0, weekly_spots_reset_at: now.toISOString() })
+            .eq('id', user.id);
+          spotProfile.weekly_spots_used = 0;
+        }
+
+        if (!spotProfile.is_pro && (spotProfile.weekly_spots_used ?? 0) >= 10) {
+          setShowUpgradeModal(true);
+          return;
+        }
+      }
+    } catch {
+      // If limit check fails, allow submission to proceed
+    }
 
     setSubmitting(true);
     try {
@@ -306,6 +336,18 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         }
       } catch (notifError) {
         console.error('Notification error:', notifError);
+      }
+
+      // Increment weekly spot counter
+      const { data: counterProfile } = await supabase
+        .from('profiles')
+        .select('weekly_spots_used')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (counterProfile) {
+        await supabase.from('profiles')
+          .update({ weekly_spots_used: (counterProfile.weekly_spots_used ?? 0) + 1 })
+          .eq('id', user.id);
       }
 
       // Store data for upgrade prompt
@@ -561,6 +603,30 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           <ChevronRight style={{ width: 14, height: 14 }} />
         </button>
       </div>
+
+      {/* Weekly limit upgrade modal */}
+      {showUpgradeModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(3,5,8,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#0a0d14', borderRadius: 12, padding: 24, margin: '0 24px', border: '1px solid rgba(249,115,22,0.20)', maxWidth: 360, width: '100%' }}>
+            <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', margin: '0 0 8px' }}>Weekly Limit Reached</h3>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.5, margin: '0 0 16px' }}>
+              You've used your 10 free spots this week. Upgrade to Pro for unlimited spotting.
+            </p>
+            <button
+              onClick={() => { setShowUpgradeModal(false); onNavigate('premium'); }}
+              style={{ width: '100%', padding: 13, background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer', marginBottom: 8 }}
+            >
+              Upgrade to Pro — $4/mo
+            </button>
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              style={{ width: '100%', padding: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a8e9e', cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
