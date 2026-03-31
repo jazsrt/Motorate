@@ -583,9 +583,9 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
         {/* Conversation list sidebar */}
         <div style={{ width: 320, flexShrink: 0, background: '#0a0e17', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Sticky header */}
-          <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0a0e17' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', margin: 0 }}>Messages</h2>
+          <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '52px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#0a0d14' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', margin: 0 }}>Messages</h2>
               <button
                 onClick={() => {
                   setShowComposeModal(true);
@@ -597,79 +597,76 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
                 <Plus size={16} />
               </button>
             </div>
-            <div style={{ position: 'relative' }}>
-              <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#5a6e7e' }} size={15} />
-              <input
-                type="text"
-                placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ ...inputStyle, borderRadius: 20, paddingLeft: 36, fontSize: 13 }}
-              />
-            </div>
+          </div>
+
+          {/* Search bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#0d1117', borderRadius: 8, margin: '10px 14px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <Search style={{ width: 14, height: 14, color: '#5a6e7e', flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#eef4f8', padding: 0 }}
+            />
           </div>
 
           {/* Conversation rows */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {filteredConversations.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", fontSize: 13 }}>
-                {searchQuery ? 'No conversations found' : 'No conversations yet'}
+              <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#3a4e60' }}>No Messages Yet</span>
               </div>
             ) : (
               filteredConversations.map((conv) => {
-                const isActive = selectedConversation === conv.id;
+                const title = getConversationTitle(conv);
+                const initials = title.slice(0, 2).toUpperCase();
                 return (
-                  <button
+                  <div
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv.id)}
                     style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      background: isActive ? 'rgba(249,115,22,0.05)' : 'transparent',
-                      border: 'none',
-                      borderBottom: '1px solid rgba(255,255,255,0.04)',
-                      cursor: 'pointer',
-                      textAlign: 'left',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 12,
-                      transition: 'background 0.15s'
+                      padding: '12px 16px',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      cursor: 'pointer'
                     }}
-                    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = isActive ? 'rgba(249,115,22,0.05)' : 'transparent'; }}
                   >
+                    {/* Avatar */}
                     {conv.other_user?.avatar_url ? (
                       <img
                         src={conv.other_user.avatar_url}
-                        alt={getConversationTitle(conv)}
-                        style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        alt={title}
+                        style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
-                      <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #F97316, #fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
-                        <MessageCircle size={18} />
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e2a38', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#7a8e9e' }}>
+                        {initials}
                       </div>
                     )}
+
+                    {/* Content */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 3 }}>
-                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {getConversationTitle(conv)}
-                        </span>
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#5a6e7e', flexShrink: 0 }}>
-                          {formatTime(conv.last_message_at)}
-                        </span>
+                      <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+                        {title}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {conv.last_message || 'No messages yet'}
-                        </p>
-                        {conv.unread_count > 0 && (
-                          <span style={{ background: '#f97316', color: '#fff', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, minWidth: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 4px' }}>
-                            {conv.unread_count}
-                          </span>
-                        )}
+                      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {conv.last_message || 'No messages yet'}
                       </div>
                     </div>
-                  </button>
+
+                    {/* Right side */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: '#3a4e60', fontVariantNumeric: 'tabular-nums' }}>
+                        {formatTime(conv.last_message_at)}
+                      </span>
+                      {conv.unread_count > 0 && (
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F97316' }} />
+                      )}
+                    </div>
+                  </div>
                 );
               })
             )}
