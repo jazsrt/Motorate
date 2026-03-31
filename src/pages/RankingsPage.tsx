@@ -5,38 +5,14 @@ import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
 
-type Scope = 'your-model' | 'city' | 'state' | 'region' | 'national' | 'brand';
+type Scope = 'your-model' | 'city' | 'state' | 'national';
 
-const SCOPE_LABELS: Record<Scope, string> = {
-  'your-model': 'Your Model',
-  'city': 'City',
-  'state': 'State',
-  'region': 'Region',
-  'national': 'National',
-  'brand': 'Brand',
-};
-
-const REGIONS: Record<string, string[]> = {
-  Midwest: ['IL','IN','OH','MI','WI','MN','IA','MO','ND','SD','NE','KS'],
-  Northeast: ['NY','PA','NJ','MA','CT','RI','VT','NH','ME','MD','DE'],
-  South: ['TX','FL','GA','NC','SC','TN','AL','MS','LA','AR','VA','WV','KY','OK','DC'],
-  West: ['CA','NV','AZ','NM','CO','UT','WY','MT','ID','OR','WA','AK','HI'],
-};
-
-function getRegionForState(state: string | null): string | null {
-  if (!state) return null;
-  const upper = state.toUpperCase();
-  for (const [region, states] of Object.entries(REGIONS)) {
-    if (states.includes(upper)) return region;
-  }
-  return null;
-}
-
-function getRegionStates(state: string | null): string[] {
-  const region = getRegionForState(state);
-  if (!region) return [];
-  return REGIONS[region];
-}
+const SCOPE_TABS: { key: Scope; label: string }[] = [
+  { key: 'your-model', label: 'Your Model' },
+  { key: 'city', label: 'City' },
+  { key: 'state', label: 'State' },
+  { key: 'national', label: 'National' },
+];
 
 interface RankingsPageProps {
   onNavigate: OnNavigate;
@@ -48,11 +24,10 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
   const [loading, setLoading] = useState(true);
   const [scope, setScope] = useState<Scope>('national');
   const [userVehicle, setUserVehicle] = useState<{ id: string; make: string | null; model: string | null; state: string | null } | null>(null);
-  const [makes, setMakes] = useState<string[]>([]);
-  const [selectedMake, setSelectedMake] = useState<string | null>(null);
   const [initDone, setInitDone] = useState(false);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
-  // Load user's claimed vehicle for scope defaults
+  // Load user's top claimed vehicle for scope defaults
   useEffect(() => {
     if (!user) { setInitDone(true); return; }
     supabase
@@ -67,7 +42,6 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         if (data?.[0]) {
           setUserVehicle(data[0]);
           setScope('your-model');
-          setSelectedMake(data[0].make);
         }
         setInitDone(true);
       });
@@ -76,6 +50,8 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
   const loadRankings = useCallback(async () => {
     if (!initDone) return;
     setLoading(true);
+    setFallbackReason(null);
+
     // PLATE: hidden — public surface
     let query = supabase
       .from('vehicles')
@@ -84,110 +60,107 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
       .order('reputation_score', { ascending: false })
       .limit(50);
 
-    if (scope === 'your-model' && userVehicle?.make && userVehicle?.model) {
-      query = query.eq('make', userVehicle.make).eq('model', userVehicle.model);
-    } else if (scope === 'city' && userVehicle?.state) {
-      query = query.eq('state', userVehicle.state);
-    } else if (scope === 'state' && userVehicle?.state) {
-      query = query.eq('state', userVehicle.state);
-    } else if (scope === 'region' && userVehicle?.state) {
-      const regionStates = getRegionStates(userVehicle.state);
-      if (regionStates.length > 0) {
-        query = query.in('state', regionStates);
+    let effectiveScope = scope;
+
+    if (scope === 'your-model') {
+      if (userVehicle?.make && userVehicle?.model) {
+        query = query.eq('make', userVehicle.make).eq('model', userVehicle.model);
+      } else {
+        effectiveScope = 'national';
+        setFallbackReason('Claim a vehicle to see how your model ranks against its peers.');
       }
-    } else if (scope === 'brand' && selectedMake) {
-      query = query.eq('make', selectedMake);
+    } else if (scope === 'city' || scope === 'state') {
+      if (userVehicle?.state) {
+        query = query.eq('state', userVehicle.state);
+      } else {
+        effectiveScope = 'national';
+        setFallbackReason('Vehicle location not set. Showing national rankings.');
+      }
     }
 
     const { data } = await query;
-    if (data) {
-      setRanked(data);
-      // Extract unique makes for brand scope
-      const uniqueMakes = [...new Set(data.map((v: any) => v.make).filter(Boolean))].sort() as string[];
-      setMakes(uniqueMakes);
-    }
+    if (data) setRanked(data);
     setLoading(false);
-  }, [scope, userVehicle, selectedMake, initDone]);
+  }, [scope, userVehicle, initDone]);
 
   useEffect(() => {
     loadRankings();
   }, [loadRankings]);
 
-  const handleScopeChange = (newScope: Scope) => {
-    setScope(newScope);
-    if (newScope === 'brand') {
-      setSelectedMake(userVehicle?.make || null);
-    } else {
-      setSelectedMake(null);
-    }
-  };
+  // Header context
+  const scopeSubtitle = scope === 'your-model' && userVehicle?.make && userVehicle?.model
+    ? `${userVehicle.make} ${userVehicle.model} ranked against exact peers`
+    : scope === 'city' && userVehicle?.state ? `Vehicles in ${userVehicle.state}`
+    : scope === 'state' && userVehicle?.state ? `Statewide · ${userVehicle.state}`
+    : 'All vehicles across MotoRate';
 
-  const scopeDisplayLabel = scope === 'your-model' && userVehicle?.make && userVehicle?.model
-    ? `${userVehicle.make} ${userVehicle.model}`
-    : scope === 'city' && userVehicle?.state ? userVehicle.state
-    : scope === 'state' && userVehicle?.state ? userVehicle.state
-    : scope === 'region' && userVehicle?.state ? getRegionForState(userVehicle.state) || 'Region'
-    : scope === 'brand' && selectedMake ? selectedMake
-    : SCOPE_LABELS[scope];
+  // Find user's position in the list
+  const userRankIndex = userVehicle ? ranked.findIndex(v => v.id === userVehicle.id) : -1;
 
   return (
     <Layout currentPage="rankings" onNavigate={onNavigate}>
       <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 88 }}>
 
-        {/* Header */}
-        <div style={{ padding: '52px 16px 14px', background: '#0a0d14' }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: '#3a4e60', marginBottom: 2 }}>
-            {scopeDisplayLabel}
-          </div>
-          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+        {/* ── HEADER ── */}
+        <div style={{ padding: '52px 18px 14px', background: '#070a0f' }}>
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>
             Top <span style={{ color: '#F97316' }}>Vehicles</span>
+          </div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.4 }}>
+            {scopeSubtitle}
           </div>
         </div>
 
-        {/* Scope tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#070a0f', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-          {(['your-model', 'city', 'state', 'region', 'national', 'brand'] as Scope[]).map((key) => {
+        {/* ── SCOPE TABS ── */}
+        <div style={{ display: 'flex', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {SCOPE_TABS.map(({ key, label }) => {
             const isOn = scope === key;
             return (
-              <button key={key} onClick={() => handleScopeChange(key)}
+              <button key={key} onClick={() => setScope(key)}
                 style={{
-                  flex: 1, padding: '10px 0', textAlign: 'center' as const,
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+                  flex: 1, padding: '11px 0', textAlign: 'center' as const,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.12em', textTransform: 'uppercase' as const,
                   color: isOn ? '#F97316' : '#5a6e7e',
-                  background: 'none', border: 'none', cursor: 'pointer',
+                  background: isOn ? 'rgba(249,115,22,0.06)' : 'transparent',
+                  border: 'none', cursor: 'pointer',
                   borderBottom: isOn ? '2px solid #F97316' : '2px solid transparent',
-                  marginBottom: -1,
                 }}>
-                {SCOPE_LABELS[key]}
+                {label}
               </button>
             );
           })}
         </div>
 
-        {/* Brand filter pills */}
-        {scope === 'brand' && makes.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, padding: '8px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const, background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            {makes.map(make => {
-              const isActive = selectedMake === make;
-              return (
-                <button key={make} onClick={() => setSelectedMake(make)}
-                  style={{
-                    flexShrink: 0, padding: '4px 12px', borderRadius: 20,
-                    background: isActive ? 'rgba(249,115,22,0.10)' : 'transparent',
-                    border: `1px solid ${isActive ? 'rgba(249,115,22,0.40)' : 'rgba(255,255,255,0.06)'}`,
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                    letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-                    color: isActive ? '#F97316' : '#3a4e60', cursor: 'pointer',
-                  }}>
-                  {make}
-                </button>
-              );
-            })}
+        {/* ── FALLBACK NOTICE ── */}
+        {fallbackReason && (
+          <div style={{ padding: '8px 16px', background: 'rgba(249,115,22,0.04)', borderBottom: '1px solid rgba(249,115,22,0.08)' }}>
+            <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e' }}>{fallbackReason}</span>
           </div>
         )}
 
-        {/* Ranked list */}
+        {/* ── USER'S POSITION (pinned) ── */}
+        {!loading && userRankIndex >= 0 && userRankIndex >= 5 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px',
+            background: 'rgba(249,115,22,0.06)', borderBottom: '1px solid rgba(249,115,22,0.12)',
+          }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              Your Position
+            </span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>
+              #{userRankIndex + 1}
+            </span>
+            <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e' }}>
+              {[ranked[userRankIndex]?.make, ranked[userRankIndex]?.model].filter(Boolean).join(' ')}
+            </span>
+            <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
+              {(ranked[userRankIndex]?.reputation_score ?? 0).toLocaleString()} RP
+            </span>
+          </div>
+        )}
+
+        {/* ── RANKED LIST ── */}
         {!loading && ranked.map((v, i) => {
           const rank = i + 1;
           const isTop3 = rank <= 3;
@@ -196,23 +169,74 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
           const spotsCount = v.spots_count ?? 0;
           const isUserVehicle = userVehicle && v.id === userVehicle.id;
 
+          // Top 1 row — larger image, stronger emphasis
+          if (rank === 1) {
+            return (
+              <div key={v.id}
+                onClick={() => onNavigate('vehicle-detail', { vehicleId: v.id })}
+                style={{
+                  position: 'relative', cursor: 'pointer',
+                  background: 'rgba(249,115,22,0.03)',
+                  borderBottom: '1px solid rgba(249,115,22,0.08)',
+                }}>
+                {/* Wider image */}
+                <div style={{ position: 'relative', width: '100%', height: 140, overflow: 'hidden', background: '#0d1117' }}>
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.65, display: 'block' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 60%)' }} />
+                  {/* Rank badge */}
+                  <div style={{ position: 'absolute', top: 10, left: 14, width: 32, height: 32, borderRadius: 6, background: '#f0a030', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#030508' }}>1</span>
+                  </div>
+                  {isUserVehicle && (
+                    <div style={{ position: 'absolute', top: 12, right: 14, padding: '3px 8px', borderRadius: 4, background: 'rgba(249,115,22,0.20)', border: '1px solid rgba(249,115,22,0.35)' }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>You</span>
+                    </div>
+                  )}
+                  {/* Vehicle info */}
+                  <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14 }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
+                      {v.make || 'Unknown'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                      <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+                        {v.model || '—'}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{repScore.toLocaleString()}</span>
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(249,115,22,0.6)' }}>RP</span>
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#5a6e7e', letterSpacing: '0.08em', marginTop: 2 }}>
+                      {[v.year, v.trim, spotsCount > 0 ? `${spotsCount} spots` : null].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Rows 2+ — standard list rows with stronger top-3 treatment
           return (
             <div key={v.id}
               onClick={() => onNavigate('vehicle-detail', { vehicleId: v.id })}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 16px',
+                padding: isTop3 ? '14px 16px' : '12px 16px',
                 borderBottom: '1px solid rgba(249,115,22,0.05)',
-                background: isTop3 ? 'rgba(249,115,22,0.02)' : 'transparent',
+                background: isUserVehicle ? 'rgba(249,115,22,0.05)' : isTop3 ? 'rgba(249,115,22,0.02)' : 'transparent',
                 cursor: 'pointer',
-                ...(isUserVehicle ? { borderLeft: '3px solid #F97316', background: 'rgba(249,115,22,0.04)' } : {}),
               }}>
               {/* Rank badge */}
               <div style={{
                 width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, borderRadius: 4,
-                ...(rank === 1 ? { background: '#f0a030' }
-                  : rank === 2 ? { background: '#9aaebc' }
+                ...(rank === 2 ? { background: '#9aaebc' }
                   : rank === 3 ? { background: '#cd7f32' }
                   : {}),
               }}>
@@ -226,9 +250,9 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 </span>
               </div>
 
-              {/* Vehicle thumb */}
+              {/* Vehicle thumb — larger for top 3 */}
               <div style={{
-                width: 52, height: 38, borderRadius: 5, overflow: 'hidden',
+                width: isTop3 ? 56 : 52, height: isTop3 ? 42 : 38, borderRadius: 5, overflow: 'hidden',
                 background: '#111720', flexShrink: 0,
               }}>
                 {photoUrl ? (
@@ -245,18 +269,23 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
               {/* Vehicle info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700,
-                  color: '#eef4f8', lineHeight: 1,
-                  whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>
-                  {[v.make, v.model].filter(Boolean).join(' ') || '\u2014'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{
+                    fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700,
+                    color: '#eef4f8', lineHeight: 1,
+                    whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {[v.make, v.model].filter(Boolean).join(' ') || '\u2014'}
+                  </span>
+                  {isUserVehicle && (
+                    <span style={{ flexShrink: 0, padding: '1px 5px', borderRadius: 3, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.30)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#F97316' }}>You</span>
+                  )}
                 </div>
                 <div style={{
                   fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
                   letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginTop: 2,
                 }}>
-                  {[v.year, spotsCount > 0 ? `${spotsCount} spots` : null].filter(Boolean).join(' \u00B7 ')}
+                  {[v.year, v.trim, v.state, spotsCount > 0 ? `${spotsCount} spots` : null].filter(Boolean).join(' \u00B7 ')}
                 </div>
               </div>
 
@@ -264,7 +293,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
                 <div style={{
                   fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600,
-                  color: '#F97316', fontVariantNumeric: 'tabular-nums',
+                  color: rank === 1 ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums',
                 }}>
                   {repScore.toLocaleString()}
                 </div>
@@ -282,7 +311,9 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         {/* Loading skeleton */}
         {loading && (
           <div>
-            {[1,2,3,4,5].map(i => (
+            {/* Top slot shimmer */}
+            <div style={{ width: '100%', height: 140, background: 'linear-gradient(90deg, #0d1117 25%, #111720 50%, #0d1117 75%)', backgroundSize: '200% 100%', animation: 'rankShimmer 1.5s infinite' }} />
+            {[1,2,3,4].map(i => (
               <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', borderBottom: '1px solid rgba(249,115,22,0.05)', alignItems: 'center' }}>
                 <div style={{ width: 28, height: 28, background: '#0e1320', borderRadius: 4 }} />
                 <div style={{ width: 52, height: 38, background: '#0e1320', borderRadius: 5 }} />
@@ -303,8 +334,14 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>No Vehicles Ranked Yet</p>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>Spot vehicles to start building the leaderboard.</p>
+            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>
+              {scope === 'your-model' ? 'No Peers Ranked Yet' : 'No Vehicles Ranked Yet'}
+            </p>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>
+              {scope === 'your-model'
+                ? `No other ${userVehicle?.make || ''} ${userVehicle?.model || ''} builds have been spotted yet. Be the first to climb.`
+                : 'Spot vehicles to start building the leaderboard.'}
+            </p>
             <button onClick={() => onNavigate('scan')} style={{
               padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
               fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
@@ -316,6 +353,13 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         )}
 
       </div>
+
+      <style>{`
+        @keyframes rankShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </Layout>
   );
 }
