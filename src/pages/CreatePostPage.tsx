@@ -13,7 +13,7 @@ import { calculateAndAwardReputation, getDailyPostCount } from '../lib/reputatio
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 6, display: 'block' };
-const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' };
 
 interface CreatePostPageProps {
   onNavigate: OnNavigate;
@@ -423,7 +423,10 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                   <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>To create content, you can:</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {['Request upgrade to User account (quick & free)', 'Claim your vehicle to get full access', 'Browse community content as spectator'].map(item => (
-                      <span key={item} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e' }}>{'✓ ' + item}</span>
+                      <span key={item} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
+                        {item}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -485,7 +488,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
               <AlertCircle style={{ width: 22, height: 22, color: '#F97316', flexShrink: 0, marginTop: 2 }} strokeWidth={1.5} />
               <div>
                 <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>Drivers Only</h3>
-                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#8a9aaa', lineHeight: 1.5, marginBottom: 14 }}>
+                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.5, marginBottom: 14 }}>
                   Add your car to leave comments and create posts. Complete onboarding to unlock posting features.
                 </p>
                 <button
@@ -520,7 +523,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                       }}
                       style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: '50%', background: 'rgba(6,9,14,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                     >
-                      <X style={{ width: 14, height: 14, color: '#ccc' }} strokeWidth={1.5} />
+                      <X style={{ width: 14, height: 14, color: '#eef4f8' }} strokeWidth={1.5} />
                     </button>
                   </div>
                 ) : (
@@ -711,7 +714,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                         }}
                       >
                         <Icon style={{ width: 18, height: 18, color: active ? '#F97316' : '#5a6e7e' }} />
-                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: active ? '#F97316' : '#8a9aaa' }}>{label}</span>
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: active ? '#F97316' : '#7a8e9e' }}>{label}</span>
                         <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e' }}>{desc}</span>
                       </button>
                     );

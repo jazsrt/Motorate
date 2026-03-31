@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MotoFans — All Screens + Modals</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#010204;font-family:'Barlow',sans-serif;color:#eef4f8;padding:48px 24px 80px;display:flex;flex-wrap:wrap;gap:48px;justify-content:center;align-items:flex-start;}
+.col{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#F97316;text-align:center;}
+.sub{font-family:'Barlow',sans-serif;font-size:11px;color:#5a6e7e;text-align:center;max-width:280px;line-height:1.5;}
+.phone{width:320px;background:#070a0f;border-radius:36px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 32px 80px rgba(0,0,0,.95),0 0 0 1px rgba(249,115,22,.08);}
+.scr{max-height:680px;overflow-y:auto;scrollbar-width:none;}
+.scr::-webkit-scrollbar{display:none;}
+.nav{height:64px;background:rgba(7,10,15,.97);border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-around;padding-bottom:6px;}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.nisvg{width:18px;height:18px;color:#3a4e60;}
+.nisvg.a{color:#F97316;}
+.nl{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#3a4e60;}
+.nl.a{color:#F97316;}
+.fab{width:46px;height:46px;border-radius:14px;background:#F97316;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(249,115,22,.5);margin-top:-8px;}
+/* hero */
+.hero{position:relative;overflow:hidden;background:#0d1117;}
+.hero img{width:100%;height:100%;object-fit:cover;opacity:.75;display:block;}
+.hgrad{position:absolute;inset:0;background:linear-gradient(to top,rgba(3,5,8,.96) 0%,rgba(3,5,8,.3) 55%,transparent 100%);}
+.back{position:absolute;top:12px;left:12px;width:28px;height:28px;border-radius:7px;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;}
+.share{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:7px;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;}
+.hid{position:absolute;bottom:12px;left:14px;right:14px;}
+.hmake{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:#F97316;}
+.hname{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#eef4f8;line-height:1;}
+.hsub{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a6e7e;margin-top:2px;}
+/* specs */
+.specs{display:flex;overflow-x:auto;scrollbar-width:none;background:#0d1117;border-top:1px solid rgba(249,115,22,.10);border-bottom:1px solid rgba(249,115,22,.10);}
+.spec{flex-shrink:0;padding:8px 12px;text-align:center;border-right:1px solid rgba(255,255,255,.04);}
+.spec:last-child{border-right:none;}
+.sv{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:#eef4f8;white-space:nowrap;}
+.sl{font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a6e7e;margin-top:1px;}
+/* stat strip */
+.stats{display:flex;background:#0a0d14;border-bottom:1px solid rgba(255,255,255,.04);}
+.stat{flex:1;padding:8px 0;text-align:center;border-right:1px solid rgba(255,255,255,.04);}
+.stat:last-child{border-right:none;}
+.stv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#eef4f8;font-variant-numeric:tabular-nums;}
+.stv.o{color:#F97316;}
+.stl{font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5a6e7e;margin-top:2px;}
+.stl.o{color:#F97316;}
+/* owner row */
+.orow{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.av{border-radius:50%;overflow:hidden;background:#1e2a38;flex-shrink:0;}
+.av img{width:100%;height:100%;object-fit:cover;display:block;}
+.fan-btn{display:flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.40);border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F97316;cursor:pointer;white-space:nowrap;}
+.fan-btn.ghost{background:transparent;border-color:rgba(255,255,255,.10);color:#7a8e9e;}
+/* section headers */
+.shdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;}
+.st{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#5a6e7e;}
+.sa{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F97316;cursor:pointer;}
+/* motofans modal */
+.mf-modal{margin:0 12px 12px;border:1px solid rgba(249,115,22,.22);border-radius:10px;overflow:hidden;background:#0d1117;}
+.mf-mhdr{padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;background:#0d1117;}
+.mf-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#eef4f8;}
+.mf-ct{font-family:'JetBrains Mono',monospace;font-size:12px;color:#F97316;}
+.mf-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.mf-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#eef4f8;}
+.mf-meta{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5a6e7e;}
+.mf-all{padding:8px 12px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#F97316;cursor:pointer;}
+/* stickers */
+.stickers{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 10px;}
+.sticker{display:flex;align-items:center;gap:4px;padding:4px 8px;background:#0d1117;border:1px solid rgba(255,255,255,.06);border-radius:18px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#eef4f8;}
+.sct{font-family:'JetBrains Mono',monospace;font-size:7px;color:#F97316;margin-left:2px;}
+/* reviews */
+.rcard{margin:0 12px 6px;background:#0d1117;border-radius:7px;padding:8px 10px;border:1px solid rgba(255,255,255,.04);}
+.rtop{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.rname{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#eef4f8;}
+.rstars{display:flex;gap:2px;margin-left:auto;}
+.rtext{font-family:'Barlow',sans-serif;font-size:10px;color:#5a6e7e;line-height:1.4;}
+/* profile */
+.pcover{height:70px;overflow:hidden;background:#0d1117;position:relative;}
+.pcover img{width:100%;height:100%;object-fit:cover;opacity:.4;display:block;}
+.pavwrap{position:relative;margin-top:-24px;margin-left:14px;width:48px;height:48px;border-radius:50%;border:3px solid #070a0f;overflow:hidden;background:#1e2a38;}
+.pavwrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.pinfo{padding:6px 14px 12px;}
+.pname{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:#eef4f8;line-height:1;}
+.phandle{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#F97316;margin-top:2px;}
+.psocials{display:flex;gap:14px;margin-top:8px;}
+.psv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#eef4f8;}
+.psl{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5a6e7e;margin-left:2px;}
+/* tabs */
+.tabs{display:flex;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);}
+.tab{flex:1;padding:8px 0;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a6e7e;border-bottom:2px solid transparent;}
+.tab.a{color:#F97316;border-bottom:2px solid #F97316;}
+/* fleet card */
+.fcard{margin:0 12px 8px;background:#0d1117;border-radius:9px;overflow:hidden;border:1px solid rgba(255,255,255,.05);}
+.fimg{width:100%;height:80px;overflow:hidden;}
+.fimg img{width:100%;height:100%;object-fit:cover;opacity:.85;display:block;}
+.fbody{padding:8px 10px 10px;}
+.fmake{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;}
+.fmodel{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#eef4f8;line-height:1;margin-bottom:5px;}
+.fbot{display:flex;align-items:center;gap:7px;}
+.frp{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;color:#F97316;}
+.fspots{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.08em;color:#5a6e7e;}
+.ctag{margin-left:auto;padding:2px 6px;background:rgba(32,192,96,.10);border:1px solid rgba(32,192,96,.20);border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;text-transform:uppercase;color:#20c060;}
+.utag{margin-left:auto;padding:2px 6px;background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.20);border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;text-transform:uppercase;color:#F97316;}
+/* badges */
+.bgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 12px 10px;}
+.bcoin{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bcirc{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.bname{font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7a8e9e;text-align:center;}
+/* motofans photo grid */
+.mfgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:0 12px 16px;}
+.mfcard{position:relative;border-radius:9px;overflow:hidden;cursor:pointer;aspect-ratio:4/3;background:#111720;}
+.mfcard img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85;}
+.mfgrad{position:absolute;inset:0;background:linear-gradient(to top,rgba(3,5,8,.93) 0%,transparent 55%);}
+.mflabel{position:absolute;bottom:7px;left:8px;right:8px;}
+.mfmake{font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;}
+.mfmodel{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:#eef4f8;line-height:1.1;}
+.mfrp{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:600;color:rgba(249,115,22,.75);margin-top:1px;}
+/* claim cta */
+.claim-cta{margin:12px 12px;padding:12px;background:rgba(249,115,22,.05);border:1px solid rgba(249,115,22,.18);border-radius:10px;}
+.ctitle{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#eef4f8;margin-bottom:3px;}
+.csub{font-family:'Barlow',sans-serif;font-size:10px;color:#5a6e7e;line-height:1.45;margin-bottom:10px;}
+.cbtns{display:flex;gap:7px;}
+.cbtn{flex:1;padding:9px 0;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-align:center;}
+.cbtn.primary{background:#F97316;border:none;color:#030508;}
+.cbtn.ghost{background:transparent;border:1px solid rgba(255,255,255,.10);color:#7a8e9e;}
+/* unclaimed badge */
+.unclaimed-badge{position:absolute;top:12px;right:12px;padding:4px 9px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.35);border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#F97316;}
+/* divider */
+.div{height:1px;background:rgba(255,255,255,.04);margin:0;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SCREEN 1: VEHICLE DETAIL (CLAIMED)
+     MotoFans stat taps open fan list modal
+     ══════════════════════════════════ -->
+<div class="col">
+  <div class="lbl">Claimed Vehicle</div>
+  <div class="sub">"MotoFans ›" stat is tappable — opens modal showing users who fanned this vehicle</div>
+  <div class="phone">
+    <div class="scr">
+      <div class="hero" style="height:180px;">
+        <img src="https://picsum.photos/seed/durango/640/360" alt="">
+        <div class="hgrad"></div>
+        <div class="back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eef4f8" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        <div class="share"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eef4f8" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+        <div class="hid">
+          <div class="hmake">2024 DODGE</div>
+          <div class="hname">Durango SRT</div>
+          <div class="hsub">IL · #1 IN YOUR MODEL</div>
+        </div>
+      </div>
+      <div class="specs">
+        <div class="spec"><div class="sv">485 hp</div><div class="sl">Power</div></div>
+        <div class="spec"><div class="sv">6.4L V8</div><div class="sl">Engine</div></div>
+        <div class="spec"><div class="sv">AWD</div><div class="sl">Drive</div></div>
+        <div class="spec"><div class="sv">8-spd</div><div class="sl">Trans</div></div>
+      </div>
+      <!-- STAT STRIP — MotoFans is tappable -->
+      <div class="stats">
+        <div class="stat"><div class="stv o">116</div><div class="stl">RP</div></div>
+        <div class="stat"><div class="stv">4</div><div class="stl">Spots</div></div>
+        <div class="stat"><div class="stv">4.2</div><div class="stl">Rating</div></div>
+        <div class="stat" style="cursor:pointer;"><div class="stv o">23</div><div class="stl o">MotoFans ›</div></div>
+      </div>
+      <!-- OWNER ROW -->
+      <div class="orow">
+        <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/man1/64/64" alt=""></div>
+        <div style="flex:1;"><div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#eef4f8;">@jazzsrt</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5a6e7e;">Owner · Verified</div></div>
+        <div class="fan-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#F97316" stroke="#F97316" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          MotoFan · 23
+        </div>
+      </div>
+      <!-- MOTOFANS MODAL — opens when tapping stat -->
+      <div style="padding:8px 14px 4px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;">↓ Tapping "MotoFans ›" opens this modal</div></div>
+      <div class="mf-modal">
+        <div class="mf-mhdr">
+          <span class="mf-title">MotoFans <span class="mf-ct">23</span></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e7e" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/woman1/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@elysa</div><div class="mf-meta">Gold Tier · 340 RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/man2/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@racerx</div><div class="mf-meta">Silver Tier · 215 RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/person3/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@testit</div><div class="mf-meta">Bronze Tier · 88 RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row" style="opacity:.5;">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/person4/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@m4comp</div><div class="mf-meta">Gold Tier · 410 RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-all">View all 23 MotoFans →</div>
+      </div>
+      <div class="shdr" style="border-top:1px solid rgba(255,255,255,.04);"><span class="st">Bumper Stickers</span></div>
+      <div class="stickers">
+        <div class="sticker">🔥 Clean Build<span class="sct">12</span></div>
+        <div class="sticker">⚡ Sleeper<span class="sct">5</span></div>
+        <div class="sticker">🏎️ Daily<span class="sct">8</span></div>
+      </div>
+      <div class="shdr" style="border-top:1px solid rgba(255,255,255,.04);"><span class="st">Reviews · 3</span><span class="sa">See All</span></div>
+      <div class="rcard">
+        <div class="rtop">
+          <div class="av" style="width:22px;height:22px;"><img src="https://picsum.photos/seed/woman1/44/44" alt=""></div>
+          <span class="rname">@elysa</span>
+          <div class="rstars">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
+        <p class="rtext">Durango sitting perfect. These things age well.</p>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg class="nisvg a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl a">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2: UNCLAIMED VEHICLE
+     MotoFan button (unfanned state) + fan modal
+     ══════════════════════════════════ -->
+<div class="col">
+  <div class="lbl">Unclaimed Vehicle</div>
+  <div class="sub">Non-owner sees "Become a MotoFan" button. Fans stat still shows modal with who's already fanned it.</div>
+  <div class="phone">
+    <div class="scr">
+      <div class="hero" style="height:180px;">
+        <img src="https://picsum.photos/seed/bmwm4/640/360" alt="">
+        <div class="hgrad"></div>
+        <div class="back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eef4f8" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        <div class="unclaimed-badge">Unclaimed</div>
+        <div class="hid">
+          <div class="hmake">2021 BMW</div>
+          <div class="hname">M4 Competition</div>
+          <div class="hsub">IL · NO OWNER YET</div>
+        </div>
+      </div>
+      <div class="specs">
+        <div class="spec"><div class="sv">503 hp</div><div class="sl">Power</div></div>
+        <div class="spec"><div class="sv">3.0L I6</div><div class="sl">Engine</div></div>
+        <div class="spec"><div class="sv">RWD</div><div class="sl">Drive</div></div>
+        <div class="spec"><div class="sv">8-spd</div><div class="sl">Trans</div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stv o">55</div><div class="stl">RP</div></div>
+        <div class="stat"><div class="stv">3</div><div class="stl">Spots</div></div>
+        <div class="stat"><div class="stv">4.8</div><div class="stl">Rating</div></div>
+        <div class="stat" style="cursor:pointer;"><div class="stv o">47</div><div class="stl o">MotoFans ›</div></div>
+      </div>
+      <!-- Claim CTA -->
+      <div class="claim-cta">
+        <div class="ctitle">Is this your car?</div>
+        <div class="csub">Verify with VIN and earn 50 RP instantly.</div>
+        <div class="cbtns">
+          <div class="cbtn primary">Claim Vehicle</div>
+          <div class="cbtn ghost">Spot &amp; Rate</div>
+        </div>
+      </div>
+      <!-- Become a MotoFan — unfanned state -->
+      <div style="display:flex;justify-content:center;padding:2px 12px 12px;">
+        <div class="fan-btn ghost" style="padding:8px 20px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7a8e9e" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Become a MotoFan · 47
+        </div>
+      </div>
+      <!-- MotoFans modal for unclaimed too -->
+      <div style="padding:4px 14px 4px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;">↓ Tapping "MotoFans ›" opens this</div></div>
+      <div class="mf-modal">
+        <div class="mf-mhdr">
+          <span class="mf-title">MotoFans <span class="mf-ct">47</span></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e7e" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/man3/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@speedfreak</div><div class="mf-meta">Platinum Tier · 1.2K RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/woman2/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@carlov3r</div><div class="mf-meta">Gold Tier · 520 RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/man4/64/64" alt=""></div>
+          <div style="flex:1;"><div class="mf-name">@jazzsrt</div><div class="mf-meta">Gold Tier · 116 RP</div></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-all">View all 47 MotoFans →</div>
+      </div>
+      <div class="shdr" style="border-top:1px solid rgba(255,255,255,.04);"><span class="st">Bumper Stickers</span></div>
+      <div class="stickers">
+        <div class="sticker">🏁 Track Ready<span class="sct">9</span></div>
+        <div class="sticker">💙 Paint Freak<span class="sct">6</span></div>
+      </div>
+      <div class="shdr" style="border-top:1px solid rgba(255,255,255,.04);"><span class="st">Reviews · 2</span><span class="sa">See All</span></div>
+      <div class="rcard">
+        <div class="rtop">
+          <div class="av" style="width:22px;height:22px;"><img src="https://picsum.photos/seed/man2/44/44" alt=""></div>
+          <span class="rname">@racerx</span>
+          <div class="rstars">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#f0a030" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
+        <p class="rtext">M4 Competition in the wild. Carbon roof. Owner knows what they're doing.</p>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 3: USER PROFILE
+     MotoFans = photo grid of vehicles user fanned
+     Tapping a card goes to that vehicle's page
+     ══════════════════════════════════ -->
+<div class="col">
+  <div class="lbl">User Profile — MotoFans Grid</div>
+  <div class="sub">Visually-first 2-col photo grid. Each card routes to that vehicle's profile. The user's fanned vehicles define their car taste on their profile.</div>
+  <div class="phone">
+    <div class="scr">
+      <div class="pcover"><img src="https://picsum.photos/seed/carbg/640/140" alt=""></div>
+      <div class="pavwrap"><img src="https://picsum.photos/seed/man1/96/96" alt=""></div>
+      <div class="pinfo">
+        <div class="pname">Jonathan Z.</div>
+        <div class="phandle">@jazzsrt · Gold Tier</div>
+        <div class="psocials">
+          <div><span class="psv">7</span><span class="psl">Friends</span></div>
+          <div><span class="psv">116</span><span class="psl">RP</span></div>
+          <div><span class="psv">12</span><span class="psl">Badges</span></div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab a">Garage</div>
+        <div class="tab">Spots</div>
+        <div class="tab">Badges</div>
+        <div class="tab">Activity</div>
+      </div>
+      <!-- Fleet -->
+      <div class="shdr" style="padding-top:10px;"><span class="st">Fleet · 1</span></div>
+      <div class="fcard">
+        <div class="fimg"><img src="https://picsum.photos/seed/durango/640/240" alt=""></div>
+        <div class="fbody">
+          <div class="fmake">Dodge</div>
+          <div class="fmodel">2024 Durango SRT</div>
+          <div class="fbot"><span class="frp">116 RP</span><span class="fspots">4 SPOTS</span><span class="ctag">Claimed</span></div>
+        </div>
+      </div>
+      <!-- Badges -->
+      <div class="shdr" style="border-top:1px solid rgba(255,255,255,.04);"><span class="st">Badges · 12</span></div>
+      <div class="bgrid">
+        <div class="bcoin"><div class="bcirc" style="background:rgba(240,160,48,.15);border:2px solid rgba(240,160,48,.40);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0a030" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><span class="bname">Eagle Eye</span></div>
+        <div class="bcoin"><div class="bcirc" style="background:rgba(249,115,22,.15);border:2px solid rgba(249,115,22,.40);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><span class="bname">First Spot</span></div>
+        <div class="bcoin"><div class="bcirc" style="background:rgba(200,216,232,.12);border:2px solid rgba(200,216,232,.30);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8d8e8" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><span class="bname">Verified</span></div>
+        <div class="bcoin" style="opacity:.3;"><div class="bcirc" style="background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5a6e7e" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><span class="bname">Locked</span></div>
+      </div>
+      <!-- MOTOFANS — 2-col photo grid, each routes to vehicle profile -->
+      <div class="shdr" style="border-top:1px solid rgba(255,255,255,.04);"><span class="st">MotoFans · 4</span><span class="sa">See All</span></div>
+      <div class="mfgrid">
+        <div class="mfcard">
+          <img src="https://picsum.photos/seed/lambo/320/240" alt="">
+          <div class="mfgrad"></div>
+          <div class="mflabel"><div class="mfmake">Lamborghini</div><div class="mfmodel">Huracán EVO</div><div class="mfrp">1.2K RP</div></div>
+        </div>
+        <div class="mfcard">
+          <img src="https://picsum.photos/seed/porsche911/320/240" alt="">
+          <div class="mfgrad"></div>
+          <div class="mflabel"><div class="mfmake">Porsche</div><div class="mfmodel">911 GT3 RS</div><div class="mfrp">980 RP</div></div>
+        </div>
+        <div class="mfcard">
+          <img src="https://picsum.photos/seed/ferrari296/320/240" alt="">
+          <div class="mfgrad"></div>
+          <div class="mflabel"><div class="mfmake">Ferrari</div><div class="mfmodel">296 GTB</div><div class="mfrp">875 RP</div></div>
+        </div>
+        <div class="mfcard">
+          <img src="https://picsum.photos/seed/bmwm4comp/320/240" alt="">
+          <div class="mfgrad"></div>
+          <div class="mflabel"><div class="mfmake">BMW</div><div class="mfmodel">M4 Competition</div><div class="mfrp">760 RP</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg class="nisvg a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl a">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 4: MY GARAGE
+     Owner sees fan count on their own vehicle
+     Tapping it shows who their fans are
+     ══════════════════════════════════ -->
+<div class="col">
+  <div class="lbl">My Garage — Owner View</div>
+  <div class="sub">Owner sees fan count on their claimed vehicle card. Tapping it opens modal showing fan profiles with their photos.</div>
+  <div class="phone">
+    <div class="scr">
+      <!-- GARAGE HERO -->
+      <div class="hero" style="height:220px;">
+        <img src="https://picsum.photos/seed/durango/640/440" alt="">
+        <div class="hgrad"></div>
+        <div style="position:absolute;top:52px;left:14px;display:flex;align-items:center;gap:9px;">
+          <div class="av" style="width:36px;height:36px;border:2px solid rgba(249,115,22,.30);"><img src="https://picsum.photos/seed/man1/72/72" alt=""></div>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;">Gold Tier</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#eef4f8;line-height:1;">@jazzsrt</div>
+          </div>
+        </div>
+        <div style="position:absolute;top:52px;right:14px;display:flex;gap:5px;">
+          <div style="padding:3px 7px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.30);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;color:#F97316;">116 RP</div>
+          <div style="padding:3px 7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;color:#7a8e9e;">4 SPOTS</div>
+        </div>
+        <div class="hid">
+          <div class="hmake">2024 DODGE</div>
+          <div class="hname">Durango SRT</div>
+          <div class="hsub">IL / TESTIES</div>
+        </div>
+        <div style="position:absolute;bottom:10px;right:14px;display:flex;gap:5px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:#F97316;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);"></div>
+        </div>
+      </div>
+      <!-- QUICK ACTIONS -->
+      <div style="display:flex;gap:7px;padding:9px 12px;background:#0a0d14;border-bottom:1px solid rgba(255,255,255,.04);">
+        <button style="flex:1;padding:7px 0;background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.25);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F97316;cursor:pointer;">+ New Post</button>
+        <button style="flex:1;padding:7px 0;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a8e9e;cursor:pointer;">Edit</button>
+        <button style="flex:1;padding:7px 0;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a8e9e;cursor:pointer;">Share</button>
+      </div>
+      <!-- STAT STRIP -->
+      <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="flex:1;padding:9px 0;text-align:center;border-right:1px solid rgba(255,255,255,.05);"><div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#eef4f8;">4</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#5a6e7e;margin-top:2px;">Spots</div></div>
+        <div style="flex:1;padding:9px 0;text-align:center;border-right:1px solid rgba(255,255,255,.05);"><div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#eef4f8;">12</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#5a6e7e;margin-top:2px;">Badges</div></div>
+        <div style="flex:1;padding:9px 0;text-align:center;border-right:1px solid rgba(255,255,255,.05);"><div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#eef4f8;">7</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#5a6e7e;margin-top:2px;">Friends</div></div>
+        <div style="flex:1;padding:9px 0;text-align:center;cursor:pointer;"><div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#F97316;">23</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:6px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#F97316;margin-top:2px;">Fans ›</div></div>
+      </div>
+      <!-- FANS MODAL on garage — who are my fans -->
+      <div style="padding:8px 14px 4px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;">↓ Tapping "Fans ›" shows who fans your vehicle</div></div>
+      <div class="mf-modal">
+        <div class="mf-mhdr">
+          <span class="mf-title">Your MotoFans <span class="mf-ct">23</span></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e7e" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/woman1/64/64" alt=""></div>
+          <div style="flex:1;">
+            <div class="mf-name">@elysa</div>
+            <div class="mf-meta">Gold Tier · 340 RP · Fanned 3 days ago</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/man2/64/64" alt=""></div>
+          <div style="flex:1;">
+            <div class="mf-name">@racerx</div>
+            <div class="mf-meta">Silver Tier · 215 RP · Fanned 1 week ago</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-row">
+          <div class="av" style="width:32px;height:32px;"><img src="https://picsum.photos/seed/man3/64/64" alt=""></div>
+          <div style="flex:1;">
+            <div class="mf-name">@speedfreak</div>
+            <div class="mf-meta">Platinum Tier · 1.2K RP · Fanned 2 weeks ago</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="mf-all">View all 23 of your MotoFans →</div>
+      </div>
+      <!-- FLEET -->
+      <div class="shdr" style="margin-top:4px;"><span class="st">The Fleet · 3</span><div style="display:flex;gap:12px;"><span class="sa">+ New Post</span><span class="sa">+ Claim</span></div></div>
+      <div class="fcard">
+        <div class="fimg"><img src="https://picsum.photos/seed/stealth/640/240" alt=""></div>
+        <div class="fbody">
+          <div class="fmake">Dodge</div>
+          <div class="fmodel">1993 Stealth</div>
+          <div class="fbot"><span class="frp">85 RP</span><span class="fspots">6 SPOTS</span><span class="ctag">Claimed</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+      <div class="ni"><svg class="nisvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg class="nisvg a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl a">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
