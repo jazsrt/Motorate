@@ -532,7 +532,10 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8' }}>{(handle || '?')[0].toUpperCase()}</span>
             }
           </div>
-          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3 }}>
+          <div
+            onClick={() => user && handleNavigate('user-profile', user.id)}
+            style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3, cursor: 'pointer' }}
+          >
             @{handle}
           </div>
           <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 14 }}>
