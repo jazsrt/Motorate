@@ -26,7 +26,8 @@ import { StickerSlab } from '../components/StickerSlab';
 import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
 import { BADGE_TIER_THRESHOLDS, TIER_COLORS } from '../config/badgeConfig';
 import { UserAvatar } from '../components/UserAvatar';
-import { VehicleFollowButton } from '../components/VehicleFollowButton';
+import { MotoFanButton } from '../components/MotoFanButton';
+import { MotoFansModal } from '../components/MotoFansModal';
 import { FollowButton } from '../components/FollowButton';
 // BadgeChip and getBadgeType imports removed - unused
 
@@ -184,6 +185,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [vehicleImages, setVehicleImages] = useState<VehicleImage[]>([]);
   const [spotCount, setSpotCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
+  const [showMotoFansModal, setShowMotoFansModal] = useState(false);
   const [_viewCount, _setViewCount] = useState(0);
   const [cityRank, _setCityRank] = useState<number | null>(null);
   const [_showSpotReviewModal, _setShowSpotReviewModal] = useState(false);
@@ -839,17 +841,18 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         {/* ── 2. STAT STRIP ── */}
         <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {[
-            { label: 'RP', value: rpScore },
-            { label: 'Spots', value: spotCount },
-            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
-            { label: 'Followers', value: followerCount },
+            { label: 'RP', value: rpScore, onClick: undefined as (() => void) | undefined },
+            { label: 'Spots', value: spotCount, onClick: undefined },
+            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014', onClick: undefined },
+            { label: 'MotoFans', value: followerCount, onClick: () => setShowMotoFansModal(true) },
           ].map((stat, i, arr) => (
-            <div key={stat.label} style={{
+            <div key={stat.label} onClick={stat.onClick} style={{
               flex: 1, padding: '10px 0', textAlign: 'center' as const,
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              cursor: stat.onClick ? 'pointer' : 'default',
             }}>
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
         </div>
@@ -926,11 +929,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               </div>
             </div>
             <div onClick={(e) => e.stopPropagation()}>
-              <VehicleFollowButton
+              <MotoFanButton
                 vehicleId={vehicleId}
-                vehicleOwnerId={vehicle?.owner_id}
-                isPrivateVehicle={vehicle?.is_private || false}
-                onFollowChange={() => loadVehicleData()}
+                ownerId={vehicle?.owner_id || null}
+                onCountChange={(c) => setFollowerCount(c)}
               />
             </div>
           </div>
@@ -1360,6 +1362,16 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <GuestJoinModal
           action={guestJoinAction}
           onClose={() => setShowGuestJoinModal(false)}
+        />
+      )}
+
+      {showMotoFansModal && vehicle && (
+        <MotoFansModal
+          vehicleId={vehicleId}
+          vehicleName={[vehicle.make, vehicle.model].filter(Boolean).join(' ') || 'Vehicle'}
+          fanCount={followerCount}
+          onClose={() => setShowMotoFansModal(false)}
+          onNavigate={onNavigate}
         />
       )}
 

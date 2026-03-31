@@ -16,6 +16,7 @@ import { BadgeCoin } from '../components/BadgeCoin';
 import { getTierFromScore } from '../lib/tierConfig';
 import { getBadgeImagePath } from '../lib/badgeUtils';
 import { TIER_COLORS } from '../config/badgeConfig';
+import { MotoFansSection } from '../components/MotoFansSection';
 
 interface ProfilePageProps {
   onNavigate: OnNavigate;
@@ -789,7 +790,10 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
           </div>
         )}
 
-        {/* ── 5. ACTIVITY — compact recent posts ── */}
+        {/* ── 5. MOTOFANS — vehicles this user is a fan of ── */}
+        {user && <MotoFansSection userId={user.id} onNavigate={onNavigate} />}
+
+        {/* ── 6. ACTIVITY — compact recent posts ── */}
         {userPosts.length > 0 && (
           <div>
             <div style={{ padding: '12px 16px 8px' }}>

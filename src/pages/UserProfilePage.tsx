@@ -23,6 +23,7 @@ import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { getTierFromScore } from '../lib/tierConfig';
 import { getBadgeType, getBadgeImagePath } from '../lib/badgeUtils';
+import { MotoFansSection } from '../components/MotoFansSection';
 
 interface UserProfilePageProps {
   userId: string;
@@ -470,6 +471,9 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                 </div>
               </div>
             )}
+
+            {/* ── 5. MOTOFANS ── */}
+            <MotoFansSection userId={userId} onNavigate={onNavigate} />
           </>
         )}
       </div>
