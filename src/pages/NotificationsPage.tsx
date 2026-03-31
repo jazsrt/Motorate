@@ -23,7 +23,7 @@ interface Notification {
   data?: Record<string, unknown>;
 }
 
-type NotificationFilter = 'all' | 'badges' | 'social' | 'vehicles' | 'unread';
+type NotificationFilter = 'all' | 'spots' | 'reactions' | 'comments' | 'badges' | 'social';
 
 interface NotificationsPageProps {
   onNavigate: OnNavigate;
@@ -122,103 +122,79 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
     }
   };
 
+  const isBadge = ['badge_received', 'badge_unlocked', 'badge_awarded'].includes(notification.type);
+  const isFriendRequest = notification.type === 'friend_request';
+
+  const avatarBg = isBadge
+    ? 'rgba(249,115,22,0.15)'
+    : '#1e2a38';
+  const avatarBorder = isBadge
+    ? '1px solid rgba(249,115,22,0.20)'
+    : 'none';
+
   return (
     <div
       {...swipeHandlers}
+      onClick={() => onClick(notification)}
       style={{
-        display: 'flex', alignItems: 'flex-start', gap: 11,
-        padding: '10px 16px 10px 14px',
-        borderBottom: '1px solid rgba(255,255,255,0.03)',
-        borderLeft: getAccentBorder(),
-        background: !notification.is_read ? 'rgba(249,115,22,0.025)' : 'transparent',
+        display: 'flex', alignItems: 'flex-start', gap: 12,
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
         opacity: isDeleting ? 0 : isDeadLink ? 0.4 : 1,
         transform: isDeleting ? 'translateX(-24px)' : 'none',
         transition: 'opacity 0.2s, transform 0.2s',
         cursor: 'pointer',
       }}
     >
-      {/* Icon circle */}
+      {/* Avatar */}
       <div style={{
-        width: 32, height: 32, borderRadius: '50%',
-        background: getIconBg(),
+        width: 36, height: 36, borderRadius: '50%',
+        background: avatarBg, border: avatarBorder,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, marginTop: 1,
+        flexShrink: 0,
+        fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#7a8e9e',
       }}>
-        <Icon style={{ width: 14, height: 14, color }} strokeWidth={1.5} />
+        {isBadge ? (
+          <span style={{ fontSize: 16 }}>🎖</span>
+        ) : (
+          <Icon style={{ width: 14, height: 14, color }} strokeWidth={1.5} />
+        )}
       </div>
-
-      {/* Unread dot */}
-      {!notification.is_read && (
-        <div style={{
-          width: 5, height: 5, borderRadius: '50%',
-          background: '#F97316',
-          flexShrink: 0, alignSelf: 'center',
-          boxShadow: '0 0 6px rgba(249,115,22,0.6)',
-        }} />
-      )}
 
       {/* Text content */}
-      <div
-        style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
-        onClick={() => onClick(notification)}
-      >
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontFamily: 'Barlow, sans-serif', fontSize: 13, fontWeight: 500,
-          color: isDeadLink ? '#7a8e9e' : '#d8e8f0',
-          lineHeight: 1.35, marginBottom: 2,
+          fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.4,
         }}>
-          {notification.title}
+          <span style={{ color: '#eef4f8', fontWeight: 600 }}>{notification.title}</span>
+          {notification.message && ` ${notification.message}`}
         </div>
-        {notification.message && (
-          <div style={{
-            fontFamily: 'Barlow, sans-serif', fontSize: 11,
-            color: '#5a6e7e', lineHeight: 1.45,
-          }}>
-            {notification.message}
-          </div>
-        )}
-        <div style={{
-          fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
-          color: '#3a4e60', marginTop: 4,
-          fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em',
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#3a4e60',
+          marginTop: 3, display: 'block', fontVariantNumeric: 'tabular-nums',
         }}>
           {formatTimeAgo(notification.created_at)}
-        </div>
+        </span>
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}>
-        {!notification.is_read && (
-          <button
-            onClick={e => { e.stopPropagation(); onMarkAsRead(notification.id); }}
-            style={{
-              width: 28, height: 28, borderRadius: 5,
-              background: 'none', border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#20c060',
-            }}
-            title="Mark as read"
-          >
-            <Check style={{ width: 12, height: 12 }} strokeWidth={2.5} />
-          </button>
-        )}
+      {/* Friend request accept button */}
+      {isFriendRequest && !notification.is_read && (
         <button
-          onClick={e => {
-            e.stopPropagation();
-            setIsDeleting(true);
-            setTimeout(() => onDelete(notification.id), 250);
-          }}
+          onClick={e => { e.stopPropagation(); onMarkAsRead(notification.id); }}
           style={{
-            width: 28, height: 28, borderRadius: 5,
-            background: 'none', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#445566',
+            padding: '5px 10px', borderRadius: 5, background: '#F97316', border: 'none',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+            textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', flexShrink: 0,
           }}
-          title="Dismiss"
         >
-          <X style={{ width: 12, height: 12 }} strokeWidth={1.5} />
+          Accept
         </button>
-      </div>
+      )}
+
+      {/* Unread dot */}
+      {!notification.is_read && !isFriendRequest && (
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F97316', flexShrink: 0, marginTop: 6 }} />
+      )}
     </div>
   );
 }
@@ -336,15 +312,14 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
   const getCategory = (type: Notification['type']): NotificationFilter => {
     if (['badge_received', 'badge_unlocked', 'badge_awarded'].includes(type)) return 'badges';
-    if (['like', 'comment', 'follow'].includes(type)) return 'social';
-    if (['friend_request', 'friend_accepted'].includes(type)) return 'social';
-    if (['vehicle_follow', 'vehicle_follow_request', 'vehicle_follow_approved'].includes(type)) return 'vehicles';
-    if (type === 'review' || type === 'spot') return 'vehicles';
+    if (type === 'like' || type === 'vehicle_follow') return 'reactions';
+    if (type === 'comment') return 'comments';
+    if (['follow', 'friend_request', 'friend_accepted', 'vehicle_follow_request', 'vehicle_follow_approved'].includes(type)) return 'social';
+    if (type === 'spot' || type === 'review') return 'spots';
     return 'all';
   };
 
   const filteredNotifications = notifications.filter(n => {
-    if (filter === 'unread') return !n.is_read;
     if (filter === 'all') return true;
     return getCategory(n.type) === filter;
   });
@@ -353,10 +328,11 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
   const FILTERS: { id: NotificationFilter; label: string }[] = [
     { id: 'all', label: 'All' },
-    { id: 'unread', label: 'Unread' },
+    { id: 'spots', label: 'Spots' },
+    { id: 'reactions', label: 'Reactions' },
+    { id: 'comments', label: 'Comments' },
     { id: 'badges', label: 'Badges' },
     { id: 'social', label: 'Social' },
-    { id: 'vehicles', label: 'Vehicles' },
   ];
 
   const groupLabels: Record<string, string> = {
@@ -370,79 +346,47 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
     <Layout currentPage="notifications" onNavigate={onNavigate}>
       <div style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
 
-        {/* Sticky header */}
-        <div style={{
-          position: 'sticky', top: 0, zIndex: 20,
-          background: 'rgba(6,9,14,0.97)', backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
-          padding: '48px 18px 0',
-        }}>
-          <div style={{
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-            marginBottom: 12,
-          }}>
-            <div>
-              <div style={{
-                fontFamily: 'Rajdhani, sans-serif', fontSize: 26, fontWeight: 700,
-                color: '#eef4f8', lineHeight: 1,
-              }}>
-                Notifications
-              </div>
-              {unreadCount > 0 && (
-                <div style={{
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.2em', textTransform: 'uppercase' as const,
-                  color: '#F97316', marginTop: 4,
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
-                  {unreadCount} unread
-                </div>
-              )}
+        {/* Header */}
+        <div style={{ padding: '52px 16px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8' }}>
+              Notifications
             </div>
-
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '7px 12px',
-                  background: 'rgba(249,115,22,0.08)',
-                  border: '1px solid rgba(249,115,22,0.2)',
-                  borderRadius: 6, cursor: 'pointer',
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: '#F97316',
+                  display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
+                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
+                  borderRadius: 5, cursor: 'pointer',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#F97316',
                 }}
               >
-                <Check style={{ width: 11, height: 11 }} strokeWidth={2.5} />
-                Mark all read
+                <Check style={{ width: 10, height: 10 }} strokeWidth={2.5} />
+                Read all
               </button>
             )}
           </div>
+        </div>
 
-          {/* Filter chips */}
-          <div style={{
-            display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' as const,
-            paddingBottom: 12,
-          }}>
-            {FILTERS.map(f => (
-              <button
-                key={f.id}
-                onClick={() => setFilter(f.id)}
-                style={{
-                  flexShrink: 0, padding: '5px 12px',
-                  background: filter === f.id ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
-                  border: filter === f.id ? '1px solid rgba(249,115,22,0.35)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 4, cursor: 'pointer',
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.14em', textTransform: 'uppercase' as const,
-                  color: filter === f.id ? '#F97316' : '#7a8e9e',
-                  transition: 'all 0.15s',
-                }}
-              >
+        {/* Filter pills */}
+        <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+          {FILTERS.map(f => {
+            const active = filter === f.id;
+            return (
+              <button key={f.id} onClick={() => setFilter(f.id)} style={{
+                flexShrink: 0, padding: '4px 12px', borderRadius: 20, cursor: 'pointer',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                background: active ? 'rgba(249,115,22,0.10)' : 'transparent',
+                border: active ? '1px solid rgba(249,115,22,0.40)' : '1px solid rgba(255,255,255,0.06)',
+                color: active ? '#F97316' : '#3a4e60',
+              }}>
                 {f.label}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {/* Loading */}
@@ -450,23 +394,9 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
         {/* Empty state */}
         {!loading && filteredNotifications.length === 0 && (
-          <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-            <Bell
-              style={{ width: 28, height: 28, color: '#3a4e60', margin: '0 auto 14px', display: 'block' }}
-              strokeWidth={1}
-            />
-            <div style={{
-              fontFamily: 'Rajdhani, sans-serif', fontSize: 17, fontWeight: 700,
-              color: '#7a8e9e', marginBottom: 6,
-            }}>
-              {filter === 'all' ? 'No notifications yet' : `No ${filter} notifications`}
-            </div>
-            <div style={{
-              fontFamily: 'Barlow, sans-serif', fontSize: 12, color: '#445566', lineHeight: 1.5,
-            }}>
-              {filter === 'all'
-                ? 'Spots, follows, and reactions on your vehicles will show up here.'
-                : 'Try a different filter'}
+          <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: '#3a4e60' }}>
+              No Notifications
             </div>
           </div>
         )}
