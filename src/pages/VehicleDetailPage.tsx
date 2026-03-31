@@ -105,7 +105,7 @@ interface VehicleImage {
   created_at: string;
 }
 
-function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: string; onFollowerUpdated: () => void }) {
+function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: string; onFollowerUpdated: () => void }) {
   const [follows, setFollows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -142,7 +142,7 @@ function VehicleFollowersPanel({ vehicleId, onFollowerUpdated }: { vehicleId: st
   return (
     <div style={{ margin: '0 16px 16px' }}>
       <button onClick={() => setExpanded(!expanded)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--muted)', cursor: 'pointer' }}>
-        <span>Followers · {accepted.length}</span>
+        <span>MotoFans · {accepted.length}</span>
         {pending.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--black)', borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700 }}>{pending.length} pending</span>}
       </button>
       {expanded && (
@@ -1218,7 +1218,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             }}>
               <div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.white }}>Private Vehicle</div>
-                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Followers need your approval</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>MotoFans need your approval</div>
               </div>
               <button
                 onClick={async () => {
@@ -1239,8 +1239,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               </button>
             </div>
 
-            {/* Followers panel */}
-            <VehicleFollowersPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />
+            {/* MotoFans pending panel */}
+            <MotoFansPendingPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />
 
             {/* Modifications */}
             <div style={{ background: C.carbon1, borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
