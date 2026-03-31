@@ -819,7 +819,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 }}>
                   <span style={{
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600,
-                    color: '#ffffff', display: 'block', fontVariantNumeric: 'tabular-nums',
+                    color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums',
                   }}>
                     {item.value}
                   </span>

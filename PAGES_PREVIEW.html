@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MotoRate — Current Pages Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#010204;font-family:'Barlow',sans-serif;color:#eef4f8;padding:40px 24px 80px;display:flex;flex-wrap:wrap;gap:40px;justify-content:center;}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:#5a6e7e;text-align:center;}
+.phone{width:320px;height:680px;background:#070a0f;border-radius:32px;overflow:hidden;border:1px solid rgba(255,255,255,.06);position:relative;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 0 1px rgba(249,115,22,.06);flex-shrink:0;}
+.scr{height:calc(100% - 72px);overflow-y:auto;scrollbar-width:none;}
+.scr::-webkit-scrollbar{display:none;}
+/* NAV */
+.nav{position:absolute;bottom:0;left:0;right:0;height:72px;background:rgba(7,10,15,.96);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-around;padding-bottom:8px;backdrop-filter:blur(12px);}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.ni svg{width:20px;height:20px;color:#3a4e60;}
+.ni svg.a{color:#F97316;}
+.nl{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#3a4e60;}
+.nl.a{color:#F97316;}
+.fab{width:52px;height:52px;border-radius:16px;background:#F97316;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(249,115,22,.4);margin-top:-10px;}
+/* COMPONENTS */
+.hdr{padding:52px 16px 14px;background:#0a0d14;border-bottom:1px solid rgba(255,255,255,.05);}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#eef4f8;}
+.filter-bar{display:flex;gap:6px;padding:8px 14px;background:#0a0d14;border-bottom:1px solid rgba(255,255,255,.04);overflow-x:auto;scrollbar-width:none;}
+.pill{flex-shrink:0;padding:4px 12px;border-radius:20px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.06);color:#3a4e60;background:transparent;}
+.pill.a{background:rgba(249,115,22,.10);border-color:rgba(249,115,22,.40);color:#F97316;}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;}
+.sh-title{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#5a6e7e;}
+.sh-action{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F97316;}
+.notif-row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);}
+.notif-av{width:36px;height:36px;border-radius:50%;background:#1e2a38;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#7a8e9e;}
+.notif-av.badge{background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.20);}
+.notif-av.rank{background:rgba(56,136,238,.12);border:1px solid rgba(56,136,238,.20);}
+.notif-text{font-family:'Barlow',sans-serif;font-size:12px;color:#7a8e9e;line-height:1.4;}
+.notif-text b{color:#eef4f8;font-weight:600;}
+.notif-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:#3a4e60;margin-top:3px;display:block;}
+.notif-thumb{width:40px;height:32px;border-radius:5px;background:#111720;overflow:hidden;flex-shrink:0;}
+.notif-thumb img{width:100%;height:100%;object-fit:cover;}
+.accept-btn{padding:5px 10px;border-radius:5px;background:#F97316;border:none;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;color:#030508;cursor:pointer;flex-shrink:0;}
+.unread-dot{width:6px;height:6px;border-radius:50%;background:#F97316;flex-shrink:0;margin-top:6px;}
+.msg-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;}
+.msg-av{width:40px;height:40px;border-radius:50%;background:#1e2a38;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#7a8e9e;}
+.msg-handle{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#eef4f8;line-height:1;}
+.msg-preview{font-family:'Barlow',sans-serif;font-size:11px;color:#5a6e7e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-time{font-family:'JetBrains Mono',monospace;font-size:8px;color:#3a4e60;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.search-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0d1117;border-radius:8px;margin:10px 14px;border:1px solid rgba(255,255,255,.06);}
+.srch-icon{width:14px;height:14px;color:#5a6e7e;}
+.srch-ph{font-family:'Barlow',sans-serif;font-size:13px;color:#3a4e60;}
+.explore-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.explore-cell{position:relative;overflow:hidden;background:#0d1117;height:120px;}
+.explore-cell.wide{grid-column:span 2;height:150px;}
+.explore-cell img{width:100%;height:100%;object-fit:cover;opacity:0.7;display:block;}
+.explore-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(3,5,8,.8) 0%,transparent 60%);}
+.explore-label{position:absolute;bottom:8px;left:10px;right:10px;}
+.explore-make{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;}
+.explore-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#eef4f8;line-height:1;}
+.premium-hero{background:#0a0d14;padding:52px 16px 24px;text-align:center;border-bottom:1px solid rgba(249,115,22,.12);}
+.premium-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#F97316;margin-bottom:6px;}
+.premium-title{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:#eef4f8;line-height:1;margin-bottom:6px;}
+.premium-sub{font-family:'Barlow',sans-serif;font-size:12px;color:#5a6e7e;line-height:1.5;}
+.premium-price{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:600;color:#F97316;margin:16px 0 4px;}
+.premium-period{font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#5a6e7e;letter-spacing:.15em;text-transform:uppercase;}
+.premium-cta{margin:16px 0 0;padding:13px;background:#F97316;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#030508;width:100%;cursor:pointer;}
+.feature-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);}
+.check-circle{width:18px;height:18px;border-radius:50%;background:rgba(32,192,96,.12);border:1px solid rgba(32,192,96,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.feature-text{font-family:'Barlow',sans-serif;font-size:12px;color:#7a8e9e;}
+.feature-text b{color:#eef4f8;}
+.date-grp{padding:10px 18px 4px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#445566;}
+</style>
+</head>
+<body>
+
+<!-- ═══ EXPLORE ═══ -->
+<div class="wrap">
+  <div class="lbl">Explore Page ✅</div>
+  <div class="phone">
+    <div class="scr">
+      <div style="padding:52px 0 0;background:#070a0f;">
+        <div style="padding:0 14px 10px;">
+          <h2 style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#eef4f8;margin:0 0 10px;">Explore</h2>
+          <div class="search-bar" style="margin:0;">
+            <svg class="srch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <span class="srch-ph">Search plates, makes, models...</span>
+          </div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="pill a">All</div><div class="pill">Vehicles</div><div class="pill">Spots</div><div class="pill">People</div>
+      </div>
+      <div style="padding:12px 16px 0;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5a6e7e;">Trending Vehicles</div>
+      <div class="explore-grid">
+        <div class="explore-cell wide">
+          <img src="https://source.unsplash.com/featured/640x300/?lamborghini,car" alt="">
+          <div class="explore-overlay"></div>
+          <div class="explore-label"><div class="explore-make">Lamborghini</div><div class="explore-name">Huracán</div></div>
+        </div>
+        <div class="explore-cell">
+          <img src="https://source.unsplash.com/featured/320x240/?ferrari,car" alt="">
+          <div class="explore-overlay"></div>
+          <div class="explore-label"><div class="explore-make">Ferrari</div><div class="explore-name">296 GTB</div></div>
+        </div>
+        <div class="explore-cell">
+          <img src="https://source.unsplash.com/featured/320x240/?dodge,durango" alt="">
+          <div class="explore-overlay"></div>
+          <div class="explore-label"><div class="explore-make">Dodge</div><div class="explore-name">Durango</div></div>
+        </div>
+        <div class="explore-cell">
+          <img src="https://source.unsplash.com/featured/320x240/?bmw,m4" alt="">
+          <div class="explore-overlay"></div>
+          <div class="explore-label"><div class="explore-make">BMW</div><div class="explore-name">M4 Competition</div></div>
+        </div>
+        <div class="explore-cell">
+          <img src="https://source.unsplash.com/featured/320x240/?porsche,911" alt="">
+          <div class="explore-overlay"></div>
+          <div class="explore-label"><div class="explore-make">Porsche</div><div class="explore-name">911 GT3</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg class="a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl a">Explore</span></div>
+      <div class="fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NOTIFICATIONS ═══ -->
+<div class="wrap">
+  <div class="lbl">Notifications Page ✅</div>
+  <div class="phone">
+    <div class="scr">
+      <div class="hdr">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="hdr-title">Notifications</div>
+          <div style="padding:5px 10px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F97316;">Read All</div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="pill a">All</div><div class="pill">Spots</div><div class="pill">Reactions</div><div class="pill">Comments</div><div class="pill">Badges</div><div class="pill">Social</div>
+      </div>
+      <div class="date-grp">Today</div>
+      <!-- Badge notification -->
+      <div class="notif-row">
+        <div class="notif-av badge">🎖</div>
+        <div style="flex:1;min-width:0;">
+          <div class="notif-text">You earned the <b>Eagle Eye</b> badge for spotting 10 vehicles.</div>
+          <span class="notif-time">2m ago</span>
+        </div>
+        <div class="unread-dot"></div>
+      </div>
+      <!-- Like notification -->
+      <div class="notif-row">
+        <div class="notif-av" style="font-size:16px;">T</div>
+        <div style="flex:1;min-width:0;">
+          <div class="notif-text"><b>@testit</b> liked your spot of the Dodge Durango.</div>
+          <span class="notif-time">14m ago</span>
+        </div>
+        <div class="notif-thumb"><img src="https://source.unsplash.com/featured/80x64/?dodge,durango" alt=""></div>
+      </div>
+      <!-- Friend request -->
+      <div class="notif-row">
+        <div class="notif-av" style="font-size:16px;">E</div>
+        <div style="flex:1;min-width:0;">
+          <div class="notif-text"><b>@elysa</b> sent you a friend request.</div>
+          <span class="notif-time">1h ago</span>
+        </div>
+        <button class="accept-btn">Accept</button>
+      </div>
+      <!-- Spot notification -->
+      <div class="notif-row">
+        <div class="notif-av" style="font-size:16px;">R</div>
+        <div style="flex:1;min-width:0;">
+          <div class="notif-text"><b>@racerx</b> spotted your <b>Dodge Durango</b> in Chicago.</div>
+          <span class="notif-time">3h ago</span>
+        </div>
+        <div class="notif-thumb"><img src="https://source.unsplash.com/featured/80x64/?dodge,suv" alt=""></div>
+      </div>
+      <!-- Rank notification -->
+      <div class="notif-row">
+        <div class="notif-av rank">⬆</div>
+        <div style="flex:1;min-width:0;">
+          <div class="notif-text">Your Durango climbed to <b>#1</b> in Global Rankings.</div>
+          <span class="notif-time">Yesterday</span>
+        </div>
+      </div>
+      <div class="date-grp">This Week</div>
+      <div class="notif-row" style="opacity:0.6;">
+        <div class="notif-av" style="font-size:16px;">J</div>
+        <div style="flex:1;min-width:0;">
+          <div class="notif-text"><b>@jsmith</b> commented on your post.</div>
+          <span class="notif-time">3 days ago</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MESSAGES ═══ -->
+<div class="wrap">
+  <div class="lbl">Messages Page ⚠️ Desktop layout — needs mobile rework</div>
+  <div class="phone">
+    <div class="scr">
+      <div class="hdr">
+        <div class="hdr-title">Messages</div>
+      </div>
+      <div class="search-bar">
+        <svg class="srch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="srch-ph">Search messages...</span>
+      </div>
+      <!-- Message rows -->
+      <div class="msg-row">
+        <div class="msg-av">T</div>
+        <div style="flex:1;min-width:0;">
+          <div class="msg-handle">@testit</div>
+          <div class="msg-preview">Sick Durango man, what tune are you running?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="msg-time">2m</span>
+          <div style="width:6px;height:6px;border-radius:50%;background:#F97316;"></div>
+        </div>
+      </div>
+      <div class="msg-row">
+        <div class="msg-av" style="background:rgba(56,136,238,.15);">E</div>
+        <div style="flex:1;min-width:0;">
+          <div class="msg-handle">@elysa</div>
+          <div class="msg-preview">Spotted your car downtown today!</div>
+        </div>
+        <span class="msg-time">1h</span>
+      </div>
+      <div class="msg-row">
+        <div class="msg-av" style="background:rgba(32,192,96,.15);">R</div>
+        <div style="flex:1;min-width:0;">
+          <div class="msg-handle">@racerx</div>
+          <div class="msg-preview">What's the 0-60 on the SRT?</div>
+        </div>
+        <span class="msg-time">3h</span>
+      </div>
+      <div style="padding:32px 24px;text-align:center;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;color:#3a4e60;">No more messages</span>
+      </div>
+      <!-- WARNING BOX -->
+      <div style="margin:0 14px;padding:12px 14px;background:rgba(232,58,74,.08);border:1px solid rgba(232,58,74,.20);border-radius:8px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#e83a4a;margin-bottom:4px;">⚠ Issue Found</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:11px;color:#9aaebc;line-height:1.5;">Current MessagesPage is built as a desktop sidebar layout, not a mobile-first list. The conversation list panel (320px sidebar) and message thread render side-by-side — on mobile this collapses incorrectly. Needs to be rebuilt as a full-screen list → tap → full-screen thread flow.</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PREMIUM ═══ -->
+<div class="wrap">
+  <div class="lbl">Premium / Pro Page ✅</div>
+  <div class="phone">
+    <div class="scr">
+      <div class="premium-hero">
+        <div class="premium-eyebrow">Upgrade</div>
+        <div class="premium-title">MotoRate <span style="color:#F97316;">Pro</span></div>
+        <div class="premium-sub">Unlock plate-to-VIN lookups and premium features.</div>
+        <div class="premium-price">$4</div>
+        <div class="premium-period">per month</div>
+        <button class="premium-cta">Upgrade to Pro</button>
+      </div>
+      <div class="feature-row">
+        <div class="check-circle"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.5 7.5L8 3" stroke="#20c060" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="feature-text"><b>Plate-to-VIN lookups</b> — automatically identify vehicles by plate</span>
+      </div>
+      <div class="feature-row">
+        <div class="check-circle"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.5 7.5L8 3" stroke="#20c060" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="feature-text"><b>10 free spots per week</b> included for all users — Pro gets unlimited</span>
+      </div>
+      <div class="feature-row">
+        <div class="check-circle"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.5 7.5L8 3" stroke="#20c060" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="feature-text"><b>Auto plate-to-VIN</b> — plate automatically identifies make, model, and year</span>
+      </div>
+      <div class="feature-row">
+        <div class="check-circle"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.5 7.5L8 3" stroke="#20c060" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="feature-text"><b>Priority spot ranking</b> — your spots surface higher in feed</span>
+      </div>
+      <div class="feature-row">
+        <div class="check-circle"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.5 7.5L8 3" stroke="#20c060" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="feature-text"><b>Pro badge</b> — verified Pro status on your profile</span>
+      </div>
+      <div class="feature-row">
+        <div class="check-circle"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.5 7.5L8 3" stroke="#20c060" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="feature-text"><b>Profile insights</b> — detailed analytics on views and engagement</span>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+      <div class="fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nl">Rankings</span></div>
+      <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Garage</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

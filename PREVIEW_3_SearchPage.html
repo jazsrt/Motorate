@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>3 — SearchPage (OLD — legacy page, barely used)</title><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Barlow:wght@400&family=Barlow+Condensed:wght@700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{background:#010204;display:flex;flex-direction:column;align-items:center;padding:40px 20px;font-family:'Barlow',sans-serif;color:#eef4f8;gap:12px;}.title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#F97316;text-align:center;}.subtitle{font-family:'Barlow',sans-serif;font-size:12px;color:#5a6e7e;text-align:center;margin-bottom:8px;}.phone{width:390px;background:#070a0f;border-radius:40px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 40px 100px rgba(0,0,0,.9);}.nav{height:72px;background:rgba(7,10,15,.96);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-around;padding-bottom:8px;}.ni{display:flex;flex-direction:column;align-items:center;gap:3px;}.ni svg{width:20px;height:20px;color:#3a4e60;}.nl{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#3a4e60;}.fab{width:52px;height:52px;border-radius:16px;background:#F97316;display:flex;align-items:center;justify-content:center;margin-top:-10px;}</style></head><body>
+<div class="title">Page 3 — SearchPage.tsx</div>
+<div class="subtitle">This is the OLD legacy search page. Uses Tailwind classes internally. Not wired to any nav tab currently. Can be deleted.</div>
+<div class="phone">
+  <div style="padding:52px 16px 16px;background:#070a0f;min-height:700px;">
+    <h1 style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;color:#eef4f8;margin-bottom:4px;">Spot &amp; Search</h1>
+    <p style="font-family:'Barlow',sans-serif;font-size:13px;color:#5a6e7e;margin-bottom:16px;">Find vehicles by plate or users by handle</p>
+    <!-- Info box -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:16px;">
+      <svg style="width:16px;height:16px;color:#F97316;flex-shrink:0;margin-top:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>
+        <p style="font-family:'Barlow',sans-serif;font-size:11px;color:#7a8e9e;margin-bottom:3px;"><b style="color:#eef4f8;">User Search:</b> Start with @ (e.g., @username)</p>
+        <p style="font-family:'Barlow',sans-serif;font-size:11px;color:#7a8e9e;"><b style="color:#eef4f8;">Plate Search:</b> Enter plate number without @</p>
+      </div>
+    </div>
+    <!-- Mode indicator -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <svg style="width:16px;height:16px;color:#F97316;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span style="font-family:'Barlow',sans-serif;font-size:13px;color:#7a8e9e;">Searching by <b style="color:#eef4f8;">License Plate</b></span>
+      <span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:#F97316;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">Switch to Username</span>
+    </div>
+    <!-- Search input -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="position:relative;margin-bottom:12px;">
+        <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#5a6e7e;">
+          <svg style="width:20px;height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="13" rx="2"/></svg>
+        </div>
+        <div style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:11px 16px 11px 40px;font-family:'JetBrains Mono',monospace;font-size:14px;color:#3a4e60;letter-spacing:.06em;">Search plate, make, model...</div>
+      </div>
+      <!-- State selector -->
+      <div style="margin-bottom:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5a6e7e;margin-bottom:4px;">State</div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:14px;color:#eef4f8;">Illinois (IL)</div>
+      </div>
+      <!-- Camera / Upload buttons -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:#F97316;border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#000;">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take Photo
+        </div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#7a8e9e;">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Photo
+        </div>
+      </div>
+    </div>
+    <!-- Search Plate button -->
+    <div style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:linear-gradient(to right,#F97316,#fb923c);border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#000;cursor:pointer;">
+      <svg style="width:20px;height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="22" x2="15.66" y2="15.66"/></svg>
+      Search Plate
+    </div>
+    <!-- Notice box -->
+    <div style="margin-top:16px;padding:12px;background:rgba(232,58,74,.06);border:1px solid rgba(232,58,74,.2);border-radius:8px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#e83a4a;margin-bottom:4px;">Legacy Page</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:11px;color:#9aaebc;line-height:1.5;">This is SearchPage.tsx — the original search page. It uses old Tailwind styling and is not wired to any nav tab. It can be safely deleted or repurposed.</div>
+    </div>
+  </div>
+  <!-- NAV -->
+  <div class="nav">
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="nl">Feed</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span class="nl">Explore</span></div>
+    <div class="fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#030508" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span class="nl">Rankings</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Garage</span></div>
+  </div>
+</div>
+</body></html>

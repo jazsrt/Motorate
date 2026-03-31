@@ -135,11 +135,11 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
       <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 88 }}>
 
         {/* Header */}
-        <div style={{ padding: '52px 18px 12px', background: '#070a0f' }}>
+        <div style={{ padding: '52px 16px 14px', background: '#0a0d14' }}>
           <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: '#3a4e60', marginBottom: 2 }}>
             {scopeDisplayLabel}
           </div>
-          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
             Top <span style={{ color: '#F97316' }}>Vehicles</span>
           </div>
         </div>
@@ -151,7 +151,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
             return (
               <button key={key} onClick={() => handleScopeChange(key)}
                 style={{
-                  flexShrink: 0, padding: '10px 14px', textAlign: 'center' as const,
+                  flex: 1, padding: '10px 0', textAlign: 'center' as const,
                   fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
                   letterSpacing: '0.15em', textTransform: 'uppercase' as const,
                   color: isOn ? '#F97316' : '#5a6e7e',
@@ -264,7 +264,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
                 <div style={{
                   fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600,
-                  color: isTop3 ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums',
+                  color: '#F97316', fontVariantNumeric: 'tabular-nums',
                 }}>
                   {repScore.toLocaleString()}
                 </div>

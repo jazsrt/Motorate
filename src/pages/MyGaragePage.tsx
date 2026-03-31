@@ -546,10 +546,10 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(3,5,8,0.15) 0%, rgba(3,5,8,0.0) 30%, rgba(3,5,8,0.85) 80%, rgba(3,5,8,0.98) 100%)' }} />
           {/* Top bar */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', zIndex: 2 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1e2a38', border: '2px solid rgba(249,115,22,0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#1e2a38', border: '2px solid rgba(249,115,22,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               {avatarUrl
                 ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8' }}>{(handle || '?')[0].toUpperCase()}</span>
+                : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8' }}>{(handle || '?')[0].toUpperCase()}</span>
               }
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -647,7 +647,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           ].map((stat, i, arr) => (
             <div key={stat.label} style={{
               flex: 1, padding: '10px 0', textAlign: 'center' as const,
-              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
             }}>
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>

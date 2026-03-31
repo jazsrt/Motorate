@@ -174,7 +174,7 @@ export default function ExplorePage({ onNavigate }: ExplorePageProps) {
       ) : (
         <>
           {/* Section header */}
-          <div style={{ padding: '12px 16px 0', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#5a6e7e' }}>
+          <div style={{ padding: '12px 16px 0', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#5a6e7e' }}>
             Trending Vehicles
           </div>
 

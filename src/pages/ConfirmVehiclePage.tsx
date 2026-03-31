@@ -38,7 +38,7 @@ export function ConfirmVehiclePage({ onNavigate, wizardData }: ConfirmVehiclePag
       </div>
 
       {/* Plate display */}
-      <div style={{ background: '#0d1117', border: '1px solid rgba(249,115,22,0.12)', borderRadius: 8, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, margin: '14px 16px' }}>
+      <div style={{ background: '#0d1117', border: '1px solid rgba(249,115,22,0.12)', borderRadius: 8, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, margin: '0 16px' }}>
         <div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: '#7a8e9e', letterSpacing: '0.1em' }}>{wizardData.plateState || '—'}</div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.15em' }}>{wizardData.plateNumber || '—'}</div>

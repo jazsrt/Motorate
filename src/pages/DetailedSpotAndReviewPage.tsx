@@ -41,9 +41,9 @@ function StarRow({
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a8e9e', width: 80 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#7a8e9e', width: 80 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
         {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
@@ -54,10 +54,10 @@ function StarRow({
           >
             <Star
               style={{
-                width: 28,
-                height: 28,
-                fill: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)',
-                color: star <= (hovered || value) ? '#F97316' : 'rgba(255,255,255,0.06)',
+                width: 14,
+                height: 14,
+                fill: star <= (hovered || value) ? '#f0a030' : 'none',
+                color: star <= (hovered || value) ? '#f0a030' : '#3a4e60',
                 transition: 'color 0.15s, fill 0.15s',
               }}
             />
