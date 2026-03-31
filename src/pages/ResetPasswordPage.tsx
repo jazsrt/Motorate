@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { Logo } from '../components/Logo';
 import { supabase } from '../lib/supabase';
+
+const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '12px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
+const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6, display: 'block' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '14px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' };
 
 export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -84,121 +87,133 @@ export function ResetPasswordPage() {
     }
   };
 
+  const renderContent = () => {
+    if (verifyingToken) {
+      return (
+        <div style={{ textAlign: 'center', padding: '32px 0' }}>
+          <Loader2 style={{ width: 32, height: 32, color: '#F97316', margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} strokeWidth={1.5} />
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>Verifying Reset Link</div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>Please wait while we verify your password reset link...</div>
+        </div>
+      );
+    }
+
+    if (success) {
+      return (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, background: 'rgba(32,192,96,0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <CheckCircle style={{ width: 24, height: 24, color: '#20c060' }} strokeWidth={1.5} />
+          </div>
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>Password Reset Successful</div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>Redirecting you to login...</div>
+        </div>
+      );
+    }
+
+    if (!hasValidSession) {
+      return (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, background: 'rgba(232,58,74,0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <AlertCircle style={{ width: 24, height: 24, color: '#e83a4a' }} strokeWidth={1.5} />
+          </div>
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>Invalid Reset Link</div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', marginBottom: 20 }}>
+            {error || 'This password reset link is invalid or has expired.'}
+          </div>
+          <button
+            onClick={() => {
+              window.location.hash = '';
+              window.location.reload();
+            }}
+            style={primaryBtnStyle}
+          >
+            Back to Login
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>Reset Password</div>
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', marginBottom: 20 }}>Enter your new password below</div>
+
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', marginBottom: 16 }}>
+              <AlertCircle style={{ width: 14, height: 14, color: '#e83a4a', flexShrink: 0, marginTop: 1 }} />
+              <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#e83a4a' }}>{error}</span>
+            </div>
+          )}
+
+          <div style={{ marginBottom: 14 }}>
+            <label htmlFor="password" style={labelStyle}>New Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={8}
+              style={inputStyle}
+              onFocus={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
+            />
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#3a4e60', marginTop: 4 }}>At least 8 characters</div>
+          </div>
+
+          <div style={{ marginBottom: 18 }}>
+            <label htmlFor="confirmPassword" style={labelStyle}>Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={8}
+              style={inputStyle}
+              onFocus={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ ...primaryBtnStyle, opacity: loading ? 0.45 : 1 }}
+          >
+            {loading ? 'Resetting...' : 'Reset Password'}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <button
+            onClick={() => {
+              window.location.hash = '';
+              window.location.reload();
+            }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#F97316' }}
+          >
+            Back to Login
+          </button>
+        </div>
+      </>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface via-surface to-surfacehighlight flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Logo size="large" showTagline />
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#030508' }}>
+      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 380, margin: '0 auto', padding: '24px 16px' }}>
+        {/* MOTORATE wordmark */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#eef4f8' }}>MOTO<span style={{ color: '#F97316' }}>R</span>ATE</div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', marginTop: 4 }}>Reputation for Real Cars</div>
         </div>
 
-        <div className="bg-surface/95 backdrop-blur-md rounded-xl p-8 border border-surfacehighlight shadow-2xl">
-          {verifyingToken ? (
-            <div className="text-center space-y-4 py-8">
-              <Loader2 className="w-12 h-12 text-accent-primary animate-spin mx-auto" strokeWidth={1.5} />
-              <h2 className="text-xl font-heading font-bold text-white">Verifying Reset Link</h2>
-              <p className="text-secondary text-sm">
-                Please wait while we verify your password reset link...
-              </p>
-            </div>
-          ) : success ? (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-status-success/20 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-8 h-8 text-status-success" strokeWidth={1.5} />
-              </div>
-              <h2 className="text-2xl font-heading font-bold text-white">Password Reset Successful</h2>
-              <p className="text-secondary text-sm">
-                Redirecting you to login...
-              </p>
-            </div>
-          ) : !hasValidSession ? (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-status-danger/20 rounded-full flex items-center justify-center mx-auto">
-                <AlertCircle className="w-8 h-8 text-status-danger" strokeWidth={1.5} />
-              </div>
-              <h2 className="text-2xl font-heading font-bold text-white">Invalid Reset Link</h2>
-              <p className="text-secondary text-sm mb-4">
-                {error || 'This password reset link is invalid or has expired.'}
-              </p>
-              <button
-                onClick={() => {
-                  window.location.hash = '';
-                  window.location.reload();
-                }}
-                className="btn-primary w-full"
-              >
-                Back to Login
-              </button>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-2xl font-heading font-bold text-white mb-2">Reset Password</h2>
-              <p className="text-secondary text-sm mb-6">
-                Enter your new password below
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                  <div className="bg-status-danger/20 border border-status-danger rounded-xl p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-status-danger flex-shrink-0 mt-0.5" strokeWidth={1.5} />
-                    <p className="text-sm text-status-danger">{error}</p>
-                  </div>
-                )}
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-heading font-semibold mb-2 text-white">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="input-enhanced w-full text-white placeholder:text-neutral-500"
-                    placeholder="••••••••"
-                    required
-                    minLength={8}
-                  />
-                  <p className="text-xs text-secondary mt-1">At least 8 characters</p>
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-heading font-semibold mb-2 text-white">
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input-enhanced w-full text-white placeholder:text-neutral-500"
-                    placeholder="••••••••"
-                    required
-                    minLength={8}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary w-full disabled:bg-surfacehighlight disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
-              </form>
-
-              <div className="mt-6 text-center">
-                <button
-                  onClick={() => {
-                    window.location.hash = '';
-                    window.location.reload();
-                  }}
-                  className="text-accent-primary hover:text-accent-hover text-sm font-heading font-semibold transition-colors"
-                >
-                  Back to Login
-                </button>
-              </div>
-            </>
-          )}
+        <div style={{ background: 'rgba(10,13,20,0.92)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px 28px', backdropFilter: 'blur(20px)' }}>
+          {renderContent()}
         </div>
       </div>
     </div>
