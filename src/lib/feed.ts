@@ -161,7 +161,7 @@ export async function loadFeedCursor(
       view_count,
       comment_count,
       author:profiles!posts_author_id_fkey(handle, avatar_url, location, is_admin),
-      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count)
+      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
     `)
     .order('created_at', { ascending: false })
     .limit(limit + 20);
@@ -318,7 +318,9 @@ export async function loadFeedCursor(
     isFavorite: false
   } : null;
 
-  return { posts: enrichedPosts as FeedPost[], nextCursor };
+  const rankedPosts = applyRankingMultiplier(enrichedPosts);
+
+  return { posts: rankedPosts as FeedPost[], nextCursor };
 }
 
 /**
@@ -386,6 +388,21 @@ export async function refreshFeed(
   limit = 20
 ): Promise<FeedResult> {
   return loadFeedCursor(userId, limit);
+}
+
+/**
+ * Apply ranking multiplier to sort feed posts by weighted engagement.
+ * Posts with higher vehicle ranking_multiplier surface higher.
+ * Falls back to 1.0 if multiplier is not set.
+ */
+export function applyRankingMultiplier(posts: any[]): any[] {
+  return posts.sort((a, b) => {
+    const aMultiplier = a.vehicles?.ranking_multiplier ?? 1.0;
+    const bMultiplier = b.vehicles?.ranking_multiplier ?? 1.0;
+    const aScore = aMultiplier * ((a.like_count ?? 0) + 1);
+    const bScore = bMultiplier * ((b.like_count ?? 0) + 1);
+    return bScore - aScore;
+  });
 }
 
 /**
