@@ -303,6 +303,14 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 }}>
                   RP
                 </div>
+                {isUserVehicle && v.verification_tier !== 'vin_verified' && (
+                  <div
+                    onClick={(e) => { e.stopPropagation(); onNavigate('scan'); }}
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer', marginTop: 2 }}
+                  >
+                    Verify to rank higher ›
+                  </div>
+                )}
               </div>
             </div>
           );

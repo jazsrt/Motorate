@@ -422,6 +422,24 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             </div>
           </div>
 
+          {/* Entry option buttons */}
+          <div style={{ padding: '12px 16px 0', display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+            <button
+              onClick={() => { /* Scrolls down to plate search — it's already below */ }}
+              style={{ width: '100%', padding: 16, background: '#F97316', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' as const }}
+            >
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#030508', lineHeight: 1 }}>Quick Spot</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: 'rgba(3,5,8,0.7)', marginTop: 4 }}>Year / Make / Model — Free, instant</div>
+            </button>
+            <button
+              onClick={() => { /* Scrolls down to plate search — it's already below */ }}
+              style={{ width: '100%', padding: 16, background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' as const }}
+            >
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>Verify with Plate</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginTop: 4 }}>Plate lookup · Uses 1 lookup credit</div>
+            </button>
+          </div>
+
           {/* Recently spotted strip */}
           {(() => {
             const spotsWithImages = recentSpots.filter(s => {

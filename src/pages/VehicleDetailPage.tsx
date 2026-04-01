@@ -1172,10 +1172,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   letterSpacing: '0.18em', textTransform: 'uppercase' as const,
                 }}
               >
-                Claim This Plate
+                Verify Ownership
               </button>
               <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.steel, marginTop: 8 }}>
-                Claiming lets you manage your vehicle profile and respond to reviews
+                Verifying lets you manage your vehicle profile and respond to reviews
               </p>
             </div>
           </div>

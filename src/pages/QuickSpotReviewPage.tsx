@@ -439,6 +439,28 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             </div>
           )}
 
+          {/* Verify CTA banner */}
+          <div style={{ margin: '0 0 12px', padding: '14px 16px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 10 }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>
+              Verify this vehicle to boost ranking and visibility
+            </div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginBottom: 12 }}>
+              Verified vehicles rank higher and get more exposure in the feed.
+            </div>
+            <button
+              onClick={() => onNavigate('scan')}
+              style={{ width: '100%', padding: 10, background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', marginBottom: 6 }}
+            >
+              Verify Now
+            </button>
+            <button
+              onClick={() => onNavigate('feed')}
+              style={{ width: '100%', padding: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}
+            >
+              Skip
+            </button>
+          </div>
+
           {/* Actions */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <button
