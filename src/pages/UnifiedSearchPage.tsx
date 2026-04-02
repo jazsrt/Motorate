@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PUBLIC_COLUMNS, VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { Search, User, X } from 'lucide-react';
@@ -72,7 +72,6 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [_currentUserHandle, setCurrentUserHandle] = useState<string>('');
-  const _searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   const [plateViewState, setPlateViewState] = useState<PlateViewState>('search');
   const [plateState, setPlateState] = useState('');
@@ -101,7 +100,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
     loadCurrentUser();
   }, []);
 
-  const _performUnifiedSearch = useCallback(async () => {
+  const performUnifiedSearch = useCallback(async () => {
     setLoading(true);
     setHasSearched(true);
 
@@ -110,53 +109,58 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       const isUserSearch = rawQuery.startsWith('@');
       const searchTerm = rawQuery.replace(/^@/, '');
 
-      // If searching for a user (@ prefix), skip vehicle search entirely
       if (isUserSearch) {
-        // Use Full Text Search instead of ilike for better performance
-        // Convert spaces to & for AND search (e.g., "john doe" becomes "john & doe")
-        const ftsQuery = searchTerm.replace(/\s+/g, ' & ');
-
-        const { data: userResults, error: userError } = await supabase
+        // @ prefix — search users only
+        const { data: userResults } = await supabase
           .from('profiles')
           .select('id, handle, avatar_url')
-          .textSearch('fts', ftsQuery)
+          .ilike('handle', `%${searchTerm}%`)
           .limit(10);
 
-        if (userError) {
-          setUsers([]);
-        } else {
-          setUsers(userResults || []);
-        }
-
+        setUsers(userResults || []);
         setVehicles([]);
         setLoading(false);
         return;
       }
 
-      // Otherwise, search for vehicles by make/model using Full Text Search
-      // Convert spaces to & for AND search (e.g., "dodge charger" becomes "dodge & charger")
+      // No @ prefix — search vehicles AND users in parallel
       const ftsQuery = searchTerm.replace(/\s+/g, ' & ');
 
-      // PLATE: hidden — public surface
-      const vehiclesResult = await supabase
-        .from('vehicles')
-        .select(VEHICLE_PUBLIC_COLUMNS)
-        .textSearch('fts', ftsQuery)
-        .limit(10);
+      const [vehiclesResult, plateResult, userResult] = await Promise.all([
+        // PLATE: hidden — public surface
+        supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).textSearch('fts', ftsQuery).limit(10),
+        supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).ilike('plate_number', `%${searchTerm}%`).eq('is_private', false).limit(10),
+        supabase.from('profiles').select('id, handle, avatar_url').ilike('handle', `%${searchTerm}%`).limit(5),
+      ]);
 
-      if (vehiclesResult.error) {
-        setVehicles([]);
-      } else {
-        setVehicles((vehiclesResult.data || []) as unknown as Vehicle[]);
-      }
-
-      setUsers([]);
+      // Merge and deduplicate vehicles
+      const allIds = new Set<string>();
+      const merged: any[] = [];
+      [...(vehiclesResult.data || []), ...(plateResult.data || [])].forEach(v => {
+        if (!allIds.has(v.id)) { allIds.add(v.id); merged.push(v); }
+      });
+      setVehicles(merged as unknown as Vehicle[]);
+      setUsers(userResult.data || []);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
       setLoading(false);
     }
   }, [query]);
+
+  // Debounced search trigger
+  useEffect(() => {
+    if (!query.trim() || query.trim().length < 2) {
+      setUsers([]);
+      setVehicles([]);
+      setHasSearched(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      performUnifiedSearch();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [query, performUnifiedSearch]);
 
   const handlePlateSearch = async (searchState: string, searchPlate: string) => {
     if (!searchPlate.trim()) return;
