@@ -467,7 +467,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         </div>
       )}
 
-      <div style={{ maxWidth: 560, margin: '0 auto', paddingBottom: 90 }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', paddingBottom: 160 }}>
         {/* Sticky header */}
         <div style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(6,9,14,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', padding: '14px 0 12px', marginBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -723,8 +723,8 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
               </div>
             </form>
 
-            {/* Fixed bottom submit */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, background: 'rgba(6,9,14,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+            {/* Fixed bottom submit — above bottom nav */}
+            <div style={{ position: 'fixed', bottom: 72, left: 0, right: 0, zIndex: 45, background: 'rgba(6,9,14,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '12px 16px' }}>
               <div style={{ maxWidth: 560, margin: '0 auto' }}>
                 <button
                   type="button"
