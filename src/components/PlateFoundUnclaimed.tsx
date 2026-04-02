@@ -165,7 +165,7 @@ export function PlateFoundUnclaimed({
 
   return (
     <>
-      <div style={{ maxWidth: 512, margin: '0 auto', padding: '0 16px' }}>
+      <div style={{ padding: '0 16px' }}>
           {/* Header */}
           <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '20px 24px', textAlign: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, marginBottom: 12 }}>
@@ -188,7 +188,7 @@ export function PlateFoundUnclaimed({
                 </div>
               ) : (
                 <div style={{ aspectRatio: '16/9', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Car style={{ width: 64, height: 64, color: '#6B7280' }} />
+                  <Car style={{ width: 64, height: 64, color: '#3a4e60' }} />
                 </div>
               )}
 
@@ -332,7 +332,7 @@ export function PlateFoundUnclaimed({
               <button
                 onClick={onSpotAndReview}
                 disabled={!isLoggedIn}
-                style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(135deg, #f97316, #f59e0b)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000', cursor: isLoggedIn ? 'pointer' : 'not-allowed', opacity: isLoggedIn ? 1 : 0.5, transition: 'all 0.5s', transform: revealStep >= 4 ? 'translateY(0)' : 'translateY(8px)' }}
+                style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: isLoggedIn ? 'pointer' : 'not-allowed', opacity: isLoggedIn ? 1 : 0.5, transition: 'all 0.5s', transform: revealStep >= 4 ? 'translateY(0)' : 'translateY(8px)' }}
               >
                 SPOT THIS PLATE {'\u00B7'} +15 RP
               </button>

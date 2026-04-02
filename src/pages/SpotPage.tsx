@@ -3,9 +3,8 @@ import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Camera, Upload, Car } from 'lucide-react';
+import { ArrowLeft, Camera, Car } from 'lucide-react';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
-import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
@@ -50,68 +49,11 @@ interface VehicleResult {
 }
 
 
-const cardStyle: React.CSSProperties = {
-  background: '#0a0d14',
-  border: '1px solid rgba(255,255,255,0.06)',
-  borderRadius: 10,
-};
-
-const cardTitleStyle: React.CSSProperties = {
-  fontFamily: "'Barlow Condensed', sans-serif",
-  fontSize: 13,
-  fontWeight: 700,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.1em',
-};
-
-const cardSubtitleStyle: React.CSSProperties = {
-  fontFamily: "'Barlow', sans-serif",
-  fontSize: 11,
-  color: '#5a6e7e',
-};
-
-const sectionHeaderStyle: React.CSSProperties = {
-  fontFamily: "'Barlow Condensed', sans-serif",
-  fontSize: 8,
-  fontWeight: 700,
-  letterSpacing: '0.18em',
-  textTransform: 'uppercase' as const,
-  color: '#7a8e9e',
-};
-
-const recentRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 12,
-  padding: '10px 20px',
-  borderBottom: '1px solid rgba(255,255,255,0.04)',
-};
-
-const vehicleNameStyle: React.CSSProperties = {
-  fontFamily: "'Rajdhani', sans-serif",
-  fontSize: 15,
-  fontWeight: 700,
-};
-
-const plateTextStyle: React.CSSProperties = {
-  fontFamily: "'Barlow Condensed', sans-serif",
-  fontSize: 10,
-  color: '#5a6e7e',
-};
-
-const spotCountStyle: React.CSSProperties = {
-  fontFamily: "'JetBrains Mono', monospace",
-  fontSize: 14,
-  fontWeight: 600,
-  color: '#F97316',
-};
-
 type ViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading' | 'revealing';
 
 export function SpotPage({ onNavigate }: SpotPageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const weeklyMetrics = useWeeklyMetrics(user?.id);
   const [viewState, setViewState] = useState<ViewState>('search');
   const [state, setState] = useState('');
   const [stateCode, setStateCode] = useState('');
@@ -122,44 +64,12 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [recentSpots, setRecentSpots] = useState<any[]>([]);
-  const [weeklySpots, setWeeklySpots] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-  const [weekTotal, setWeekTotal] = useState(0);
   const [revealPhase, setRevealPhase] = useState(0);
   const [revealResult, setRevealResult] = useState<{ vehicle: VehicleResult | null; found: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const plateEntryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function loadWeeklySpots() {
-      if (!user) return;
-      const now = new Date();
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-      monday.setHours(0, 0, 0, 0);
-
-      try {
-        const { data } = await supabase
-          .from('spot_history')
-          .select('created_at')
-          .eq('spotter_id', user.id)
-          .gte('created_at', monday.toISOString())
-          .order('created_at', { ascending: true });
-
-        if (data) {
-          const counts = [0, 0, 0, 0, 0, 0, 0];
-          data.forEach(spot => {
-            const d = new Date(spot.created_at);
-            const dayIdx = (d.getDay() + 6) % 7;
-            counts[dayIdx]++;
-          });
-          setWeeklySpots(counts);
-          setWeekTotal(data.length);
-        }
-      } catch (err) {
-        console.error('Error loading weekly spots:', err);
-      }
-    }
-
     async function loadRecentSpots() {
       try {
         const { data } = await supabase
@@ -191,7 +101,6 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     }
 
     loadRecentSpots();
-    loadWeeklySpots();
   }, [user]);
 
   // Reveal animation phases with proper cleanup
@@ -388,7 +297,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             </div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 12 }}>Find the Vehicle</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(249,115,22,0.40)' }} />
+              <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
               <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
               <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
             </div>

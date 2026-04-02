@@ -287,7 +287,7 @@ export function PlateFoundClaimed({
               {onViewVehicle && (
                 <button
                   onClick={() => onViewVehicle(vehicle.id)}
-                  style={{ width: '100%', padding: '14px', background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '14px', background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer' }}
                 >
                   VIEW VEHICLE PROFILE
                 </button>
@@ -301,7 +301,7 @@ export function PlateFoundClaimed({
                 </button>
                 <button
                   onClick={onLeaveReview}
-                  style={{ padding: '13px', background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#000', cursor: 'pointer' }}
+                  style={{ padding: '13px', background: C.orange, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer' }}
                 >
                   Spot This Plate
                 </button>
