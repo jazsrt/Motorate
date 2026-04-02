@@ -108,7 +108,7 @@ export function StickerSelector({ selectedStickers, onToggleSticker, maxPositive
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="grid grid-cols-2 gap-2">
         {displayedStickers.map((sticker) => {
           const isSelected = selectedStickers.includes(sticker.id);
           const isPositiveSticker = sticker.category === 'Positive' || sticker.category === 'Fun' || sticker.category === 'Community';

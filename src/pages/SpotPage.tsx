@@ -127,6 +127,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   const [revealPhase, setRevealPhase] = useState(0);
   const [revealResult, setRevealResult] = useState<{ vehicle: VehicleResult | null; found: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const plateEntryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadWeeklySpots() {
@@ -425,14 +426,14 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           {/* Entry option buttons */}
           <div style={{ padding: '12px 16px 0', display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
             <button
-              onClick={() => { /* Scrolls down to plate search — it's already below */ }}
+              onClick={() => onNavigate('quick-spot', { wizardData: {} })}
               style={{ width: '100%', padding: 16, background: '#F97316', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' as const }}
             >
               <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#030508', lineHeight: 1 }}>Quick Spot</div>
               <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: 'rgba(3,5,8,0.7)', marginTop: 4 }}>Year / Make / Model — Free, instant</div>
             </button>
             <button
-              onClick={() => { /* Scrolls down to plate search — it's already below */ }}
+              onClick={() => plateEntryRef.current?.scrollIntoView({ behavior: 'smooth' })}
               style={{ width: '100%', padding: 16, background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' as const }}
             >
               <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>Verify with Plate</div>
@@ -466,7 +467,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           })()}
 
           {/* Form area */}
-          <div style={{ padding: 16 }}>
+          <div ref={plateEntryRef} style={{ padding: 16 }}>
             <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
 
             {/* Pro upgrade hint */}

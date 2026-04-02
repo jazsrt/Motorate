@@ -182,9 +182,9 @@ export function PlateFoundUnclaimed({
           <div style={{ padding: 24, transition: 'all 0.5s', opacity: revealStep >= 3 ? 1 : 0, transform: revealStep >= 3 ? 'translateY(0)' : 'translateY(8px)' }}>
             {/* Vehicle card */}
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
-              {(vehicle.profile_image_url || vehicle.stock_image_url) ? (
+              {vehicle.profile_image_url ? (
                 <div style={{ aspectRatio: '16/9' }}>
-                  <img src={(vehicle.profile_image_url || vehicle.stock_image_url)!} alt={vehicleName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <img src={vehicle.profile_image_url} alt={vehicleName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
               ) : (
                 <div style={{ aspectRatio: '16/9', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -344,7 +344,7 @@ export function PlateFoundUnclaimed({
                     onClick={onClaimVehicle}
                     style={{ width: '100%', padding: '13px', background: '#0a0d14', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#F97316', cursor: 'pointer' }}
                   >
-                    CLAIM THIS PLATE
+                    VERIFY OWNERSHIP
                   </button>
                 </div>
               )}

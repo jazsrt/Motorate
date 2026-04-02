@@ -21,24 +21,26 @@ export const sounds = {
   revEngine: () => {
     if (!audioCtx) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
+    // Layer 1: engine body — triangle wave, mid frequencies
     const o1 = audioCtx.createOscillator();
     const g1 = audioCtx.createGain();
-    o1.type = 'sawtooth';
-    o1.frequency.setValueAtTime(55, audioCtx.currentTime);
-    o1.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.25);
-    o1.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + 0.5);
-    g1.gain.setValueAtTime(0.22, audioCtx.currentTime);
-    g1.gain.linearRampToValueAtTime(0.28, audioCtx.currentTime + 0.15);
-    g1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    o1.type = 'triangle';
+    o1.frequency.setValueAtTime(120, audioCtx.currentTime);
+    o1.frequency.exponentialRampToValueAtTime(380, audioCtx.currentTime + 0.3);
+    o1.frequency.exponentialRampToValueAtTime(260, audioCtx.currentTime + 0.55);
+    g1.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    g1.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 0.15);
+    g1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
     o1.connect(g1); g1.connect(audioCtx.destination);
-    o1.start(); o1.stop(audioCtx.currentTime + 0.5);
+    o1.start(); o1.stop(audioCtx.currentTime + 0.55);
+    // Layer 2: harmonic — sine, octave up
     const o2 = audioCtx.createOscillator();
     const g2 = audioCtx.createGain();
-    o2.type = 'sawtooth';
-    o2.frequency.setValueAtTime(110, audioCtx.currentTime);
-    o2.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.25);
-    o2.frequency.exponentialRampToValueAtTime(320, audioCtx.currentTime + 0.5);
-    g2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(240, audioCtx.currentTime);
+    o2.frequency.exponentialRampToValueAtTime(760, audioCtx.currentTime + 0.3);
+    o2.frequency.exponentialRampToValueAtTime(520, audioCtx.currentTime + 0.5);
+    g2.gain.setValueAtTime(0.08, audioCtx.currentTime);
     g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
     o2.connect(g2); g2.connect(audioCtx.destination);
     o2.start(); o2.stop(audioCtx.currentTime + 0.45);
