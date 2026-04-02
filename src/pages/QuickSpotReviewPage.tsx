@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ArrowLeft, Star, Heart, ThumbsDown, Zap, ChevronRight, Camera, X, Image } from 'lucide-react';
+import { ArrowLeft, Star, Heart, ThumbsDown, Camera, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -17,7 +17,7 @@ import { haptics } from '../lib/haptics';
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 6, display: 'block' };
-const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#000', cursor: 'pointer' };
+const primaryBtnStyle: React.CSSProperties = { width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' };
 
 interface QuickSpotReviewPageProps {
   onNavigate: OnNavigate;
@@ -595,6 +595,7 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         ) : (
           <button onClick={() => fileInputRef.current?.click()} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', background: 'transparent', border: '1px dashed rgba(255,255,255,0.07)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
             <Camera style={{ width: 14, height: 14 }} /> Add a Photo (optional)
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 4, padding: '2px 6px', marginLeft: 6 }}>+5 RP</span>
           </button>
         )}
       </div>
@@ -611,9 +612,6 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         </button>
       </div>
 
-      {/* Full spot upgrade link */}
-      <div style={{ margin: '0 16px 24px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 8, padding: '10px 14px' }}>
-      </div>
 
       {/* Weekly limit upgrade modal */}
       {showUpgradeModal && (

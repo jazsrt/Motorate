@@ -182,7 +182,7 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
                     borderRadius: 9999,
                     transition: 'all 0.3s',
                     ...(i === 1
-                      ? { width: 32, background: 'linear-gradient(90deg, #f97316, #f59e0b)' }
+                      ? { width: 32, background: '#F97316' }
                       : { width: 16, background: 'rgba(255,255,255,0.08)' }),
                   }}
                 />
@@ -294,7 +294,7 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <label style={labelStyle}>
-                Year <span style={{ color: '#4a5568' }}>(optional)</span>
+                Year <span style={{ color: '#5a6e7e' }}>(optional)</span>
               </label>
               <div style={selectWrapperStyle}>
                 <select
@@ -311,7 +311,7 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
 
             <div>
               <label style={labelStyle}>
-                Trim <span style={{ color: '#4a5568' }}>(optional)</span>
+                Trim <span style={{ color: '#5a6e7e' }}>(optional)</span>
               </label>
               <div style={selectWrapperStyle}>
                 <select
@@ -339,11 +339,11 @@ export function QuickSpotPage({ onNavigate, wizardData }: QuickSpotPageProps) {
             justifyContent: 'center',
             gap: 12,
             ...(canProceed
-              ? { background: 'linear-gradient(135deg, #f97316, #f59e0b)', color: '#000' }
+              ? { background: '#F97316', color: '#030508' }
               : { background: 'rgba(255,255,255,0.08)', color: '#5a6e7e', cursor: 'not-allowed' }),
           }}
         >
-          Next: Confirm
+          Next: Rate It
           <ChevronRight style={{ width: 18, height: 18 }} />
         </button>
       </div>
