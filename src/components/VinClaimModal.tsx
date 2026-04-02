@@ -20,7 +20,7 @@ interface VinClaimModalProps {
   onViewVehicle?: (vehicleId: string) => void;
 }
 
-type Step = 'enter' | 'review' | 'done';
+type Step = 'enter' | 'review' | 'handle' | 'done';
 
 export function VinClaimModal({
   vehicleId,
@@ -37,6 +37,9 @@ export function VinClaimModal({
   const [decoding, setDecoding] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState('');
+  const [vehicleHandle, setVehicleHandle] = useState('');
+  const [handleError, setHandleError] = useState('');
+  const [checkingHandle, setCheckingHandle] = useState(false);
 
   const handleDecode = async () => {
     const cleaned = vin.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '');
@@ -59,7 +62,7 @@ export function VinClaimModal({
     }
   };
 
-  const handleClaim = async () => {
+  const handleClaim = async (confirmedHandle: string) => {
     if (!user || !vinResult) return;
 
     setClaiming(true);
@@ -71,6 +74,7 @@ export function VinClaimModal({
           is_claimed: true,
           claimed_at: new Date().toISOString(),
           verification_tier: 'vin_verified',
+          vehicle_handle: confirmedHandle,
           vin: vinResult.vin,
           vin_year: vinResult.year || null,
           vin_make: vinResult.make || null,
@@ -102,6 +106,41 @@ export function VinClaimModal({
       showToast(err instanceof Error ? err.message : 'Claim failed', 'error');
     } finally {
       setClaiming(false);
+    }
+  };
+
+  const handleCheckAndProceed = async () => {
+    const cleaned = vehicleHandle.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (cleaned.length < 3) {
+      setHandleError('Handle must be at least 3 characters');
+      return;
+    }
+    if (cleaned.length > 24) {
+      setHandleError('Handle must be 24 characters or less');
+      return;
+    }
+
+    setCheckingHandle(true);
+    setHandleError('');
+
+    try {
+      const { data } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('vehicle_handle', cleaned)
+        .maybeSingle();
+
+      if (data) {
+        setHandleError('That handle is already taken. Try another.');
+        return;
+      }
+
+      setVehicleHandle(cleaned);
+      await handleClaim(cleaned);
+    } catch {
+      setHandleError('Failed to check handle. Try again.');
+    } finally {
+      setCheckingHandle(false);
     }
   };
 
@@ -183,7 +222,7 @@ export function VinClaimModal({
                 margin: 0,
                 lineHeight: 1,
               }}>
-                {step === 'done' ? 'Verified!' : 'Claim via VIN'}
+                {step === 'done' ? 'Verified!' : step === 'handle' ? 'Your Handle' : 'Claim via VIN'}
               </h3>
             </div>
           </div>
@@ -405,8 +444,7 @@ export function VinClaimModal({
                 Re-enter
               </button>
               <button
-                onClick={handleClaim}
-                disabled={claiming}
+                onClick={() => setStep('handle')}
                 style={{
                   flex: 2,
                   padding: '12px 0',
@@ -419,27 +457,91 @@ export function VinClaimModal({
                   background: '#F97316',
                   color: '#030508',
                   border: 'none',
-                  cursor: claiming ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
+                  cursor: 'pointer',
                 }}
               >
-                {claiming ? (
-                  <>
-                    <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
-                    Claiming...
-                  </>
+                Choose Handle →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: Choose handle */}
+        {step === 'handle' && (
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
+            <div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>
+                Choose a Handle
+              </div>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', margin: 0, lineHeight: 1.5 }}>
+                This is your vehicle's permanent identity on MotoRate. It can't be changed after claiming.
+              </p>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#7a8e9e', marginBottom: 8 }}>
+                Vehicle Handle
+              </label>
+              <div style={{ position: 'relative' as const, display: 'flex', alignItems: 'center' }}>
+                <span style={{ position: 'absolute' as const, left: 14, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, color: '#F97316', pointerEvents: 'none' as const }}>@</span>
+                <input
+                  type="text"
+                  value={vehicleHandle}
+                  onChange={(e) => {
+                    setVehicleHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24));
+                    setHandleError('');
+                  }}
+                  placeholder="blackwidow"
+                  maxLength={24}
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px 12px 30px',
+                    borderRadius: 8,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 16,
+                    letterSpacing: '1px',
+                    background: '#070a0f',
+                    border: `1px solid ${handleError ? '#ef4444' : 'rgba(255,255,255,0.08)'}`,
+                    color: '#eef4f8',
+                    outline: 'none',
+                    boxSizing: 'border-box' as const,
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+                <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: handleError ? '#ef4444' : '#5a6e7e' }}>
+                  {handleError || 'Letters, numbers, and underscores only'}
+                </span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: vehicleHandle.length >= 3 ? '#20c060' : '#5a6e7e' }}>
+                  {vehicleHandle.length}/24
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => setStep('review')}
+                style={{ flex: 1, padding: '12px 0', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em', background: 'transparent', color: '#7a8e9e', border: '1px solid rgba(255,255,255,0.10)', cursor: 'pointer' }}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleCheckAndProceed}
+                disabled={vehicleHandle.length < 3 || checkingHandle}
+                style={{ flex: 2, padding: '12px 0', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em', background: vehicleHandle.length >= 3 ? '#F97316' : 'rgba(255,255,255,0.06)', color: vehicleHandle.length >= 3 ? '#030508' : '#5a6e7e', border: 'none', cursor: vehicleHandle.length < 3 || checkingHandle ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              >
+                {checkingHandle ? (
+                  <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} /> Checking...</>
                 ) : (
-                  'Claim & Verify'
+                  'Claim & Verify →'
                 )}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 3: Done */}
+        {/* STEP 4: Done */}
         {step === 'done' && (
           <div style={{ padding: 32, textAlign: 'center' as const, position: 'relative', overflow: 'hidden', minHeight: 220 }}>
             {/* Expanding rings */}
