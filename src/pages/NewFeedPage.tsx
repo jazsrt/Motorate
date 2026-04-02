@@ -239,13 +239,14 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
         aria-label="New Post"
         style={{
           position: 'fixed', bottom: 88, right: 16, zIndex: 30,
-          width: 44, height: 44, borderRadius: 12,
-          background: '#0a0d14', border: '1px solid rgba(255,255,255,0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '10px 16px', borderRadius: 12,
+          background: '#F97316', border: 'none',
+          cursor: 'pointer', boxShadow: '0 4px 20px rgba(249,115,22,0.35)',
         }}
       >
-        <Plus size={20} strokeWidth={2} color="#F97316" />
+        <Plus size={16} strokeWidth={2.5} color="#030508" />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508' }}>Post</span>
       </button>
 
       <style>{`
