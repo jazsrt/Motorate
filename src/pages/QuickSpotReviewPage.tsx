@@ -64,6 +64,9 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   const [driverRating, setDriverRating] = useState(0);
   const [drivingRating, setDrivingRating] = useState(0);
   const [vehicleRating, setVehicleRating] = useState(0);
+  const [looksRating, setLooksRating] = useState(0);
+  const [soundRating, setSoundRating] = useState(0);
+  const [conditionRating, setConditionRating] = useState(0);
   const [sentiment, setSentiment] = useState<'love' | 'hate' | null>(null);
   const [comment, setComment] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -224,6 +227,9 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           rating_driver: driverRating,
           rating_driving: drivingRating,
           rating_vehicle: vehicleRating,
+          looks_rating: looksRating || null,
+          sound_rating: soundRating || null,
+          condition_rating: conditionRating || null,
           sentiment,
           comment: comment.trim() || null,
           spot_type: 'quick',
@@ -265,6 +271,9 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
             rating_driver: driverRating,
             rating_driving: drivingRating,
             rating_vehicle: vehicleRating,
+            looks_rating: looksRating || null,
+            sound_rating: soundRating || null,
+            condition_rating: conditionRating || null,
             sentiment,
             moderation_status: 'approved',
             privacy_level: 'public',
@@ -462,31 +471,12 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
             <button
               onClick={() => onNavigate('feed')}
-              style={{ padding: '12px', background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}
+              style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}
             >
               Done
-            </button>
-            <button
-              onClick={() => {
-                onNavigate('detailed-review', {
-                  wizardData: { ...wizardData, vehicleId },
-                  driverRating,
-                  drivingRating,
-                  vehicleRating,
-                  sentiment,
-                  comment,
-                  selectedStickerIds,
-                  upgradeFromQuickSpot: true,
-                  existingReviewId: reviewId,
-                });
-              }}
-              style={{ ...primaryBtnStyle, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            >
-              <Zap style={{ width: 14, height: 14 }} />
-              Full Spot +5 RP
             </button>
           </div>
         </div>
@@ -538,6 +528,14 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
         <StarRow label="Driver" value={driverRating} onChange={setDriverRating} />
         <StarRow label="Driving" value={drivingRating} onChange={setDrivingRating} />
+
+        {/* Additional optional ratings */}
+        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#5a6e7e', padding: '12px 16px 0' }}>
+          Additional Ratings · Optional
+        </div>
+        <StarRow label="Looks" value={looksRating} onChange={setLooksRating} />
+        <StarRow label="Sound" value={soundRating} onChange={setSoundRating} />
+        <StarRow label="Condition" value={conditionRating} onChange={setConditionRating} />
       </div>
 
       {/* Sentiment buttons */}
@@ -615,15 +613,6 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
 
       {/* Full spot upgrade link */}
       <div style={{ margin: '0 16px 24px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 8, padding: '10px 14px' }}>
-        <button
-          onClick={handleGoDetailed}
-          disabled={!canSubmit}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '8px', background: 'none', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: !canSubmit ? '#5a6e7e' : '#F97316', cursor: !canSubmit ? 'not-allowed' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
-        >
-          <Zap style={{ width: 14, height: 14 }} />
-          Full Spot — +15 RP
-          <ChevronRight style={{ width: 14, height: 14 }} />
-        </button>
       </div>
 
       {/* Weekly limit upgrade modal */}

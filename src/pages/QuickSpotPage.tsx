@@ -45,7 +45,7 @@ const primaryBtnStyle: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: '0.18em',
   textTransform: 'uppercase' as const,
-  color: '#000',
+  color: '#030508',
   cursor: 'pointer',
 };
 

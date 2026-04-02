@@ -298,54 +298,25 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
     setLoading(true);
     try {
-      // Fetch stock image in parallel with vehicle creation
-      const stockImagePromise = getVehicleImageUrl(vehicleData.make, vehicleData.model, vehicleData.year ?? undefined, vehicleData.color || undefined);
+      // Fetch stock image but do NOT create the vehicle row yet
+      const stockImageUrl = await getVehicleImageUrl(vehicleData.make, vehicleData.model, vehicleData.year ?? undefined, vehicleData.color || undefined);
 
-      const { data: newVehicle, error: createError } = await supabase
-        .from('vehicles')
-        .insert({
-          plate_hash: plateHash,
-          plate_state: stateCode,
-          plate_number: plateNumber.trim().toUpperCase(),
-          make: vehicleData.make,
-          model: vehicleData.model,
-          year: vehicleData.year,
-          color: vehicleData.color,
-          owner_id: null,
-          is_claimed: false,
-          verification_tier: 'shadow',
-          created_by_user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        showToast('Failed to create vehicle: ' + createError.message, 'error');
-        return;
-      }
-
-      const stockImageUrl = await stockImagePromise;
-
-      // Update vehicle with stock image if found
-      if (stockImageUrl) {
-        await supabase.from('vehicles').update({ stock_image_url: stockImageUrl }).eq('id', newVehicle.id);
-      }
-
+      // Build wizardData without vehicleId — vehicle created at submit time
       const wizardData: SpotWizardData = {
         plateState: stateCode,
         plateNumber: plateNumber.trim().toUpperCase(),
         plateHash,
-        vehicleId: newVehicle.id,
         make: vehicleData.make,
         model: vehicleData.model,
         color: vehicleData.color || '',
         year: vehicleData.year ? String(vehicleData.year) : undefined,
+        trim: vehicleData.trim || undefined,
         stockImageUrl: stockImageUrl || undefined,
       };
 
       onNavigate('quick-spot-review', { wizardData });
     } catch {
-      showToast('Failed to create vehicle. Please try again.', 'error');
+      showToast('Failed to prepare vehicle. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

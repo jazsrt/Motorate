@@ -78,7 +78,7 @@ export function CompletedReviewModal({
         {/* Hero header */}
         <div style={{
           padding: '24px 20px', textAlign: 'center' as const, position: 'relative' as const,
-          background: 'linear-gradient(135deg, rgba(249,115,22,0.12) 0%, rgba(240,160,48,0.08) 100%)',
+          background: 'rgba(249,115,22,0.06)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}>
           <button onClick={onDone} style={{
@@ -207,31 +207,6 @@ export function CompletedReviewModal({
           {comment && (
             <div style={{ padding: '10px 12px', borderRadius: 8, background: '#131920', marginBottom: 14, fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#a8bcc8', lineHeight: 1.5 }}>
               {comment}
-            </div>
-          )}
-
-          {/* Upgrade CTA */}
-          {spotType === 'quick' && onUpgradeToFull && (
-            <div style={{
-              padding: '14px', borderRadius: 8, marginBottom: 14,
-              background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Zap style={{ width: 18, height: 18, color: '#fff' }} />
-                </div>
-                <div>
-                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8' }}>Earn +20 More Points</div>
-                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>Complete the full spot review for 35 total points</div>
-                </div>
-              </div>
-              <button onClick={onUpgradeToFull} style={{
-                width: '100%', padding: 12, borderRadius: 8, background: '#F97316', border: 'none',
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer',
-              }}>
-                Complete Full Spot
-              </button>
             </div>
           )}
 
