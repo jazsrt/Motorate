@@ -729,11 +729,11 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                 <button
                   type="button"
                   onClick={handleSubmit as unknown as React.MouseEventHandler}
-                  disabled={loading || !isAllowed || !image}
+                  disabled={loading || !isAllowed || (!image && !caption.trim())}
                   style={{
                     ...primaryBtnStyle,
-                    opacity: (loading || !isAllowed || !image) ? 0.35 : 1,
-                    cursor: (loading || !isAllowed || !image) ? 'not-allowed' : 'pointer',
+                    opacity: (loading || !isAllowed || (!image && !caption.trim())) ? 0.35 : 1,
+                    cursor: (loading || !isAllowed || (!image && !caption.trim())) ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {loading ? 'Posting...' : !isAllowed ? 'Rate Limited' : 'Share Post'}
