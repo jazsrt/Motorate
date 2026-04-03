@@ -588,20 +588,7 @@ function AppContent() {
             setPreviousPage('scan');
             setCurrentPage('vehicle-detail');
           }}
-          onUpgradeToFull={completedReviewData.spotType === 'quick' ? () => {
-            setWizardData({
-              ...completedReviewData.wizardData,
-              driverRating: completedReviewData.driverRating,
-              drivingRating: completedReviewData.drivingRating,
-              vehicleRating: completedReviewData.vehicleRating,
-              sentiment: completedReviewData.sentiment,
-              comment: completedReviewData.comment,
-              upgradeFromQuickSpot: true,
-              existingReviewId: completedReviewData.reviewId,
-            });
-            setCompletedReviewData(null);
-            setCurrentPage('verified-review');
-          } : undefined}
+          onUpgradeToFull={undefined}
         />
       )}
     </Suspense>

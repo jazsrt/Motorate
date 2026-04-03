@@ -14,6 +14,7 @@ import { StickerSelector } from '../components/StickerSelector';
 import { giveSticker } from '../lib/stickerService';
 import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
+import { trackSpotEvent } from '../lib/spotAnalytics';
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 const labelStyle: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 6, display: 'block' };
@@ -298,6 +299,11 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         });
       }
 
+      trackSpotEvent('quick_spot_created', user.id, {
+        vehicleId,
+        plate: wizardData.plateNumber,
+      });
+
       // STEP 5: Check for badge awards (counts from spot_history and reviews)
       try {
         await supabase.rpc('check_and_award_badges', {
@@ -384,22 +390,6 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleGoDetailed = () => {
-    if (!canSubmit) {
-      showToast('Please complete all ratings and select Love It or Hate It first', 'error');
-      return;
-    }
-    onNavigate('detailed-review', {
-      wizardData,
-      driverRating,
-      drivingRating,
-      vehicleRating,
-      sentiment,
-      comment,
-      photoFile: photoFile || undefined,
-    });
   };
 
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
