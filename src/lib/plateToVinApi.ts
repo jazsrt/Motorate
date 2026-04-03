@@ -127,23 +127,6 @@ export async function executeLookup(
     return null;
   }
 
-  // Pro check
-  if (userId) {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_pro')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (!profile?.is_pro) {
-        return null;
-      }
-    } catch {
-      return null;
-    }
-  }
-
   try {
     const response = await fetch(
       `${SUPABASE_URL}/functions/v1/lookup-plate`,

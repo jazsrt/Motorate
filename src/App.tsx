@@ -24,7 +24,8 @@ const SpotPage = lazy(() => import('./pages/SpotPage').then(m => ({ default: m.S
 const QuickSpotPage = lazy(() => import('./pages/QuickSpotPage').then(m => ({ default: m.QuickSpotPage })));
 const ConfirmVehiclePage = lazy(() => import('./pages/ConfirmVehiclePage').then(m => ({ default: m.ConfirmVehiclePage })));
 const QuickSpotReviewPage = lazy(() => import('./pages/QuickSpotReviewPage').then(m => ({ default: m.QuickSpotReviewPage })));
-const DetailedSpotAndReviewPage = lazy(() => import('./pages/DetailedSpotAndReviewPage').then(m => ({ default: m.DetailedSpotAndReviewPage })));
+const VerifiedConfirmPage = lazy(() => import('./pages/VerifiedConfirmPage').then(m => ({ default: m.VerifiedConfirmPage })));
+const VerifiedReviewPage = lazy(() => import('./pages/VerifiedReviewPage').then(m => ({ default: m.VerifiedReviewPage })));
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage').then(m => ({ default: m.ChallengesPage })));
 const RankingsPage = lazy(() => import('./pages/RankingsPage').then(m => ({ default: m.RankingsPage })));
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then(m => ({ default: m.SafetyPage })));
@@ -56,7 +57,7 @@ const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const GloveboxPage = lazy(() => import('./pages/GloveboxPage').then(m => ({ default: m.GloveboxPage })));
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'detailed-review' | 'completed-review' | 'glovebox';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'completed-review' | 'verified-confirm' | 'verified-review' | 'glovebox';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -221,10 +222,12 @@ function AppContent() {
     } else if (page === 'quick-spot-review' && data && typeof data === 'object') {
       setWizardData((obj.wizardData as Record<string, unknown>) || null);
       setCurrentPage('quick-spot-review');
-    } else if (page === 'detailed-review' && data && typeof data === 'object') {
-      setWizardData((obj.wizardData as Record<string, unknown>) || obj);
-      setWizardReviewData(obj);
-      setCurrentPage('detailed-review');
+    } else if (page === 'verified-confirm' && data && typeof data === 'object') {
+      setWizardData((obj.wizardData as Record<string, unknown>) || null);
+      setCurrentPage('verified-confirm');
+    } else if (page === 'verified-review' && data && typeof data === 'object') {
+      setWizardData((obj.wizardData as Record<string, unknown>) || null);
+      setCurrentPage('verified-review');
     } else if (page === 'completed-review' && data && typeof data === 'object') {
       setCompletedReviewData(obj);
       setCurrentPage('completed-review');
@@ -397,20 +400,16 @@ function AppContent() {
         <SpotPage onNavigate={handleNavigate} />
       );
       break;
-    case 'detailed-review':
-      pageContent = wizardReviewData ? (
-        <DetailedSpotAndReviewPage
-          onNavigate={handleNavigate}
-          wizardData={wizardReviewData.wizardData || wizardData}
-          driverRating={wizardReviewData.driverRating || 0}
-          drivingRating={wizardReviewData.drivingRating || 0}
-          vehicleRating={wizardReviewData.vehicleRating || 0}
-          sentiment={wizardReviewData.sentiment || 'love'}
-          comment={wizardReviewData.comment}
-          selectedStickerIds={wizardReviewData.selectedStickerIds}
-          upgradeFromQuickSpot={wizardReviewData.upgradeFromQuickSpot}
-          existingReviewId={wizardReviewData.existingReviewId}
-        />
+    case 'verified-confirm':
+      pageContent = wizardData ? (
+        <VerifiedConfirmPage onNavigate={handleNavigate} wizardData={wizardData} />
+      ) : (
+        <SpotPage onNavigate={handleNavigate} />
+      );
+      break;
+    case 'verified-review':
+      pageContent = wizardData ? (
+        <VerifiedReviewPage onNavigate={handleNavigate} wizardData={wizardData} />
       ) : (
         <SpotPage onNavigate={handleNavigate} />
       );
@@ -590,9 +589,8 @@ function AppContent() {
             setCurrentPage('vehicle-detail');
           }}
           onUpgradeToFull={completedReviewData.spotType === 'quick' ? () => {
-            setWizardData(completedReviewData.wizardData);
-            setWizardReviewData({
-              wizardData: completedReviewData.wizardData,
+            setWizardData({
+              ...completedReviewData.wizardData,
               driverRating: completedReviewData.driverRating,
               drivingRating: completedReviewData.drivingRating,
               vehicleRating: completedReviewData.vehicleRating,
@@ -602,7 +600,7 @@ function AppContent() {
               existingReviewId: completedReviewData.reviewId,
             });
             setCompletedReviewData(null);
-            setCurrentPage('detailed-review');
+            setCurrentPage('verified-review');
           } : undefined}
         />
       )}

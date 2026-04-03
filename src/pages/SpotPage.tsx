@@ -1,28 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Camera, Car } from 'lucide-react';
+import { ArrowLeft, Camera, Shield, Zap } from 'lucide-react';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { hashPlate } from '../lib/hash';
 import { US_STATES } from '../lib/constants';
-import { LicensePlate } from '../components/LicensePlate';
-import { type VerificationTier } from '../components/TierBadge';
 import { PlateSearch } from '../components/PlateSearch';
 import { PlateNotFound, type CreateVehicleData } from '../components/PlateNotFound';
-import { PlateFoundUnclaimed } from '../components/PlateFoundUnclaimed';
-import { PlateFoundClaimed } from '../components/PlateFoundClaimed';
-import { VinClaimModal } from '../components/VinClaimModal';
 import { CameraModal } from '../components/spot/CameraModal';
 import type { SpotWizardData } from '../types/spot';
-import { lookupPlate } from '../lib/plateToVinApi';
+import { executeLookup } from '../lib/plateToVinApi';
+import { trackSpotEvent, getLookupCredits, consumeLookupCredit } from '../lib/spotAnalytics';
+import { type VerificationTier } from '../components/TierBadge';
 
-interface SpotPageProps {
-  onNavigate: OnNavigate;
-}
+interface SpotPageProps { onNavigate: OnNavigate; }
 
 interface VehicleResult {
   id: string;
@@ -37,527 +32,450 @@ interface VehicleResult {
   owner_id: string | null;
   plate_state: string | null;
   plate_number: string | null;
-  created_by_user_id?: string | null;
-  owner?: {
-    handle: string;
-    avatar_url: string | null;
-  };
-  creator?: {
-    handle: string;
-    avatar_url: string | null;
-  };
 }
 
-
-type ViewState = 'search' | 'not-found' | 'unclaimed' | 'claimed' | 'loading' | 'revealing';
+type ViewState =
+  | 'choice'
+  | 'quick-plate'
+  | 'quick-not-found'
+  | 'quick-found'
+  | 'verified-plate'
+  | 'verified-balance-gate'
+  | 'verified-no-balance'
+  | 'loading';
 
 export function SpotPage({ onNavigate }: SpotPageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [viewState, setViewState] = useState<ViewState>('search');
+  const [viewState, setViewState] = useState<ViewState>('choice');
   const [state, setState] = useState('');
   const [stateCode, setStateCode] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
   const [plateHash, setPlateHash] = useState('');
-  const [vehicle, setVehicle] = useState<VehicleResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [foundVehicle, setFoundVehicle] = useState<VehicleResult | null>(null);
+  const [lookupCredits, setLookupCredits] = useState(0);
   const [showCameraModal, setShowCameraModal] = useState(false);
-  const [recentSpots, setRecentSpots] = useState<any[]>([]);
-  const [revealPhase, setRevealPhase] = useState(0);
-  const [revealResult, setRevealResult] = useState<{ vehicle: VehicleResult | null; found: boolean } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const plateEntryRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    async function loadRecentSpots() {
-      try {
-        const { data } = await supabase
-          .from('spot_history')
-          .select(`
-            id,
-            created_at,
-            vehicle:vehicles(
-              id,
-              make,
-              model,
-              year,
-              color,
-              plate_state,
-              plate_number,
-              profile_image_url,
-              stock_image_url
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (data) {
-          setRecentSpots(data.filter(s => s.vehicle));
-        }
-      } catch (error) {
-        console.error('Error loading recent spots:', error);
-      }
-    }
-
-    loadRecentSpots();
-  }, [user]);
-
-  // Reveal animation phases with proper cleanup
-  useEffect(() => {
-    if (viewState !== 'revealing') return;
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    timeouts.push(setTimeout(() => setRevealPhase(2), 400));
-    timeouts.push(setTimeout(() => setRevealPhase(3), 900));
-    timeouts.push(setTimeout(() => {
-      setRevealPhase(4);
-      timeouts.push(setTimeout(() => {
-        if (revealResult?.found && revealResult.vehicle) {
-          setViewState(revealResult.vehicle.is_claimed ? 'claimed' : 'unclaimed');
-        } else {
-          setViewState('not-found');
-        }
-      }, 400));
-    }, 1400));
-    return () => timeouts.forEach(t => clearTimeout(t));
-  }, [viewState, revealResult]);
-
-  const handleSearch = async (searchState: string, searchPlate: string) => {
-    if (!searchPlate.trim()) return;
-
-    const normalizedPlate = searchPlate.trim().toUpperCase().replace(/[\s-]/g, '');
-    if (normalizedPlate.length < 2 || normalizedPlate.length > 8) {
-      showToast('Please enter a valid plate number (2-8 characters)', 'error');
-      return;
-    }
-    if (!/^[A-Z0-9]+$/.test(normalizedPlate)) {
-      showToast('Plate numbers can only contain letters and numbers', 'error');
-      return;
-    }
-
-    setState(searchState);
-    setPlateNumber(searchPlate);
-    setViewState('loading');
-    setVehicle(null);
-
-    try {
-      const stateObj = US_STATES.find(s => s.name.toLowerCase() === searchState.toLowerCase());
-      const code = stateObj?.code || searchState;
-      setStateCode(code);
-
-      const hash = await hashPlate(code, searchPlate.trim().toUpperCase());
-      setPlateHash(hash);
-
-      // PLATE: visible — spot flow confirmation
-      const { data: vehicleData, error: vehicleError } = await supabase
-        .from('vehicles')
-        .select(VEHICLE_PLATE_VISIBLE_COLUMNS + `, owner:profiles!vehicles_owner_id_fkey(handle, avatar_url)`)
-        .eq('plate_hash', hash)
-        .maybeSingle();
-
-      if (vehicleError) {
-        showToast('Search failed: ' + vehicleError.message, 'error');
-        setViewState('search');
-        return;
-      }
-
-      if (vehicleData) {
-        // Found in DB — trigger reveal animation
-        setRevealResult({ vehicle: vehicleData as unknown as VehicleResult, found: true });
-        setVehicle(vehicleData as unknown as VehicleResult);
-        setViewState('revealing');
-        setRevealPhase(1);
-      } else {
-        // Not in DB — try Auto.dev plate lookup
-        const apiResult = await lookupPlate(searchPlate.trim().toUpperCase(), code, user?.id);
-
-        if (apiResult && apiResult.make && apiResult.model) {
-          // Auto.dev returned vehicle data — fetch stock image in parallel, show confirm screen
-          const stockImageUrl = await getVehicleImageUrl(apiResult.make, apiResult.model, apiResult.year ? parseInt(apiResult.year) : undefined, apiResult.color || undefined);
-          const wizardData: SpotWizardData = {
-            plateState: code,
-            plateNumber: searchPlate.trim().toUpperCase(),
-            plateHash: hash,
-            make: apiResult.make,
-            model: apiResult.model,
-            color: apiResult.color || '',
-            year: apiResult.year || undefined,
-            trim: apiResult.trim || undefined,
-            stockImageUrl: stockImageUrl || undefined,
-          };
-          onNavigate('confirm-vehicle', { wizardData });
-        } else {
-          // Auto.dev returned nothing — show not-found state for manual entry
-          setRevealResult({ vehicle: null, found: false });
-          setViewState('revealing');
-          setRevealPhase(1);
-        }
-      }
-    } catch {
-      showToast('Failed to search. Please try again.', 'error');
-      setViewState('search');
-    }
-  };
-
-  const handleCreateVehicle = async (vehicleData: CreateVehicleData) => {
-    if (!user) {
-      showToast('Please log in to create a vehicle profile', 'error');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Fetch stock image but do NOT create the vehicle row yet
-      const stockImageUrl = await getVehicleImageUrl(vehicleData.make, vehicleData.model, vehicleData.year ?? undefined, vehicleData.color || undefined);
-
-      // Build wizardData without vehicleId — vehicle created at submit time
-      const wizardData: SpotWizardData = {
-        plateState: stateCode,
-        plateNumber: plateNumber.trim().toUpperCase(),
-        plateHash,
-        make: vehicleData.make,
-        model: vehicleData.model,
-        color: vehicleData.color || '',
-        year: vehicleData.year ? String(vehicleData.year) : undefined,
-        trim: vehicleData.trim || undefined,
-        stockImageUrl: stockImageUrl || undefined,
-      };
-
-      onNavigate('quick-spot-review', { wizardData });
-    } catch {
-      showToast('Failed to prepare vehicle. Please try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [quickLoading, setQuickLoading] = useState(false);
+  const [verifiedLoading, setVerifiedLoading] = useState(false);
 
   const handleBack = () => {
-    setViewState('search');
-    setVehicle(null);
+    setViewState('choice');
+    setFoundVehicle(null);
     setState('');
     setStateCode('');
     setPlateNumber('');
     setPlateHash('');
   };
 
-  const handleSpotAndReview = () => {
-    if (!vehicle) return;
-    if (!user) {
-      showToast('Please log in to spot vehicles', 'error');
-      return;
+  const resolveCode = (s: string): string => {
+    const obj = US_STATES.find(x => x.name.toLowerCase() === s.toLowerCase());
+    return obj?.code || s;
+  };
+
+  // ── QUICK SPOT ─────────────────────────────────────────────────────────────
+
+  const handleQuickSearch = async (searchState: string, searchPlate: string) => {
+    if (!searchPlate.trim()) return;
+    const normalized = searchPlate.trim().toUpperCase().replace(/[\s-]/g, '');
+    setState(searchState);
+    setPlateNumber(normalized);
+    setViewState('loading');
+    trackSpotEvent('quick_spot_started', user?.id, { plate: normalized });
+
+    try {
+      const code = resolveCode(searchState);
+      setStateCode(code);
+      const hash = await hashPlate(code, normalized);
+      setPlateHash(hash);
+
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select(VEHICLE_PLATE_VISIBLE_COLUMNS)
+        .eq('plate_hash', hash)
+        .maybeSingle();
+
+      if (error) throw new Error(error.message);
+
+      if (data) {
+        setFoundVehicle(data as unknown as VehicleResult);
+        setViewState('quick-found');
+        trackSpotEvent('cache_hit', user?.id, { plate: normalized });
+      } else {
+        setFoundVehicle(null);
+        setViewState('quick-not-found');
+        trackSpotEvent('cache_miss', user?.id, { plate: normalized });
+      }
+    } catch {
+      showToast('Search failed. Please try again.', 'error');
+      setViewState('quick-plate');
     }
+  };
 
+  // Vehicle found in DB — user can continue Quick Spot or upgrade to Verified
+  const handleQuickContinue = () => {
+    if (!foundVehicle) return;
+    if (!user) { showToast('Please log in to spot vehicles', 'error'); return; }
     const wizardData: SpotWizardData = {
-      plateState: stateCode,
-      plateNumber,
-      plateHash,
-      vehicleId: vehicle.id,
-      make: vehicle.make || '',
-      model: vehicle.model || '',
-      color: vehicle.color || '',
-      year: vehicle.year ? String(vehicle.year) : undefined,
-      trim: vehicle.trim || undefined,
-      stockImageUrl: vehicle.stock_image_url || undefined,
+      plateState: stateCode, plateNumber, plateHash,
+      vehicleId: foundVehicle.id,
+      make: foundVehicle.make || '', model: foundVehicle.model || '',
+      color: foundVehicle.color || '',
+      year: foundVehicle.year ? String(foundVehicle.year) : undefined,
+      trim: foundVehicle.trim || undefined,
+      stockImageUrl: foundVehicle.stock_image_url || undefined,
     };
-
     onNavigate('quick-spot-review', { wizardData });
   };
 
-  const handleClaimVehicle = () => {
-    if (!vehicle) return;
-    if (!user) {
-      showToast('Please log in to claim this vehicle', 'error');
-      return;
+  // "Verify Now" from pre-submit CTA — vehicle is already in DB, direct to verified-confirm
+  const handleVerifyNowFromQuick = () => {
+    if (!foundVehicle) return;
+    trackSpotEvent('verify_clicked_pre_submit', user?.id);
+    trackSpotEvent('quick_to_verified_conversion', user?.id);
+    const wizardData: SpotWizardData = {
+      plateState: stateCode, plateNumber, plateHash,
+      vehicleId: foundVehicle.id,
+      make: foundVehicle.make || '', model: foundVehicle.model || '',
+      color: foundVehicle.color || '',
+      year: foundVehicle.year ? String(foundVehicle.year) : undefined,
+      trim: foundVehicle.trim || undefined,
+      stockImageUrl: foundVehicle.stock_image_url || undefined,
+    };
+    onNavigate('verified-confirm', { wizardData });
+  };
+
+  // Plate not in DB — manual entry
+  const handleCreateVehicle = async (vehicleData: CreateVehicleData) => {
+    if (!user) { showToast('Please log in', 'error'); return; }
+    setQuickLoading(true);
+    try {
+      const stockImageUrl = await getVehicleImageUrl(
+        vehicleData.make, vehicleData.model,
+        vehicleData.year ?? undefined, vehicleData.color || undefined
+      );
+      const wizardData: SpotWizardData = {
+        plateState: stateCode, plateNumber: plateNumber.trim().toUpperCase(), plateHash,
+        make: vehicleData.make, model: vehicleData.model,
+        color: vehicleData.color || '',
+        year: vehicleData.year ? String(vehicleData.year) : undefined,
+        trim: vehicleData.trim || undefined,
+        stockImageUrl: stockImageUrl || undefined,
+      };
+      onNavigate('confirm-vehicle', { wizardData });
+    } catch {
+      showToast('Failed to prepare vehicle.', 'error');
+    } finally {
+      setQuickLoading(false);
     }
-    setShowClaimModal(true);
   };
 
-  const handleUploadPhoto = () => {
-    fileInputRef.current?.click();
+  // ── VERIFIED SPOT ──────────────────────────────────────────────────────────
+
+  const handleVerifiedSearch = async (searchState: string, searchPlate: string) => {
+    if (!searchPlate.trim()) return;
+    const normalized = searchPlate.trim().toUpperCase().replace(/[\s-]/g, '');
+    setState(searchState);
+    setPlateNumber(normalized);
+    setViewState('loading');
+    trackSpotEvent('verified_spot_started', user?.id, { plate: normalized });
+
+    try {
+      const code = resolveCode(searchState);
+      setStateCode(code);
+      const hash = await hashPlate(code, normalized);
+      setPlateHash(hash);
+
+      // Cache-first: internal DB only
+      const { data: cached } = await supabase
+        .from('vehicles')
+        .select(VEHICLE_PLATE_VISIBLE_COLUMNS)
+        .eq('plate_hash', hash)
+        .not('make', 'is', null)
+        .maybeSingle();
+
+      if (cached && (cached as any).make && (cached as any).model) {
+        trackSpotEvent('cache_hit', user?.id, { plate: normalized });
+        const wizardData: SpotWizardData = {
+          plateState: code, plateNumber: normalized, plateHash: hash,
+          vehicleId: (cached as any).id,
+          make: (cached as any).make || '', model: (cached as any).model || '',
+          color: (cached as any).color || '',
+          year: (cached as any).year ? String((cached as any).year) : undefined,
+          trim: (cached as any).trim || undefined,
+          stockImageUrl: (cached as any).stock_image_url || undefined,
+        };
+        onNavigate('verified-confirm', { wizardData });
+        return;
+      }
+
+      // Cache miss — check lookup credits
+      trackSpotEvent('cache_miss', user?.id, { plate: normalized });
+
+      if (!user) {
+        showToast('Log in to use Verified Spot', 'error');
+        setViewState('verified-plate');
+        return;
+      }
+
+      const credits = await getLookupCredits(user.id);
+      setLookupCredits(credits);
+
+      if (credits <= 0) {
+        trackSpotEvent('lookup_blocked_zero_balance', user.id);
+        setViewState('verified-no-balance');
+      } else {
+        setViewState('verified-balance-gate');
+      }
+    } catch {
+      showToast('Search failed. Please try again.', 'error');
+      setViewState('verified-plate');
+    }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    showToast('Photo uploaded - OCR processing is available via camera scan', 'info');
-    e.target.value = '';
+  const handleExecuteLookup = async () => {
+    if (!user) return;
+    setVerifiedLoading(true);
+    try {
+      const consumed = await consumeLookupCredit(user.id);
+      if (!consumed) { showToast('Could not consume lookup credit.', 'error'); return; }
+      trackSpotEvent('lookup_confirmed', user.id, { plate: plateNumber });
+
+      const result = await executeLookup(plateNumber, stateCode, user.id);
+      if (result && result.make && result.model) {
+        const stockImageUrl = await getVehicleImageUrl(
+          result.make, result.model,
+          result.year ? parseInt(result.year) : undefined,
+          result.color || undefined
+        );
+        const wizardData: SpotWizardData = {
+          plateState: stateCode, plateNumber, plateHash,
+          make: result.make, model: result.model,
+          color: result.color || '',
+          year: result.year || undefined,
+          trim: result.trim || undefined,
+          stockImageUrl: stockImageUrl || undefined,
+          verifiedSpecs: {
+            engine: result.engine || null,
+            bodyStyle: result.bodyStyle || null,
+            transmission: result.transmission || null,
+            driveType: result.driveType || null,
+          },
+        };
+        onNavigate('verified-confirm', { wizardData });
+      } else {
+        showToast('Lookup returned no results. Try Quick Spot instead.', 'error');
+        setViewState('verified-plate');
+      }
+    } catch {
+      showToast('Lookup failed. Please try again.', 'error');
+    } finally {
+      setVerifiedLoading(false);
+    }
   };
+
+  // ── SHARED UI HELPERS ──────────────────────────────────────────────────────
+
+  const pageHeader = (title: string, subtitle: string, step: string, onBackFn: () => void) => (
+    <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={onBackFn} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />
+        </button>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>{step}</span>
+      </div>
+      <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>{title}</div>
+      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>{subtitle}</div>
+    </div>
+  );
+
+  const plateForm = (onSearch: (s: string, p: string) => void) => (
+    <div style={{ padding: 16 }}>
+      <PlateSearch initialPlate={plateNumber} onSearch={onSearch} onCameraScan={() => setShowCameraModal(true)} onNavigateToVehicle={(id) => onNavigate('vehicle-detail', id)} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0' }}>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>or</span>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
+      </div>
+      <button onClick={() => setShowCameraModal(true)} style={{ padding: '12px 16px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', cursor: 'pointer', width: '100%' }}>
+        <Camera size={18} color="#5a6e7e" />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>Scan plate with camera</span>
+      </button>
+    </div>
+  );
+
+  // ── RENDER ─────────────────────────────────────────────────────────────────
 
   return (
     <Layout currentPage="scan" onNavigate={onNavigate}>
-      {viewState === 'search' && (
+
+      {/* ── CHOICE SCREEN ── */}
+      {viewState === 'choice' && (
         <div>
-          {/* Header */}
           <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <button onClick={() => onNavigate('feed')} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />
-              </button>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>Step 1 of 3</span>
-            </div>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 12 }}>Find the Vehicle</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
-              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
-              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
-            </div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>Log a Spot</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>How do you want to spot this vehicle?</div>
           </div>
-
-          {/* Entry option buttons */}
-          <div style={{ padding: '12px 16px 0', display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-            <button
-              onClick={() => onNavigate('quick-spot', { wizardData: {} })}
-              style={{ width: '100%', padding: 16, background: '#F97316', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' as const }}
-            >
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#030508', lineHeight: 1 }}>Quick Spot</div>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: 'rgba(3,5,8,0.7)', marginTop: 4 }}>Year / Make / Model — Free, instant</div>
-            </button>
-            <button
-              onClick={() => plateEntryRef.current?.scrollIntoView({ behavior: 'smooth' })}
-              style={{ width: '100%', padding: 16, background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' as const }}
-            >
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>Verify with Plate</div>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginTop: 4 }}>Plate lookup · Uses 1 lookup credit</div>
-            </button>
-          </div>
-
-          {/* Recently spotted strip */}
-          {(() => {
-            const spotsWithImages = recentSpots.filter(s => {
-              const v = s.vehicle;
-              return v && (v.profile_image_url || v.stock_image_url);
-            });
-            if (spotsWithImages.length === 0) return null;
-            return (
-              <div style={{ display: 'flex', gap: 8, padding: '10px 16px', overflowX: 'auto', scrollbarWidth: 'none' as const, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                {spotsWithImages.map((spot: any) => {
-                  const v = spot.vehicle;
-                  const imgUrl = v.profile_image_url || v.stock_image_url;
-                  return (
-                    <button key={spot.id} onClick={() => onNavigate('vehicle-detail', v.id)} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                      <div style={{ width: 70, height: 52, borderRadius: 6, overflow: 'hidden', background: '#111720' }}>
-                        <img src={imgUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </div>
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, textTransform: 'uppercase' as const, color: '#5a6e7e' }}>{v.make}</span>
-                    </button>
-                  );
-                })}
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+            <button onClick={() => setViewState('quick-plate')} style={{ width: '100%', padding: '20px 16px', background: '#F97316', border: 'none', borderRadius: 10, cursor: 'pointer', textAlign: 'left' as const }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <Zap size={18} color="#030508" />
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#030508', lineHeight: 1 }}>Quick Spot</div>
               </div>
-            );
-          })()}
-
-          {/* Form area */}
-          <div ref={plateEntryRef} style={{ padding: 16 }}>
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
-
-            {/* Pro upgrade hint */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 8 }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, textTransform: 'uppercase', color: '#5a6e7e' }}>Auto-identify from plate · </span>
-              <span
-                onClick={() => onNavigate('premium')}
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, textTransform: 'uppercase', color: '#F97316', cursor: 'pointer' }}
-              >Upgrade to Pro</span>
-            </div>
-
-            <PlateSearch
-              initialPlate={plateNumber}
-              onSearch={handleSearch}
-              onCameraScan={() => setShowCameraModal(true)}
-              onNavigateToVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
-            />
-
-            {/* "or" divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>or</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
-            </div>
-
-            {/* Camera button */}
-            <button
-              onClick={() => setShowCameraModal(true)}
-              style={{ padding: '12px 16px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, background: 'transparent', cursor: 'pointer', width: '100%' }}
-            >
-              <Camera size={18} color="#5a6e7e" />
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>Scan plate with camera</span>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: 'rgba(3,5,8,0.65)' }}>Enter the plate. Free. No lookup credit used.</div>
+            </button>
+            <button onClick={() => setViewState('verified-plate')} style={{ width: '100%', padding: '20px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, cursor: 'pointer', textAlign: 'left' as const }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <Shield size={18} color="#F97316" />
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>Verified Spot</div>
+              </div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>Pulls factory specs from the plate. Uses 1 lookup credit.</div>
             </button>
           </div>
         </div>
       )}
 
-      {showCameraModal && (
-        <CameraModal
-          onClose={() => setShowCameraModal(false)}
-          onPlateDetected={(detected) => {
-            setShowCameraModal(false);
-            setPlateNumber(detected.toUpperCase());
-          }}
+      {/* ── QUICK — PLATE ENTRY ── */}
+      {viewState === 'quick-plate' && (
+        <div>
+          {pageHeader('Enter the Plate', 'Free — checks our database only', 'Quick Spot \u00b7 Step 1 of 3', handleBack)}
+          {plateForm(handleQuickSearch)}
+        </div>
+      )}
+
+      {/* ── QUICK — PLATE FOUND IN DB ── */}
+      {viewState === 'quick-found' && foundVehicle && (
+        <div>
+          <div style={{ padding: '52px 16px 16px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <button onClick={() => setViewState('quick-plate')} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, color: '#5a6e7e', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>
+              <ArrowLeft style={{ width: 14, height: 14 }} /> Back
+            </button>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#20c060', marginBottom: 4 }}>Vehicle Found</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+              {[foundVehicle.year, foundVehicle.make, foundVehicle.model].filter(Boolean).join(' ')}
+            </div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#F97316', letterSpacing: '0.12em', marginTop: 4 }}>
+              {stateCode} \u00b7 {plateNumber}
+            </div>
+          </div>
+
+          {/* Pre-submit CTA — mandatory */}
+          <div style={{ margin: '14px 16px 0', padding: '16px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.22)', borderRadius: 10 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 4 }}>This vehicle is not verified</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 3 }}>Verify to boost ranking and visibility</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginBottom: 12, lineHeight: 1.5 }}>Verified vehicles rank higher and appear more often in the feed.</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleVerifyNowFromQuick}
+                style={{ flex: 1, padding: '11px', background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}
+              >
+                Verify Now
+              </button>
+              <button
+                onClick={handleQuickContinue}
+                style={{ flex: 1, padding: '11px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── QUICK — NOT FOUND ── */}
+      {viewState === 'quick-not-found' && (
+        <PlateNotFound
+          state={state}
+          plateNumber={plateNumber}
+          onCancel={() => setViewState('quick-plate')}
+          onCreate={handleCreateVehicle}
+          loading={quickLoading}
         />
       )}
 
+      {/* ── VERIFIED — PLATE ENTRY ── */}
+      {viewState === 'verified-plate' && (
+        <div>
+          {pageHeader('Enter the Plate', 'Factory specs from the plate \u00b7 uses 1 lookup credit', 'Verified Spot \u00b7 Step 1 of 3', handleBack)}
+          {plateForm(handleVerifiedSearch)}
+        </div>
+      )}
+
+      {/* ── LOADING ── */}
       {viewState === 'loading' && (
-        <div style={{ padding: '40px 16px', textAlign: 'center' }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              border: '2px solid rgba(249,115,22,0.2)',
-              borderTopColor: '#f97316',
-              margin: '0 auto 16px',
-              animation: 'spin 1s linear infinite',
-            }}
-          />
-          <p style={{ fontSize: 14, color: '#8a9aaa' }}>
+        <div style={{ padding: '40px 16px', textAlign: 'center' as const }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid rgba(249,115,22,0.2)', borderTopColor: '#f97316', margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} />
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#8a9aaa' }}>
             Searching {state} — <span style={{ fontWeight: 600, color: '#eef4f8', letterSpacing: 2 }}>{plateNumber}</span>
           </p>
         </div>
       )}
 
-      {viewState === 'revealing' && (
-        <div style={{ padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-          {/* Phase 1: Plate slides in */}
-          <div
-            style={{
-              opacity: revealPhase >= 1 ? 1 : 0,
-              transform: revealPhase >= 1 ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.9)',
-              transition: 'all 0.5s cubic-bezier(.25,.46,.45,.94)',
-            }}
-          >
-            <LicensePlate plateNumber={plateNumber} plateState={stateCode} size="lg" />
-          </div>
-
-          {/* Phase 2: Scanning line */}
-          {revealPhase >= 2 && revealPhase < 4 && (
-            <div
-              style={{
-                width: 192,
-                height: 2,
-                borderRadius: 9999,
-                background: 'linear-gradient(90deg, transparent, #F97316, transparent)',
-                animation: 'plate-scan 0.8s ease-in-out infinite',
-              }}
-            />
-          )}
-
-          {/* Phase 3: Result text */}
-          <div
-            style={{
-              opacity: revealPhase >= 3 ? 1 : 0,
-              transform: revealPhase >= 3 ? 'translateY(0)' : 'translateY(10px)',
-              transition: 'all 0.4s cubic-bezier(.25,.46,.45,.94)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{
-              fontSize: 14,
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 700,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.1em',
-              color: '#F97316',
-            }}>
-              {revealResult?.found ? 'Vehicle Found' : 'New Plate Detected'}
-            </p>
-            {revealResult?.found && revealResult.vehicle && (
-              <p style={{ fontSize: 12, color: '#8a9aaa', marginTop: 4 }}>
-                {revealResult.vehicle.year} {revealResult.vehicle.make} {revealResult.vehicle.model}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {viewState !== 'search' && viewState !== 'loading' && (
-        <div style={{ padding: '16px 16px 0' }}>
-          <button
-            onClick={handleBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              marginBottom: 16,
-              color: '#8a9aaa',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            <ArrowLeft style={{ width: 16, height: 16 }} strokeWidth={1.5} />
-            <span style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase' as const,
-            }}>Back to Search</span>
+      {/* ── VERIFIED — BALANCE GATE ── */}
+      {viewState === 'verified-balance-gate' && (
+        <div style={{ padding: 24 }}>
+          <button onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, color: '#5a6e7e', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>
+            <ArrowLeft style={{ width: 16, height: 16 }} /> Back
           </button>
+          <div style={{ background: '#0d1117', border: '1px solid rgba(249,115,22,0.20)', borderRadius: 12, padding: '20px 16px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <Shield size={20} color="#F97316" />
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8' }}>Verify this vehicle?</div>
+            </div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#F97316', letterSpacing: '0.15em', marginBottom: 10 }}>{plateNumber}</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.5, marginBottom: 14 }}>
+              This plate isn't in our system yet. A lookup will pull factory specs and add this vehicle to MotoRate.
+            </div>
+            <div style={{ background: '#070a0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Cost</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#eef4f8' }}>1 Lookup Credit</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Remaining Lookups</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#F97316' }}>{lookupCredits}</span>
+              </div>
+            </div>
+          </div>
+          <button onClick={handleExecuteLookup} disabled={verifiedLoading} style={{ width: '100%', padding: '14px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: verifiedLoading ? 'not-allowed' : 'pointer', opacity: verifiedLoading ? 0.6 : 1, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            {verifiedLoading && <div style={{ width: 14, height: 14, border: '2px solid #030508', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+            {verifiedLoading ? 'Looking up...' : 'Confirm \u2014 Use 1 Lookup Credit'}
+          </button>
+          <button onClick={handleBack} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>Cancel</button>
         </div>
       )}
 
-      {viewState === 'not-found' && (
-        <PlateNotFound
-          state={state}
-          plateNumber={plateNumber}
-          onCancel={handleBack}
-          onCreate={handleCreateVehicle}
-          onClaimVehicle={() => {
-            if (!user) {
-              showToast('Please log in to claim a vehicle', 'error');
-              return;
-            }
-            showToast('Please create the vehicle profile first', 'info');
-          }}
-          loading={loading}
+      {/* ── VERIFIED — NO BALANCE ── */}
+      {viewState === 'verified-no-balance' && (
+        <div style={{ padding: 24 }}>
+          <button onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, color: '#5a6e7e', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>
+            <ArrowLeft style={{ width: 16, height: 16 }} /> Back
+          </button>
+          <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '28px 16px', textAlign: 'center' as const }}>
+            <Shield size={32} color="#3a4e60" style={{ margin: '0 auto 14px', display: 'block' }} />
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>You're out of lookups</div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#F97316', marginBottom: 12 }}>0 Remaining Lookups</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.5, marginBottom: 20 }}>
+              Get more lookups to continue with Verified Spot, or use Quick Spot — it's free.
+            </div>
+            <button onClick={() => onNavigate('premium')} style={{ width: '100%', padding: '13px', background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', marginBottom: 10 }}>
+              Get More Lookups
+            </button>
+            <button onClick={() => setViewState('quick-plate')} style={{ width: '100%', padding: '11px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
+              Use Quick Spot Instead
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODALS ── */}
+      {showCameraModal && (
+        <CameraModal
+          onClose={() => setShowCameraModal(false)}
+          onPlateDetected={(detected) => { setShowCameraModal(false); setPlateNumber(detected.toUpperCase()); }}
         />
       )}
 
-      {viewState === 'unclaimed' && vehicle && (
-        <PlateFoundUnclaimed
-          state={state}
-          plateNumber={plateNumber}
-          vehicle={vehicle}
-          onSpotAndReview={handleSpotAndReview}
-          onClaimVehicle={handleClaimVehicle}
-          onViewVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
-          isLoggedIn={!!user}
-        />
-      )}
-
-      {viewState === 'claimed' && vehicle && (
-        <PlateFoundClaimed
-          state={state}
-          plateNumber={plateNumber}
-          vehicle={vehicle as unknown as Parameters<typeof PlateFoundClaimed>[0]['vehicle']}
-          onLeaveReview={handleSpotAndReview}
-          onBack={handleBack}
-          onViewOwnerProfile={(userId) => onNavigate('user-profile', userId)}
-          onViewVehicle={(vehicleId) => onNavigate('vehicle-detail', vehicleId)}
-        />
-      )}
-
-      {showClaimModal && vehicle && user && (
-        <VinClaimModal
-          vehicleId={vehicle.id}
-          vehicleInfo={{
-            make: vehicle.make,
-            model: vehicle.model,
-            year: vehicle.year,
-            color: vehicle.color,
-            plateState: stateCode,
-            plateNumber: plateNumber,
-          }}
-          onClose={() => {
-            setShowClaimModal(false);
-            handleSearch(state, plateNumber);
-          }}
-          onSuccess={() => {
-            setShowClaimModal(false);
-            showToast('Vehicle verified via VIN!', 'success');
-            handleSearch(state, plateNumber);
-          }}
-        />
-      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Layout>
   );
 }

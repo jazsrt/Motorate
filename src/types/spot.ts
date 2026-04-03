@@ -9,6 +9,13 @@ export interface SpotWizardData {
   year?: string;
   trim?: string;
   stockImageUrl?: string;
+  verifiedSpecs?: {
+    engine?: string | null;
+    bodyStyle?: string | null;
+    transmission?: string | null;
+    driveType?: string | null;
+    horsepower?: string | null;
+  } | null;
   driverRating?: number;
   drivingRating?: number;
   vehicleRating?: number;
