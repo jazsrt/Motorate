@@ -143,7 +143,7 @@ function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: str
   return (
     <div style={{ margin: '0 16px 16px' }}>
       <button onClick={() => setExpanded(!expanded)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--muted)', cursor: 'pointer' }}>
-        <span>MotoFans · {accepted.length}</span>
+        <span>Fans · {accepted.length}</span>
         {pending.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--black)', borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700 }}>{pending.length} pending</span>}
       </button>
       {expanded && (
@@ -915,8 +915,23 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             <Share2 size={14} color="#eef4f8" strokeWidth={2} />
           </button>
 
+          {/* Rank pill — top center */}
+          {cityRank && cityRank > 0 && (
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 2, background: 'rgba(3,5,8,0.85)', border: '1px solid #F97316', borderRadius: 3, padding: '3px 7px' }}>
+              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 700, color: '#eef4f8' }}>#{cityRank}</span>
+            </div>
+          )}
+
           {/* Content bottom-left */}
           <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, zIndex: 2 }}>
+            {/* Hero stat cluster */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 0, marginBottom: 6 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{rpScore}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#F97316', marginLeft: 4 }}>RP</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', marginLeft: 16, fontVariantNumeric: 'tabular-nums' }}>{followerCount}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginLeft: 4 }}>FANS</span>
+            </div>
+
             {/* Plate or @handle */}
             {vehicle.is_claimed && vehicle.owner?.handle ? (
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: C.accent, marginBottom: 4 }}>
@@ -969,6 +984,32 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
         <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
 
+        {/* ── RANK STRIP (claimed only) ── */}
+        {vehicle.is_claimed && (
+          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 18px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#3a4e60', marginRight: 8 }}>City Rank</span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 600, color: cityRank ? '#F97316' : '#3a4e60', fontVariantNumeric: 'tabular-nums' }}>
+              {cityRank ? `#${cityRank}` : 'Unranked'}
+            </span>
+          </div>
+        )}
+
+        {/* ── OWNER ANALYTICS STRIP (owner only) ── */}
+        {isOwner && (
+          <div style={{ display: 'flex', background: C.carbon1, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            {[
+              { label: 'This Week', value: '\u2014' },
+              { label: 'New Fans', value: '\u2014' },
+              { label: 'Avg Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
+            ].map((stat, i, arr) => (
+              <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#3a4e60', display: 'block', marginTop: 1 }}>{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── 2. STAT STRIP ── */}
         <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {[
@@ -982,37 +1023,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               cursor: stat.onClick ? 'pointer' : 'default',
             }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Followers' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
-        </div>
-
-        {/* Share preview row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
-          {/* Thumbnail */}
-          <div style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', background: '#111720', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {(vehicle.profile_image_url || vehicle.stock_image_url) ? (
-              <img src={(vehicle.profile_image_url || vehicle.stock_image_url)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <Car style={{ width: 18, height: 18, color: '#3a4e60' }} />
-            )}
-          </div>
-          {/* Identity */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-              {vehicle.vehicle_handle ? `@${vehicle.vehicle_handle}` : vehicle.plate_number || [vehicle.make, vehicle.model].filter(Boolean).join(' ')}
-            </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e', marginTop: 1 }}>
-              {spotCount} spots · {followerCount} followers
-            </div>
-          </div>
-          {/* Top badge chip */}
-          {vBadges.length > 0 && (
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', flexShrink: 0 }}>
-              {vBadges[0].badge_id}
-            </span>
-          )}
         </div>
 
         {/* ── 3. ACTION BAR ── */}
@@ -1084,32 +1098,32 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             </>
           ) : (
             <>
-              {/* Non-owner action bar */}
+              {/* Non-owner action bar — Row 1: Become a Fan */}
+              {vehicle.is_claimed && vehicle.owner_id && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <MotoFanButton
+                    vehicleId={vehicleId}
+                    ownerId={vehicle.owner_id}
+                    onCountChange={(c) => setFollowerCount(c)}
+                  />
+                </div>
+              )}
+              {/* Row 2: Spot + Follow Owner */}
               <div style={{ display: 'flex', gap: 8 }}>
-                {vehicle.is_claimed && vehicle.owner_id && (
-                  <div style={{ flex: 1 }} onClick={(e) => e.stopPropagation()}>
-                    <MotoFanButton
-                      vehicleId={vehicleId}
-                      ownerId={vehicle.owner_id}
-                      onCountChange={(c) => setFollowerCount(c)}
-                    />
-                  </div>
-                )}
                 <button
                   onClick={() => {
                     if (guestMode || !user) { setGuestJoinAction('spot a vehicle'); setShowGuestJoinModal(true); return; }
                     onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
                   }}
-                  style={{
-                    flex: 1, padding: '11px 0',
-                    background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}
+                  style={{ flex: 1, minHeight: 44, background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
-                  <Camera size={14} /> Leave a Spot
+                  Spot Vehicle
                 </button>
+                {vehicle.is_claimed && vehicle.owner && (
+                  <div style={{ flex: 1 }} onClick={e => e.stopPropagation()}>
+                    <FollowButton targetUserId={vehicle.owner.id} />
+                  </div>
+                )}
               </div>
               {/* Claim CTA (unclaimed only) */}
               {isUnclaimed && (
@@ -1624,7 +1638,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             }}>
               <div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.white }}>Private Vehicle</div>
-                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>MotoFans need your approval</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Fans need your approval</div>
               </div>
               <button
                 onClick={async () => {

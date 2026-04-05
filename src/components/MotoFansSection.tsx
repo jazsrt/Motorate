@@ -54,7 +54,7 @@ export function MotoFansSection({ userId, onNavigate }: MotoFansSectionProps) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-          MotoFans · {vehicles.length}
+          Fans · {vehicles.length}
         </span>
       </div>
 

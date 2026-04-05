@@ -115,58 +115,95 @@ export async function lookupPlate(
 }
 
 /**
- * Execute the actual plate-to-VIN API call.
+ * Execute the actual plate-to-VIN API call via RapidAPI.
  * Only called after user explicitly confirms (to conserve API quota).
+ * Credit consumption happens in the caller (plateSearch.ts), not here.
  */
 export async function executeLookup(
   plate: string,
   state: string,
-  userId?: string
+  _userId?: string
 ): Promise<VehicleLookupResult | null> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  const apiKey = import.meta.env.VITE_RAPIDAPI_PLATE_KEY;
+
+  if (!apiKey) {
+    // Fallback: try Supabase edge function (which may use its own key)
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/functions/v1/lookup-plate`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ plate: plate.trim().toUpperCase(), state: state.trim().toUpperCase() }),
+          }
+        );
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (!data.found || !data.make || !data.model) return null;
+        return {
+          vin: data.vin ?? '', year: String(data.year ?? ''), make: data.make ?? '',
+          model: data.model ?? '', trim: data.trim ?? '', color: data.color ?? '',
+          engine: data.engine ?? '', bodyStyle: data.style ?? '',
+          transmission: data.transmission ?? '', driveType: data.drivetrain ?? '',
+          fuel: '', fullName: `${data.year ?? ''} ${data.make ?? ''} ${data.model ?? ''}`.trim(),
+        };
+      } catch { return null; }
+    }
+    console.warn('VITE_RAPIDAPI_PLATE_KEY not configured and no edge function fallback');
     return null;
   }
 
   try {
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/lookup-plate`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plate: plate.trim().toUpperCase(), state: state.trim().toUpperCase() }),
-      }
-    );
+    const cleanPlate = plate.trim().toUpperCase();
+    const cleanState = state.trim().toUpperCase();
+    const url = `https://us-plate-to-vin-lookup.p.rapidapi.com/rpc/secure_lookup_plate?p_state=${encodeURIComponent(cleanState)}&p_plate=${encodeURIComponent(cleanPlate)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'us-plate-to-vin-lookup.p.rapidapi.com',
+        'x-rapidapi-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
-      console.error('Plate lookup edge function error:', response.status);
+      console.warn('RapidAPI plate lookup failed with status:', response.status);
       return null;
     }
 
     const data = await response.json();
+    console.log('RapidAPI response:', JSON.stringify(data));
 
-    if (!data.found || !data.make || !data.model) {
-      return null;
-    }
+    if (!data) return null;
+
+    // Map response — covers common field naming patterns
+    const make = data.make || data.Make || data.manufacturer || null;
+    const model = data.model || data.Model || null;
+    const year = data.year || data.Year || data.model_year || data.modelYear || null;
+
+    if (!make && !model) return null;
 
     return {
-      vin: data.vin ?? '',
-      year: String(data.year ?? ''),
-      make: data.make ?? '',
-      model: data.model ?? '',
-      trim: data.trim ?? '',
-      color: '',
-      engine: data.engine ?? '',
-      bodyStyle: data.style ?? '',
-      transmission: data.transmission ?? '',
-      driveType: data.drivetrain ?? '',
-      fuel: '',
-      fullName: `${data.year ?? ''} ${data.make ?? ''} ${data.model ?? ''}`.trim(),
+      vin: data.vin || data.VIN || data.Vin || '',
+      year: String(year ?? ''),
+      make: make ?? '',
+      model: model ?? '',
+      trim: data.trim || data.Trim || data.style || '',
+      color: data.color || data.Color || data.exterior_color || data.exteriorColor || '',
+      engine: data.engine || data.Engine || data.engine_description || '',
+      bodyStyle: data.body_type || data.bodyType || data.style || '',
+      transmission: data.transmission || data.Transmission || '',
+      driveType: data.drivetrain || data.Drivetrain || data.drive_type || '',
+      fuel: data.fuel_type || data.fuelType || '',
+      fullName: `${year ?? ''} ${make ?? ''} ${model ?? ''}`.trim(),
     };
-  } catch (error) {
-    console.error('Plate lookup failed:', error);
+  } catch (err) {
+    console.error('RapidAPI plate lookup error:', err);
     return null;
   }
 }

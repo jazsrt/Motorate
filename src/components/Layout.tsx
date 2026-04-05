@@ -30,6 +30,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 16px 10px',
         background: '#070a0f',
+        borderBottom: '1px solid rgba(249,115,22,0.10)',
       }}>
         <button
           onClick={() => onNavigate('feed')}
@@ -56,6 +57,9 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         )}
       </header>
 
+      {/* Orange signal strip */}
+      <div style={{ position: 'fixed', top: 44, left: 0, right: 0, zIndex: 50, height: 2, background: 'linear-gradient(90deg, #F97316 0%, rgba(249,115,22,0.2) 100%)' }} />
+
       {/* LiveStatsBar */}
       {user && <LiveStatsBar />}
 
@@ -70,7 +74,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
       {/* Bottom Nav */}
       <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40,
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
         height: 72,
         display: 'flex', alignItems: 'center', justifyContent: 'space-around',
         background: 'rgba(7,10,15,0.96)',

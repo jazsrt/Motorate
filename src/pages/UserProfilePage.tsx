@@ -393,7 +393,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
             {[
               { label: 'Spots', value: spotsCount },
               { label: 'Badges', value: badges.length },
-              { label: 'Friends', value: followerCount },
+              { label: 'Followers', value: followerCount },
               { label: 'Vehicles', value: vehicles.length },
             ].map(stat => (
               <div key={stat.label}>

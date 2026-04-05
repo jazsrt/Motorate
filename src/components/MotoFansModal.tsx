@@ -66,7 +66,7 @@ export function MotoFansModal({ vehicleId, vehicleName, fanCount, onClose, onNav
         }}>
           <div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8' }}>
-              MotoFans
+              Fans
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: '#F97316', marginLeft: 8, fontVariantNumeric: 'tabular-nums' }}>
                 {fanCount}
               </span>
@@ -89,7 +89,7 @@ export function MotoFansModal({ vehicleId, vehicleName, fanCount, onClose, onNav
           ) : fans.length === 0 ? (
             <div style={{ padding: '32px 16px', textAlign: 'center' as const }}>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>
-                No MotoFans yet
+                No fans yet
               </div>
             </div>
           ) : (

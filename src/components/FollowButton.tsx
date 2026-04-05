@@ -138,7 +138,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
       case 'accepted':
         return {
           icon: <UserCheck className={iconSize} />,
-          text: 'Friends',
+          text: 'Following',
           isFollowing: true
         };
       case 'pending':

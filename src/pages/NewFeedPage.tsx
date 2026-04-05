@@ -28,7 +28,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const { user, loading: authLoading } = useAuth();
   const { posts, loading, error, refreshFeed, hasMore, loadMore } = useFeed(user?.id);
   const sentinelRef = useInfiniteScroll({ loading, hasMore, onLoadMore: loadMore, rootMargin: '300px' });
-  const [filterType, setFilterType] = useState<'all' | 'spots' | 'posts'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'following' | 'spots' | 'badges'>('all');
   const [focusPost, setFocusPost] = useState<any>(null);
   const [focusLoading, setFocusLoading] = useState(!!focusPostId);
 
@@ -75,7 +75,8 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const displayPosts = useMemo(() => {
     return posts.filter((p: any) => {
       if (filterType === 'spots' && p.post_type !== 'spot') return false;
-      if (filterType === 'posts' && p.post_type === 'spot') return false;
+      if (filterType === 'following' && p.post_type === 'spot') return false;
+      if (filterType === 'badges' && p.post_type !== 'badge' && p.post_type !== 'badge_given') return false;
       return true;
     });
   }, [posts, filterType]);
@@ -135,12 +136,13 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       {/* Achievement carousel */}
       <AchievementCarousel />
 
-      {/* Scope selector */}
+      {/* Filter pills */}
       <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
         {([
-          { key: 'all' as const, label: 'Latest' },
-          { key: 'spots' as const, label: 'Following' },
-          { key: 'posts' as const, label: 'Top Rated' },
+          { key: 'all' as const, label: 'All' },
+          { key: 'following' as const, label: 'Following' },
+          { key: 'spots' as const, label: 'Spots' },
+          { key: 'badges' as const, label: 'Badges' },
         ]).map(({ key, label }) => (
           <button key={key} onClick={() => setFilterType(key)} style={pillStyle(filterType === key)}>
             {label}
@@ -187,32 +189,30 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
             <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="13" rx="2"/>
           </svg>
           <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>
-            {filterType === 'spots' ? 'Nothing Here Yet' : hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
+            {filterType === 'following' ? 'Nothing Here Yet'
+              : filterType === 'spots' ? 'No Spots Yet'
+              : filterType === 'badges' ? 'No Badge Events Yet'
+              : 'No Posts Yet'}
           </p>
           <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>
-            {filterType === 'spots'
-              ? 'Follow vehicles to see their activity here.'
-              : hasActiveFilters
-                ? 'Try changing your filters.'
-                : <>Spot a car or claim yours<br />to get started.</>}
+            {filterType === 'following' ? 'Follow vehicles to see their activity here.'
+              : filterType === 'spots' ? 'Spotted vehicles will appear here.'
+              : filterType === 'badges' ? 'Badge events from the community will show up here.'
+              : <>Spot a car or claim yours<br />to get started.</>}
           </p>
-          {filterType === 'spots' ? (
-            <button onClick={() => onNavigate('search')} style={{
-              padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer',
-            }}>
+          {filterType === 'following' ? (
+            <button onClick={() => onNavigate('search')} style={{ padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>
               Explore Vehicles
             </button>
-          ) : !hasActiveFilters && (
-            <button onClick={() => onNavigate('scan')} style={{
-              padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer',
-            }}>
+          ) : filterType === 'spots' ? (
+            <button onClick={() => onNavigate('scan')} style={{ padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>
+              Spot a Vehicle
+            </button>
+          ) : filterType === 'all' ? (
+            <button onClick={() => onNavigate('scan')} style={{ padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>
               Spot a Car
             </button>
-          )}
+          ) : null}
         </div>
       )}
 

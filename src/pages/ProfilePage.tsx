@@ -73,7 +73,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [showBadgesModal, setShowBadgesModal] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'fleet' | 'spots' | 'badges' | 'activity'>('fleet');
+  const [activeTab, setActiveTab] = useState<'spots' | 'fleet' | 'badges'>('spots');
   const [spotsLoaded, setSpotsLoaded] = useState(false);
   const [spotsGiven, setSpotsGiven] = useState<any[]>([]);
   const [spotsReceived, setSpotsReceived] = useState<any[]>([]);
@@ -587,7 +587,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         {/* ── 1. HERO — Identity Block ── */}
         <div style={{ background: '#0a0d14', position: 'relative' }}>
           {/* Cover strip — use featured vehicle image or dark fallback */}
-          <div style={{ height: 80, background: '#0d1117', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ height: 120, background: '#0d1117', overflow: 'hidden', position: 'relative' }}>
             {featuredPhoto && (
               <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
             )}
@@ -681,7 +681,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             {[
               { label: 'Spots', value: spotCount },
               { label: 'Badges', value: userBadges.length },
-              { label: 'Friends', value: followerCount },
+              { label: 'Followers', value: followerCount },
             ].map(stat => (
               <div key={stat.label}>
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8' }}>{stat.value}</span>

@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { VEHICLE_PUBLIC_COLUMNS, VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
+import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { Search, User, X, Camera, Car, Eye } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { FollowButton } from '../components/FollowButton';
 import { UserAvatar } from '../components/UserAvatar';
-import { hashPlate } from '../lib/hash';
 import { US_STATES } from '../lib/constants';
 import { LicensePlate } from '../components/LicensePlate';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,7 +13,7 @@ import { VinClaimModal } from '../components/VinClaimModal';
 import { CameraModal } from '../components/spot/CameraModal';
 import { TierBadge } from '../components/TierBadge';
 import type { SpotWizardData } from '../types/spot';
-import { lookupPlate } from '../lib/plateToVinApi';
+import { searchPlate as sharedSearchPlate } from '../lib/plateSearch';
 import { type VerificationTier } from '../components/TierBadge';
 
 // ---------------------------------------------------------------------------
@@ -224,104 +223,56 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
   // ---------------------------------------------------------------------------
 
   const handlePlateSearch = async (searchStateCode: string, searchPlate: string) => {
-    if (!searchPlate.trim()) return;
-
     const normalizedPlate = searchPlate.trim().toUpperCase().replace(/[\s-]/g, '');
-    if (normalizedPlate.length < 2 || normalizedPlate.length > 8) {
-      showToast('Please enter a valid plate number (2-8 characters)', 'error');
-      return;
-    }
-    if (!/^[A-Z0-9]+$/.test(normalizedPlate)) {
-      showToast('Plate numbers can only contain letters and numbers', 'error');
+    if (!normalizedPlate || normalizedPlate.length < 2 || normalizedPlate.length > 8) {
+      showToast('Enter a valid plate (2-8 characters)', 'error');
       return;
     }
 
     setPlateNumber(normalizedPlate);
+    setPlateStateCode(searchStateCode);
     setPlateViewState('loading');
     setPlateVehicle(null);
     setSpotCount(0);
     setFollowerCount(0);
 
-    try {
-      const stateObj = US_STATES.find(s => s.code === searchStateCode);
-      const code = stateObj?.code || searchStateCode;
-      setPlateStateCode(code);
+    const result = await sharedSearchPlate(searchStateCode, normalizedPlate, user?.id);
 
-      const hash = await hashPlate(code, normalizedPlate);
-      setPlateHash(hash);
+    if (result.plateHash) setPlateHash(result.plateHash);
 
-      // PLATE: visible -- plate search confirmation
-      const { data: vehicleData, error: vehicleError } = await supabase
-        .from('vehicles')
-        .select(VEHICLE_PLATE_VISIBLE_COLUMNS + `, owner:profiles!vehicles_owner_id_fkey(handle, avatar_url)`)
-        .eq('plate_hash', hash)
-        .maybeSingle();
+    if (result.status === 'found' && result.vehicle) {
+      setPlateVehicle(result.vehicle as unknown as Vehicle);
+      setPlateViewState(result.vehicle.is_claimed ? 'claimed' : 'unclaimed');
 
-      if (vehicleError) {
-        showToast('Search failed: ' + vehicleError.message, 'error');
-        setPlateViewState('idle');
-        return;
-      }
-
-      if (vehicleData) {
-        const vehicle = vehicleData as unknown as Vehicle;
-        setPlateVehicle(vehicle);
-        setPlateViewState(vehicle.is_claimed ? 'claimed' : 'unclaimed');
-
-        // Fetch spot + follower counts
+      // Fetch spot + follower counts
+      if (result.vehicle.id) {
         const [spotRes, followRes] = await Promise.all([
-          supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('vehicle_id', vehicle.id),
-          supabase.from('vehicle_follows').select('*', { count: 'exact', head: true }).eq('vehicle_id', vehicle.id).eq('status', 'accepted'),
+          supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('vehicle_id', result.vehicle.id),
+          supabase.from('vehicle_follows').select('*', { count: 'exact', head: true }).eq('vehicle_id', result.vehicle.id).eq('status', 'accepted'),
         ]);
         setSpotCount(spotRes.count || 0);
         setFollowerCount(followRes.count || 0);
-
-        // Save to recent searches
-        if (user?.id) {
-          saveRecentSearch(user.id, {
-            plateState: code,
-            plateNumber: normalizedPlate,
-            vehicleId: vehicle.id,
-            make: vehicle.make,
-            model: vehicle.model,
-            year: vehicle.year,
-            imageUrl: vehicle.profile_image_url || vehicle.stock_image_url,
-            ts: Date.now(),
-          });
-          setRecentSearches(loadRecentSearches(user.id));
-        }
-      } else {
-        // Not in DB -- try Auto.dev plate lookup
-        const apiResult = await lookupPlate(normalizedPlate, code, user?.id);
-
-        if (apiResult && apiResult.make && apiResult.model) {
-          const wizardData: SpotWizardData = {
-            plateState: code,
-            plateNumber: normalizedPlate,
-            plateHash: hash,
-            make: apiResult.make,
-            model: apiResult.model,
-            color: apiResult.color || '',
-            year: apiResult.year || undefined,
-            trim: apiResult.trim || undefined,
-          };
-          onNavigate('quick-spot-review', { wizardData });
-        } else {
-          setPlateViewState('not-found');
-
-          // Save "not found" to recent searches too
-          if (user?.id) {
-            saveRecentSearch(user.id, {
-              plateState: code,
-              plateNumber: normalizedPlate,
-              ts: Date.now(),
-            });
-            setRecentSearches(loadRecentSearches(user.id));
-          }
-        }
       }
-    } catch {
-      showToast('Failed to search. Please try again.', 'error');
+
+      // Save recent
+      if (user?.id) {
+        saveRecentSearch(user.id, {
+          plateState: searchStateCode, plateNumber: normalizedPlate,
+          vehicleId: result.vehicle.id, make: result.vehicle.make, model: result.vehicle.model,
+          year: result.vehicle.year ? Number(result.vehicle.year) : undefined,
+          imageUrl: result.vehicle.profile_image_url || result.vehicle.stock_image_url,
+          ts: Date.now(),
+        });
+        setRecentSearches(loadRecentSearches(user.id));
+      }
+    } else if (result.status === 'not-found') {
+      setPlateViewState('not-found');
+      if (user?.id) {
+        saveRecentSearch(user.id, { plateState: searchStateCode, plateNumber: normalizedPlate, ts: Date.now() });
+        setRecentSearches(loadRecentSearches(user.id));
+      }
+    } else {
+      showToast(result.error || 'Search failed', 'error');
       setPlateViewState('idle');
     }
   };

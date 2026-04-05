@@ -257,7 +257,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         .insert({
           author_id: user.id,
           vehicle_id: selectedVehicleId,
-          post_type: 'photo',
+          post_type: contentType === 'video' ? 'video' : 'photo',
           image_url: contentType === 'video' ? null : finalImageUrl,
           video_url: contentType === 'video' ? finalImageUrl : null,
           content_type: contentType,
@@ -387,7 +387,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
   const privacyOptions = [
     { value: 'public' as PrivacyLevel, icon: Globe, label: 'Public', desc: 'Everyone can see' },
-    { value: 'friends' as PrivacyLevel, icon: Users, label: 'Friends', desc: 'Followers only' },
+    { value: 'friends' as PrivacyLevel, icon: Users, label: 'Followers', desc: 'Followers only' },
     { value: 'private' as PrivacyLevel, icon: Lock, label: 'Private', desc: 'Only you' },
   ];
 

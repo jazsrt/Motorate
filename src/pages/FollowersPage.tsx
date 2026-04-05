@@ -415,9 +415,9 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">
-            {isOwnProfile ? 'Friends' : 'Friends'}
+            Followers
           </h2>
-          <p className="text-secondary">Manage your friends and friend requests</p>
+          <p className="text-secondary">Manage your followers and requests</p>
         </div>
 
         <div className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
@@ -467,11 +467,11 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
           <div className="bg-surface border border-surfacehighlight rounded-xl">
             <EmptyState
               icon={activeTab === 'friends' ? Users : Clock}
-              title={activeTab === 'friends' ? 'No Friends Yet' : 'No Pending Requests'}
+              title={activeTab === 'friends' ? 'No Followers Yet' : 'No Pending Requests'}
               description={
                 activeTab === 'friends'
                   ? 'No friends yet — find car enthusiasts to connect with'
-                  : 'No pending friend requests'
+                  : 'No pending follow requests'
               }
               actionLabel={activeTab === 'friends' && isOwnProfile ? 'Find Users' : undefined}
               onAction={activeTab === 'friends' && isOwnProfile ? () => onNavigate('search') : undefined}

@@ -21,11 +21,7 @@ import './index.css';
 
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then(m => ({ default: m.CreatePostPage })));
 const SpotPage = lazy(() => import('./pages/SpotPage').then(m => ({ default: m.SpotPage })));
-const QuickSpotPage = lazy(() => import('./pages/QuickSpotPage').then(m => ({ default: m.QuickSpotPage })));
-const ConfirmVehiclePage = lazy(() => import('./pages/ConfirmVehiclePage').then(m => ({ default: m.ConfirmVehiclePage })));
 const QuickSpotReviewPage = lazy(() => import('./pages/QuickSpotReviewPage').then(m => ({ default: m.QuickSpotReviewPage })));
-const VerifiedConfirmPage = lazy(() => import('./pages/VerifiedConfirmPage').then(m => ({ default: m.VerifiedConfirmPage })));
-const VerifiedReviewPage = lazy(() => import('./pages/VerifiedReviewPage').then(m => ({ default: m.VerifiedReviewPage })));
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage').then(m => ({ default: m.ChallengesPage })));
 const RankingsPage = lazy(() => import('./pages/RankingsPage').then(m => ({ default: m.RankingsPage })));
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then(m => ({ default: m.SafetyPage })));
@@ -214,21 +210,13 @@ function AppContent() {
         setSelectedUserId(userId);
         setCurrentPage('user-profile');
       }
-    } else if (page === 'quick-spot' && data && typeof data === 'object') {
-      setWizardData((obj.wizardData as Record<string, unknown>) || null);
-      setCurrentPage('quick-spot');
-    } else if (page === 'confirm-vehicle' && data && typeof data === 'object') {
-      setWizardData((obj.wizardData as Record<string, unknown>) || null);
-      setCurrentPage('confirm-vehicle');
     } else if (page === 'quick-spot-review' && data && typeof data === 'object') {
       setWizardData((obj.wizardData as Record<string, unknown>) || null);
       setCurrentPage('quick-spot-review');
-    } else if (page === 'verified-confirm' && data && typeof data === 'object') {
+    } else if ((page === 'quick-spot' || page === 'confirm-vehicle' || page === 'verified-confirm' || page === 'verified-review') && data && typeof data === 'object') {
+      // Legacy routes — redirect to scan
       setWizardData((obj.wizardData as Record<string, unknown>) || null);
-      setCurrentPage('verified-confirm');
-    } else if (page === 'verified-review' && data && typeof data === 'object') {
-      setWizardData((obj.wizardData as Record<string, unknown>) || null);
-      setCurrentPage('verified-review');
+      setCurrentPage('scan');
     } else if (page === 'completed-review' && data && typeof data === 'object') {
       setCompletedReviewData(obj);
       setCurrentPage('completed-review');
@@ -384,20 +372,6 @@ function AppContent() {
     case 'create-post':
       pageContent = <CreatePostPage onNavigate={handleNavigate} />;
       break;
-    case 'quick-spot':
-      pageContent = wizardData ? (
-        <QuickSpotPage onNavigate={handleNavigate} wizardData={wizardData} />
-      ) : (
-        <SpotPage onNavigate={handleNavigate} />
-      );
-      break;
-    case 'confirm-vehicle':
-      pageContent = wizardData ? (
-        <ConfirmVehiclePage onNavigate={handleNavigate} wizardData={wizardData} />
-      ) : (
-        <SpotPage onNavigate={handleNavigate} />
-      );
-      break;
     case 'quick-spot-review':
       pageContent = wizardData ? (
         <QuickSpotReviewPage onNavigate={handleNavigate} wizardData={wizardData} />
@@ -405,19 +379,12 @@ function AppContent() {
         <SpotPage onNavigate={handleNavigate} />
       );
       break;
+    case 'quick-spot':
+    case 'confirm-vehicle':
     case 'verified-confirm':
-      pageContent = wizardData ? (
-        <VerifiedConfirmPage onNavigate={handleNavigate} wizardData={wizardData} />
-      ) : (
-        <SpotPage onNavigate={handleNavigate} />
-      );
-      break;
     case 'verified-review':
-      pageContent = wizardData ? (
-        <VerifiedReviewPage onNavigate={handleNavigate} wizardData={wizardData} />
-      ) : (
-        <SpotPage onNavigate={handleNavigate} />
-      );
+      // Legacy routes — redirect to SpotPage
+      pageContent = <SpotPage onNavigate={handleNavigate} />;
       break;
     case 'challenges':
       pageContent = <ChallengesPage onNavigate={handleNavigate} />;
@@ -592,7 +559,13 @@ function AppContent() {
           userHandle={profile?.handle || ''}
           onDone={() => {
             setCompletedReviewData(null);
-            setCurrentPage('scan');
+            if (completedReviewData?.vehicleId) {
+              setSelectedVehicleId(completedReviewData.vehicleId);
+              setPreviousPage('scan');
+              setCurrentPage('vehicle-detail');
+            } else {
+              setCurrentPage('scan');
+            }
           }}
           onViewVehicle={(vehicleId) => {
             setCompletedReviewData(null);

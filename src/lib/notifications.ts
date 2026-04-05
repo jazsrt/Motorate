@@ -457,9 +457,9 @@ export async function notifyFriendRequest(toUserId: string, fromUserId: string):
     const { data: sender } = await supabase.from('profiles').select('handle').eq('id', fromUserId).maybeSingle();
     if (!sender) return;
     const handle = sender.handle || 'Someone';
-    const message = `@${handle} sent you a friend request`;
-    await createNotification(toUserId, 'friend_request', 'Friend Request', message, 'profile', fromUserId);
-    await sendPushNotification(toUserId, 'Friend Request', message, { type: 'friend_request', fromUserId, url: `/profile/${fromUserId}` });
+    const message = `@${handle} wants to follow you`;
+    await createNotification(toUserId, 'friend_request', 'Follow Request', message, 'profile', fromUserId);
+    await sendPushNotification(toUserId, 'Follow Request', message, { type: 'friend_request', fromUserId, url: `/profile/${fromUserId}` });
   } catch (error) { console.error('Error sending friend request notification:', error); }
 }
 
@@ -468,9 +468,9 @@ export async function notifyFriendAccepted(toUserId: string, fromUserId: string)
     const { data: accepter } = await supabase.from('profiles').select('handle').eq('id', fromUserId).maybeSingle();
     if (!accepter) return;
     const handle = accepter.handle || 'Someone';
-    const message = `@${handle} accepted your friend request`;
-    await createNotification(toUserId, 'friend_accepted', 'Friend Request Accepted', message, 'profile', fromUserId);
-    await sendPushNotification(toUserId, 'Friend Request Accepted', message, { type: 'friend_accepted', fromUserId, url: `/profile/${fromUserId}` });
+    const message = `@${handle} is now following you`;
+    await createNotification(toUserId, 'friend_accepted', 'New Follower', message, 'profile', fromUserId);
+    await sendPushNotification(toUserId, 'New Follower', message, { type: 'friend_accepted', fromUserId, url: `/profile/${fromUserId}` });
   } catch (error) { console.error('Error sending friend accepted notification:', error); }
 }
 
