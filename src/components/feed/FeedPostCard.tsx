@@ -108,25 +108,47 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
   return (
     <>
       <div ref={cardRef} style={{ background: '#0a0d14', borderTop: '1px solid rgba(249,115,22,0.08)', marginBottom: 2 }}>
-        {/* MEDIA ZONE — 4:3 cover, no borders */}
-        {hasPhoto && (
-          <div style={{ width: '100%', aspectRatio: '4/3', overflow: 'hidden', background: '#070a0f' }}>
-            <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
-          </div>
-        )}
+        {/* POST TYPE LABEL */}
+        {(() => {
+          const typeLabel = post.post_type === 'spot' ? 'Spotted'
+            : (post.post_type === 'owner_post' || post.post_type === 'post') ? 'Owner Post'
+            : post.post_type === 'badge' ? 'Badge Unlocked'
+            : null;
+          if (!typeLabel) return null;
+          return (
+            <div style={{ padding: '6px 14px 0', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+              {typeLabel}
+            </div>
+          );
+        })()}
 
-        {/* SIGNAL STRIP — vehicle make/model + RP score */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: '#070a0f' }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>
-            {makeLabel && <>{makeLabel} </>}<b style={{ color: '#eef4f8' }}>{modelLabel || '---'}</b>
-          </span>
-          {repScore > 0 && (
-            <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 600, color: '#F97316' }}>
-              {formatRP(repScore)} RP
-            </span>
+        {/* MEDIA ZONE + SIGNAL STRIP — tappable to vehicle detail */}
+        <div
+          onClick={() => {
+            const vid = post.vehicle_id || vehicles?.id;
+            if (vid && onNavigate) onNavigate('vehicle-detail', { vehicleId: vid });
+          }}
+          style={{ cursor: (post.vehicle_id || vehicles?.id) ? 'pointer' : 'default' }}
+        >
+          {hasPhoto && (
+            <div style={{ width: '100%', aspectRatio: '4/3', overflow: 'hidden', background: '#070a0f' }}>
+              <img src={imageUrl!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
+            </div>
           )}
+
+          {/* SIGNAL STRIP — vehicle make/model + RP score */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: '#070a0f' }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#7a8e9e' }}>
+              {makeLabel && <>{makeLabel} </>}<b style={{ color: '#eef4f8' }}>{modelLabel || '---'}</b>
+            </span>
+            {repScore > 0 && (
+              <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 600, color: '#F97316' }}>
+                {formatRP(repScore)} RP
+              </span>
+            )}
+          </div>
         </div>
 
         {/* CAPTION — only if user-written, skip generic defaults */}

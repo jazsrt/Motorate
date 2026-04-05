@@ -43,7 +43,7 @@ function StickerPill({
       title={sticker.description || sticker.name}
     >
       <span className={`leading-none flex-shrink-0 ${large ? 'text-xl' : 'text-base'}`}>
-        {sticker.icon_name}
+        {sticker.icon_name || '\uD83D\uDE97'}
       </span>
       <span
         className={`font-bold uppercase tracking-wide whitespace-nowrap ${

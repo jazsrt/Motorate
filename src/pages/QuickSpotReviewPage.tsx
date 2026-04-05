@@ -68,18 +68,16 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   const [looksRating, setLooksRating] = useState(0);
   const [soundRating, setSoundRating] = useState(0);
   const [conditionRating, setConditionRating] = useState(0);
-  const [sentiment, setSentiment] = useState<'love' | 'hate' | null>(null);
+  const [sentiment, setSentiment] = useState<'love' | 'neutral' | 'hate' | null>(null);
   const [comment, setComment] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [reviewId, setReviewId] = useState<string | null>(null);
-  const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
-  const [rewardData, setRewardData] = useState<{ rp: number; vehicleName: string; spotCount: number } | null>(null);
+  const [existingSpotId, setExistingSpotId] = useState<string | null>(null);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ratingsComplete = driverRating > 0 && drivingRating > 0 && vehicleRating > 0;
@@ -182,6 +180,23 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
     try {
       const vehicleId = await ensureVehicleExists();
 
+      // Duplicate spot check
+      if (!existingSpotId) {
+        const { data: existingSpot } = await supabase
+          .from('spot_history')
+          .select('id')
+          .eq('spotter_id', user.id)
+          .eq('vehicle_id', vehicleId)
+          .maybeSingle();
+
+        if (existingSpot) {
+          setExistingSpotId(existingSpot.id);
+          setShowDuplicateWarning(true);
+          setSubmitting(false);
+          return;
+        }
+      }
+
       let photoUrl: string | null = null;
       if (photoFile) {
         setUploadingPhoto(true);
@@ -194,27 +209,47 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         }
       }
 
-      // STEP 1: Record the spot in spot_history
+      // STEP 1: Record or update the spot in spot_history
       // NOTE: If location (lat/lng) is added to this payload in the future,
       // it MUST go through fuzzCoordinates() from src/lib/locationPrivacy.ts first.
       // Never store raw GPS coordinates.
-      const spotPayload: Record<string, unknown> = {
-        spotter_id: user.id,
-        vehicle_id: vehicleId,
-        spot_type: 'quick',
-        reputation_earned: 10,
-      };
-      if (photoUrl) spotPayload.photo_url = photoUrl;
+      let spotData: { id: string };
 
-      const { data: spotData, error: spotError } = await supabase
-        .from('spot_history')
-        .insert(spotPayload)
-        .select('id')
-        .single();
+      if (existingSpotId) {
+        // Update existing spot
+        const updatePayload: Record<string, unknown> = {
+          spot_type: 'quick',
+          reputation_earned: 10,
+        };
+        if (photoUrl) updatePayload.photo_url = photoUrl;
 
-      if (spotError) {
-        console.error('Spot insert error:', spotError);
-        throw new Error('Failed to record spot: ' + spotError.message);
+        const { error: updateError } = await supabase
+          .from('spot_history')
+          .update(updatePayload)
+          .eq('id', existingSpotId);
+
+        if (updateError) throw new Error('Failed to update spot: ' + updateError.message);
+        spotData = { id: existingSpotId };
+      } else {
+        const spotPayload: Record<string, unknown> = {
+          spotter_id: user.id,
+          vehicle_id: vehicleId,
+          spot_type: 'quick',
+          reputation_earned: 10,
+        };
+        if (photoUrl) spotPayload.photo_url = photoUrl;
+
+        const { data: newSpotData, error: spotError } = await supabase
+          .from('spot_history')
+          .insert(spotPayload)
+          .select('id')
+          .single();
+
+        if (spotError) {
+          console.error('Spot insert error:', spotError);
+          throw new Error('Failed to record spot: ' + spotError.message);
+        }
+        spotData = newSpotData;
       }
 
       try { sounds.revEngine(); haptics.medium(); } catch { /* intentionally empty */ }
@@ -365,26 +400,23 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
           .eq('id', user.id);
       }
 
-      // Store data for upgrade prompt
-      setReviewId(reviewData.id);
-      setVehicleId(vehicleId);
-
-      // Fetch vehicle spot count for reward display
-      const { data: vehicleStats } = await supabase
-        .from('vehicles')
-        .select('spots_count')
-        .eq('id', vehicleId)
-        .maybeSingle();
-
-      const vName = [wizardData.make, wizardData.model].filter(Boolean).join(' ');
-      setRewardData({
-        rp: 10,
-        vehicleName: vName || 'Vehicle',
-        spotCount: vehicleStats?.spots_count ?? 1,
+      // Navigate directly to completed review — no upgrade prompt
+      onNavigate('completed-review', {
+        vehicleId,
+        spotType: 'quick',
+        wizardData,
+        driverRating,
+        drivingRating,
+        vehicleRating,
+        looksRating: looksRating || undefined,
+        soundRating: soundRating || undefined,
+        conditionRating: conditionRating || undefined,
+        sentiment,
+        comment: comment.trim() || undefined,
+        selectedTags: selectedStickerIds,
+        reputationEarned: existingSpotId ? 0 : 10,
+        isFirstSpot: isNewPlate,
       });
-
-      // Show upgrade prompt instead of navigating away
-      setShowUpgradePrompt(true);
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Failed to submit spot', 'error');
     } finally {
@@ -393,86 +425,6 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
   };
 
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
-
-  const loveActive = sentiment === 'love';
-  const hateActive = sentiment === 'hate';
-
-  // Inline reward block — shown after successful submission, replacing the form
-  if (showUpgradePrompt && rewardData) {
-    const milestones = [1, 5, 10, 20, 50];
-    const nextMilestone = milestones.find(m => m > rewardData.spotCount) ?? null;
-    const spotsToNext = nextMilestone ? nextMilestone - rewardData.spotCount : null;
-
-    return (
-      <Layout currentPage="scan" onNavigate={onNavigate}>
-        <div style={{ maxWidth: 512, margin: '0 auto', padding: '32px 16px' }}>
-          {/* RP Earned */}
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 42, fontWeight: 700, color: '#F97316', lineHeight: 1 }}>+{rewardData.rp}</span>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316', marginLeft: 6 }}>RP</span>
-          </div>
-
-          {/* Vehicle Impact */}
-          <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '14px 16px', marginBottom: 12 }}>
-            <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px' }}>
-              {rewardData.vehicleName}
-            </p>
-            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', margin: 0 }}>
-              {rewardData.spotCount === 1 ? 'First spot recorded' : `${rewardData.spotCount} spots total`}
-            </p>
-          </div>
-
-          {/* Milestone Progress */}
-          {spotsToNext !== null && nextMilestone !== null && (
-            <div style={{ background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 16px', marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Next milestone</span>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#eef4f8' }}>{nextMilestone}</span>
-              </div>
-              <div style={{ width: '100%', height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
-                <div style={{ width: `${Math.min(100, (rewardData.spotCount / nextMilestone) * 100)}%`, height: '100%', background: '#F97316', borderRadius: 2 }} />
-              </div>
-              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', margin: '6px 0 0', textAlign: 'right' }}>
-                {spotsToNext} more {spotsToNext === 1 ? 'spot' : 'spots'} to go
-              </p>
-            </div>
-          )}
-
-          {/* Verify CTA banner */}
-          <div style={{ margin: '0 0 12px', padding: '14px 16px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 10 }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>
-              Verify this vehicle to boost ranking and visibility
-            </div>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginBottom: 12 }}>
-              Verified vehicles rank higher and get more exposure in the feed.
-            </div>
-            <button
-              onClick={() => onNavigate('scan')}
-              style={{ width: '100%', padding: 10, background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', marginBottom: 6 }}
-            >
-              Verify Now
-            </button>
-            <button
-              onClick={() => onNavigate('feed')}
-              style={{ width: '100%', padding: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}
-            >
-              Skip
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div>
-            <button
-              onClick={() => onNavigate('feed')}
-              style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   const heroImageUrl = photoPreview || wizardData.stockImageUrl || null;
 
@@ -528,22 +480,24 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         <StarRow label="Condition" value={conditionRating} onChange={setConditionRating} />
       </div>
 
-      {/* Sentiment buttons */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '12px 16px' }}>
-        <button onClick={() => setSentiment('love')} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8,
-          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, cursor: 'pointer',
-          ...(loveActive ? { background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.4)', color: '#F97316' } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
-        }}>
-          <Heart style={{ width: 16, height: 16, fill: loveActive ? '#F97316' : 'none' }} /> Love It
-        </button>
-        <button onClick={() => setSentiment('hate')} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8,
-          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, cursor: 'pointer',
-          ...(hateActive ? { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
-        }}>
-          <ThumbsDown style={{ width: 16, height: 16, fill: hateActive ? '#ef4444' : 'none' }} /> Hate It
-        </button>
+      {/* Sentiment buttons — 3 options */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: '12px 16px' }}>
+        {([
+          { value: 'love' as const, label: 'Love It', icon: <Heart style={{ width: 14, height: 14, fill: sentiment === 'love' ? '#F97316' : 'none' }} />, activeColor: '#F97316', activeBg: 'rgba(249,115,22,0.1)', activeBorder: 'rgba(249,115,22,0.4)' },
+          { value: 'neutral' as const, label: "It's OK", icon: null, activeColor: '#7a8e9e', activeBg: 'rgba(255,255,255,0.06)', activeBorder: 'rgba(255,255,255,0.2)' },
+          { value: 'hate' as const, label: 'Not For Me', icon: <ThumbsDown style={{ width: 14, height: 14, fill: sentiment === 'hate' ? '#ef4444' : 'none' }} />, activeColor: '#ef4444', activeBg: 'rgba(239,68,68,0.08)', activeBorder: 'rgba(239,68,68,0.3)' },
+        ]).map(opt => {
+          const isActive = sentiment === opt.value;
+          return (
+            <button key={opt.value} onClick={() => setSentiment(opt.value)} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 4px', borderRadius: 8,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, cursor: 'pointer',
+              ...(isActive ? { background: opt.activeBg, border: `1px solid ${opt.activeBorder}`, color: opt.activeColor } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: '#5a6e7e' }),
+            }}>
+              {opt.icon} {opt.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Bumper Stickers */}
@@ -590,15 +544,57 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         )}
       </div>
 
-      {/* Submit button */}
-      <div style={{ margin: '0 16px 16px' }}>
+      {/* Spacer for fixed submit button */}
+      <div style={{ height: 120 }} />
+
+      {/* Duplicate spot warning */}
+      {showDuplicateWarning && (
+        <div style={{
+          position: 'fixed', bottom: 80, left: 16, right: 16, zIndex: 61,
+          background: '#0d1117', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: 14,
+        }}>
+          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', margin: '0 0 10px' }}>
+            You've already spotted this vehicle.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => { setShowDuplicateWarning(false); handleSubmitQuick(); }}
+              style={{
+                flex: 1, padding: '10px', background: '#F97316', border: 'none', borderRadius: 6,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer',
+              }}
+            >
+              Update My Spot
+            </button>
+            <button
+              onClick={() => { setShowDuplicateWarning(false); onNavigate('scan'); }}
+              style={{
+                flex: 1, padding: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Fixed submit button — above bottom nav (z-index 50) */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
+        padding: '12px 16px 20px',
+        background: 'rgba(3,5,8,0.95)', backdropFilter: 'blur(8px)',
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+      }}>
         <button
           onClick={handleSubmitQuick}
           disabled={!canSubmit || submitting || uploadingPhoto}
           style={{ width: '100%', padding: 13, background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', opacity: (!canSubmit || submitting || uploadingPhoto) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           {(submitting || uploadingPhoto) ? <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : null}
-          {uploadingPhoto ? 'Uploading...' : 'Submit Spot +10 RP'}
+          {uploadingPhoto ? 'Uploading...' : existingSpotId ? 'Update Spot' : 'Submit Spot +10 RP'}
         </button>
       </div>
 

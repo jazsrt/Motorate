@@ -45,7 +45,6 @@ const UserProfilePage = lazy(() => import('./pages/UserProfilePage').then(m => (
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
-const _SearchPage = lazy(() => import('./pages/SearchPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage').then(m => ({ default: m.EventsPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })));
 const MyGaragePage = lazy(() => import('./pages/MyGaragePage').then(m => ({ default: m.MyGaragePage })));
@@ -56,8 +55,9 @@ const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m 
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const GloveboxPage = lazy(() => import('./pages/GloveboxPage').then(m => ({ default: m.GloveboxPage })));
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
+const ClaimVehiclePage = lazy(() => import('./pages/ClaimVehiclePage').then(m => ({ default: m.ClaimVehiclePage })));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'completed-review' | 'verified-confirm' | 'verified-review' | 'glovebox';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'completed-review' | 'verified-confirm' | 'verified-review' | 'glovebox' | 'claim-vehicle';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -133,6 +133,7 @@ function AppContent() {
   const [vehicleDetailOpenReviewModal, setVehicleDetailOpenReviewModal] = useState<boolean>(false);
   const [previousPage, setPreviousPage] = useState<Page>('feed');
   const [_previousPageData, setPreviousPageData] = useState<any>(null);
+  const [claimData, setClaimData] = useState<any>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -240,6 +241,10 @@ function AppContent() {
     } else if (page === 'search' && typeof data === 'string') {
       setSearchQuery(data);
       setCurrentPage('search');
+    } else if (page === 'claim-vehicle' && data && typeof data === 'object') {
+      setClaimData(obj);
+      setPreviousPage(currentPage);
+      setCurrentPage('claim-vehicle');
     } else {
       setCurrentPage(page as Page);
     }
@@ -421,7 +426,7 @@ function AppContent() {
       pageContent = <UnifiedSearchPage onNavigate={handleNavigate} onViewVehicle={handleViewVehicle} initialQuery={searchQuery} />;
       break;
     case 'explore':
-      pageContent = <ExplorePage onNavigate={handleNavigate} />;
+      pageContent = <UnifiedSearchPage onNavigate={handleNavigate} onViewVehicle={handleViewVehicle} initialQuery={searchQuery} />;
       break;
     case 'messages':
       pageContent = <MessagesPage onNavigate={handleNavigate} recipientId={messageRecipientId} />;
@@ -527,6 +532,13 @@ function AppContent() {
       break;
     case 'glovebox':
       pageContent = <GloveboxPage onNavigate={handleNavigate} />;
+      break;
+    case 'claim-vehicle':
+      pageContent = claimData ? (
+        <ClaimVehiclePage onNavigate={handleNavigate} claimData={claimData} />
+      ) : (
+        <NewFeedPage onNavigate={handleNavigate} />
+      );
       break;
     default:
       pageContent = (

@@ -13,13 +13,16 @@ import { formatTimeAgo } from '../lib/formatting';
 
 interface Notification {
   id: string;
-  type: 'review' | 'badge_received' | 'badge_unlocked' | 'badge_awarded' | 'comment' | 'like' | 'follow' | 'spot' | 'message' | 'admin_action' | 'friend_request' | 'friend_accepted' | 'vehicle_follow' | 'vehicle_follow_request' | 'vehicle_follow_approved';
+  type: string;
   title: string;
-  message: string;
+  message?: string;
+  body?: string;
   is_read: boolean;
   created_at: string;
   link_type?: string;
   link_id?: string;
+  reference_type?: string;
+  reference_id?: string;
   data?: Record<string, unknown>;
 }
 
@@ -29,22 +32,27 @@ interface NotificationsPageProps {
   onNavigate: OnNavigate;
 }
 
-function getIcon(type: Notification['type']) {
+function getIcon(type: string) {
   switch (type) {
     case 'badge_received':
     case 'badge_unlocked':
     case 'badge_awarded':
+    case 'badge_unlock':
       return { Icon: Award, color: '#f0a030' };
     case 'like':
       return { Icon: Heart, color: '#F97316' };
     case 'comment':
+    case 'owner_reply':
       return { Icon: MessageCircle, color: '#7a8e9e' };
     case 'follow':
+    case 'new_follower':
       return { Icon: UserPlus, color: '#7a8e9e' };
     case 'review':
-      return { Icon: Star, color: '#F97316' };
     case 'spot':
+    case 'new_spot':
       return { Icon: MapPin, color: '#F97316' };
+    case 'milestone':
+      return { Icon: Star, color: '#F97316' };
     case 'admin_action':
       return { Icon: Shield, color: '#F97316' };
     case 'friend_request': return { Icon: UserPlus, color: '#F97316' };
@@ -87,17 +95,17 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
   });
 
   // Left border accent color
-  const getAccentBorder = () => {
+  const _getAccentBorder = () => {
     switch (notification.type) {
-      case 'spot': case 'review': case 'vehicle_follow': case 'vehicle_follow_request': case 'vehicle_follow_approved':
+      case 'spot': case 'new_spot': case 'review': case 'milestone': case 'vehicle_follow': case 'vehicle_follow_request': case 'vehicle_follow_approved':
         return '2px solid rgba(249,115,22,0.55)';
-      case 'badge_received': case 'badge_unlocked': case 'badge_awarded':
+      case 'badge_received': case 'badge_unlocked': case 'badge_awarded': case 'badge_unlock':
         return '2px solid rgba(240,160,48,0.45)';
       case 'friend_accepted':
         return '2px solid rgba(32,192,96,0.45)';
-      case 'comment': case 'message':
+      case 'comment': case 'owner_reply': case 'message':
         return '2px solid rgba(56,136,238,0.4)';
-      case 'follow': case 'friend_request': case 'like':
+      case 'follow': case 'new_follower': case 'friend_request': case 'like':
         return '2px solid rgba(255,255,255,0.08)';
       default:
         return '2px solid transparent';
@@ -107,30 +115,24 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
   // Icon circle background
   const getIconBg = () => {
     switch (notification.type) {
-      case 'spot': case 'review': case 'vehicle_follow': case 'vehicle_follow_request': case 'vehicle_follow_approved': case 'like':
+      case 'spot': case 'new_spot': case 'review': case 'milestone': case 'vehicle_follow': case 'vehicle_follow_request': case 'vehicle_follow_approved': case 'like':
         return 'rgba(249,115,22,0.12)';
-      case 'badge_received': case 'badge_unlocked': case 'badge_awarded':
+      case 'badge_received': case 'badge_unlocked': case 'badge_awarded': case 'badge_unlock':
         return 'rgba(240,160,48,0.12)';
       case 'friend_accepted':
         return 'rgba(32,192,96,0.12)';
-      case 'comment': case 'message':
+      case 'comment': case 'owner_reply': case 'message':
         return 'rgba(56,136,238,0.1)';
-      case 'follow': case 'friend_request':
+      case 'follow': case 'new_follower': case 'friend_request':
         return 'rgba(255,255,255,0.06)';
       default:
         return 'rgba(255,255,255,0.06)';
     }
   };
 
-  const isBadge = ['badge_received', 'badge_unlocked', 'badge_awarded'].includes(notification.type);
+  const isBadge = ['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(notification.type);
   const isFriendRequest = notification.type === 'friend_request';
-
-  const avatarBg = isBadge
-    ? 'rgba(249,115,22,0.15)'
-    : '#1e2a38';
-  const avatarBorder = isBadge
-    ? '1px solid rgba(249,115,22,0.20)'
-    : 'none';
+  const displayMessage = notification.message || notification.body || '';
 
   return (
     <div
@@ -139,6 +141,7 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
       style={{
         display: 'flex', alignItems: 'flex-start', gap: 12,
         padding: '12px 16px',
+        background: notification.is_read ? '#070a0f' : '#0d1117',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
         opacity: isDeleting ? 0 : isDeadLink ? 0.4 : 1,
         transform: isDeleting ? 'translateX(-24px)' : 'none',
@@ -146,19 +149,14 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
         cursor: 'pointer',
       }}
     >
-      {/* Avatar */}
+      {/* Icon circle */}
       <div style={{
         width: 36, height: 36, borderRadius: '50%',
-        background: avatarBg, border: avatarBorder,
+        background: getIconBg(),
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0,
-        fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#7a8e9e',
       }}>
-        {isBadge ? (
-          <span style={{ fontSize: 16 }}>🎖</span>
-        ) : (
-          <Icon style={{ width: 14, height: 14, color }} strokeWidth={1.5} />
-        )}
+        <Icon style={{ width: 14, height: 14, color }} strokeWidth={1.5} />
       </div>
 
       {/* Text content */}
@@ -167,7 +165,7 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
           fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', lineHeight: 1.4,
         }}>
           <span style={{ color: '#eef4f8', fontWeight: 600 }}>{notification.title}</span>
-          {notification.message && ` ${notification.message}`}
+          {displayMessage && ` ${displayMessage}`}
         </div>
         <span style={{
           fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#3a4e60',
@@ -258,9 +256,10 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
   const handleNotificationClick = async (notification: Notification) => {
     markAsRead(notification.id);
-    if (['badge_received', 'badge_unlocked', 'badge_awarded'].includes(notification.type)) {
-      // Try to load badge data and show unlock modal
-      const badgeId = notification.data?.badge_id || notification.link_id;
+
+    // Badge notifications → badges page or modal
+    if (['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(notification.type)) {
+      const badgeId = notification.data?.badge_id || notification.link_id || notification.reference_id;
       if (badgeId) {
         try {
           const { data: badgeData } = await supabase
@@ -274,29 +273,66 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           }
         } catch { /* intentionally empty */ }
       }
-      // Fallback: navigate to badges page
       onNavigate('badges');
       return;
     }
-    if (!notification.link_type || !notification.link_id) return;
+
+    // Spot notifications → vehicle detail (look up vehicle_id from spot_history if needed)
+    if (['spot', 'new_spot', 'owner_reply', 'milestone'].includes(notification.type)) {
+      const refType = notification.link_type || notification.reference_type;
+      const refId = notification.link_id || notification.reference_id;
+
+      if (refType === 'vehicle' && refId) {
+        onNavigate('vehicle-detail', { vehicleId: refId });
+        return;
+      }
+      if (refType === 'spot_history' && refId) {
+        // Look up the vehicle from spot_history
+        try {
+          const { data: spot } = await supabase.from('spot_history').select('vehicle_id').eq('id', refId).maybeSingle();
+          if (spot?.vehicle_id) { onNavigate('vehicle-detail', { vehicleId: spot.vehicle_id }); return; }
+        } catch { /* intentionally empty */ }
+      }
+      // Fallback: if we have any vehicle reference in the data
+      if (notification.data?.vehicle_id) {
+        onNavigate('vehicle-detail', { vehicleId: notification.data.vehicle_id as string });
+        return;
+      }
+      return;
+    }
+
+    // Follower notifications → vehicle detail
+    if (['new_follower', 'vehicle_follow', 'vehicle_follow_approved'].includes(notification.type)) {
+      const refId = notification.link_id || notification.reference_id;
+      if (refId) {
+        onNavigate('vehicle-detail', { vehicleId: refId });
+        return;
+      }
+    }
+
+    // Generic link_type / reference_type routing
+    const linkType = notification.link_type || notification.reference_type;
+    const linkId = notification.link_id || notification.reference_id;
+    if (!linkType || !linkId) return;
+
     try {
-      switch (notification.link_type) {
+      switch (linkType) {
         case 'vehicle': {
-          const { data } = await supabase.from('vehicles').select('id').eq('id', notification.link_id).maybeSingle();
-          if (data) onNavigate('vehicle-detail', notification.link_id);
+          const { data } = await supabase.from('vehicles').select('id').eq('id', linkId).maybeSingle();
+          if (data) onNavigate('vehicle-detail', { vehicleId: linkId });
           else { showToast('Vehicle no longer available', 'error'); setDeadLinkNotifications(prev => new Set(prev).add(notification.id)); }
           break;
         }
         case 'post': {
-          const { data } = await supabase.from('posts').select('id').eq('id', notification.link_id).maybeSingle();
+          const { data } = await supabase.from('posts').select('id').eq('id', linkId).maybeSingle();
           if (data) onNavigate('feed');
           else { showToast('Post no longer available', 'error'); setDeadLinkNotifications(prev => new Set(prev).add(notification.id)); }
           break;
         }
         case 'user':
         case 'profile': {
-          const { data } = await supabase.from('profiles').select('id').eq('id', notification.link_id).maybeSingle();
-          if (data) onNavigate('user-profile', notification.link_id);
+          const { data } = await supabase.from('profiles').select('id').eq('id', linkId).maybeSingle();
+          if (data) onNavigate('user-profile', linkId);
           else { showToast('Profile no longer available', 'error'); setDeadLinkNotifications(prev => new Set(prev).add(notification.id)); }
           break;
         }
@@ -310,12 +346,12 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
     }
   };
 
-  const getCategory = (type: Notification['type']): NotificationFilter => {
-    if (['badge_received', 'badge_unlocked', 'badge_awarded'].includes(type)) return 'badges';
-    if (type === 'like' || type === 'vehicle_follow') return 'reactions';
-    if (type === 'comment') return 'comments';
+  const getCategory = (type: string): NotificationFilter => {
+    if (['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(type)) return 'badges';
+    if (type === 'like' || type === 'vehicle_follow' || type === 'new_follower') return 'reactions';
+    if (type === 'comment' || type === 'owner_reply') return 'comments';
     if (['follow', 'friend_request', 'friend_accepted', 'vehicle_follow_request', 'vehicle_follow_approved'].includes(type)) return 'social';
-    if (type === 'spot' || type === 'review') return 'spots';
+    if (['spot', 'new_spot', 'review', 'milestone'].includes(type)) return 'spots';
     return 'all';
   };
 
@@ -395,8 +431,12 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
         {/* Empty state */}
         {!loading && filteredNotifications.length === 0 && (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: '#3a4e60' }}>
-              No Notifications
+            <Bell style={{ width: 32, height: 32, color: '#1e2a38', margin: '0 auto 14px', display: 'block' }} strokeWidth={1.2} />
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>
+              No notifications yet
+            </div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5 }}>
+              Spot vehicles and follow them to get updates.
             </div>
           </div>
         )}

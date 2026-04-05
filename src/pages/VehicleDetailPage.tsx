@@ -3,6 +3,7 @@ import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { ModerationStatus } from '../components/ModerationStatus';
 import { useModerationSubscription } from '../hooks/useModerationSubscription';
@@ -13,11 +14,9 @@ import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { type VerificationTier } from '../components/TierBadge';
 import { parseVehicleSpecs } from '../lib/vehicleSpecs';
-import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, User, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, MapPin, Camera, BookOpen, ChevronRight, Heart } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, User, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, MapPin, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
-import { shareToSocial } from '../components/ShareCardGenerator';
 import { GuestBottomNav } from '../components/GuestBottomNav';
 // RateDriverModal and VehicleStats imports removed - unused
 import { GarageSection } from '../components/GarageSection';
@@ -83,6 +82,7 @@ interface Vehicle {
   plate_number?: string | null;
   is_private?: boolean;
   trim?: string | null;
+  vehicle_handle?: string | null;
   vin_raw_data?: Record<string, unknown> | null;
   owner?: {
     id: string;
@@ -177,6 +177,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   } as const;
 
   const { user } = useAuth();
+  const { showToast } = useToast();
   const { goBack, getReturnLabel } = useNavigation();
   const _returnLabel = getReturnLabel();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -221,6 +222,13 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const isUnclaimed = vehicle && !vehicle.is_claimed;
   const canClaim = user && isUnclaimed && !vehicle?.owner_id;
 
+  // Owner manage sheet + reply state
+  const [showManageSheet, setShowManageSheet] = useState(false);
+  const [replyingToReviewId, setReplyingToReviewId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replySubmitting, setReplySubmitting] = useState(false);
+  const [ownerReplies, setOwnerReplies] = useState<Record<string, { text: string; created_at: string }[]>>({});
+
   useEffect(() => {
     if (vehicle && !vehicleImages[0]?.image_url && !vehicle.stock_image_url && !vehicle.profile_image_url) {
       getVehicleImageUrl(vehicle.make || '', vehicle.model || '', vehicle.year || undefined, vehicle.color || undefined).then(url => {
@@ -251,7 +259,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     const { data: vehicleData } = await supabase
       .from('vehicles')
       // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
-      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', owners_manual_url, claimed_at, vin_raw_data, profiles!owner_id(id, handle, avatar_url)')
+      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', vehicle_handle, owners_manual_url, claimed_at, vin_raw_data, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 
@@ -495,6 +503,125 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
+  // Load owner replies for reviews
+  const loadOwnerReplies = useCallback(async () => {
+    if (!vehicle?.owner_id || reviews.length === 0) return;
+    // Find posts that correspond to these reviews, then find owner comments
+    const reviewIds = reviews.map(r => r.id);
+    const { data: posts } = await supabase
+      .from('posts')
+      .select('id, review_id')
+      .in('review_id', reviewIds);
+
+    if (!posts || posts.length === 0) return;
+
+    const postIdToReviewId: Record<string, string> = {};
+    posts.forEach(p => { if (p.review_id) postIdToReviewId[p.id] = p.review_id; });
+
+    const { data: comments } = await supabase
+      .from('post_comments')
+      .select('post_id, text, created_at')
+      .in('post_id', posts.map(p => p.id))
+      .eq('author_id', vehicle.owner_id!)
+      .order('created_at', { ascending: true });
+
+    if (!comments) return;
+    const grouped: Record<string, { text: string; created_at: string }[]> = {};
+    comments.forEach(c => {
+      const reviewId = postIdToReviewId[c.post_id];
+      if (reviewId) {
+        if (!grouped[reviewId]) grouped[reviewId] = [];
+        grouped[reviewId].push({ text: c.text, created_at: c.created_at });
+      }
+    });
+    setOwnerReplies(grouped);
+  }, [vehicle?.owner_id, reviews]);
+
+  useEffect(() => {
+    if (isOwner && reviews.length > 0) loadOwnerReplies();
+  }, [isOwner, reviews.length, loadOwnerReplies]);
+
+  // Dynamic meta tags for share previews
+  function setMeta(property: string, content: string) {
+    let el = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null;
+    if (!el) { el = document.createElement('meta'); el.setAttribute('property', property); document.head.appendChild(el); }
+    el.setAttribute('content', content);
+  }
+
+  useEffect(() => {
+    if (!vehicle) return;
+
+    const vName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
+    const handleOrPlate = vehicle.vehicle_handle
+      ? `@${vehicle.vehicle_handle}`
+      : [vehicle.state, vehicle.plate_number].filter(Boolean).join(' ');
+    const ogTitle = [vName, handleOrPlate].filter(Boolean).join(' · ');
+
+    let ogDesc = `${spotCount} spots · ${followerCount} followers`;
+    if (vBadges.length > 0) ogDesc += ` · ${vBadges[0].badge_id}`;
+
+    const ogImage = vehicle.profile_image_url || vehicle.stock_image_url || '';
+    const plateLabel = [vehicle.state, vehicle.plate_number].filter(Boolean).join('-');
+    const ogUrl = vehicle.vehicle_handle
+      ? `https://motorate.app/v/${vehicle.vehicle_handle}`
+      : `https://motorate.app/plate/${plateLabel || vehicle.id}`;
+
+    document.title = `${vName} · MotoRate`;
+    setMeta('og:title', ogTitle);
+    setMeta('og:description', ogDesc);
+    setMeta('og:image', ogImage);
+    setMeta('og:url', ogUrl);
+
+    return () => {
+      document.title = 'MotoRate';
+      setMeta('og:title', 'MotoRate');
+      setMeta('og:description', 'The vehicle identity and reputation platform');
+      setMeta('og:image', '');
+      setMeta('og:url', '');
+    };
+  }, [vehicleId, vehicle, spotCount, followerCount, vBadges]);
+
+  const handleOwnerReply = async (reviewId: string) => {
+    if (!user || !replyText.trim() || replySubmitting) return;
+    setReplySubmitting(true);
+    try {
+      // Find the post associated with this review
+      const { data: post } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('review_id', reviewId)
+        .maybeSingle();
+
+      if (!post) {
+        setError('Cannot reply — no linked post found.');
+        setReplySubmitting(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from('post_comments')
+        .insert({
+          post_id: post.id,
+          author_id: user.id,
+          text: replyText.trim(),
+        });
+
+      if (insertError) throw insertError;
+
+      // Update local state
+      setOwnerReplies(prev => ({
+        ...prev,
+        [reviewId]: [...(prev[reviewId] || []), { text: replyText.trim(), created_at: new Date().toISOString() }],
+      }));
+      setReplyText('');
+      setReplyingToReviewId(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to post reply');
+    } finally {
+      setReplySubmitting(false);
+    }
+  };
+
   const handleManualUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !vehicle || !isOwner) return;
@@ -716,23 +843,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   return (
     <Layout currentPage="vehicle-detail" onNavigate={onNavigate}>
-      {vehicle && (
-        <Helmet>
-          <title>{`${vehicle.year} ${vehicle.make} ${vehicle.model} - MotoRate`}</title>
-          <meta property="og:title" content={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} />
-          <meta property="og:description" content={`View ratings and spots for this ${vehicle.year} ${vehicle.make} ${vehicle.model} on MotoRate`} />
-          {vehicle.profile_image_url && (
-            <meta property="og:image" content={vehicle.profile_image_url} />
-          )}
-          {guestMode && (
-            <>
-              <meta name="robots" content="noindex, nofollow" />
-              <meta name="googlebot" content="noindex, nofollow" />
-            </>
-          )}
-        </Helmet>
-      )}
-
       <div style={{ paddingBottom: 96 }}>
         {error && (
           <div style={{ margin: '0 16px 16px', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'flex-start', gap: 12, background: 'rgba(138,74,74,0.12)', border: '1px solid rgba(138,74,74,0.3)' }}>
@@ -741,8 +851,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 1. HERO ── */}
-        <div style={{ position: 'relative', width: '100%', height: 200, overflow: 'hidden' }}>
+        {/* ── 1. HERO (cinematic, 40vh) ── */}
+        <div style={{ position: 'relative', width: '100%', height: '40vh', minHeight: 280, maxHeight: 420, overflow: 'hidden' }}>
           {(() => {
             const heroUrl = vehicle.profile_image_url || vehicle.stock_image_url || carImageryUrl;
             return heroUrl && !heroImgError ? (
@@ -753,12 +863,14 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 onError={() => setHeroImgError(true)}
               />
             ) : (
-              <div style={{ width: '100%', height: '100%', background: '#111720' }} />
+              <div style={{ width: '100%', height: '100%', background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Car style={{ width: 64, height: 64, color: '#2c3a50' }} />
+              </div>
             );
           })()}
 
-          {/* Overlay */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.95) 0%, rgba(3,5,8,0.4) 50%, transparent 100%)' }} />
+          {/* Gradient overlay — bottom 50% */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.97) 0%, rgba(3,5,8,0.6) 40%, transparent 100%)' }} />
 
           {/* Back button */}
           <button
@@ -770,15 +882,32 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
           {/* Share button */}
           <button
-            onClick={() => {
-              const vName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ') || 'Vehicle';
-              shareToSocial({
-                type: 'vehicle',
-                title: vName,
-                userHandle: vehicle.owner?.handle || 'unknown',
-                userRep: 0,
-                deepLinkUrl: `${window.location.origin}/#/vehicle/${vehicle.id}`,
-              }, user?.id);
+            onClick={async () => {
+              const handle = vehicle.vehicle_handle;
+              const plateLabel = [vehicle.state, vehicle.plate_number].filter(Boolean).join('-');
+
+              const shareTitle = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
+                + (handle ? ` · @${handle}` : plateLabel ? ` · ${plateLabel}` : '');
+
+              let shareText = `${spotCount} spots · ${followerCount} followers`;
+              if (vBadges.length > 0) shareText += ` · ${vBadges[0].badge_id}`;
+
+              const shareUrl = handle
+                ? `https://motorate.app/v/${handle}`
+                : `https://motorate.app/plate/${plateLabel || vehicle.id}`;
+
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+                } catch { /* user cancelled or share failed — ignore */ }
+              } else {
+                try {
+                  await navigator.clipboard.writeText(shareUrl);
+                  showToast('Link copied', 'success');
+                } catch {
+                  showToast('Failed to copy link', 'error');
+                }
+              }
             }}
             style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
             title="Share this vehicle"
@@ -787,15 +916,51 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </button>
 
           {/* Content bottom-left */}
-          <div style={{ position: 'absolute', bottom: 14, left: 16, right: 16, zIndex: 2 }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 2 }}>
+          <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, zIndex: 2 }}>
+            {/* Plate or @handle */}
+            {vehicle.is_claimed && vehicle.owner?.handle ? (
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: C.accent, marginBottom: 4 }}>
+                @{vehicle.owner.handle}
+              </div>
+            ) : vehicle.plate_number ? (
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, letterSpacing: '0.14em', color: C.accent, marginBottom: 4 }}>
+                {vehicle.state || ''} {vehicle.plate_number}
+              </div>
+            ) : null}
+
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 2 }}>
               {vehicle.make || 'Unknown'}
             </div>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
               {vehicle.model || 'Vehicle'}
             </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 2 }}>
-              {[vehicle.year, vehicle.trim, vehicle.color].filter(Boolean).join(' · ')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#7a8e9e' }}>
+                {[vehicle.year, vehicle.trim, vehicle.color].filter(Boolean).join(' · ')}
+              </span>
+              {/* Verified badge chip */}
+              {vehicle.verification_tier === 'vin_verified' && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  padding: '2px 7px', borderRadius: 4,
+                  background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.3)',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#20c060',
+                }}>
+                  <Shield size={9} /> Verified
+                </span>
+              )}
+              {vehicle.is_claimed && vehicle.verification_tier !== 'vin_verified' && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  padding: '2px 7px', borderRadius: 4,
+                  background: 'rgba(32,192,96,0.08)', border: '1px solid rgba(32,192,96,0.2)',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#20c060',
+                }}>
+                  Claimed
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -804,7 +969,179 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
         <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
 
-        {/* ── 1b. SPECS STRIP (claimed vehicles with vin_raw_data) ── */}
+        {/* ── 2. STAT STRIP ── */}
+        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {[
+            { label: 'Followers', value: followerCount, onClick: () => setShowMotoFansModal(true) },
+            { label: 'Spots', value: spotCount, onClick: undefined as (() => void) | undefined },
+            { label: 'RP', value: rpScore, onClick: undefined },
+            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014', onClick: undefined },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} onClick={stat.onClick} style={{
+              flex: 1, padding: '12px 0', textAlign: 'center' as const,
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              cursor: stat.onClick ? 'pointer' : 'default',
+            }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Share preview row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
+          {/* Thumbnail */}
+          <div style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', background: '#111720', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {(vehicle.profile_image_url || vehicle.stock_image_url) ? (
+              <img src={(vehicle.profile_image_url || vehicle.stock_image_url)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <Car style={{ width: 18, height: 18, color: '#3a4e60' }} />
+            )}
+          </div>
+          {/* Identity */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+              {vehicle.vehicle_handle ? `@${vehicle.vehicle_handle}` : vehicle.plate_number || [vehicle.make, vehicle.model].filter(Boolean).join(' ')}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e', marginTop: 1 }}>
+              {spotCount} spots · {followerCount} followers
+            </div>
+          </div>
+          {/* Top badge chip */}
+          {vBadges.length > 0 && (
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', flexShrink: 0 }}>
+              {vBadges[0].badge_id}
+            </span>
+          )}
+        </div>
+
+        {/* ── 3. ACTION BAR ── */}
+        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' as const, gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {isOwner ? (
+            <>
+              {/* Owner action bar */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => {
+                    onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
+                  }}
+                  style={{
+                    flex: 1, padding: '11px 0',
+                    background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  <Camera size={14} /> Leave a Spot
+                </button>
+                <button
+                  onClick={() => setShowManageSheet(true)}
+                  style={{
+                    flex: 1, padding: '11px 0',
+                    background: C.carbon1, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.white,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  <Settings size={14} /> Manage Vehicle
+                </button>
+              </div>
+              {/* Owner Management Row */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { icon: <Image size={16} />, label: 'Upload Photos', action: () => fileInputRef.current?.click() },
+                  { icon: <Settings size={16} />, label: 'Edit Info', action: () => { import('../contexts/ToastContext').then(m => { /* toast via existing ref */ }); setShowManageSheet(false); } },
+                  { icon: <BarChart3 size={16} />, label: 'Insights', action: () => { /* coming soon handled below */ } },
+                ].map(item => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      if (item.label === 'Insights' || item.label === 'Edit Info') {
+                        // Use existing showToast would be ideal but we'll use a simple approach
+                        setError('');
+                        import('../contexts/ToastContext').catch(() => {});
+                        // Show inline feedback
+                        const el = document.getElementById('owner-toast');
+                        if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
+                      } else {
+                        item.action();
+                      }
+                    }}
+                    style={{
+                      flex: 1, padding: '10px 4px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
+                      background: C.carbon1, border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8,
+                      cursor: 'pointer', color: C.dim,
+                    }}
+                  >
+                    {item.icon}
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim }}>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div id="owner-toast" style={{ textAlign: 'center' as const, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.accent, opacity: 0, transition: 'opacity 0.3s', height: 0, overflow: 'visible' }} />
+            </>
+          ) : (
+            <>
+              {/* Non-owner action bar */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {vehicle.is_claimed && vehicle.owner_id && (
+                  <div style={{ flex: 1 }} onClick={(e) => e.stopPropagation()}>
+                    <MotoFanButton
+                      vehicleId={vehicleId}
+                      ownerId={vehicle.owner_id}
+                      onCountChange={(c) => setFollowerCount(c)}
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={() => {
+                    if (guestMode || !user) { setGuestJoinAction('spot a vehicle'); setShowGuestJoinModal(true); return; }
+                    onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
+                  }}
+                  style={{
+                    flex: 1, padding: '11px 0',
+                    background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  <Camera size={14} /> Leave a Spot
+                </button>
+              </div>
+              {/* Claim CTA (unclaimed only) */}
+              {isUnclaimed && (
+                <button
+                  onClick={() => {
+                    if (canClaim) {
+                      onNavigate('claim-vehicle', {
+                        vehicleId,
+                        plateNumber: vehicle.plate_number || '',
+                        plateState: vehicle.state || '',
+                        make: vehicle.make,
+                        model: vehicle.model,
+                        year: vehicle.year,
+                      });
+                    } else { setGuestJoinAction('claim a plate'); setShowGuestJoinModal(true); }
+                  }}
+                  style={{
+                    width: '100%', padding: '11px',
+                    background: 'rgba(32,192,96,0.08)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: 8,
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#20c060',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Claim Vehicle
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ── 4. SPECS STRIP (claimed vehicles with vin_raw_data) ── */}
         {vehicle.is_claimed && (() => {
           const specs = parseVehicleSpecs(vehicle.vin_raw_data);
           if (!specs) return null;
@@ -845,68 +1182,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           );
         })()}
 
-        {/* ── 2. STAT STRIP ── */}
-        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          {[
-            { label: 'RP', value: rpScore, onClick: undefined as (() => void) | undefined },
-            { label: 'Spots', value: spotCount, onClick: undefined },
-            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014', onClick: undefined },
-            { label: 'MotoFans', value: followerCount, onClick: () => setShowMotoFansModal(true) },
-          ].map((stat, i, arr) => (
-            <div key={stat.label} onClick={stat.onClick} style={{
-              flex: 1, padding: '10px 0', textAlign: 'center' as const,
-              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-              cursor: stat.onClick ? 'pointer' : 'default',
-            }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── VEHICLE BADGE RACK ── */}
-        {vBadges.length > 0 && (
-          <div style={{ padding: '12px 18px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{
-              fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-              letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginBottom: 10,
-            }}>
-              Earned Badges
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-              {[...vBadges]
-                .sort((a, b) => {
-                  const order: Record<string, number> = { Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
-                  return (order[b.tier ?? ''] || 0) - (order[a.tier ?? ''] || 0);
-                })
-                .map(badge => {
-                  const colors = TIER_COLORS[(badge.tier ?? 'Bronze') as keyof typeof TIER_COLORS] || TIER_COLORS.Bronze;
-                  return (
-                    <div key={badge.badge_id} style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                      background: colors.bg, border: `1px solid ${colors.border}`,
-                      borderRadius: 5, padding: '4px 9px',
-                    }}>
-                      <span style={{
-                        fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700,
-                        letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: colors.text,
-                      }}>
-                        {badge.badge_id}
-                      </span>
-                      <span style={{
-                        fontFamily: 'JetBrains Mono, monospace', fontSize: 7,
-                        color: colors.text, opacity: 0.7, fontVariantNumeric: 'tabular-nums',
-                      }}>
-                        x{badge.sticker_count}
-                      </span>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-
-        {/* ── 3. OWNER STRIP ── */}
+        {/* ── 5. OWNER STRIP ── */}
         {vehicle.is_claimed && vehicle.owner && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
@@ -936,16 +1212,42 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               </div>
             </div>
             <div onClick={(e) => e.stopPropagation()}>
-              <MotoFanButton
-                vehicleId={vehicleId}
-                ownerId={vehicle?.owner_id || null}
-                onCountChange={(c) => setFollowerCount(c)}
-              />
+              <FollowButton targetUserId={vehicle.owner.id} />
             </div>
           </div>
         )}
 
-        {/* ── 5. BUMPER STICKERS — flat layout per mockup, no tabs ── */}
+        {/* ── 6. RATINGS ── */}
+        {ratingCategories.length > 0 && (
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
+              Ratings
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+              {ratingCategories.map(cat => (
+                <div key={cat.label} style={{ background: '#0d1117', borderRadius: 8, padding: '8px 6px', textAlign: 'center' as const, border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{cat.label}</span>
+                </div>
+              ))}
+            </div>
+            {/* Sentiment */}
+            {(loveCount > 0 || hateCount > 0) && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fb7185' }}>
+                  <Heart size={14} style={{ fill: 'currentColor' }} />
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700 }}>{loveCount}</span>
+                </div>
+                <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#5a6e7e' }}>
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700 }}>{hateCount}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 7. BUMPER STICKERS ── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Bumper Stickers</span>
@@ -960,11 +1262,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
 
-        {/* ── 6. REVIEWS — flat layout per mockup ── */}
+        {/* ── 8. ENCOUNTER LOG ── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-              Reviews{reviews.length > 0 ? ` · ${reviews.length}` : ''}
+              Encounter Log{reviews.length > 0 ? ` · ${reviews.length}` : ''}
             </span>
             {reviews.length > 1 && (
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
@@ -981,26 +1283,86 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
                 {reviews.slice(0, 3).map((review) => {
                   const avgRating = [review.rating_vehicle, review.rating_driver, review.rating_driving].filter(r => r != null).reduce((s, r) => s + r!, 0) / [review.rating_vehicle, review.rating_driver, review.rating_driving].filter(r => r != null).length || 0;
+                  const replies = ownerReplies[review.id] || [];
                   return (
-                    <div key={review.id} style={{ background: '#0d1117', borderRadius: 8, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1e2a38', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {review.author.avatar_url ? (
-                            <img src={review.author.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                          ) : (
-                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 700, color: '#7a8e9e' }}>{(review.author.handle || '?')[0].toUpperCase()}</span>
-                          )}
+                    <div key={review.id}>
+                      <div style={{ background: '#0d1117', borderRadius: 8, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                          <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1e2a38', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {review.author.avatar_url ? (
+                              <img src={review.author.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                            ) : (
+                              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 700, color: '#7a8e9e' }}>{(review.author.handle || '?')[0].toUpperCase()}</span>
+                            )}
+                          </div>
+                          <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>@{review.author.handle || 'Anonymous'}</span>
+                          <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <svg key={star} width="14" height="14" viewBox="0 0 24 24" fill={star <= Math.round(avgRating) ? '#f0a030' : 'none'} stroke={star <= Math.round(avgRating) ? '#f0a030' : '#3a4e60'} strokeWidth="1.5">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                              </svg>
+                            ))}
+                          </div>
                         </div>
-                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>@{review.author.handle || 'Anonymous'}</span>
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <svg key={star} width="14" height="14" viewBox="0 0 24 24" fill={star <= Math.round(avgRating) ? '#f0a030' : 'none'} stroke={star <= Math.round(avgRating) ? '#f0a030' : '#3a4e60'} strokeWidth="1.5">
-                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                            </svg>
-                          ))}
-                        </div>
+                        {review.comment && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.4, margin: 0 }}>{review.comment}</p>}
+
+                        {/* Owner reply button */}
+                        {isOwner && review.author_id !== user?.id && (
+                          <button
+                            onClick={() => setReplyingToReviewId(replyingToReviewId === review.id ? null : review.id)}
+                            style={{
+                              marginTop: 8, display: 'flex', alignItems: 'center', gap: 4,
+                              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                              letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.accent,
+                            }}
+                          >
+                            <MessageCircle size={11} /> Reply
+                          </button>
+                        )}
                       </div>
-                      {review.comment && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.4, margin: 0 }}>{review.comment}</p>}
+
+                      {/* Existing owner replies */}
+                      {replies.map((r, ri) => (
+                        <div key={ri} style={{
+                          marginTop: 4, marginLeft: 16, padding: '8px 10px',
+                          borderLeft: '3px solid #F97316',
+                          background: 'rgba(249,115,22,0.04)', borderRadius: '0 6px 6px 0',
+                        }}>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.accent }}>Owner</span>
+                          <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#a8bcc8', lineHeight: 1.4, margin: '2px 0 0' }}>{r.text}</p>
+                        </div>
+                      ))}
+
+                      {/* Inline reply input */}
+                      {replyingToReviewId === review.id && isOwner && (
+                        <div style={{ marginTop: 4, marginLeft: 16, display: 'flex', gap: 6 }}>
+                          <input
+                            value={replyText}
+                            onChange={e => setReplyText(e.target.value)}
+                            placeholder="Reply as owner..."
+                            autoFocus
+                            onKeyDown={e => { if (e.key === 'Enter' && replyText.trim()) handleOwnerReply(review.id); }}
+                            style={{
+                              flex: 1, padding: '8px 10px',
+                              background: '#070a0f', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 6,
+                              fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#eef4f8', outline: 'none',
+                            }}
+                          />
+                          <button
+                            onClick={() => handleOwnerReply(review.id)}
+                            disabled={!replyText.trim() || replySubmitting}
+                            style={{
+                              padding: '8px 10px', background: C.accent, border: 'none', borderRadius: 6,
+                              cursor: replyText.trim() ? 'pointer' : 'not-allowed',
+                              opacity: replyText.trim() ? 1 : 0.4,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}
+                          >
+                            <Send size={12} color="#030508" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1009,8 +1371,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
 
-        {/* ── PHOTOS (owner only, compact) ── */}
-        {vehicle.is_claimed && vehicleImages.length > 0 && (
+        {/* ── PHOTOS ── */}
+        {vehicle.is_claimed && (vehicleImages.length > 0 || isOwner) && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Photos · {vehicleImages.length}</span>
@@ -1058,12 +1420,12 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── MODIFICATIONS ── */}
-        {vehicle.is_claimed && (
+        {/* ── BUILD SHEET (owner only) ── */}
+        {isOwner && vehicle.is_claimed && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                Modifications{modifications.length > 0 ? ` · ${modifications.length}` : ''}
+                Build Sheet{modifications.length > 0 ? ` · ${modifications.length}` : ''}
               </span>
               {isOwner && (
                 <span onClick={() => setShowAddModForm(!showAddModForm)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
@@ -1152,36 +1514,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 10. OWNER ACTIONS ── */}
-        {/* Claim CTA */}
-        {isUnclaimed && (
-          <div style={{ padding: '0 18px 16px' }}>
-            <div style={{ background: 'rgba(32,192,96,0.06)', border: `1px solid rgba(32,192,96,0.22)`, borderRadius: 10, padding: 16, textAlign: 'center' as const }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 12 }}>
-                Is this your car?
-              </div>
-              <button
-                onClick={() => {
-                  if (canClaim) setShowClaimModal(true);
-                  else { setGuestJoinAction('claim a plate'); setShowGuestJoinModal(true); }
-                }}
-                style={{
-                  width: '100%', padding: 13, borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: C.green, color: '#001a0a',
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
-                  letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-                }}
-              >
-                Verify Ownership
-              </button>
-              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.steel, marginTop: 8 }}>
-                Verifying lets you manage your vehicle profile and respond to reviews
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Verify Ownership */}
+        {/* ── VERIFY OWNERSHIP (owner, standard tier) ── */}
         {isOwner && vehicle && vehicle.verification_tier === 'standard' && (
           <div style={{ padding: '0 18px 16px' }}>
             <div style={{ background: C.accentDim, border: '1px solid rgba(249,115,22,0.22)', borderRadius: 10, padding: 16 }}>
@@ -1399,6 +1732,84 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
       </div>
+
+      {/* ── MANAGE VEHICLE BOTTOM SHEET (owner only) ── */}
+      {showManageSheet && isOwner && (
+        <div
+          onClick={() => setShowManageSheet(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 480,
+              background: '#0d1117', borderTop: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px 16px 0 0', padding: '20px 20px 32px',
+            }}
+          >
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.12)', margin: '0 auto 18px' }} />
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 16 }}>
+              Manage Vehicle
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
+              <button
+                onClick={() => { setShowManageSheet(false); fileInputRef.current?.click(); }}
+                style={{
+                  width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10,
+                  cursor: 'pointer', textAlign: 'left' as const,
+                }}
+              >
+                <Image size={18} color={C.accent} />
+                <div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>Upload Photos</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 1 }}>Add images to your vehicle gallery</div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowManageSheet(false);
+                  const el = document.getElementById('owner-toast');
+                  if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
+                }}
+                style={{
+                  width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10,
+                  cursor: 'pointer', textAlign: 'left' as const,
+                }}
+              >
+                <Settings size={18} color={C.dim} />
+                <div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>Edit Vehicle Info</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 1 }}>Update make, model, year, color</div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowManageSheet(false);
+                  const el = document.getElementById('owner-toast');
+                  if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
+                }}
+                style={{
+                  width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10,
+                  cursor: 'pointer', textAlign: 'left' as const,
+                }}
+              >
+                <BarChart3 size={18} color={C.dim} />
+                <div>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>View Insights</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 1 }}>Spot trends, viewer stats, ranking</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── MODALS ── */}
       {showVerifyModal && vehicle && (

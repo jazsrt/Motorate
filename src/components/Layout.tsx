@@ -15,7 +15,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const navLeft = [
     { id: 'feed' as const, icon: LayoutGrid, label: 'Feed' },
-    { id: 'explore' as const, icon: Compass, label: 'Explore' },
+    { id: 'search' as const, icon: Compass, label: 'Explore' },
   ];
   const navRight = [
     { id: 'rankings' as const, icon: Activity, label: 'Rankings' },

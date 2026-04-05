@@ -6,9 +6,7 @@ import { Layout } from '../components/Layout';
 import { useFeed } from '../hooks/useFeed';
 import { supabase } from '../lib/supabase';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
-import { CompetitionStrip } from '../components/feed/CompetitionStrip';
 import { StoryRail } from '../components/feed/StoryRail';
-
 import { AchievementCarousel } from '../components/feed/AchievementCarousel';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
@@ -131,25 +129,23 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
   return (
     <Layout currentPage="feed" onNavigate={onNavigate}>
-      {/* Competition strip */}
-      <CompetitionStrip />
-
       {/* Story rail — vehicles the user tracks */}
       {user && <StoryRail onNavigate={onNavigate} />}
 
       {/* Achievement carousel */}
       <AchievementCarousel />
 
-      {/* Filter bar — pills only, matching mockup */}
+      {/* Scope selector */}
       <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-        {(['All', 'Spots', 'Posts'] as const).map((label) => {
-          const key = label.toLowerCase() as 'all' | 'spots' | 'posts';
-          return (
-            <button key={label} onClick={() => setFilterType(key)} style={pillStyle(filterType === key)}>
-              {label}
-            </button>
-          );
-        })}
+        {([
+          { key: 'all' as const, label: 'Latest' },
+          { key: 'spots' as const, label: 'Following' },
+          { key: 'posts' as const, label: 'Top Rated' },
+        ]).map(({ key, label }) => (
+          <button key={key} onClick={() => setFilterType(key)} style={pillStyle(filterType === key)}>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Focused post (from shared link) */}
@@ -191,12 +187,24 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
             <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="13" rx="2"/>
           </svg>
           <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>
-            {hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
+            {filterType === 'spots' ? 'Nothing Here Yet' : hasActiveFilters ? 'No Matching Posts' : 'No Posts Yet'}
           </p>
           <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>
-            {hasActiveFilters ? 'Try changing your filters.' : <>Spot a car or claim yours<br />to get started.</>}
+            {filterType === 'spots'
+              ? 'Follow vehicles to see their activity here.'
+              : hasActiveFilters
+                ? 'Try changing your filters.'
+                : <>Spot a car or claim yours<br />to get started.</>}
           </p>
-          {!hasActiveFilters && (
+          {filterType === 'spots' ? (
+            <button onClick={() => onNavigate('search')} style={{
+              padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer',
+            }}>
+              Explore Vehicles
+            </button>
+          ) : !hasActiveFilters && (
             <button onClick={() => onNavigate('scan')} style={{
               padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
               fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,

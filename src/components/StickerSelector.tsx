@@ -117,7 +117,7 @@ export function StickerSelector({ selectedStickers, onToggleSticker, maxPositive
                 textAlign: 'left' as const,
               }}
             >
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{sticker.icon_name}</span>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{sticker.icon_name || '\uD83D\uDE97'}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{sticker.name}</div>
                 <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{sticker.description}</div>

@@ -62,27 +62,49 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   // Albums
   const [garageAlbums, setGarageAlbums] = useState<{ id: string; title: string; cover_image_url: string | null; photo_count: number }[]>([]);
 
-  // New state for garage hero
-  const [userProfile, setUserProfile] = useState<{ handle: string; full_name: string | null; avatar_url: string | null; reputation_tier: string | null } | null>(null);
-  const [followerCount, setFollowerCount] = useState<number | null>(null);
-  const [badgeCount, setBadgeCount] = useState<number | null>(null);
+  // Garage hero + stats state
+  const [userProfile, setUserProfile] = useState<{ handle: string; full_name: string | null; avatar_url: string | null; reputation_tier: string | null; reputation_score: number } | null>(null);
+  const [userSpotCount, setUserSpotCount] = useState(0);
+  const [vehicleFollowerTotal, setVehicleFollowerTotal] = useState(0);
+  const [badgeCount, setBadgeCount] = useState(0);
+  const [latestBadge, setLatestBadge] = useState<{ name: string; tier: string } | null>(null);
+  const [recentSpots, setRecentSpots] = useState<{ id: string; vehicle_id: string; plate_number: string | null; make: string | null; model: string | null; created_at: string }[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('handle, full_name, avatar_url, tier').eq('id', user.id).maybeSingle()
-      .then(({ data }) => { if (data) setUserProfile({ ...data, reputation_tier: data.tier }); });
-    supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', user.id).eq('status', 'accepted')
-      .then(({ count }) => { if (count !== null) setFollowerCount(count); });
+    // Profile
+    supabase.from('profiles').select('handle, full_name, avatar_url, tier, reputation_score').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data) setUserProfile({ ...data, reputation_tier: data.tier, reputation_score: data.reputation_score ?? 0 }); });
+    // User's own spot count (from spot_history)
+    supabase.from('spot_history').select('*', { count: 'exact', head: true }).eq('spotter_id', user.id)
+      .then(({ count }) => { if (count !== null) setUserSpotCount(count); });
+    // Badge count + latest badge
     supabase.from('user_badges').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
       .then(({ count }) => { if (count !== null) setBadgeCount(count); });
-    supabase.from('albums').select('id, title, cover_image_url').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10)
-      .then(async ({ data }) => {
-        if (!data) return;
-        const withCounts = await Promise.all(data.map(async (a) => {
-          const { count } = await supabase.from('album_photos').select('*', { count: 'exact', head: true }).eq('album_id', a.id);
-          return { ...a, photo_count: count || 0 };
-        }));
-        setGarageAlbums(withCounts);
+    supabase.from('user_badges').select('badge_id, badges(name, tier)').eq('user_id', user.id).order('earned_at', { ascending: false }).limit(1)
+      .then(({ data }) => {
+        if (data && data[0]) {
+          const b = (data[0] as any).badges;
+          if (b) setLatestBadge({ name: b.name, tier: b.tier || 'Bronze' });
+        }
+      });
+    // Recent spots (last 10 by this user)
+    supabase.from('spot_history')
+      .select('id, vehicle_id, created_at, vehicle:vehicles!spot_history_vehicle_id_fkey(plate_number, make, model)')
+      .eq('spotter_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) {
+          setRecentSpots(data.map((s: any) => ({
+            id: s.id,
+            vehicle_id: s.vehicle_id,
+            plate_number: s.vehicle?.plate_number || null,
+            make: s.vehicle?.make || null,
+            model: s.vehicle?.model || null,
+            created_at: s.created_at,
+          })));
+        }
       });
   }, [user]);
 
@@ -215,9 +237,12 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       (followCounts || []).forEach((f: any) => {
         countMap[f.vehicle_id] = (countMap[f.vehicle_id] || 0) + 1;
       });
+      let totalFollowers = 0;
       allVehicles.forEach((v: any) => {
         v._vehicleFollowerCount = countMap[v.id as string] || 0;
+        totalFollowers += v._vehicleFollowerCount;
       });
+      setVehicleFollowerTotal(totalFollowers);
 
       // Load vehicle badges for fleet tiles
       const { data: vehicleBadgeData } = await supabase
@@ -522,150 +547,225 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     );
   };
 
+  // Helper: relative time
+  function timeAgo(dateStr: string): string {
+    const d = new Date(dateStr);
+    const diff = Date.now() - d.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return d.toLocaleDateString();
+  }
+
+  // Primary vehicle image for hero
+  const primaryVehicle = vehicles[0];
+  const heroImage = primaryVehicle
+    ? ((primaryVehicle as any).profile_image_url || primaryVehicle.stock_image_url || stockImages[primaryVehicle.id] || null)
+    : null;
+
   return (
     <Layout currentPage="my-garage" onNavigate={handleNavigate}>
       <div style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
 
-        {/* 1. GARAGE HERO — compact per mockup */}
-        <div style={{ background: '#0a0d14', padding: '52px 16px 20px' }}>
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#1e2a38', border: '2px solid rgba(249,115,22,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 10 }}>
-            {avatarUrl
-              ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8' }}>{(handle || '?')[0].toUpperCase()}</span>
-            }
-          </div>
-          <div
-            onClick={() => user && handleNavigate('user-profile', user.id)}
-            style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3, cursor: 'pointer' }}
-          >
-            @{handle}
-          </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 14 }}>
-            {userProfile?.reputation_tier || 'Starter'} Tier · {totalRP} RP
-          </div>
-          {/* Stat strip */}
-          <div style={{ display: 'flex', gap: 0, borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', margin: '0 -16px' }}>
-            {[
-              { label: 'Spots', value: fleetStats.totalSpots },
-              { label: 'Badges', value: badgeCount ?? 0 },
-              { label: 'Friends', value: followerCount ?? 0 },
-              { label: 'Vehicles', value: fleetStats.vehicleCount },
-            ].map((stat, i, arr) => (
-              <div key={stat.label} style={{
-                flex: 1, padding: '10px 0', textAlign: 'center' as const,
-                borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-              }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
-              </div>
-            ))}
+        {/* ── 1. HERO — vehicle-image driven ── */}
+        <div style={{ position: 'relative', width: '100%', height: 200, overflow: 'hidden' }}>
+          {heroImage ? (
+            <img src={heroImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0a0d14, #070a0f)' }} />
+          )}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.95) 0%, rgba(3,5,8,0.5) 50%, transparent 100%)' }} />
+          <div style={{ position: 'absolute', bottom: 16, left: 16, zIndex: 2 }}>
+            <div
+              onClick={() => user && handleNavigate('profile')}
+              style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1, cursor: 'pointer' }}
+            >
+              @{handle}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
+                {(userProfile?.reputation_score ?? totalRP).toLocaleString()}
+              </span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#F97316' }}>RP</span>
+            </div>
           </div>
         </div>
 
-        {/* PROFILE INSIGHTS */}
-        {user && <ProfileInsights profileId={user.id} />}
-
-        {/* BADGE NUDGE */}
-        {user && (
-          <div style={{ paddingTop: 12 }}>
-            <NearMissBadgeNudge userId={user.id} />
-          </div>
-        )}
-
-        {/* 3. FLEET SECTION or EMPTY STATE */}
-        {vehicles.length > 0 ? (
-          <>
-            {/* Fleet header with actions — matches mockup */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                The Fleet · {vehicles.length}
-              </span>
-              <div style={{ display: 'flex', gap: 14 }}>
-                <span onClick={() => handleNavigate('glovebox')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
-                  Glovebox
-                </span>
-                <span onClick={() => onNavigate?.('create-post')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                  + New Post
-                </span>
-                <span onClick={() => setShowClaimSearch(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                  + Claim
-                </span>
-              </div>
+        {/* ── 2. STAT STRIP (all live) ── */}
+        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {[
+            { label: 'Vehicles', value: vehicles.length },
+            { label: 'Spots', value: userSpotCount },
+            { label: 'Followers', value: vehicleFollowerTotal },
+            { label: 'Badges', value: badgeCount },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} style={{
+              flex: 1, padding: '12px 0', textAlign: 'center' as const,
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+            }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
+          ))}
+        </div>
 
-            {/* Fleet cards — all vehicles */}
-            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, padding: '0 14px 16px' }}>
-              {vehicles.map(vehicle => <FleetTile key={vehicle.id} vehicle={vehicle} />)}
-            </div>
-          </>
-        ) : (
-          /* EMPTY STATE */
-          <div style={{ margin: '0 14px', padding: '32px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(249,115,22,0.18)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2" style={{ marginBottom: 12 }}><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No Vehicles Yet</div>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 12 }}>Claim your first vehicle to start tracking spots and ratings.</p>
-            <button onClick={() => setShowClaimSearch(true)} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
-              + Claim a Vehicle
-            </button>
-          </div>
-        )}
-
-        {/* 4. ALBUMS */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
+        {/* ── 3. FLEET ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 10px' }}>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-            Albums{garageAlbums.length > 0 ? ` \u00B7 ${garageAlbums.length}` : ''}
+            The Fleet{vehicles.length > 0 ? ` \u00B7 ${vehicles.length}` : ''}
           </span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {garageAlbums.length > 0 && (
-              <span onClick={() => handleNavigate('albums')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
-                View All
-              </span>
-            )}
-            <span onClick={() => handleNavigate('albums')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-              + New Album
-            </span>
-          </div>
         </div>
 
-        {garageAlbums.length > 0 ? (
+        {vehicles.length > 0 ? (
           <div style={{ display: 'flex', gap: 10, padding: '0 14px 16px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-            {garageAlbums.map(album => (
-              <div key={album.id} onClick={() => handleNavigate('albums')} style={{ flexShrink: 0, width: 140, borderRadius: 10, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
-                <div style={{ height: 100, position: 'relative', overflow: 'hidden' }}>
-                  {album.cover_image_url ? (
-                    <img src={album.cover_image_url} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {vehicles.map(vehicle => {
+              const img = (vehicle as any).profile_image_url || vehicle.stock_image_url || stockImages[vehicle.id];
+              const topSticker = vehicleStickerCounts[vehicle.id]?.[0];
+              const fans = (vehicle as any)._vehicleFollowerCount ?? 0;
+              const spots = vehicle.spot_count ?? (vehicle as any).spots_count ?? 0;
+              const vHandle = (vehicle as any).vehicle_handle;
+
+              return (
+                <div
+                  key={vehicle.id}
+                  onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })}
+                  style={{
+                    flexShrink: 0, width: 160, borderRadius: 10, overflow: 'hidden',
+                    background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer',
+                  }}
+                >
+                  {img ? (
+                    <img src={img} alt="" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Album style={{ width: 24, height: 24, color: '#3a4e60' }} strokeWidth={1.2} />
+                    <div style={{ width: '100%', height: 100, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Car style={{ width: 28, height: 28, color: '#3a4e60' }} strokeWidth={1.2} />
                     </div>
                   )}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.8) 0%, transparent 60%)' }} />
-                  <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10 }}>
-                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', lineHeight: 1, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {album.title}
+                  <div style={{ padding: '8px 10px' }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.06em', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                      {vHandle ? `@${vHandle}` : ((vehicle as any).plate_number || `${vehicle.make} ${vehicle.model}`)}
                     </div>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e' }}>
+                      {fans} Fans · {spots} Spots
+                    </div>
+                    {topSticker && (
+                      <div style={{
+                        marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 3,
+                        background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
+                        borderRadius: 4, padding: '2px 6px',
+                        fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#F97316',
+                      }}>
+                        {topSticker.name} x{topSticker.count}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div style={{ padding: '6px 10px' }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e' }}>
-                    {album.photo_count} {album.photo_count === 1 ? 'photo' : 'photos'}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div style={{ margin: '0 14px 16px', padding: '20px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
-            <Album style={{ width: 24, height: 24, color: '#3a4e60', marginBottom: 8 }} strokeWidth={1.2} />
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>No Albums Yet</div>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginBottom: 10 }}>Organize your car photos into collections</div>
-            <button onClick={() => handleNavigate('albums')} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
-              + New Album
+          <div style={{ margin: '0 14px 16px', padding: '28px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(249,115,22,0.18)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
+            <Car style={{ width: 32, height: 32, color: '#3a4e60', marginBottom: 10 }} strokeWidth={1.2} />
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No vehicles claimed yet</div>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 12 }}>Search for your plate and claim your first vehicle.</p>
+            <button onClick={() => handleNavigate('search')} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+              Search a Plate
             </button>
           </div>
         )}
 
-        {/* 5. LIFETIME RIDES */}
+        {/* ── 4. ACHIEVEMENTS PREVIEW ── */}
+        <div style={{ padding: '0 14px 16px' }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
+            Achievements
+          </div>
+          {latestBadge ? (
+            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>
+                  {latestBadge.name}
+                </div>
+                <span style={{
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                  padding: '2px 7px', borderRadius: 4,
+                  ...(TIER_COLORS[(latestBadge.tier as keyof typeof TIER_COLORS)] || TIER_COLORS.Bronze),
+                }}>
+                  {latestBadge.tier}
+                </span>
+              </div>
+              <button
+                onClick={() => handleNavigate('badges')}
+                style={{
+                  padding: '8px 14px', borderRadius: 6,
+                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer',
+                }}
+              >
+                View All
+              </button>
+            </div>
+          ) : (
+            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '20px 16px', textAlign: 'center' as const }}>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginBottom: 10 }}>Spot vehicles to earn badges</div>
+              <button
+                onClick={() => handleNavigate('badges')}
+                style={{
+                  padding: '7px 14px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer',
+                }}
+              >
+                View All Badges
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── 5. RECENT SPOT ACTIVITY ── */}
+        <div style={{ padding: '0 14px 16px' }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
+            Recent Spots
+          </div>
+          {recentSpots.length > 0 ? (
+            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden' }}>
+              {recentSpots.map((spot, i) => (
+                <div
+                  key={spot.id}
+                  onClick={() => handleNavigate('vehicle-detail', { vehicleId: spot.vehicle_id })}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', cursor: 'pointer',
+                    borderBottom: i < recentSpots.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  }}
+                >
+                  <div>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.06em' }}>
+                      {spot.plate_number || [spot.make, spot.model].filter(Boolean).join(' ') || 'Vehicle'}
+                    </span>
+                    {spot.plate_number && spot.make && (
+                      <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginLeft: 8 }}>
+                        {spot.make} {spot.model}
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, color: '#5a6e7e', flexShrink: 0 }}>
+                    {timeAgo(spot.created_at)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '20px 16px', textAlign: 'center' as const }}>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e' }}>No spots yet</div>
+            </div>
+          )}
+        </div>
+
+        {/* ── 6. LIFETIME RIDES ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
             Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
@@ -738,147 +838,6 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         />
       )}
 
-      {/* Claim Search Modal */}
-      {showClaimSearch && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-            zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-          }}
-          onClick={() => { setShowClaimSearch(false); setClaimSearchQuery(''); setClaimSearchResult(null); setClaimSearchError(''); }}
-        >
-          <div
-            style={{
-              background: '#0e1320', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 16, width: '100%', maxWidth: 448,
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{
-              padding: 20, borderBottom: '1px solid rgba(255,255,255,0.06)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 18, color: '#eef4f8' }}>Claim a Plate</h3>
-              <button
-                onClick={() => { setShowClaimSearch(false); setClaimSearchQuery(''); setClaimSearchResult(null); setClaimSearchError(''); }}
-                style={{
-                  width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.06)',
-                }}
-              >
-                <X style={{ width: 16, height: 16, color: '#9ab0c0' }} />
-              </button>
-            </div>
-            <div style={{ padding: 20 }}>
-              <p style={{ fontSize: 14, color: '#9ab0c0', marginBottom: 16 }}>Enter your license plate number to find and claim your vehicle.</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#556677' }} />
-                  <input
-                    type="text"
-                    value={claimSearchQuery}
-                    onChange={e => setClaimSearchQuery(e.target.value.toUpperCase())}
-                    onKeyDown={e => e.key === 'Enter' && handleClaimSearch()}
-                    placeholder="ABC1234"
-                    maxLength={8}
-                    autoFocus
-                    style={{
-                      width: '100%', paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12,
-                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 12, fontSize: 14, color: '#eef4f8',
-                      fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-                <button
-                  onClick={handleClaimSearch}
-                  disabled={!claimSearchQuery.trim() || claimSearchLoading}
-                  style={{
-                    padding: '12px 20px', background: '#F97316', border: 'none', borderRadius: 12,
-                    fontSize: 14, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em',
-                    color: '#ffffff', cursor: 'pointer',
-                    opacity: (!claimSearchQuery.trim() || claimSearchLoading) ? 0.5 : 1,
-                  }}
-                >
-                  {claimSearchLoading ? (
-                    <div style={{
-                      width: 20, height: 20, border: '2px solid #ffffff', borderTopColor: 'transparent',
-                      borderRadius: '50%', animation: 'spin 1s linear infinite',
-                    }} />
-                  ) : 'Search'}
-                </button>
-              </div>
-
-              {claimSearchError && (
-                <div style={{
-                  marginTop: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
-                  borderRadius: 12, padding: 16, fontSize: 14, color: '#fbbf24',
-                }}>
-                  {claimSearchError}
-                </div>
-              )}
-
-              {claimSearchResult && (
-                <div style={{
-                  marginTop: 16, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: 12, padding: 16,
-                }}>
-                  <div style={{ textAlign: 'center' as const }}>
-                    <p style={{ fontWeight: 700, fontSize: 18, color: '#eef4f8' }}>
-                      {claimSearchResult.year} {claimSearchResult.make} {claimSearchResult.model}
-                    </p>
-                    <p style={{ fontSize: 14, color: '#9ab0c0', marginTop: 4 }}>
-                      {claimSearchResult.color} {'\u00B7'} {claimSearchResult.plate_state}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowClaimSearch(false);
-                      setShowClaimModal(true);
-                    }}
-                    style={{
-                      width: '100%', marginTop: 12, padding: '12px 0', border: 'none', borderRadius: 12,
-                      fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontSize: 14,
-                      color: '#ffffff', cursor: 'pointer',
-                      background: 'linear-gradient(to right, #22c55e, #10b981)',
-                    }}
-                  >
-                    Claim This Plate
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Claim Vehicle VIN Modal */}
-      {showClaimModal && claimSearchResult && (
-        <VinClaimModal
-          vehicleId={claimSearchResult.id}
-          vehicleInfo={{
-            year: claimSearchResult.year,
-            make: claimSearchResult.make,
-            model: claimSearchResult.model,
-            color: claimSearchResult.color,
-            plateState: claimSearchResult.plate_state,
-            plateNumber: claimSearchResult.plate_number,
-          }}
-          onClose={() => {
-            setShowClaimModal(false);
-            setClaimSearchResult(null);
-            setClaimSearchQuery('');
-          }}
-          onSuccess={() => {
-            setShowClaimModal(false);
-            setClaimSearchResult(null);
-            setClaimSearchQuery('');
-            loadGarageData();
-          }}
-        />
-      )}
 
       {/* All Retired Vehicles Modal */}
       {showAllRetiredModal && (
