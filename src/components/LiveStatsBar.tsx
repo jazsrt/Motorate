@@ -52,7 +52,7 @@ export function LiveStatsBar() {
   const metrics = [
     { value: stats.spotsWeek, label: 'Spots/wk' },
     { value: stats.repToday, label: 'Score today' },
-    { value: stats.newFans, label: 'New fans' },
+    { value: stats.newFans, label: 'New followers' },
     { value: stats.badgesMonth, label: 'Badges/mo' },
   ];
 

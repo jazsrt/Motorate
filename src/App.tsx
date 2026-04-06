@@ -21,7 +21,7 @@ import './index.css';
 
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then(m => ({ default: m.CreatePostPage })));
 const SpotPage = lazy(() => import('./pages/SpotPage').then(m => ({ default: m.SpotPage })));
-const QuickSpotReviewPage = lazy(() => import('./pages/QuickSpotReviewPage').then(m => ({ default: m.QuickSpotReviewPage })));
+// QuickSpotReviewPage removed — legacy split-first spot model deprecated
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage').then(m => ({ default: m.ChallengesPage })));
 const RankingsPage = lazy(() => import('./pages/RankingsPage').then(m => ({ default: m.RankingsPage })));
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then(m => ({ default: m.SafetyPage })));
@@ -210,12 +210,8 @@ function AppContent() {
         setSelectedUserId(userId);
         setCurrentPage('user-profile');
       }
-    } else if (page === 'quick-spot-review' && data && typeof data === 'object') {
-      setWizardData((obj.wizardData as Record<string, unknown>) || null);
-      setCurrentPage('quick-spot-review');
-    } else if ((page === 'quick-spot' || page === 'confirm-vehicle' || page === 'verified-confirm' || page === 'verified-review') && data && typeof data === 'object') {
-      // Legacy routes — redirect to scan
-      setWizardData((obj.wizardData as Record<string, unknown>) || null);
+    } else if (page === 'quick-spot-review' || page === 'quick-spot' || page === 'confirm-vehicle' || page === 'verified-confirm' || page === 'verified-review') {
+      // All legacy spot routes redirect to unified SpotPage
       setCurrentPage('scan');
     } else if (page === 'completed-review' && data && typeof data === 'object') {
       setCompletedReviewData(obj);
@@ -373,17 +369,11 @@ function AppContent() {
       pageContent = <CreatePostPage onNavigate={handleNavigate} />;
       break;
     case 'quick-spot-review':
-      pageContent = wizardData ? (
-        <QuickSpotReviewPage onNavigate={handleNavigate} wizardData={wizardData} />
-      ) : (
-        <SpotPage onNavigate={handleNavigate} />
-      );
-      break;
     case 'quick-spot':
     case 'confirm-vehicle':
     case 'verified-confirm':
     case 'verified-review':
-      // Legacy routes — redirect to SpotPage
+      // All legacy spot routes → unified SpotPage
       pageContent = <SpotPage onNavigate={handleNavigate} />;
       break;
     case 'challenges':

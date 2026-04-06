@@ -212,7 +212,7 @@ export function CompletedReviewModal({
 
           {/* Share */}
           <div style={{ textAlign: 'center' as const, padding: '8px 0' }}>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#445566', marginBottom: 10 }}>Share your spot with friends</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#445566', marginBottom: 10 }}>Share your spot</div>
             <button onClick={() => {
               shareToSocial({
                 type: 'spot', title: `Spotted: ${vehicleName}`,

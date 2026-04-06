@@ -58,6 +58,12 @@ export interface FeedPost {
     reputation_score: number | null;
     spots_count: number | null;
   } | null;
+  badge?: {
+    id: string;
+    name: string;
+    icon_path: string | null;
+    tier: string | null;
+  } | null;
 }
 
 /**

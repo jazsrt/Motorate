@@ -643,8 +643,8 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   {isVerified && (
                     <div style={{ position: 'absolute', top: 5, left: 5, zIndex: 3, background: 'rgba(3,5,8,0.8)', border: '1px solid rgba(249,115,22,0.4)', borderRadius: 2, padding: '1px 5px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, color: '#F97316' }}>VIN</div>
                   )}
-                  {/* Fan count */}
-                  <div style={{ position: 'absolute', top: 5, right: 5, zIndex: 3, background: 'rgba(3,5,8,0.8)', borderRadius: 2, padding: '2px 5px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#eef4f8' }}>{fans} Fans</div>
+                  {/* Follower count */}
+                  <div style={{ position: 'absolute', top: 5, right: 5, zIndex: 3, background: 'rgba(3,5,8,0.8)', borderRadius: 2, padding: '2px 5px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#eef4f8' }}>{fans} Followers</div>
                   {/* Bottom meta */}
                   <div style={{ position: 'absolute', bottom: 6, left: 6, right: 6, zIndex: 2 }}>
                     <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316', lineHeight: 1 }}>{vehicle.make}</div>

@@ -31,6 +31,53 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const [filterType, setFilterType] = useState<'all' | 'following' | 'spots' | 'badges'>('all');
   const [focusPost, setFocusPost] = useState<any>(null);
   const [focusLoading, setFocusLoading] = useState(!!focusPostId);
+  const [tickerItems, setTickerItems] = useState<{text: string, handle: string, detail: string, color: string, ts: string}[]>([]);
+
+  useEffect(() => {
+    async function loadTicker() {
+      try {
+        const [spotRes, badgeRes] = await Promise.all([
+          supabase
+            .from('posts')
+            .select('post_type, created_at, author:profiles!posts_author_id_fkey(handle), vehicles:vehicle_id(make, model)')
+            .eq('post_type', 'spot')
+            .not('vehicle_id', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(10),
+          supabase
+            .from('user_badges')
+            .select('earned_at, user:profiles!user_badges_user_id_fkey(handle), badge:badges!user_badges_badge_id_fkey(name, tier)')
+            .order('earned_at', { ascending: false })
+            .limit(10),
+        ]);
+
+        const spots = (spotRes.data || []).map((s: any) => {
+          const author = Array.isArray(s.author) ? s.author[0] : s.author;
+          const vehicle = Array.isArray(s.vehicles) ? s.vehicles[0] : s.vehicles;
+          const handle = author?.handle || 'someone';
+          const detail = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ') || 'a vehicle';
+          return { text: `@${handle} spotted ${detail}`, handle, detail, color: '#F97316', ts: s.created_at };
+        });
+
+        const badges = (badgeRes.data || []).map((b: any) => {
+          const u = Array.isArray(b.user) ? b.user[0] : b.user;
+          const badge = Array.isArray(b.badge) ? b.badge[0] : b.badge;
+          const handle = u?.handle || 'someone';
+          const detail = [badge?.name, badge?.tier].filter(Boolean).join(' ') || 'a badge';
+          return { text: `@${handle} earned ${detail}`, handle, detail, color: '#f0a030', ts: b.earned_at };
+        });
+
+        const combined = [...spots, ...badges]
+          .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
+          .slice(0, 15);
+
+        if (combined.length > 0) {
+          setTickerItems([...combined, ...combined]);
+        }
+      } catch {}
+    }
+    loadTicker();
+  }, []);
 
   useEffect(() => {
     if (!focusPostId) return;
@@ -135,6 +182,28 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
       {/* Achievement carousel */}
       <AchievementCarousel />
+
+      {/* Live activity ticker */}
+      {tickerItems.length > 0 && (
+        <div style={{
+          height: 26, background: 'rgba(6,9,14,0.98)',
+          borderBottom: '1px solid rgba(249,115,22,0.10)',
+          display: 'flex', alignItems: 'center', overflow: 'hidden', flexShrink: 0,
+        }}>
+          <div style={{
+            display: 'flex', gap: 28, padding: '0 16px',
+            whiteSpace: 'nowrap',
+            animation: `tick ${tickerItems.length * 2}s linear infinite`,
+          }}>
+            {tickerItems.map((item, i) => (
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.06em', color: '#5a6e7e' }}>
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
+                <span>@<b style={{ color: '#9aaebc', fontWeight: 700 }}>{item.handle}</b>{' '}{item.color === '#F97316' ? 'spotted' : 'earned'}{' '}<b style={{ color: '#9aaebc', fontWeight: 700 }}>{item.detail}</b></span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter pills */}
       <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
@@ -258,12 +327,12 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       </button>
 
       <style>{`
-        @keyframes motorate-shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes tick {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
       `}</style>
     </Layout>

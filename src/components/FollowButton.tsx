@@ -62,7 +62,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
     setLoading(true);
 
     if (followStatus === 'accepted') {
-      if (!window.confirm('Unfriend this user?')) {
+      if (!window.confirm('Unfollow this user?')) {
         setLoading(false);
         return;
       }
@@ -77,7 +77,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
           .eq('following_id', targetUserId);
 
         if (!error) {
-          // Also delete reverse follow for mutual unfriending
+          // Also delete reverse follow for mutual unfollow
           await supabase
             .from('follows')
             .delete()
@@ -88,7 +88,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
           onFollowChange?.(false);
         }
       } else {
-        const newStatus = 'pending';  // ALL friend requests require acceptance
+        const newStatus = 'pending';  // All follow requests require acceptance
 
         const { error } = await supabase
           .from('follows')
@@ -102,7 +102,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
           setFollowStatus(newStatus);
           onFollowChange?.((newStatus as FollowStatus) === 'accepted');
 
-          // Send notification for friend request
+          // Send notification for follow request
           if (newStatus === 'pending') {
             try {
               const { notifyFriendRequest } = await import('../lib/notifications');
@@ -150,7 +150,7 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
       default:
         return {
           icon: <UserPlus className={iconSize} />,
-          text: 'Add Friend',
+          text: 'Follow',
           isFollowing: false
         };
     }

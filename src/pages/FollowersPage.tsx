@@ -431,7 +431,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
               }`}
             >
               <Users className="w-4 h-4" />
-              Friends
+              Followers
               <span className={`px-2 py-0.5 rounded-full text-xs ${
                 activeTab === 'friends' ? 'bg-white/20' : 'bg-surfacehighlight'
               }`}>
@@ -470,7 +470,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
               title={activeTab === 'friends' ? 'No Followers Yet' : 'No Pending Requests'}
               description={
                 activeTab === 'friends'
-                  ? 'No friends yet — find car enthusiasts to connect with'
+                  ? 'No followers yet — find car enthusiasts to connect with'
                   : 'No pending follow requests'
               }
               actionLabel={activeTab === 'friends' && isOwnProfile ? 'Find Users' : undefined}

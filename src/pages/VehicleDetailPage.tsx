@@ -143,7 +143,7 @@ function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: str
   return (
     <div style={{ margin: '0 16px 16px' }}>
       <button onClick={() => setExpanded(!expanded)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--muted)', cursor: 'pointer' }}>
-        <span>Fans · {accepted.length}</span>
+        <span>Followers · {accepted.length}</span>
         {pending.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--black)', borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700 }}>{pending.length} pending</span>}
       </button>
       {expanded && (
@@ -859,7 +859,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               <img
                 src={heroUrl}
                 alt="Vehicle"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block', transition: 'transform 0.3s ease' }}
                 onError={() => setHeroImgError(true)}
               />
             ) : (
@@ -999,7 +999,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           <div style={{ display: 'flex', background: C.carbon1, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
             {[
               { label: 'This Week', value: '\u2014' },
-              { label: 'New Fans', value: '\u2014' },
+              { label: 'New Followers', value: '\u2014' },
               { label: 'Avg Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
             ].map((stat, i, arr) => (
               <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
@@ -1023,7 +1023,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               cursor: stat.onClick ? 'pointer' : 'default',
             }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Followers' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Followers' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
@@ -1638,7 +1638,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             }}>
               <div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.white }}>Private Vehicle</div>
-                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Fans need your approval</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Followers need your approval</div>
               </div>
               <button
                 onClick={async () => {

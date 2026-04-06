@@ -106,7 +106,7 @@ export function MotoFanButton({ vehicleId, ownerId, onCountChange }: MotoFanButt
         fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const,
         color: isFan ? '#F97316' : '#7a8e9e',
       }}>
-        {isFan ? 'MotoFan' : 'Become a MotoFan'}
+        {isFan ? 'Following' : 'Follow Vehicle'}
       </span>
     </button>
   );
