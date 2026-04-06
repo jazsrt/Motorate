@@ -13,10 +13,14 @@ export interface VehicleLookupResult {
   trim: string;
   color: string;
   engine: string;
+  cylinders: string;
+  fuel: string;
   bodyStyle: string;
   transmission: string;
   driveType: string;
-  fuel: string;
+  doors: string;
+  madeIn: string;
+  msrp: string;
   fullName: string;
 }
 
@@ -98,10 +102,14 @@ export async function lookupPlate(
           trim: cached.trim ?? '',
           color: cached.color ?? '',
           engine: '',
+          cylinders: '',
+          fuel: '',
           bodyStyle: '',
           transmission: '',
           driveType: '',
-          fuel: '',
+          doors: '',
+          madeIn: '',
+          msrp: '',
           fullName: `${cached.year ?? ''} ${cached.make} ${cached.model}`.trim(),
         };
       }
@@ -156,26 +164,32 @@ export async function executeLookup(
 
     if (!data) return null;
 
-    // Map response — covers common field naming patterns
-    const make = data.make || data.Make || data.manufacturer || null;
-    const model = data.model || data.Model || null;
-    const year = data.year || data.Year || data.model_year || data.modelYear || null;
+    // API returns nested structure: data.vehicle, data.engine, etc.
+    const vehicle = data.vehicle || {};
+    const eng = data.engine || {};
 
-    if (!make && !model) return null;
+    if (!vehicle.make && !vehicle.model) return null;
+
+    // Title-case make/model from API (returns lowercase)
+    const capFirst = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 
     return {
-      vin: data.vin || data.VIN || data.Vin || '',
-      year: String(year ?? ''),
-      make: make ?? '',
-      model: model ?? '',
-      trim: data.trim || data.Trim || data.style || '',
-      color: data.color || data.Color || data.exterior_color || data.exteriorColor || '',
-      engine: data.engine || data.Engine || data.engine_description || '',
-      bodyStyle: data.body_type || data.bodyType || data.style || '',
-      transmission: data.transmission || data.Transmission || '',
-      driveType: data.drivetrain || data.Drivetrain || data.drive_type || '',
-      fuel: data.fuel_type || data.fuelType || '',
-      fullName: `${year ?? ''} ${make ?? ''} ${model ?? ''}`.trim(),
+      vin: data.vin || '',
+      year: vehicle.year ? String(vehicle.year) : '',
+      make: vehicle.make ? capFirst(vehicle.make) : '',
+      model: vehicle.model ? vehicle.model.charAt(0).toUpperCase() + vehicle.model.slice(1) : '',
+      trim: vehicle.trim || '',
+      color: '',
+      engine: eng.description || '',
+      cylinders: eng.cylinders || '',
+      fuel: eng.fuel_type || '',
+      bodyStyle: vehicle.type || '',
+      transmission: '',
+      driveType: data.drivetrain || '',
+      doors: vehicle.doors || '',
+      madeIn: vehicle.made_in || '',
+      msrp: data.pricing?.msrp || '',
+      fullName: [vehicle.year, vehicle.make ? capFirst(vehicle.make) : '', vehicle.model].filter(Boolean).join(' '),
     };
   } catch (err) {
     console.error('RapidAPI plate lookup error:', err);
