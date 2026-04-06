@@ -132,40 +132,15 @@ export async function executeLookup(
   state: string,
   _userId?: string
 ): Promise<VehicleLookupResult | null> {
-  console.log('RapidAPI key present:', !!import.meta.env.VITE_RAPIDAPI_PLATE_KEY);
-  const apiKey = import.meta.env.VITE_RAPIDAPI_PLATE_KEY;
-
-  if (!apiKey) {
-    console.warn('VITE_RAPIDAPI_PLATE_KEY not configured — plate lookup unavailable');
-    return null;
-  }
-
   try {
-    const cleanPlate = plate.trim().toUpperCase();
-    const cleanState = state.trim().toUpperCase();
-    const url = `https://us-plate-to-vin-lookup.p.rapidapi.com/rpc/secure_lookup_plate?p_state=${encodeURIComponent(cleanState)}&p_plate=${encodeURIComponent(cleanPlate)}`;
-
-    console.log('[RapidAPI] Sending request with headers:', {
-      'x-rapidapi-host': 'us-plate-to-vin-lookup.p.rapidapi.com',
-      'x-rapidapi-key': apiKey ? apiKey.substring(0, 6) + '...' + apiKey.slice(-4) : 'MISSING',
-      url: url,
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lookup-plate`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plate: plate.trim().toUpperCase(), state: state.trim().toUpperCase() })
     });
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'x-rapidapi-host': 'us-plate-to-vin-lookup.p.rapidapi.com',
-        'x-rapidapi-key': apiKey,
-      },
-    });
-
-    if (!response.ok) {
-      console.warn('RapidAPI plate lookup failed with status:', response.status);
-      return null;
-    }
-
+    if (!response.ok) { console.warn('lookup-plate failed:', response.status); return null; }
     const data = await response.json();
-    console.log('RapidAPI response:', JSON.stringify(data));
+    console.log('[plateToVinApi] response:', JSON.stringify(data));
 
     if (!data) return null;
 
