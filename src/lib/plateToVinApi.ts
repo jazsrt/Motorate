@@ -145,12 +145,17 @@ export async function executeLookup(
     const cleanState = state.trim().toUpperCase();
     const url = `https://us-plate-to-vin-lookup.p.rapidapi.com/rpc/secure_lookup_plate?p_state=${encodeURIComponent(cleanState)}&p_plate=${encodeURIComponent(cleanPlate)}`;
 
+    console.log('[RapidAPI] Sending request with headers:', {
+      'x-rapidapi-host': 'us-plate-to-vin-lookup.p.rapidapi.com',
+      'x-rapidapi-key': apiKey ? apiKey.substring(0, 6) + '...' + apiKey.slice(-4) : 'MISSING',
+      url: url,
+    });
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'x-rapidapi-host': 'us-plate-to-vin-lookup.p.rapidapi.com',
         'x-rapidapi-key': apiKey,
-        'Content-Type': 'application/json',
       },
     });
 
