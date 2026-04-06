@@ -146,8 +146,8 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   // Plate search
   // ---------------------------------------------------------------------------
 
-  const handlePlateSearch = async (searchStateCode: string, searchPlate: string) => {
-    const normalized = searchPlate.trim().toUpperCase().replace(/[\s-]/g, '');
+  const handlePlateSearch = async (searchStateCode: string, searchPlateNumber: string) => {
+    const normalized = searchPlateNumber.trim().toUpperCase().replace(/[\s-]/g, '');
     if (!normalized || normalized.length < 2 || normalized.length > 8) {
       showToast('Enter a valid plate (2-8 characters)', 'error');
       return;
@@ -159,7 +159,9 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     setFoundVehicle(null);
     setNoCredits(false);
 
+    console.log('[SpotPage] searchPlate called with:', searchStateCode, normalized);
     const result = await searchPlate(searchStateCode, normalized, user?.id);
+    console.log('[SpotPage] searchPlate result:', result.status, result);
 
     if (result.plateHash) setPlateHash(result.plateHash);
 
