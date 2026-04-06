@@ -70,7 +70,6 @@ export function useFeed(userId?: string): UseFeedReturn {
           sound_rating: post.sound_rating || null,
           condition_rating: post.condition_rating || null,
           vehicles: post.vehicles || null,
-          badge: post.badge || null,
           author: {
             id: post.author_id,
             handle: post.author_handle || 'unknown',

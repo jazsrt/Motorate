@@ -39,12 +39,7 @@ interface FeedPostCardProps {
     author_avatar_url?: string | null;
     location?: string | null;
     location_label?: string | null;
-    badge?: {
-      id: string;
-      name: string;
-      icon_path: string | null;
-      tier: string | null;
-    } | null;
+    badge_id?: string | null;
   };
   vehicleRank?: number | null;
   currentUserId?: string | null;
@@ -135,21 +130,8 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
           />
         ) : isBadgePost && !imageUrl ? (
           <div style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at center, #131d2a 0%, #060a10 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            {post.badge?.icon_path ? (
-              post.badge.icon_path.startsWith('emoji:') ? (
-                <span style={{ fontSize: 52, lineHeight: 1 }}>{post.badge.icon_path.slice(6)}</span>
-              ) : (
-                <img src={`/badges/${post.badge.icon_path}`} alt={post.badge.name || 'Badge'} style={{ width: 80, height: 80, objectFit: 'contain' }} />
-              )
-            ) : (
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            )}
-            {post.badge?.name && (
-              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#f0a030', textAlign: 'center', zIndex: 2, position: 'relative' }}>{post.badge.name}</span>
-            )}
-            {post.badge?.tier && (
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f0a030', opacity: 0.7, zIndex: 2, position: 'relative' }}>{post.badge.tier}</span>
-            )}
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#f0a030', textAlign: 'center', zIndex: 2, position: 'relative' }}>Badge Earned</span>
           </div>
         ) : imageUrl && !imgError ? (
           <img
