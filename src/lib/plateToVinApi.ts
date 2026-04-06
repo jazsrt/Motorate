@@ -128,33 +128,7 @@ export async function executeLookup(
   const apiKey = import.meta.env.VITE_RAPIDAPI_PLATE_KEY;
 
   if (!apiKey) {
-    // Fallback: try Supabase edge function (which may use its own key)
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/functions/v1/lookup-plate`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ plate: plate.trim().toUpperCase(), state: state.trim().toUpperCase() }),
-          }
-        );
-        if (!response.ok) return null;
-        const data = await response.json();
-        if (!data.found || !data.make || !data.model) return null;
-        return {
-          vin: data.vin ?? '', year: String(data.year ?? ''), make: data.make ?? '',
-          model: data.model ?? '', trim: data.trim ?? '', color: data.color ?? '',
-          engine: data.engine ?? '', bodyStyle: data.style ?? '',
-          transmission: data.transmission ?? '', driveType: data.drivetrain ?? '',
-          fuel: '', fullName: `${data.year ?? ''} ${data.make ?? ''} ${data.model ?? ''}`.trim(),
-        };
-      } catch { return null; }
-    }
-    console.warn('VITE_RAPIDAPI_PLATE_KEY not configured and no edge function fallback');
+    console.warn('VITE_RAPIDAPI_PLATE_KEY not configured — plate lookup unavailable');
     return null;
   }
 
