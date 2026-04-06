@@ -36,20 +36,31 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   useEffect(() => {
     async function loadTicker() {
       try {
-        const [spotRes, badgeRes] = await Promise.all([
-          supabase
-            .from('posts')
-            .select('post_type, created_at, author:profiles!posts_author_id_fkey(handle), vehicles:vehicle_id(make, model)')
-            .eq('post_type', 'spot')
-            .not('vehicle_id', 'is', null)
-            .order('created_at', { ascending: false })
-            .limit(10),
-          supabase
-            .from('user_badges')
-            .select('earned_at, user:profiles!user_badges_user_id_fkey(handle), badge:badges!user_badges_badge_id_fkey(name, tier)')
-            .order('earned_at', { ascending: false })
-            .limit(10),
-        ]);
+        // Spots query
+        const spotRes = await supabase
+          .from('posts')
+          .select('post_type, created_at, author:profiles!posts_author_id_fkey(handle), vehicles:vehicle_id(make, model)')
+          .eq('post_type', 'spot')
+          .not('vehicle_id', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        // Badge earns — two-step (no FK from user_badges to badges)
+        const badgeRes = await supabase
+          .from('user_badges')
+          .select('earned_at, badge_id, user:profiles!user_badges_user_id_fkey(handle)')
+          .order('earned_at', { ascending: false })
+          .limit(10);
+
+        const badgeIds = (badgeRes.data || []).map((b: any) => b.badge_id).filter(Boolean);
+        let badgeMap: Record<string, { name: string; tier: string | null }> = {};
+        if (badgeIds.length > 0) {
+          const { data: badgeNames } = await supabase
+            .from('badges')
+            .select('id, name, tier')
+            .in('id', badgeIds);
+          badgeMap = Object.fromEntries((badgeNames || []).map((b: any) => [b.id, b]));
+        }
 
         const spots = (spotRes.data || []).map((s: any) => {
           const author = Array.isArray(s.author) ? s.author[0] : s.author;
@@ -61,9 +72,9 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
         const badges = (badgeRes.data || []).map((b: any) => {
           const u = Array.isArray(b.user) ? b.user[0] : b.user;
-          const badge = Array.isArray(b.badge) ? b.badge[0] : b.badge;
           const handle = u?.handle || 'someone';
-          const detail = [badge?.name, badge?.tier].filter(Boolean).join(' ') || 'a badge';
+          const info = badgeMap[b.badge_id];
+          const detail = info ? [info.name, info.tier].filter(Boolean).join(' ') : 'a badge';
           return { text: `@${handle} earned ${detail}`, handle, detail, color: '#f0a030', ts: b.earned_at };
         });
 

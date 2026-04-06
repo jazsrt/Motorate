@@ -124,6 +124,7 @@ export async function executeLookup(
   state: string,
   _userId?: string
 ): Promise<VehicleLookupResult | null> {
+  console.log('RapidAPI key present:', !!import.meta.env.VITE_RAPIDAPI_PLATE_KEY);
   const apiKey = import.meta.env.VITE_RAPIDAPI_PLATE_KEY;
 
   if (!apiKey) {
