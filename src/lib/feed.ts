@@ -161,7 +161,8 @@ export async function loadFeedCursor(
       view_count,
       comment_count,
       author:profiles!posts_author_id_fkey(handle, avatar_url, location, is_admin),
-      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
+      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier),
+      badge:badges!posts_badge_id_fkey(id, name, icon_path, tier)
     `)
     .order('created_at', { ascending: false })
     .limit(limit + 20);
@@ -265,7 +266,8 @@ export async function loadFeedCursor(
           comment_count: commentCount || 0,
           user_liked: !!userLike,
           view_count: post.view_count || 0,
-          vehicles: post.vehicles || null
+          vehicles: post.vehicles || null,
+          badge: (post as any).badge || null
         };
       } catch (enrichError) {
         console.error('Error enriching post:', enrichError);
@@ -307,7 +309,8 @@ export async function loadFeedCursor(
           comment_count: 0,
           user_liked: false,
           view_count: post.view_count || 0,
-          vehicles: post.vehicles || null
+          vehicles: post.vehicles || null,
+          badge: (post as any).badge || null
         };
       }
     });

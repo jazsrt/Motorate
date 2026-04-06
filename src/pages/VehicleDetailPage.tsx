@@ -1763,6 +1763,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               width: '100%', maxWidth: 480,
               background: '#0d1117', borderTop: '1px solid rgba(255,255,255,0.08)',
               borderRadius: '16px 16px 0 0', padding: '20px 20px 32px',
+              animation: 'motorate-slide-up 0.25s ease-out',
             }}
           >
             <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.12)', margin: '0 auto 18px' }} />

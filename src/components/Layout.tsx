@@ -58,7 +58,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       </header>
 
       {/* Orange signal strip */}
-      <div style={{ position: 'fixed', top: 44, left: 0, right: 0, zIndex: 50, height: 2, background: 'linear-gradient(90deg, #F97316 0%, rgba(249,115,22,0.2) 100%)' }} />
+      <div style={{ position: 'fixed', top: 44, left: 0, right: 0, zIndex: 50, height: 2, background: 'linear-gradient(90deg, #F97316 0%, rgba(249,115,22,0.2) 100%)', animation: 'motorate-pulse 3s ease-in-out infinite' }} />
 
       {/* LiveStatsBar */}
       {user && <LiveStatsBar />}
