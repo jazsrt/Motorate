@@ -111,111 +111,118 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     if (vid && onNavigate) onNavigate('vehicle-detail', { vehicleId: vid });
   };
 
+  // Aspect ratio: 4:5 portrait for images, 9:16 for video, square for badge/fallback
+  const aspectPadding = isVideo ? '177%' : (isBadgePost && !imageUrl) ? '100%' : '125%';
+
   return (
     <>
+      {/* Outer wrapper: aspect-ratio via padding trick */}
       <div
         ref={cardRef}
-        style={{ position: 'relative', width: '100%', height: 280, overflow: 'hidden', marginBottom: 4, cursor: 'pointer', animation: 'motorate-fade-in 0.3s ease-out' }}
+        style={{ position: 'relative', width: '100%', paddingBottom: aspectPadding, overflow: 'hidden', marginBottom: 3, cursor: 'pointer', animation: 'motorate-fade-in 0.3s ease-out' }}
         onClick={handleCardClick}
       >
-        {/* Layer 1: Media */}
-        {isVideo ? (
-          <video
-            src={post.video_url!}
-            controls
-            playsInline
-            preload="metadata"
-            onClick={e => e.stopPropagation()}
-            style={{ width: '100%', height: 280, objectFit: 'cover', display: 'block', background: '#000' }}
-          />
-        ) : isBadgePost && !imageUrl ? (
-          <div style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at center, #131d2a 0%, #060a10 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#f0a030', textAlign: 'center', zIndex: 2, position: 'relative' }}>Badge Earned</span>
-          </div>
-        ) : imageUrl && !imgError ? (
-          <img
-            src={imageUrl}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'saturate(0.9) brightness(0.95)' }}
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a2535, #0d1520, #08101a)', position: 'relative' }}>
-            {/* HUD grid texture */}
-            <div style={{ position: 'absolute', inset: 0, opacity: 0.08, zIndex: 1, backgroundImage: 'linear-gradient(rgba(249,115,22,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.5) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-            {/* Scan line */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(249,115,22,0.6), transparent)', animation: 'motorate-scan 3s linear infinite', zIndex: 4 }} />
-          </div>
-        )}
-
-        {/* Layer 2: Gradient overlay */}
-        {!isVideo && (
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 1,
-            background: 'linear-gradient(180deg, rgba(3,5,8,0) 0%, rgba(3,5,8,0.05) 30%, rgba(3,5,8,0.55) 60%, rgba(3,5,8,0.92) 85%, rgba(3,5,8,0.98) 100%)',
-          }} />
-        )}
-
-        {/* Layer 3: Accent bar */}
-        {config && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, zIndex: 3, background: config.bar }} />
-        )}
-
-        {/* Layer 4: Post type chip */}
-        {config && (
-          <div style={{
-            position: 'absolute', top: 8, left: 10, zIndex: 3,
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
-            letterSpacing: '0.1em', padding: '2px 6px', borderRadius: 3,
-            background: config.chip.bg, border: `1px solid ${config.chip.border}`, color: config.chip.color,
-          }}>
-            {config.chip.label}
-          </div>
-        )}
-
-        {/* Layer 5: Rank pill */}
-        {repScore > 100 && (
-          <div style={{
-            position: 'absolute', top: 8, right: 10, zIndex: 3,
-            background: 'rgba(3,5,8,0.85)', border: '1px solid #F97316', borderRadius: 3, padding: '3px 7px',
-            fontFamily: "'Rajdhani', sans-serif", fontSize: 10, fontWeight: 700, color: '#eef4f8',
-          }}>
-            {formatCount(repScore)} RP
-          </div>
-        )}
-
-        {/* Layer 6: Bottom content overlay */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 12px', zIndex: 2 }}>
-          {/* Row A: Vehicle identity */}
-          {makeLabel && (
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#F97316', lineHeight: 1 }}>
-              {makeLabel}
+        {/* Inner absolute container */}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {/* Layer 1: Media */}
+          {isVideo ? (
+            <video
+              src={post.video_url!}
+              controls
+              playsInline
+              preload="metadata"
+              onClick={e => e.stopPropagation()}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#000' }}
+            />
+          ) : isBadgePost && !imageUrl ? (
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, #131d2a 0%, #060a10 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#f0a030', textAlign: 'center', zIndex: 2, position: 'relative' }}>Badge Earned</span>
+            </div>
+          ) : imageUrl && !imgError ? (
+            <img
+              src={imageUrl}
+              alt=""
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block', filter: 'saturate(0.9) brightness(0.95)' }}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1a2535, #0d1520, #08101a)' }}>
+              {/* HUD grid texture */}
+              <div style={{ position: 'absolute', inset: 0, opacity: 0.08, zIndex: 1, backgroundImage: 'linear-gradient(rgba(249,115,22,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.5) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+              {/* Scan line */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(249,115,22,0.6), transparent)', animation: 'motorate-scan 3s linear infinite', zIndex: 4 }} />
             </div>
           )}
-          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1.1 }}>
-            {modelLabel || (isBadgePost ? (post.caption || 'Badge Earned') : '---')}
-          </div>
 
-          {/* Row C: Action row */}
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 6, paddingTop: 6,
-          }}>
-            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
-              <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+          {/* Layer 2: Gradient overlay */}
+          {!isVideo && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              background: 'linear-gradient(180deg, rgba(3,5,8,0) 0%, rgba(3,5,8,0.02) 40%, rgba(3,5,8,0.6) 65%, rgba(3,5,8,0.95) 85%, rgba(3,5,8,0.99) 100%)',
+            }} />
+          )}
+
+          {/* Layer 3: Accent bar */}
+          {config && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, zIndex: 3, background: config.bar }} />
+          )}
+
+          {/* Layer 4: Post type chip */}
+          {config && (
+            <div style={{
+              position: 'absolute', top: 8, left: 10, zIndex: 3,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+              letterSpacing: '0.1em', padding: '2px 6px', borderRadius: 3,
+              background: config.chip.bg, border: `1px solid ${config.chip.border}`, color: config.chip.color,
+            }}>
+              {config.chip.label}
             </div>
-            <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
-            <button
-              onClick={e => { e.stopPropagation(); setShowComments(true); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-              {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
-            </button>
-            <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60' }}>
-              by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
-            </span>
+          )}
+
+          {/* Layer 5: Rank pill */}
+          {repScore > 100 && (
+            <div style={{
+              position: 'absolute', top: 8, right: 10, zIndex: 3,
+              background: 'rgba(3,5,8,0.85)', border: '1px solid #F97316', borderRadius: 3, padding: '3px 7px',
+              fontFamily: "'Rajdhani', sans-serif", fontSize: 10, fontWeight: 700, color: '#eef4f8',
+            }}>
+              {formatCount(repScore)} RP
+            </div>
+          )}
+
+          {/* Layer 6: Bottom content overlay */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 12px', zIndex: 2 }}>
+            {/* Row A: Vehicle identity */}
+            {makeLabel && (
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#F97316', lineHeight: 1 }}>
+                {makeLabel}
+              </div>
+            )}
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1.1 }}>
+              {modelLabel || (isBadgePost ? (post.caption || 'Badge Earned') : '---')}
+            </div>
+
+            {/* Row C: Action row */}
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 6, paddingTop: 6,
+            }}>
+              <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
+                <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+              </div>
+              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+              <button
+                onClick={e => { e.stopPropagation(); setShowComments(true); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
+              </button>
+              <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60' }}>
+                by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
+              </span>
+            </div>
           </div>
         </div>
       </div>
