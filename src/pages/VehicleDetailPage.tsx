@@ -716,6 +716,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
       if (insertError) throw insertError;
 
+      // Update hero image if this is the first/primary photo
+      if (isPrimary) {
+        await supabase.from('vehicles').update({ profile_image_url: imageUrl }).eq('id', vehicleId);
+      }
+
       await loadVehicleData();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to upload image');
@@ -737,6 +742,12 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         .eq('id', imageId);
 
       if (updateError) throw updateError;
+
+      // Update hero image on vehicles table
+      const targetImage = vehicleImages.find(img => img.id === imageId);
+      if (targetImage) {
+        await supabase.from('vehicles').update({ profile_image_url: (targetImage as any).image_url }).eq('id', vehicleId);
+      }
 
       await loadVehicleData();
     } catch (err: unknown) {
@@ -1155,6 +1166,55 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           )}
         </div>
 
+        {/* ── PHOTOS ── */}
+        {vehicle.is_claimed && (vehicleImages.length > 0 || isOwner) && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Photos · {vehicleImages.length}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, padding: 0 }}>
+              {vehicleImages.map((img) => (
+                <div key={img.id} style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: '#0a0d14' }}>
+                  <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0a0d14' }} />
+                  {img.is_primary && (
+                    <div style={{ position: 'absolute', top: 6, left: 6, background: '#F97316', color: '#030508', fontSize: 7, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>Primary</div>
+                  )}
+                  {isOwner && (
+                    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
+                      {!img.is_primary && (
+                        <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Star size={11} color="#F97316" />
+                        </button>
+                      )}
+                      <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={11} color="#fca5a5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {isOwner && (
+              <div style={{ margin: '12px 16px' }}>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  style={{
+                    width: '100%', padding: '10px 0', borderRadius: 6, cursor: 'pointer',
+                    background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  <Upload size={12} />
+                  {uploading ? 'Uploading...' : '+ Add Photo'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── 4. SPECS STRIP (claimed vehicles with vin_raw_data) ── */}
         {vehicle.is_claimed && (() => {
           const specs = parseVehicleSpecs(vehicle.vin_raw_data);
@@ -1385,55 +1445,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
 
-        {/* ── PHOTOS ── */}
-        {vehicle.is_claimed && (vehicleImages.length > 0 || isOwner) && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Photos · {vehicleImages.length}</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, padding: 0 }}>
-              {vehicleImages.map((img) => (
-                <div key={img.id} style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: '#0a0d14' }}>
-                  <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0a0d14' }} />
-                  {img.is_primary && (
-                    <div style={{ position: 'absolute', top: 6, left: 6, background: '#F97316', color: '#030508', fontSize: 7, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>Primary</div>
-                  )}
-                  {isOwner && (
-                    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
-                      {!img.is_primary && (
-                        <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Star size={11} color="#F97316" />
-                        </button>
-                      )}
-                      <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <X size={11} color="#fca5a5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            {isOwner && (
-              <div style={{ margin: '12px 16px' }}>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  style={{
-                    width: '100%', padding: '10px 0', borderRadius: 6, cursor: 'pointer',
-                    background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}
-                >
-                  <Upload size={12} />
-                  {uploading ? 'Uploading...' : '+ Add Photo'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* ── BUILD SHEET (owner only) ── */}
         {isOwner && vehicle.is_claimed && (
           <div>
@@ -1516,14 +1527,16 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── ALBUMS (owner only) ── */}
-        {vehicle.is_claimed && isOwner && (
+        {/* ── ALBUMS ── */}
+        {vehicle.is_claimed && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Albums</span>
-              <span onClick={() => setShowAlbumsModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                Manage Albums
-              </span>
+              {isOwner && (
+                <span onClick={() => setShowAlbumsModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                  Manage Albums
+                </span>
+              )}
             </div>
           </div>
         )}
