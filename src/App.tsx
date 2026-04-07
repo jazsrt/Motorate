@@ -20,7 +20,6 @@ import './index.css';
 
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then(m => ({ default: m.CreatePostPage })));
 const SpotPage = lazy(() => import('./pages/SpotPage').then(m => ({ default: m.SpotPage })));
-// QuickSpotReviewPage removed — legacy split-first spot model deprecated
 const ChallengesPage = lazy(() => import('./pages/ChallengesPage').then(m => ({ default: m.ChallengesPage })));
 const RankingsPage = lazy(() => import('./pages/RankingsPage').then(m => ({ default: m.RankingsPage })));
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then(m => ({ default: m.SafetyPage })));
@@ -52,7 +51,7 @@ const GloveboxPage = lazy(() => import('./pages/GloveboxPage').then(m => ({ defa
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
 const ClaimVehiclePage = lazy(() => import('./pages/ClaimVehiclePage').then(m => ({ default: m.ClaimVehiclePage })));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'quick-spot' | 'confirm-vehicle' | 'quick-spot-review' | 'completed-review' | 'verified-confirm' | 'verified-review' | 'glovebox' | 'claim-vehicle';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'completed-review' | 'glovebox' | 'claim-vehicle';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -117,8 +116,6 @@ function AppContent() {
   const [shadowPlateNumber, setShadowPlateNumber] = useState<string>('');
   const [spotPlateState, setSpotPlateState] = useState<string>('');
   const [spotPlateNumber, setSpotPlateNumber] = useState<string>('');
-  const [wizardData, setWizardData] = useState<any>(null);
-  const [wizardReviewData, setWizardReviewData] = useState<any>(null);
   const [completedReviewData, setCompletedReviewData] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [guestMode, setGuestMode] = useState(false);
@@ -207,9 +204,6 @@ function AppContent() {
         setSelectedUserId(userId);
         setCurrentPage('user-profile');
       }
-    } else if (page === 'quick-spot-review' || page === 'quick-spot' || page === 'confirm-vehicle' || page === 'verified-confirm' || page === 'verified-review') {
-      // All legacy spot routes redirect to unified SpotPage
-      setCurrentPage('scan');
     } else if (page === 'completed-review' && data && typeof data === 'object') {
       setCompletedReviewData(obj);
       setCurrentPage('completed-review');
@@ -364,14 +358,6 @@ function AppContent() {
       break;
     case 'create-post':
       pageContent = <CreatePostPage onNavigate={handleNavigate} />;
-      break;
-    case 'quick-spot-review':
-    case 'quick-spot':
-    case 'confirm-vehicle':
-    case 'verified-confirm':
-    case 'verified-review':
-      // All legacy spot routes → unified SpotPage
-      pageContent = <SpotPage onNavigate={handleNavigate} />;
       break;
     case 'challenges':
       pageContent = <ChallengesPage onNavigate={handleNavigate} />;

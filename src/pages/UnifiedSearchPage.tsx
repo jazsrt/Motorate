@@ -303,7 +303,7 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       trim: v?.trim || undefined,
     };
 
-    onNavigate('quick-spot-review', { wizardData });
+    onNavigate('scan', { wizardData });
   };
 
   const handleSpotNewVehicle = () => {

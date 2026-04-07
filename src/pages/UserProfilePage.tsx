@@ -8,10 +8,8 @@ import { ArrowLeft, Car, Award, Instagram, Music, Eye, MessageCircle, Calendar, 
 import { EmptyState } from '../components/ui/EmptyState';
 import { TierBadge } from '../components/TierBadge';
 import { VerifiedBadge } from '../components/VerifiedBadge';
-// Badge import removed - unused
 import { BadgeCoin } from '../components/BadgeCoin';
 import { ReactionButton } from '../components/ReactionButton';
-// DashLight, DigitalDisplay imports removed - unused
 import { FollowButton } from '../components/FollowButton';
 import { BlockUserButton } from '../components/BlockUserButton';
 import { ReportModal } from '../components/ReportModal';

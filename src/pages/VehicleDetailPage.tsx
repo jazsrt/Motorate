@@ -18,7 +18,6 @@ import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, 
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { GuestBottomNav } from '../components/GuestBottomNav';
-// RateDriverModal and VehicleStats imports removed - unused
 import { GarageSection } from '../components/GarageSection';
 import { ModList } from '../components/ModList';
 import { StickerSlab } from '../components/StickerSlab';
@@ -29,7 +28,6 @@ import { MotoFanButton } from '../components/MotoFanButton';
 import { MotoFansModal } from '../components/MotoFansModal';
 import { AlbumsModal } from '../components/AlbumsModal';
 import { FollowButton } from '../components/FollowButton';
-// BadgeChip and getBadgeType imports removed - unused
 
 interface VehicleDetailPageProps {
   vehicleId: string;
