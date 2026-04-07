@@ -918,13 +918,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             <Share2 size={14} color="#eef4f8" strokeWidth={2} />
           </button>
 
-          {/* Rank pill — top center */}
-          {cityRank && cityRank > 0 && (
-            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 2, background: 'rgba(3,5,8,0.85)', border: '1px solid #F97316', borderRadius: 3, padding: '3px 7px' }}>
-              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 700, color: '#eef4f8' }}>#{cityRank}</span>
-            </div>
-          )}
-
           {/* Content bottom-left */}
           <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, zIndex: 2 }}>
             {/* Hero stat cluster */}
@@ -987,179 +980,8 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
         <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
 
-        {/* ── RANK STRIP (claimed only) ── */}
-        {vehicle.is_claimed && (
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 18px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#3a4e60', marginRight: 8 }}>City Rank</span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 600, color: cityRank ? '#F97316' : '#3a4e60', fontVariantNumeric: 'tabular-nums' }}>
-              {cityRank ? `#${cityRank}` : 'Unranked'}
-            </span>
-          </div>
-        )}
-
-        {/* ── OWNER ANALYTICS STRIP (owner only) ── */}
-        {isOwner && (
-          <div style={{ display: 'flex', background: C.carbon1, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            {[
-              { label: 'This Week', value: '\u2014' },
-              { label: 'New Followers', value: '\u2014' },
-              { label: 'Avg Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
-            ].map((stat, i, arr) => (
-              <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#3a4e60', display: 'block', marginTop: 1 }}>{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── 2. STAT STRIP ── */}
-        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          {[
-            { label: 'Followers', value: followerCount, onClick: () => setShowMotoFansModal(true) },
-            { label: 'Spots', value: spotCount, onClick: undefined as (() => void) | undefined },
-            { label: 'RP', value: rpScore, onClick: undefined },
-            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014', onClick: undefined },
-          ].map((stat, i, arr) => (
-            <div key={stat.label} onClick={stat.onClick} style={{
-              flex: 1, padding: '12px 0', textAlign: 'center' as const,
-              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-              cursor: stat.onClick ? 'pointer' : 'default',
-            }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Followers' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── 3. ACTION BAR ── */}
-        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' as const, gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          {isOwner ? (
-            <>
-              {/* Owner action bar */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={() => {
-                    onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
-                  }}
-                  style={{
-                    flex: 1, padding: '11px 0',
-                    background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}
-                >
-                  <Camera size={14} /> Leave a Spot
-                </button>
-                <button
-                  onClick={() => setShowManageSheet(true)}
-                  style={{
-                    flex: 1, padding: '11px 0',
-                    background: C.carbon1, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.white,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}
-                >
-                  <Settings size={14} /> Manage Vehicle
-                </button>
-              </div>
-              {/* Owner Management Row */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                {[
-                  { icon: <Image size={16} />, label: 'Upload Photos', action: () => fileInputRef.current?.click() },
-                  { icon: <Settings size={16} />, label: 'Edit Info', action: () => { import('../contexts/ToastContext').then(m => { /* toast via existing ref */ }); setShowManageSheet(false); } },
-                  { icon: <BarChart3 size={16} />, label: 'Insights', action: () => { /* coming soon handled below */ } },
-                ].map(item => (
-                  <button
-                    key={item.label}
-                    onClick={() => {
-                      if (item.label === 'Insights' || item.label === 'Edit Info') {
-                        // Use existing showToast would be ideal but we'll use a simple approach
-                        setError('');
-                        import('../contexts/ToastContext').catch(() => {});
-                        // Show inline feedback
-                        const el = document.getElementById('owner-toast');
-                        if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
-                      } else {
-                        item.action();
-                      }
-                    }}
-                    style={{
-                      flex: 1, padding: '10px 4px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
-                      background: C.carbon1, border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8,
-                      cursor: 'pointer', color: C.dim,
-                    }}
-                  >
-                    {item.icon}
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim }}>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-              <div id="owner-toast" style={{ textAlign: 'center' as const, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.accent, opacity: 0, transition: 'opacity 0.3s', height: 0, overflow: 'visible' }} />
-            </>
-          ) : (
-            <>
-              {/* Non-owner action bar — Row 1: Become a Fan */}
-              {vehicle.is_claimed && vehicle.owner_id && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <MotoFanButton
-                    vehicleId={vehicleId}
-                    ownerId={vehicle.owner_id}
-                    onCountChange={(c) => setFollowerCount(c)}
-                  />
-                </div>
-              )}
-              {/* Row 2: Spot + Follow Owner */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={() => {
-                    if (guestMode || !user) { setGuestJoinAction('spot a vehicle'); setShowGuestJoinModal(true); return; }
-                    onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
-                  }}
-                  style={{ flex: 1, minHeight: 44, background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                >
-                  Spot Vehicle
-                </button>
-                {vehicle.is_claimed && vehicle.owner && (
-                  <div style={{ flex: 1 }} onClick={e => e.stopPropagation()}>
-                    <FollowButton targetUserId={vehicle.owner.id} />
-                  </div>
-                )}
-              </div>
-              {/* Claim CTA (unclaimed only) */}
-              {isUnclaimed && (
-                <button
-                  onClick={() => {
-                    if (canClaim) {
-                      onNavigate('claim-vehicle', {
-                        vehicleId,
-                        plateNumber: vehicle.plate_number || '',
-                        plateState: vehicle.state || '',
-                        make: vehicle.make,
-                        model: vehicle.model,
-                        year: vehicle.year,
-                      });
-                    } else { setGuestJoinAction('claim a plate'); setShowGuestJoinModal(true); }
-                  }}
-                  style={{
-                    width: '100%', padding: '11px',
-                    background: 'rgba(32,192,96,0.08)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: 8,
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#20c060',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Claim Vehicle
-                </button>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* ── PHOTOS ── */}
-        {vehicle.is_claimed && (vehicleImages.length > 0 || isOwner) && (
+        {/* ── 2. PHOTOS ── */}
+        {vehicleImages.length > 0 && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Photos · {vehicleImages.length}</span>
@@ -1186,24 +1008,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 </div>
               ))}
             </div>
-            {isOwner && (
-              <div style={{ margin: '12px 16px' }}>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  style={{
-                    width: '100%', padding: '10px 0', borderRadius: 6, cursor: 'pointer',
-                    background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}
-                >
-                  <Upload size={12} />
-                  {uploading ? 'Uploading...' : '+ Add Photo'}
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -1248,6 +1052,26 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           );
         })()}
 
+        {/* ── 4. STAT STRIP ── */}
+        <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {[
+            { label: 'RP', value: rpScore, onClick: undefined as (() => void) | undefined },
+            { label: 'Spots', value: spotCount, onClick: undefined as (() => void) | undefined },
+            { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014', onClick: undefined },
+            { label: 'Followers', value: followerCount, onClick: () => setShowMotoFansModal(true) },
+            ...(cityRank && cityRank > 0 ? [{ label: 'Rank', value: `#${cityRank}` as string | number, onClick: undefined as (() => void) | undefined }] : []),
+          ].map((stat, i, arr) => (
+            <div key={stat.label} onClick={stat.onClick} style={{
+              flex: 1, padding: '12px 0', textAlign: 'center' as const,
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              cursor: stat.onClick ? 'pointer' : 'default',
+            }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Followers' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+
         {/* ── 5. OWNER STRIP ── */}
         {vehicle.is_claimed && vehicle.owner && (
           <div style={{
@@ -1283,32 +1107,58 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 6. RATINGS ── */}
-        {ratingCategories.length > 0 && (
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
-              Ratings
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
-              {ratingCategories.map(cat => (
-                <div key={cat.label} style={{ background: '#0d1117', borderRadius: 8, padding: '8px 6px', textAlign: 'center' as const, border: '1px solid rgba(255,255,255,0.04)' }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{cat.label}</span>
-                </div>
-              ))}
-            </div>
-            {/* Sentiment */}
-            {(loveCount > 0 || hateCount > 0) && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fb7185' }}>
-                  <Heart size={14} style={{ fill: 'currentColor' }} />
-                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700 }}>{loveCount}</span>
-                </div>
-                <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#5a6e7e' }}>
-                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700 }}>{hateCount}</span>
-                </div>
+        {/* ── 6. PUBLIC ACTIONS ── */}
+        {!isOwner && (
+          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' as const, gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            {vehicle.is_claimed && vehicle.owner_id && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <MotoFanButton
+                  vehicleId={vehicleId}
+                  ownerId={vehicle.owner_id}
+                  onCountChange={(c) => setFollowerCount(c)}
+                />
               </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => {
+                  if (guestMode || !user) { setGuestJoinAction('spot a vehicle'); setShowGuestJoinModal(true); return; }
+                  onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
+                }}
+                style={{ flex: 1, minHeight: 44, background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                Spot Vehicle
+              </button>
+              {vehicle.is_claimed && vehicle.owner && (
+                <div style={{ flex: 1 }} onClick={e => e.stopPropagation()}>
+                  <FollowButton targetUserId={vehicle.owner.id} />
+                </div>
+              )}
+            </div>
+            {isUnclaimed && (
+              <button
+                onClick={() => {
+                  if (canClaim) {
+                    onNavigate('claim-vehicle', {
+                      vehicleId,
+                      plateNumber: vehicle.plate_number || '',
+                      plateState: vehicle.state || '',
+                      make: vehicle.make,
+                      model: vehicle.model,
+                      year: vehicle.year,
+                    });
+                  } else { setGuestJoinAction('claim a plate'); setShowGuestJoinModal(true); }
+                }}
+                style={{
+                  width: '100%', padding: '11px',
+                  background: 'rgba(32,192,96,0.08)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: 8,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#20c060',
+                  cursor: 'pointer',
+                }}
+              >
+                Claim Vehicle
+              </button>
             )}
           </div>
         )}
@@ -1328,7 +1178,36 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
 
-        {/* ── 8. ENCOUNTER LOG ── */}
+        {/* ── 8. RATINGS ── */}
+        {ratingCategories.length > 0 && (
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
+              Ratings
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+              {ratingCategories.map(cat => (
+                <div key={cat.label} style={{ background: '#0d1117', borderRadius: 8, padding: '8px 6px', textAlign: 'center' as const, border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{cat.label}</span>
+                </div>
+              ))}
+            </div>
+            {(loveCount > 0 || hateCount > 0) && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fb7185' }}>
+                  <Heart size={14} style={{ fill: 'currentColor' }} />
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700 }}>{loveCount}</span>
+                </div>
+                <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#5a6e7e' }}>
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700 }}>{hateCount}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 9. ENCOUNTER LOG ── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
@@ -1437,7 +1316,107 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         </div>
 
-        {/* ── BUILD SHEET (owner only) ── */}
+        {/* ═══════════ OWNER-ONLY SECTIONS ═══════════ */}
+
+        {/* ── 10. OWNER ANALYTICS STRIP ── */}
+        {isOwner && (
+          <div style={{ display: 'flex', background: C.carbon1, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            {[
+              { label: 'This Week', value: '\u2014' },
+              { label: 'New Followers', value: '\u2014' },
+              { label: 'Avg Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
+            ].map((stat, i, arr) => (
+              <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#3a4e60', display: 'block', marginTop: 1 }}>{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── 11. OWNER ACTION BAR ── */}
+        {isOwner && (
+          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' as const, gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => {
+                  onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
+                }}
+                style={{
+                  flex: 1, padding: '11px 0',
+                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                <Camera size={14} /> Leave a Spot
+              </button>
+              <button
+                onClick={() => setShowManageSheet(true)}
+                style={{
+                  flex: 1, padding: '11px 0',
+                  background: C.carbon1, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.white,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                <Settings size={14} /> Manage Vehicle
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { icon: <Image size={16} />, label: 'Upload Photos', action: () => fileInputRef.current?.click() },
+                { icon: <Settings size={16} />, label: 'Edit Info', action: () => {} },
+                { icon: <BarChart3 size={16} />, label: 'Insights', action: () => {} },
+              ].map(item => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (item.label === 'Insights' || item.label === 'Edit Info') {
+                      const el = document.getElementById('owner-toast');
+                      if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
+                    } else {
+                      item.action();
+                    }
+                  }}
+                  style={{
+                    flex: 1, padding: '10px 4px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
+                    background: C.carbon1, border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8,
+                    cursor: 'pointer', color: C.dim,
+                  }}
+                >
+                  {item.icon}
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim }}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+            <div id="owner-toast" style={{ textAlign: 'center' as const, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.accent, opacity: 0, transition: 'opacity 0.3s', height: 0, overflow: 'visible' }} />
+          </div>
+        )}
+
+        {/* ── 12. OWNER PHOTOS UPLOAD ── */}
+        {isOwner && (
+          <div style={{ margin: '12px 16px' }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 6, cursor: 'pointer',
+                background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}
+            >
+              <Upload size={12} />
+              {uploading ? 'Uploading...' : '+ Add Photo'}
+            </button>
+          </div>
+        )}
+
+        {/* ── 13. BUILD SHEET (owner only) ── */}
         {isOwner && vehicle.is_claimed && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
