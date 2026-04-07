@@ -12,11 +12,11 @@ interface BadgeCoinProps {
   onClick?: () => void;
 }
 
-const TIER_CONFIG: Record<BadgeTier, { bg: string; tierColor: string; label: string; strokeColor: string }> = {
-  bronze: { bg: 'linear-gradient(145deg, #5a4228, #7a6040 40%, #9a7a58 55%, #7a6040 70%, #5a4228)', tierColor: '#c07840', label: 'Bronze', strokeColor: '#2a1a08' },
-  silver: { bg: 'linear-gradient(145deg, #4a5668, #6a7688 40%, #909aaa 55%, #6a7688 70%, #4a5668)', tierColor: '#9ab0c0', label: 'Silver', strokeColor: '#1a1a2a' },
-  gold: { bg: 'linear-gradient(145deg, #806828, #a8883e 40%, #c8a85a 55%, #a8883e 70%, #806828)', tierColor: '#f0a030', label: 'Gold', strokeColor: '#1a1400' },
-  plat: { bg: 'linear-gradient(145deg, #585678, #706e90 40%, #8a88a8 55%, #706e90 70%, #585678)', tierColor: '#8a88a8', label: 'Platinum', strokeColor: '#1a1a28' },
+const TIER_CONFIG: Record<BadgeTier, { bg: string; tierColor: string; strokeColor: string }> = {
+  bronze: { bg: 'linear-gradient(145deg, #5a4228, #7a6040 40%, #9a7a58 55%, #7a6040 70%, #5a4228)', tierColor: '#c07840', strokeColor: '#2a1a08' },
+  silver: { bg: 'linear-gradient(145deg, #4a5668, #6a7688 40%, #909aaa 55%, #6a7688 70%, #4a5668)', tierColor: '#9ab0c0', strokeColor: '#1a1a2a' },
+  gold: { bg: 'linear-gradient(145deg, #806828, #a8883e 40%, #c8a85a 55%, #a8883e 70%, #806828)', tierColor: '#f0a030', strokeColor: '#1a1400' },
+  plat: { bg: 'linear-gradient(145deg, #585678, #706e90 40%, #8a88a8 55%, #706e90 70%, #585678)', tierColor: '#8a88a8', strokeColor: '#1a1a28' },
 };
 
 const SIZE_PX = { sm: 44, md: 56, lg: 60 };
@@ -69,13 +69,6 @@ export function BadgeCoin({ tier, name, icon, icon_path, locked = false, size = 
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
         {locked ? '???' : name}
-      </span>
-      <span style={{
-        fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
-        textTransform: 'uppercase', letterSpacing: '0.12em',
-        color: locked ? '#445566' : config.tierColor,
-      }}>
-        {config.label}
       </span>
     </div>
   );
