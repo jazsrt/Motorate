@@ -262,7 +262,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             })
             .select('id')
             .single();
-          if (createErr) throw new Error('Failed to create vehicle');
+          if (createErr) { console.error('[SpotPage] Vehicle create error:', createErr); throw new Error(`Failed to create vehicle: ${createErr.message}`); }
           vehicleId = newVehicle.id;
         }
       }
@@ -291,6 +291,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       }
 
       // Spot history: insert or update
+      console.log('[SpotPage] vehicleId before spot insert:', vehicleId, 'userId:', user.id);
       let spotId: string;
       if (existingSpotId) {
         await supabase.from('spot_history').update({ spot_type: 'quick', ...(photoUrl ? { photo_url: photoUrl } : {}) }).eq('id', existingSpotId);
@@ -299,7 +300,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         const payload: Record<string, unknown> = { spotter_id: user.id, vehicle_id: vehicleId, spot_type: 'quick', reputation_earned: 10 };
         if (photoUrl) payload.photo_url = photoUrl;
         const { data: spotData, error: spotErr } = await supabase.from('spot_history').insert(payload).select('id').single();
-        if (spotErr) throw new Error('Failed to record spot');
+        if (spotErr) { console.error('[SpotPage] Spot history error:', spotErr); throw new Error(`Failed to record spot: ${spotErr.message}`); }
         spotId = spotData.id;
       }
 
