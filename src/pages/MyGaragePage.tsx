@@ -23,7 +23,6 @@ import { uploadImage } from '../lib/storage';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
 import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
-import { TIER_COLORS } from '../config/badgeConfig';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
 import { NearMissBadgeNudge } from '../components/NearMissBadgeNudge';
 import { ProfileInsights } from '../components/ProfileInsights';
@@ -671,48 +670,34 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         )}
 
         {/* ── 4. ACHIEVEMENTS PREVIEW ── */}
-        <div style={{ padding: '0 14px 16px' }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
-            Achievements
-          </div>
-          {latestBadge ? (
-            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>
-                  {latestBadge.name}
-                </div>
-              </div>
-              <button
-                onClick={() => handleNavigate('badges')}
-                style={{
-                  padding: '8px 14px', borderRadius: 6,
-                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer',
-                }}
-              >
-                View All
-              </button>
-            </div>
-          ) : (
-            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '20px 16px', textAlign: 'center' as const }}>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginBottom: 10 }}>Spot vehicles to earn badges</div>
-              <button
-                onClick={() => handleNavigate('badges')}
-                style={{
-                  padding: '7px 14px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                  letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer',
-                }}
-              >
-                View All Badges
-              </button>
-            </div>
-          )}
+        <NearMissBadgeNudge userId={user?.id} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 6px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+            Badges · {badgeCount}
+          </span>
+          <span
+            onClick={() => handleNavigate('badges')}
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}
+          >
+            View All
+          </span>
         </div>
 
-        {/* Near-miss badge nudge */}
-        <NearMissBadgeNudge userId={user?.id} />
+        {latestBadge ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 16px 14px' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8' }}>
+              {latestBadge.name}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+              Most Recent
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: '6px 16px 14px' }}>
+            <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e' }}>Spot vehicles to earn badges</span>
+          </div>
+        )}
 
         {/* ── 5. RECENT SPOT ACTIVITY ── */}
         <div style={{ padding: '0 14px 16px' }}>

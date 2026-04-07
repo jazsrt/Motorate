@@ -637,12 +637,12 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
           {/* Featured badges in hero */}
           {userBadges.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, padding: '8px 16px 0', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-              {userBadges.slice(0, 5).map((ub) => (
+            <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+              {userBadges.slice(0, 6).map((ub) => (
                 <div key={ub.badge.id} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px 4px 4px', borderRadius: 20, flexShrink: 0,
-                  background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.16)',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '4px 10px 4px 5px', borderRadius: 20, flexShrink: 0,
+                  background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.14)',
                 }}>
                   <BadgeCoin
                     tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
@@ -650,7 +650,11 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     icon_path={getBadgeImagePath(ub.badge)}
                     size="sm"
                   />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: '#eef4f8', whiteSpace: 'nowrap' as const }}>
+                  <span style={{
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase' as const,
+                    color: '#9aaebc', whiteSpace: 'nowrap' as const,
+                  }}>
                     {ub.badge.name}
                   </span>
                 </div>
@@ -765,7 +769,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
         {/* ── 4. BADGES — visual showcase ── */}
         {userBadges.length > 0 && (
-          <div>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
                 Badges · {userBadges.length}
@@ -774,15 +778,22 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 View All
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 14px 14px' }}>
-              {userBadges.slice(0, 8).map((ub) => (
-                <div key={ub.badge.id} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, padding: '0 16px 16px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+              {userBadges.map((ub) => (
+                <div key={ub.badge.id} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
                   <BadgeCoin
                     tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
                     name={ub.badge.name}
                     icon_path={getBadgeImagePath(ub.badge)}
                     size="md"
                   />
+                  <span style={{
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase' as const,
+                    color: '#5a6e7e', textAlign: 'center' as const, whiteSpace: 'nowrap' as const,
+                  }}>
+                    {ub.badge.name}
+                  </span>
                 </div>
               ))}
             </div>
