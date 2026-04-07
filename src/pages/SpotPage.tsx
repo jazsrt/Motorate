@@ -208,7 +208,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         setRecentSpots(loadRecentSpots(user.id));
       }
 
-      setViewState('found');
+      setViewState('review');
     } else if (result.status === 'not-found') {
       setNoCredits(!!result.noCredits);
       setViewState('not-found');
@@ -426,8 +426,15 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       {viewState === 'plate-entry' && (
         <div style={{ minHeight: '100vh', paddingBottom: 100 }}>
           <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: C.text1, lineHeight: 1 }}>
-              Spot a Vehicle
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: C.text1, lineHeight: 1 }}>
+                Spot a Vehicle
+              </div>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.text3 }}>Step 1 of 2</span>
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <div style={{ flex: 1, height: 2, borderRadius: 1, background: C.accent }} />
+              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
             </div>
           </div>
 
@@ -599,28 +606,44 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       )}
 
       {/* ================================================================ */}
-      {/* SCREEN 5 — REVIEW                                               */}
+      {/* SCREEN 5 — REVIEW (2-step flow: plate entry → review)           */}
       {/* ================================================================ */}
       {viewState === 'review' && (
         <div style={{ paddingBottom: 120 }}>
-          {/* Hero */}
-          <div style={{ position: 'relative', width: '100%', height: 180, overflow: 'hidden', background: '#111720' }}>
+          {/* 3a. Hero — 260px vehicle image */}
+          <div style={{ position: 'relative', width: '100%', height: 260, overflow: 'hidden', background: '#111720' }}>
             {heroImage ? (
-              <>
-                <img src={heroImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.85) 0%, transparent 60%)' }} />
-              </>
+              <img src={heroImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             ) : null}
-            <button onClick={() => foundVehicle?.id ? setViewState('found') : resetToPlateEntry} style={{ position: 'absolute', top: 14, left: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.97) 0%, rgba(3,5,8,0.4) 40%, transparent 70%)' }} />
+            {/* Back button */}
+            <button onClick={resetToPlateEntry} style={{ position: 'absolute', top: 14, left: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
               <ArrowLeft size={14} color={C.text1} strokeWidth={2} />
             </button>
-            <div style={{ position: 'absolute', bottom: 12, left: 16, zIndex: 2 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: C.accent }}>{foundVehicle?.make || ''}</div>
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: C.text1, lineHeight: 1 }}>{foundVehicle?.model || 'Vehicle'}</div>
+            {/* Step tag top-right */}
+            <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.text3 }}>Step 2 of 2</span>
+              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                <div style={{ flex: 1, height: 2, borderRadius: 1, background: C.accent }} />
+                <div style={{ flex: 1, height: 2, borderRadius: 1, background: C.accent }} />
+              </div>
+            </div>
+            {/* Vehicle identity bottom-left */}
+            <div style={{ position: 'absolute', bottom: 14, left: 16, zIndex: 2 }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: C.accent }}>{foundVehicle?.make || ''}</div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: C.text1, lineHeight: 1 }}>
+                {[foundVehicle?.model, foundVehicle?.trim].filter(Boolean).join(' ') || 'Vehicle'}
+              </div>
+              {(foundVehicle?.year || foundVehicle?.bodyStyle || foundVehicle?.doors) && (
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: C.text2, marginTop: 2 }}>
+                  {[foundVehicle.year, foundVehicle.bodyStyle, foundVehicle.doors].filter(Boolean).join(' · ')}
+                </div>
+              )}
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(249,115,22,0.75)', letterSpacing: '0.12em', marginTop: 3 }}>{stateCode} {plateNumber}</div>
             </div>
           </div>
 
-          {/* API specs strip — only for API-sourced vehicles (no DB id yet) */}
+          {/* 3b. Specs strip — API-sourced vehicles only */}
           {!foundVehicle?.id && foundVehicle && (() => {
             const specs: { value: string; label: string }[] = [];
             if (foundVehicle.engine) specs.push({ value: foundVehicle.engine, label: 'ENGINE' });
@@ -635,11 +658,11 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             if (specs.length === 0) return null;
             return (
               <>
-                <div style={{ display: 'flex', overflowX: 'auto', background: '#0d1117', borderTop: '1px solid rgba(249,115,22,0.10)', borderBottom: '1px solid rgba(249,115,22,0.10)', scrollbarWidth: 'none' }}>
+                <div style={{ display: 'flex', overflowX: 'auto', background: '#0d1117', borderTop: '1px solid rgba(249,115,22,0.10)', borderBottom: '1px solid rgba(249,115,22,0.10)', scrollbarWidth: 'none' as const }}>
                   {specs.map((s, i) => (
-                    <div key={i} style={{ flexShrink: 0, padding: '10px 16px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div key={i} style={{ flexShrink: 0, padding: '10px 16px', textAlign: 'center' as const, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#5a6e7e', display: 'block', marginTop: 2 }}>{s.label}</span>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{s.label}</span>
                     </div>
                   ))}
                 </div>
@@ -652,42 +675,60 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             );
           })()}
 
-          {/* Ratings — all 4 required */}
-          <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
-          <StarRow label="Looks" value={looksRating} onChange={setLooksRating} />
-          <StarRow label="Sound" value={soundRating} onChange={setSoundRating} />
+          {/* 3d. Rate bar header */}
+          <div style={{ padding: '10px 16px 4px', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ flex: 1 }} />
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Rate the Vehicle</span>
+          </div>
+
+          {/* 3e. Rating rows — 4 required */}
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
+          </div>
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <StarRow label="Looks" value={looksRating} onChange={setLooksRating} />
+          </div>
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <StarRow label="Sound" value={soundRating} onChange={setSoundRating} />
+          </div>
           <StarRow label="Condition" value={conditionRating} onChange={setConditionRating} />
 
-          {/* Sentiment — 3 buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: '12px 16px' }}>
+          {/* 3f. Sentiment row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, padding: '10px 16px' }}>
             {([
-              { value: 'love' as const, label: 'Love It', icon: <Heart style={{ width: 14, height: 14, fill: sentiment === 'love' ? C.accent : 'none' }} />, ac: C.accent, bg: 'rgba(249,115,22,0.1)', bd: 'rgba(249,115,22,0.4)' },
+              { value: 'love' as const, label: 'Love It', icon: <Heart style={{ width: 14, height: 14, fill: sentiment === 'love' ? C.accent : 'none' }} />, ac: C.accent, bg: 'rgba(249,115,22,0.10)', bd: 'rgba(249,115,22,0.28)' },
               { value: 'neutral' as const, label: "It's OK", icon: null, ac: C.text2, bg: 'rgba(255,255,255,0.06)', bd: 'rgba(255,255,255,0.2)' },
               { value: 'hate' as const, label: 'Not For Me', icon: <ThumbsDown style={{ width: 14, height: 14, fill: sentiment === 'hate' ? '#ef4444' : 'none' }} />, ac: '#ef4444', bg: 'rgba(239,68,68,0.08)', bd: 'rgba(239,68,68,0.3)' },
             ]).map(opt => {
               const active = sentiment === opt.value;
               return (
-                <button key={opt.value} onClick={() => setSentiment(opt.value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, padding: '10px 4px', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', ...(active ? { background: opt.bg, border: `1px solid ${opt.bd}`, color: opt.ac } : { background: 'transparent', border: `1px solid ${C.border}`, color: C.text3 }) }}>
-                  {opt.icon} {opt.label}
+                <button key={opt.value} onClick={() => setSentiment(opt.value)} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 0', borderRadius: 7, cursor: 'pointer', ...(active ? { background: opt.bg, border: `1px solid ${opt.bd}`, color: opt.ac } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', color: '#3a4e60' }) }}>
+                  {opt.icon}
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>{opt.label}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Stickers — with suggestions */}
+          {/* 3g. Bumper stickers — suggested + more */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 6px' }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Bumper Stickers</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>All Stickers</span>
+          </div>
           <div style={{ padding: '0 16px 10px' }}>
             {foundVehicle && !foundVehicle.id && (() => {
               const suggestedTags = getSuggestedStickerTags(foundVehicle);
               if (suggestedTags.length === 0) return null;
               return (
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#3a4e60', marginBottom: 4 }}>Suggested</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: '#3a4e60', marginBottom: 4 }}>Suggested</div>
+                  <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' as const }}>
                     {suggestedTags.map(tag => {
                       const isSelected = selectedStickerIds.includes(tag);
                       return (
                         <button key={tag} onClick={() => setSelectedStickerIds(prev => prev.includes(tag) ? prev.filter(s => s !== tag) : [...prev, tag])}
-                          style={{ padding: '4px 10px', borderRadius: 12, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: isSelected ? '1px solid rgba(249,115,22,0.40)' : '1px solid rgba(249,115,22,0.30)', background: isSelected ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.10)', color: isSelected ? '#F97316' : '#7a8e9e' }}>
+                          style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 12, fontFamily: "'Barlow', sans-serif", fontSize: 10, fontWeight: 600, cursor: 'pointer', border: isSelected ? '1px solid rgba(249,115,22,0.50)' : '1px solid rgba(249,115,22,0.30)', background: isSelected ? 'rgba(249,115,22,0.16)' : 'rgba(249,115,22,0.10)', color: '#F97316', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {isSelected && <div style={{ width: 10, height: 10, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={6} color="#030508" strokeWidth={3} /></div>}
                           {tag.replace(/-/g, ' ')}
                         </button>
                       );
@@ -699,10 +740,10 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             <StickerSelector selectedStickers={selectedStickerIds} onToggleSticker={(id) => setSelectedStickerIds(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])} />
           </div>
 
-          {/* Caption */}
-          <div style={{ margin: '0 16px 10px' }}>
+          {/* 3h. Caption */}
+          <div style={{ margin: '4px 16px 10px' }}>
             <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Add a caption..." rows={2}
-              style={{ width: '100%', padding: '10px 12px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.text1, outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '10px 12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.text1, outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Photo */}
@@ -716,7 +757,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                 </button>
               </div>
             ) : (
-              <button onClick={() => fileInputRef.current?.click()} style={{ width: '100%', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.text3, cursor: 'pointer' }}>
+              <button onClick={() => fileInputRef.current?.click()} style={{ width: '100%', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.text3, cursor: 'pointer' }}>
                 <Camera style={{ width: 14, height: 14 }} /> Add a Photo (optional)
               </button>
             )}
@@ -727,17 +768,17 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             <div style={{ position: 'fixed', bottom: 80, left: 16, right: 16, zIndex: 61, background: C.surface, border: `1px solid rgba(249,115,22,0.3)`, borderRadius: 10, padding: 14 }}>
               <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.text1, margin: '0 0 10px' }}>You've spotted this vehicle before.</p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => { setShowDuplicateWarning(false); handleSubmitSpot(); }} style={{ flex: 1, minHeight: 44, background: C.accent, border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer' }}>Update My Spot</button>
-                <button onClick={() => { setShowDuplicateWarning(false); setExistingSpotId(null); }} style={{ flex: 1, minHeight: 44, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.text3, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => { setShowDuplicateWarning(false); handleSubmitSpot(); }} style={{ flex: 1, minHeight: 44, background: C.accent, border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}>Update My Spot</button>
+                <button onClick={() => { setShowDuplicateWarning(false); setExistingSpotId(null); }} style={{ flex: 1, minHeight: 44, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.text3, cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           )}
 
-          {/* Fixed submit */}
-          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, padding: '12px 16px 20px', background: 'rgba(3,5,8,0.95)', backdropFilter: 'blur(8px)', borderTop: `1px solid ${C.border}` }}>
-            <button onClick={handleSubmitSpot} disabled={!canSubmit || submitting} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: canSubmit && !submitting ? 'pointer' : 'not-allowed', opacity: canSubmit && !submitting ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {/* 3i. Submit button */}
+          <div style={{ margin: '0 16px 16px' }}>
+            <button onClick={handleSubmitSpot} disabled={!canSubmit || submitting} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: canSubmit && !submitting ? 'pointer' : 'not-allowed', opacity: canSubmit && !submitting ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {submitting ? <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : null}
-              {submitting ? 'Submitting...' : existingSpotId ? 'Update Spot' : 'Submit Spot'}
+              {submitting ? 'Submitting...' : existingSpotId ? 'Update Spot' : 'Submit Spot +10 RP'}
             </button>
           </div>
         </div>
