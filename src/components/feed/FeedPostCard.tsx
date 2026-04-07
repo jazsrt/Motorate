@@ -66,6 +66,7 @@ function getPostTypeConfig(postType: string | null | undefined) {
 export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [imageAspect, setImageAspect] = useState<number>(56.25);
   const cardRef = useRef<HTMLDivElement>(null);
   const viewTracked = useRef(false);
 
@@ -111,8 +112,16 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     if (vid && onNavigate) onNavigate('vehicle-detail', { vehicleId: vid });
   };
 
-  // Aspect ratio: 4:5 portrait for images, 9:16 for video, square for badge/fallback
-  const aspectPadding = isVideo ? '177%' : (isBadgePost && !imageUrl) ? '100%' : '56.25%';
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.naturalWidth && img.naturalHeight) {
+      const ratio = img.naturalHeight / img.naturalWidth;
+      const clamped = Math.max(52.36, Math.min(125, ratio * 100));
+      setImageAspect(clamped);
+    }
+  };
+
+  const aspectPadding = isVideo ? '177%' : (isBadgePost && !imageUrl) ? '40%' : `${imageAspect}%`;
 
   return (
     <>
@@ -143,7 +152,8 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
             <img
               src={imageUrl}
               alt=""
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center center', display: 'block', background: '#030508', filter: 'saturate(0.9) brightness(0.95)' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block', background: '#030508' }}
+              onLoad={handleImageLoad}
               onError={() => setImgError(true)}
             />
           ) : (
