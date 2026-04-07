@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { hashPlate } from '../lib/hash';
 import { US_STATES } from '../lib/constants';
 import { CameraModal } from '../components/spot/CameraModal';
-import { StickerSelector } from '../components/StickerSelector';
+import { getStickerDefinitions, type StickerDefinition } from '../lib/stickers';
 import { giveSticker } from '../lib/stickerService';
 import { calculateAndAwardReputation } from '../lib/reputation';
 import { uploadImage } from '../lib/storage';
@@ -160,6 +160,10 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
   // Error
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Sticker catalog
+  const [allStickers, setAllStickers] = useState<StickerDefinition[]>([]);
+  useEffect(() => { getStickerDefinitions().then(setAllStickers); }, []);
 
   // Load recent spots
   useEffect(() => {
@@ -425,76 +429,80 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       {/* ================================================================ */}
       {viewState === 'plate-entry' && (
         <div style={{ minHeight: '100vh', paddingBottom: 100 }}>
-          <div style={{ padding: '52px 16px 20px', background: '#0a0d14', borderBottom: '1px solid rgba(249,115,22,0.10)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: C.text1, lineHeight: 1 }}>
-                Spot a Vehicle
+          {/* Hero background */}
+          <div style={{ position: 'relative', width: '100%', height: 240, overflow: 'hidden', background: '#111720' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0a0d14 0%, #111720 50%, #0d1117 100%)' }} />
+            <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)' }} />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'flex-end', padding: '0 16px 20px' }}>
+              {/* Step indicator top-right */}
+              <div style={{ position: 'absolute', top: 52, right: 16, display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-end', gap: 6 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Step 1 of 2</span>
+                <div style={{ display: 'flex', gap: 4, width: 48 }}>
+                  <div style={{ flex: 1, height: 2, borderRadius: 1, background: '#F97316' }} />
+                  <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
+                </div>
               </div>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.text3 }}>Step 1 of 2</span>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <div style={{ flex: 1, height: 2, borderRadius: 1, background: C.accent }} />
-              <div style={{ flex: 1, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 4 }}>MotoRate</div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>Spot a Vehicle</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', letterSpacing: '0.06em' }}>Enter a plate to rate this car</div>
             </div>
           </div>
 
           {/* Plate input */}
-          <div style={{ padding: '16px 16px 0' }}>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              <select
-                value={plateState}
-                onChange={e => setPlateState(e.target.value)}
-                style={{ width: 72, padding: '10px 6px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: C.text2, outline: 'none', cursor: 'pointer' }}
-              >
-                {US_STATES.map(s => <option key={s.code} value={s.code}>{s.code}</option>)}
-              </select>
-              <input
-                type="text"
-                value={plateNumber}
-                onChange={e => setPlateNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                placeholder="PLATE #"
-                maxLength={8}
-                autoFocus
-                onKeyDown={e => { if (e.key === 'Enter' && plateNumber.trim()) handlePlateSearch(plateState, plateNumber); }}
-                style={{ flex: 1, padding: '10px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600, letterSpacing: '0.12em', color: C.text1, outline: 'none', textTransform: 'uppercase' }}
-              />
-            </div>
-
-            {/* Find Vehicle — primary */}
-            <button
-              onClick={() => plateNumber.trim() && handlePlateSearch(plateState, plateNumber)}
-              disabled={!plateNumber.trim()}
-              style={{ width: '100%', minHeight: 44, padding: '12px', background: plateNumber.trim() ? C.accent : 'rgba(249,115,22,0.3)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: plateNumber.trim() ? 'pointer' : 'not-allowed', opacity: plateNumber.trim() ? 1 : 0.4, marginBottom: 8 }}
+          <div style={{ display: 'flex', gap: 8, padding: '16px 16px 10px' }}>
+            <select
+              value={plateState}
+              onChange={e => setPlateState(e.target.value)}
+              style={{ width: 72, padding: '10px 6px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: C.text2, outline: 'none', cursor: 'pointer' }}
             >
-              Find Vehicle
-            </button>
-
-            {/* Scan Plate — secondary ghost */}
-            <button
-              onClick={() => setShowCameraModal(true)}
-              style={{ width: '100%', minHeight: 44, padding: '10px', background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            >
-              <Camera size={14} /> Scan Plate
-            </button>
+              {US_STATES.map(s => <option key={s.code} value={s.code}>{s.code}</option>)}
+            </select>
+            <input
+              type="text"
+              value={plateNumber}
+              onChange={e => setPlateNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+              placeholder="PLATE #"
+              maxLength={8}
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter' && plateNumber.trim()) handlePlateSearch(plateState, plateNumber); }}
+              style={{ flex: 1, padding: '10px 14px', background: '#0d1117', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, letterSpacing: '0.12em', color: C.text1, outline: 'none', textTransform: 'uppercase' as const }}
+            />
           </div>
+
+          {/* Find Vehicle */}
+          <button
+            onClick={() => plateNumber.trim() && handlePlateSearch(plateState, plateNumber)}
+            disabled={!plateNumber.trim()}
+            style={{ width: 'calc(100% - 32px)', margin: '0 16px 8px', minHeight: 44, padding: '12px', background: plateNumber.trim() ? C.accent : 'rgba(249,115,22,0.3)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: plateNumber.trim() ? 'pointer' : 'not-allowed', opacity: plateNumber.trim() ? 1 : 0.4 }}
+          >
+            Find Vehicle
+          </button>
+
+          {/* Scan Plate */}
+          <button
+            onClick={() => setShowCameraModal(true)}
+            style={{ width: 'calc(100% - 32px)', margin: '0 16px 16px', minHeight: 44, padding: '10px', background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          >
+            <Camera size={14} /> Scan Plate
+          </button>
 
           {/* Recent spots */}
           {recentSpots.length > 0 && (
-            <div style={{ padding: '16px 16px 0' }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.text3, marginBottom: 8 }}>
+            <div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#3a4e60', padding: '12px 16px 6px' }}>
                 Recent
               </div>
               {recentSpots.map((s, i) => (
                 <button
                   key={`${s.plateState}-${s.plateNumber}-${i}`}
                   onClick={() => { setPlateState(s.plateState); handlePlateSearch(s.plateState, s.plateNumber); }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < recentSpots.length - 1 ? `1px solid ${C.border}` : 'none', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' as const }}
                 >
                   <div>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: C.text1, letterSpacing: '0.08em' }}>{s.plateState} {s.plateNumber}</span>
-                    {s.make && <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.text3, marginLeft: 8 }}>{s.make} {s.model}</span>}
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.08em' }}>{s.plateState} {s.plateNumber}</span>
+                    {s.make && <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginLeft: 8 }}>{s.make} {s.model}</span>}
                   </div>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: C.text3, flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60', flexShrink: 0 }}>
                     {new Date(s.ts).toLocaleDateString()}
                   </span>
                 </button>
@@ -737,7 +745,33 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                 </div>
               );
             })()}
-            <StickerSelector selectedStickers={selectedStickerIds} onToggleSticker={(id) => setSelectedStickerIds(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])} />
+            {/* More stickers — full catalog minus suggested, horizontal scroll */}
+            {allStickers.length > 0 && (() => {
+              const sugTags = foundVehicle ? getSuggestedStickerTags(foundVehicle) : [];
+              const moreStickers = allStickers.filter(s => !sugTags.includes(s.id));
+              if (moreStickers.length === 0) return null;
+              return (
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' as const, paddingBottom: 4 }}>
+                  {moreStickers.map(s => {
+                    const isSelected = selectedStickerIds.includes(s.id);
+                    return (
+                      <button key={s.id} onClick={() => setSelectedStickerIds(prev =>
+                        prev.includes(s.id) ? prev.filter(x => x !== s.id) : [...prev, s.id]
+                      )} style={{
+                        flexShrink: 0, padding: '5px 10px', borderRadius: 20,
+                        border: isSelected ? '1px solid rgba(249,115,22,0.30)' : '1px solid rgba(255,255,255,0.06)',
+                        background: isSelected ? 'rgba(249,115,22,0.10)' : 'rgba(58,78,96,0.30)',
+                        fontFamily: "'Barlow', sans-serif", fontSize: 10,
+                        color: isSelected ? '#F97316' : '#7a8e9e',
+                        cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                      }}>
+                        {s.icon_name} {s.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {/* 3h. Caption */}
