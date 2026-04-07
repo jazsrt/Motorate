@@ -54,9 +54,8 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [claimSearchResult, setClaimSearchResult] = useState<any>(null);
   const [claimSearchError, setClaimSearchError] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [_userBadgesForGarage, setUserBadgesForGarage] = useState<any[]>([]);
+  const [, setUserBadgesForGarage] = useState<any[]>([]);
   const [retiredStockImages, setRetiredStockImages] = useState<Record<string, string>>({});
-  const [_activeVehicleIndex, _setActiveVehicleIndex] = useState(0);
 
   // Albums
   const [garageAlbums, setGarageAlbums] = useState<{ id: string; title: string; cover_image_url: string | null; photo_count: number }[]>([]);

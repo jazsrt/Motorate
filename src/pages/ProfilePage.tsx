@@ -59,9 +59,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [showAlbumsModal, setShowAlbumsModal] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
-  const [_tagBreakdown, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
-  const [_profileViewCount, _setProfileViewCount] = useState(0);
-  const [_activeQuests, setActiveQuests] = useState<any[]>([]);
+  const [, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
+  const [, setActiveQuests] = useState<any[]>([]);
   const [userStickers, setUserStickers] = useState<any[]>([]);
   const [pinnedBadges, setPinnedBadges] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,8 +80,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [following, setFollowing] = useState<any[]>([]);
   const [cityRank, setCityRank] = useState<number | null>(null);
   const [weeklySpots, setWeeklySpots] = useState(0);
-  const [_weeklyReviews, setWeeklyReviews] = useState(0);
-  const [_weeklyStickers, setWeeklyStickers] = useState(0);
+  const [, setWeeklyReviews] = useState(0);
+  const [, setWeeklyStickers] = useState(0);
   const [fleetBadges, setFleetBadges] = useState<any[]>([]);
 
   const loadProfile = useCallback(async () => {

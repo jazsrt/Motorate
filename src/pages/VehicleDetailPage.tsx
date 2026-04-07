@@ -194,9 +194,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [newModCategory, setNewModCategory] = useState('Exterior');
   const [newModBrand, setNewModBrand] = useState('');
   const [newModCost, setNewModCost] = useState('');
-  const [_viewCount, _setViewCount] = useState(0);
-  const [cityRank, _setCityRank] = useState<number | null>(null);
-  const [_showSpotReviewModal, _setShowSpotReviewModal] = useState(false);
+  const [cityRank] = useState<number | null>(null);
 
   useModerationSubscription(() => !guestMode && loadVehicleData());
   const [loading, setLoading] = useState(true);
@@ -207,13 +205,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [showShareModal, setShowShareModal] = useState(false);
   const [guestJoinAction, setGuestJoinAction] = useState('');
   const [error, setError] = useState('');
-  const [_showRateDriver, _setShowRateDriver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const manualInputRef = useRef<HTMLInputElement>(null);
-  const [_uploadingManual, setUploadingManual] = useState(false);
-  const [_expandedCategory, _setExpandedCategory] = useState<string | null>(null);
-
-  const [_activeTab, _setActiveTab] = useState<'photos' | 'stickers' | 'modifications' | 'reviews'>('stickers');
+  const [, setUploadingManual] = useState(false);
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
   const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);

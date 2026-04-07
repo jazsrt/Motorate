@@ -15,7 +15,6 @@ import { LoadingScreen } from './components/ui/LoadingScreen';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 import { CompletedReviewModal } from './components/CompletedReviewModal';
-import { useBadgeChecker } from './hooks/useBadgeChecker';
 import { SetHandleModal } from './components/SetHandleModal';
 import './index.css';
 
@@ -107,7 +106,6 @@ function parseUrl(): { page: Page | null; params: Record<string, string> } {
 function AppContent() {
   const { user, loading, profile, refreshProfile } = useAuth();
   const { unlockedBadge, dismissBadge } = useBadges();
-  useBadgeChecker();
 
   const [currentPage, setCurrentPage] = useState<Page>('feed');
   const [authView, setAuthView] = useState<AuthView>('login');
@@ -119,7 +117,6 @@ function AppContent() {
   const [shadowPlateNumber, setShadowPlateNumber] = useState<string>('');
   const [spotPlateState, setSpotPlateState] = useState<string>('');
   const [spotPlateNumber, setSpotPlateNumber] = useState<string>('');
-  const [_spotVehicleImage, _setSpotVehicleImage] = useState<string | null>(null);
   const [wizardData, setWizardData] = useState<any>(null);
   const [wizardReviewData, setWizardReviewData] = useState<any>(null);
   const [completedReviewData, setCompletedReviewData] = useState<any>(null);
@@ -128,7 +125,7 @@ function AppContent() {
   const [vehicleDetailScrollTo, setVehicleDetailScrollTo] = useState<string | undefined>(undefined);
   const [vehicleDetailOpenReviewModal, setVehicleDetailOpenReviewModal] = useState<boolean>(false);
   const [previousPage, setPreviousPage] = useState<Page>('feed');
-  const [_previousPageData, setPreviousPageData] = useState<any>(null);
+  const [, setPreviousPageData] = useState<any>(null);
   const [claimData, setClaimData] = useState<any>(null);
 
   useEffect(() => {

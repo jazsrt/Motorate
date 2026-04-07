@@ -25,11 +25,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-is'],
+          'react-vendor': ['react', 'react-dom'],
           'supabase': ['@supabase/supabase-js'],
           'charts': ['recharts'],
           'map': ['leaflet', 'react-leaflet'],
-          'qr': ['qrcode.react', 'jsqr'],
+          'qr': ['qrcode.react'],
           'icons': ['lucide-react'],
           'ocr': ['tesseract.js'],
         },
