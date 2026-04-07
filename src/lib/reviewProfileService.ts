@@ -88,22 +88,22 @@ async function getStickerStats(userId: string): Promise<StickerStats> {
       .from('vehicle_stickers')
       .select(`
         id,
-        bumper_stickers!inner(category, name)
+        sticker_definitions!inner(category, name)
       `)
       .eq('placed_by', userId);
 
     const stickerData = stickers?.map(s => ({
       ...s,
-      bumper_stickers: Array.isArray(s.bumper_stickers) ? s.bumper_stickers[0] : s.bumper_stickers
+      sticker_definitions: Array.isArray(s.sticker_definitions) ? s.sticker_definitions[0] : s.sticker_definitions
     })) || [];
-    const positiveCount = stickerData.filter(s => s.bumper_stickers?.category === 'positive').length || 0;
-    const negativeCount = stickerData.filter(s => s.bumper_stickers?.category === 'negative').length || 0;
+    const positiveCount = stickerData.filter(s => s.sticker_definitions?.category === 'positive').length || 0;
+    const negativeCount = stickerData.filter(s => s.sticker_definitions?.category === 'negative').length || 0;
     const total = positiveCount + negativeCount;
     const positivityRatio = total > 0 ? positiveCount / total : 0;
 
     const stickerCounts: Record<string, number> = {};
     stickerData.forEach(s => {
-      const name = s.bumper_stickers?.name;
+      const name = s.sticker_definitions?.name;
       stickerCounts[name] = (stickerCounts[name] || 0) + 1;
     });
 

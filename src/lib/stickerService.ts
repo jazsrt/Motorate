@@ -34,7 +34,7 @@ export async function giveSticker(
     };
   }
 
-  // Try sticker_catalog first, fall back to bumper_stickers
+  // Try sticker_catalog first, fall back to sticker_definitions
   let sticker: any | null = null;
   const { data: catalogSticker } = await supabase
     .from('sticker_catalog')
@@ -46,7 +46,7 @@ export async function giveSticker(
     sticker = catalogSticker;
   } else {
     const { data: fallbackSticker } = await supabase
-      .from('bumper_stickers')
+      .from('sticker_definitions')
       .select('*')
       .eq('id', stickerId)
       .maybeSingle();

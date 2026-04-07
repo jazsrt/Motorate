@@ -50,7 +50,7 @@ export async function getVehicleStickers(vehicleId: string, userId?: string): Pr
     .select(`
       sticker_id,
       given_by,
-      bumper_stickers!vehicle_stickers_sticker_id_fkey(
+      sticker_definitions!vehicle_stickers_sticker_id_fkey(
         id,
         name,
         description,
@@ -69,7 +69,7 @@ export async function getVehicleStickers(vehicleId: string, userId?: string): Pr
   const stickerMap = new Map<string, VehicleStickerWithCount>();
 
   data?.forEach((item: any) => {
-    const sticker = item.bumper_stickers as any;
+    const sticker = item.sticker_definitions as any;
     if (!sticker) return;
 
     if (!stickerMap.has(sticker.id)) {
@@ -155,7 +155,7 @@ export async function getTopStickeredVehicles(limit: number = 10): Promise<Array
     .select(`
       vehicle_id,
       sticker_id,
-      bumper_stickers!vehicle_stickers_sticker_id_fkey(category)
+      sticker_definitions!vehicle_stickers_sticker_id_fkey(category)
     `);
 
   if (error) {
@@ -172,7 +172,7 @@ export async function getTopStickeredVehicles(limit: number = 10): Promise<Array
 
   data?.forEach((item: any) => {
     const vehicleId = item.vehicle_id;
-    const category = (item.bumper_stickers as any)?.category;
+    const category = (item.sticker_definitions as any)?.category;
 
     if (!vehicleCounts.has(vehicleId)) {
       vehicleCounts.set(vehicleId, {

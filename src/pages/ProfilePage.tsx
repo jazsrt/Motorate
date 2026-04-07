@@ -445,7 +445,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         .select(`
           id,
           sticker_id,
-          bumper_stickers!vehicle_stickers_sticker_id_fkey(
+          sticker_definitions!vehicle_stickers_sticker_id_fkey(
             id,
             name,
             description,
@@ -464,7 +464,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
       const stickerMap = new Map();
       stickersData?.forEach((item: any) => {
-        const sticker = item.bumper_stickers as any;
+        const sticker = item.sticker_definitions as any;
         if (!sticker) return;
 
         if (!stickerMap.has(sticker.id)) {

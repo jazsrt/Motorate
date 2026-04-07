@@ -42,7 +42,7 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
 
       const { data: givenStickers } = await supabase
         .from('vehicle_stickers')
-        .select(`sticker_id, bumper_stickers(category)`)
+        .select(`sticker_id, sticker_definitions!vehicle_stickers_sticker_id_fkey(category)`)
         .eq('vehicle_id', vehicleId)
         .eq('given_by', user.id);
 
@@ -50,7 +50,7 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
         let positive = 0;
         let negative = 0;
         givenStickers.forEach((item: any) => {
-          const category = (item.bumper_stickers as any)?.category;
+          const category = (item.sticker_definitions as any)?.category;
           if (category === 'Positive') positive++;
           else if (category === 'Negative') negative++;
         });

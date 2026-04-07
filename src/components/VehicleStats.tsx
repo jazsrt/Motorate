@@ -49,15 +49,15 @@ export function VehicleStats({ vehicleId }: VehicleStatsProps) {
         .from('vehicle_stickers')
         .select(`
           sticker_id,
-          bumper_stickers!vehicle_stickers_sticker_id_fkey(category)
+          sticker_definitions!vehicle_stickers_sticker_id_fkey(category)
         `)
         .eq('vehicle_id', vehicleId);
 
       if (stickersError) throw stickersError;
 
       const totalStickers = stickers?.length || 0;
-      const positiveStickers = stickers?.filter((s: Record<string, unknown>) => (s.bumper_stickers as Record<string, unknown>)?.category === 'Positive').length || 0;
-      const negativeStickers = stickers?.filter((s: Record<string, unknown>) => (s.bumper_stickers as Record<string, unknown>)?.category === 'Negative').length || 0;
+      const positiveStickers = stickers?.filter((s: Record<string, unknown>) => (s.sticker_definitions as Record<string, unknown>)?.category === 'Positive').length || 0;
+      const negativeStickers = stickers?.filter((s: Record<string, unknown>) => (s.sticker_definitions as Record<string, unknown>)?.category === 'Negative').length || 0;
 
       // profile_views table not yet created in Supabase
       const viewsCount = 0;
