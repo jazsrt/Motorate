@@ -681,13 +681,6 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>
                   {latestBadge.name}
                 </div>
-                <span style={{
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-                  padding: '2px 7px', borderRadius: 4,
-                  ...(TIER_COLORS[(latestBadge.tier as keyof typeof TIER_COLORS)] || TIER_COLORS.Bronze),
-                }}>
-                  {latestBadge.tier}
-                </span>
               </div>
               <button
                 onClick={() => handleNavigate('badges')}
@@ -717,6 +710,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
             </div>
           )}
         </div>
+
+        {/* Near-miss badge nudge */}
+        <NearMissBadgeNudge userId={user?.id} />
 
         {/* ── 5. RECENT SPOT ACTIVITY ── */}
         <div style={{ padding: '0 14px 16px' }}>
