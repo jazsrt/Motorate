@@ -637,12 +637,12 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
           {/* Featured badges in hero */}
           {userBadges.length > 0 && (
-            <div style={{ display: 'flex', gap: 6, padding: '8px 16px 0', flexWrap: 'wrap' }}>
-              {userBadges.slice(0, 3).map((ub) => (
+            <div style={{ display: 'flex', gap: 8, padding: '8px 16px 0', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+              {userBadges.slice(0, 5).map((ub) => (
                 <div key={ub.badge.id} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  padding: '3px 8px', borderRadius: 4,
-                  background: 'rgba(240,160,48,0.10)', border: '1px solid rgba(240,160,48,0.25)',
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px 4px 4px', borderRadius: 20, flexShrink: 0,
+                  background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.16)',
                 }}>
                   <BadgeCoin
                     tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
@@ -650,7 +650,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                     icon_path={getBadgeImagePath(ub.badge)}
                     size="sm"
                   />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#f0a030' }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: '#eef4f8', whiteSpace: 'nowrap' as const }}>
                     {ub.badge.name}
                   </span>
                 </div>
@@ -776,16 +776,13 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 14px 14px' }}>
               {userBadges.slice(0, 8).map((ub) => (
-                <div key={ub.badge.id} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
+                <div key={ub.badge.id} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center' }}>
                   <BadgeCoin
                     tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
                     name={ub.badge.name}
                     icon_path={getBadgeImagePath(ub.badge)}
                     size="md"
                   />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e', textAlign: 'center' as const, lineHeight: 1.2, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                    {ub.badge.name}
-                  </span>
                 </div>
               ))}
             </div>
