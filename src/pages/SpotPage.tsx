@@ -90,6 +90,32 @@ function StarRow({ label, value, onChange }: { label: string; value: number; onC
 }
 
 // ---------------------------------------------------------------------------
+// Suggested stickers based on vehicle specs
+// ---------------------------------------------------------------------------
+
+function getSuggestedStickerTags(vehicle: VehicleResult): string[] {
+  const suggestions: string[] = [];
+  const cylinders = parseInt(vehicle.cylinders ?? '0');
+  const bodyType = (vehicle.bodyStyle ?? '').toLowerCase();
+  const engineSize = parseFloat((vehicle.engine ?? '').match(/(\d+\.?\d*)\s*L/i)?.[1] ?? '0');
+  const fuelType = (vehicle.fuel ?? '').toLowerCase();
+
+  if (bodyType.includes('sedan') || bodyType.includes('hatchback')) suggestions.push('daily-driver');
+  if (bodyType.includes('truck') || bodyType.includes('suv')) suggestions.push('built');
+  if (bodyType.includes('coupe') || bodyType.includes('convertible')) suggestions.push('head-turner');
+
+  if (cylinders >= 8 || engineSize >= 5.0) suggestions.push('loud');
+  if (cylinders >= 6 || engineSize >= 3.5) suggestions.push('fast');
+  if (cylinders <= 4 && engineSize > 0 && engineSize <= 2.0) suggestions.push('daily-driver');
+
+  if (fuelType === 'electric') suggestions.push('silent-storm');
+  if (fuelType === 'gasoline' && engineSize >= 3.0) suggestions.push('gas-guzzler');
+  if (fuelType === 'gasoline' && engineSize > 0 && engineSize < 2.5) suggestions.push('city-car');
+
+  return [...new Set(suggestions)].slice(0, 4);
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -114,9 +140,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   const [followerCount, setFollowerCount] = useState(0);
   const [noCredits, setNoCredits] = useState(false);
 
-  // Review
-  const [driverRating, setDriverRating] = useState(0);
-  const [drivingRating, setDrivingRating] = useState(0);
+  // Review (4 required vehicle ratings — driver/driving removed)
   const [vehicleRating, setVehicleRating] = useState(0);
   const [looksRating, setLooksRating] = useState(0);
   const [soundRating, setSoundRating] = useState(0);
@@ -198,7 +222,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   // Submit spot
   // ---------------------------------------------------------------------------
 
-  const ratingsComplete = driverRating > 0 && drivingRating > 0 && vehicleRating > 0;
+  const ratingsComplete = vehicleRating > 0 && looksRating > 0 && soundRating > 0 && conditionRating > 0;
   const canSubmit = ratingsComplete && sentiment !== null;
 
   const handleSubmitSpot = async () => {
@@ -282,8 +306,8 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         .from('reviews')
         .insert({
           vehicle_id: vehicleId, author_id: user.id,
-          rating_driver: driverRating, rating_driving: drivingRating, rating_vehicle: vehicleRating,
-          looks_rating: looksRating || null, sound_rating: soundRating || null, condition_rating: conditionRating || null,
+          rating_vehicle: vehicleRating,
+          looks_rating: looksRating, sound_rating: soundRating, condition_rating: conditionRating,
           sentiment, comment: comment.trim() || null, spot_type: 'quick', spot_history_id: spotId,
         })
         .select('id')
@@ -301,8 +325,8 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         await supabase.from('posts').insert({
           author_id: user.id, vehicle_id: vehicleId, post_type: 'spot', spot_type: 'quick',
           caption: comment.trim() || null, image_url: feedImage, spot_history_id: spotId, review_id: reviewData.id,
-          rating_driver: driverRating, rating_driving: drivingRating, rating_vehicle: vehicleRating,
-          looks_rating: looksRating || null, sound_rating: soundRating || null, condition_rating: conditionRating || null,
+          rating_vehicle: vehicleRating,
+          looks_rating: looksRating, sound_rating: soundRating, condition_rating: conditionRating,
           sentiment, moderation_status: 'approved', privacy_level: 'public',
         });
       }
@@ -380,7 +404,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     setErrorMessage('');
     setExistingSpotId(null);
     setShowDuplicateWarning(false);
-    setDriverRating(0); setDrivingRating(0); setVehicleRating(0);
+    setVehicleRating(0);
     setLooksRating(0); setSoundRating(0); setConditionRating(0);
     setSentiment(null); setComment(''); clearPhoto();
     setSelectedStickerIds([]);
@@ -596,11 +620,40 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             </div>
           </div>
 
-          {/* Ratings */}
+          {/* API specs strip — only for API-sourced vehicles (no DB id yet) */}
+          {!foundVehicle?.id && foundVehicle && (() => {
+            const specs: { value: string; label: string }[] = [];
+            if (foundVehicle.engine) specs.push({ value: foundVehicle.engine, label: 'ENGINE' });
+            if (foundVehicle.cylinders) specs.push({ value: foundVehicle.cylinders, label: 'CONFIG' });
+            if (foundVehicle.driveType) {
+              const dt = foundVehicle.driveType;
+              const abbr = dt.toLowerCase().includes('front') ? 'FWD' : dt.toLowerCase().includes('rear') ? 'RWD' : dt.toLowerCase().includes('all') ? 'AWD' : dt.toLowerCase().includes('4') ? '4WD' : dt;
+              specs.push({ value: abbr, label: 'DRIVE' });
+            }
+            if (foundVehicle.fuel) specs.push({ value: foundVehicle.fuel, label: 'FUEL' });
+            if (foundVehicle.msrp) specs.push({ value: foundVehicle.msrp.replace(' USD', ''), label: 'MSRP' });
+            if (specs.length === 0) return null;
+            return (
+              <>
+                <div style={{ display: 'flex', overflowX: 'auto', background: '#0d1117', borderTop: '1px solid rgba(249,115,22,0.10)', borderBottom: '1px solid rgba(249,115,22,0.10)', scrollbarWidth: 'none' }}>
+                  {specs.map((s, i) => (
+                    <div key={i} style={{ flexShrink: 0, padding: '10px 16px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#5a6e7e', display: 'block', marginTop: 2 }}>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {foundVehicle.vin && (
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: '#3a4e60', letterSpacing: '0.06em' }}>VIN {foundVehicle.vin}</span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {/* Ratings — all 4 required */}
           <StarRow label="Vehicle" value={vehicleRating} onChange={setVehicleRating} />
-          <StarRow label="Driver" value={driverRating} onChange={setDriverRating} />
-          <StarRow label="Driving" value={drivingRating} onChange={setDrivingRating} />
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.text3, padding: '12px 16px 0' }}>Additional Ratings · Optional</div>
           <StarRow label="Looks" value={looksRating} onChange={setLooksRating} />
           <StarRow label="Sound" value={soundRating} onChange={setSoundRating} />
           <StarRow label="Condition" value={conditionRating} onChange={setConditionRating} />
@@ -621,8 +674,28 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             })}
           </div>
 
-          {/* Stickers */}
+          {/* Stickers — with suggestions */}
           <div style={{ padding: '0 16px 10px' }}>
+            {foundVehicle && !foundVehicle.id && (() => {
+              const suggestedTags = getSuggestedStickerTags(foundVehicle);
+              if (suggestedTags.length === 0) return null;
+              return (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#3a4e60', marginBottom: 4 }}>Suggested</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {suggestedTags.map(tag => {
+                      const isSelected = selectedStickerIds.includes(tag);
+                      return (
+                        <button key={tag} onClick={() => setSelectedStickerIds(prev => prev.includes(tag) ? prev.filter(s => s !== tag) : [...prev, tag])}
+                          style={{ padding: '4px 10px', borderRadius: 12, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: isSelected ? '1px solid rgba(249,115,22,0.40)' : '1px solid rgba(249,115,22,0.30)', background: isSelected ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.10)', color: isSelected ? '#F97316' : '#7a8e9e' }}>
+                          {tag.replace(/-/g, ' ')}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
             <StickerSelector selectedStickers={selectedStickerIds} onToggleSticker={(id) => setSelectedStickerIds(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])} />
           </div>
 

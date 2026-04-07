@@ -140,7 +140,7 @@ export async function executeLookup(
     });
     if (!response.ok) { console.warn('lookup-plate failed:', response.status); return null; }
     const data = await response.json();
-    console.log('[plateToVinApi] response:', JSON.stringify(data));
+    console.log('[plateToVinApi] Raw RapidAPI response:', JSON.stringify(data));
 
     if (!data) return null;
 
@@ -148,7 +148,12 @@ export async function executeLookup(
     const vehicle = data.vehicle || {};
     const eng = data.engine || {};
 
-    if (!vehicle.make && !vehicle.model) return null;
+    console.log('[plateToVinApi] Extracted vehicle:', JSON.stringify(vehicle), 'engine:', JSON.stringify(eng));
+
+    if (!vehicle.make && !vehicle.model) {
+      console.warn('[plateToVinApi] No make/model found in data.vehicle — returning null');
+      return null;
+    }
 
     // Title-case make/model from API (returns lowercase)
     const capFirst = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
