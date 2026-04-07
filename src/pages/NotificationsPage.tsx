@@ -61,7 +61,7 @@ function getIcon(type: string) {
     case 'vehicle_follow_request': return { Icon: Car, color: '#f0a030' };
     case 'vehicle_follow_approved': return { Icon: Car, color: '#20c060' };
     default:
-      return { Icon: Bell, color: '#445566' };
+      return { Icon: Bell, color: '#5a6e7e' };
   }
 }
 
@@ -459,7 +459,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
                     <div style={{
                       padding: '10px 18px 4px',
                       fontFamily: 'Barlow Condensed, sans-serif', fontSize: 8, fontWeight: 700,
-                      letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#445566',
+                      letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#5a6e7e',
                     }}>
                       {groupLabels[g]}
                     </div>

@@ -238,7 +238,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       )}
       {focusPost && (
         <div>
-          <div style={{ padding: '10px 16px 6px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+          <div style={{ padding: '10px 16px 6px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
             Shared Post
           </div>
           <FeedPostCard

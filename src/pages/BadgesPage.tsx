@@ -240,10 +240,10 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
   if (loading) {
     return (
       <Layout currentPage="badges" onNavigate={onNavigate}>
-        <div className="px-3.5 py-4">
-          <div className="animate-pulse space-y-3">
+        <div style={{ padding: '16px 14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="card-v3 h-20" />
+              <div key={i} style={{ height: 80, background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }} />
             ))}
           </div>
         </div>
@@ -255,25 +255,25 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
 
   return (
     <Layout currentPage="badges" onNavigate={onNavigate}>
-      <div className="pb-20 animate-page-enter">
+      <div style={{ paddingBottom: 80 }}>
         {/* DONUT HEADER */}
         <div style={{ padding: '56px 20px 20px', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <svg width="78" height="78" viewBox="0 0 78 78">
             <circle cx="39" cy="39" r="32" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
-            <circle cx="39" cy="39" r="32" fill="none" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round"
+            <circle cx="39" cy="39" r="32" fill="none" stroke="#F97316" strokeWidth="7" strokeLinecap="round"
               strokeDasharray={`${(earned.length / Math.max(allBadges.length, 1)) * 201} 201`}
               transform="rotate(-90 39 39)" />
-            <text x="39" y="36" textAnchor="middle" style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, fill: 'var(--accent)' }}>
+            <text x="39" y="36" textAnchor="middle" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '22px', fontWeight: 700, fill: '#F97316' }}>
               {Math.round((earned.length / Math.max(allBadges.length, 1)) * 100)}%
             </text>
-            <text x="39" y="50" textAnchor="middle" style={{ fontFamily: 'var(--font-cond)', fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', fill: 'var(--muted)' }}>
+            <text x="39" y="50" textAnchor="middle" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', fill: '#3a4e60' }}>
               EARNED
             </text>
           </svg>
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700, color: 'var(--white)' }}>{earned.length}</div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>Badges Earned</div>
-            <div style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', color: 'var(--dim)', marginTop: '2px' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8' }}>{earned.length}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>Badges Earned</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, color: '#5a6e7e', marginTop: 2 }}>
               {allBadges.length > 0 ? `Top ${Math.max(1, Math.round(100 - (earned.length / allBadges.length) * 100))}% of spotters` : ''}
             </div>
           </div>
@@ -281,21 +281,18 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
 
         {/* NEXT BADGE HERO */}
         {nextBadge && (
-          <div className="card-v3 mx-3.5 mt-3 p-4 stg">
-            <div className="flex justify-between items-center mb-3">
+          <div style={{ margin: '12px 14px', padding: '14px 16px', background: '#0a0d14', borderTop: '1px solid rgba(249,115,22,0.16)', borderBottom: '1px solid rgba(249,115,22,0.16)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <div>
-                <span className="text-xs font-medium text-primary" style={{ fontFamily: 'var(--font-display)' }}>{nextBadge.badge.name}</span>
-                <span className="text-[10px] ml-2" style={{ fontFamily: 'var(--font-cond)', color: 'var(--gold-h)' }}>
-                  {tierLabel(nextBadge.badge.tier)}
-                </span>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>{nextBadge.badge.name}</span>
               </div>
-              <span className="text-sm text-primary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{Math.round(nextBadge.progressPercent)}%</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{Math.round(nextBadge.progressPercent)}%</span>
             </div>
-            <div className="tach-bar">
-              <div className="tach-fill" style={{ width: `${nextBadge.progressPercent}%` }} />
+            <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${nextBadge.progressPercent}%`, background: '#F97316', transition: 'width 0.5s' }} />
             </div>
-            <div className="text-[10px] mt-2 text-quaternary" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
-              {nextBadge.currentCount} / {nextBadge.badge.tier_threshold} — <span style={{ color: 'var(--orange)' }}>{nextBadge.remaining} to go</span>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#5a6e7e', marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>
+              {nextBadge.currentCount} / {nextBadge.badge.tier_threshold} — <span style={{ color: '#F97316' }}>{nextBadge.remaining} to go</span>
             </div>
           </div>
         )}
@@ -305,12 +302,11 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
           {(['earned', 'progress', 'locked'] as const).map(key => (
             <button key={key} onClick={() => setActiveSection(key)}
               style={{
-                fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
-                letterSpacing: '0.12em', padding: '5px 12px', borderRadius: '3px', cursor: 'pointer',
-                background: activeSection === key ? 'var(--accent-dim)' : 'rgba(255,255,255,0.04)',
-                color: activeSection === key ? 'var(--accent)' : 'var(--dim)',
-                borderWidth: '1px', borderStyle: 'solid',
-                borderColor: activeSection === key ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.05)',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const,
+                letterSpacing: '0.12em', padding: '5px 12px', borderRadius: 3, cursor: 'pointer',
+                background: activeSection === key ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
+                color: activeSection === key ? '#F97316' : '#5a6e7e',
+                border: `1px solid ${activeSection === key ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.05)'}`,
               }}>
               {key === 'earned' ? `Earned \u00B7 ${earned.length}` : key === 'progress' ? `In Progress \u00B7 ${inProgress.length}` : `Locked \u00B7 ${locked.length}`}
             </button>
@@ -363,23 +359,21 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
       </div>
 
       {celebBadge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center"
-             style={{ background: 'rgba(0,0,0,0.85)' }}
-             onClick={() => setCelebBadge(null)}>
-          <div className="text-center p-8" onClick={e => e.stopPropagation()}>
-            <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
-                 style={{ background: 'linear-gradient(145deg, #806828, #c8a45a 55%, #806828)', border: '3px solid rgba(200,164,90,0.4)' }}>
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)' }}
+          onClick={() => setCelebBadge(null)}>
+          <div style={{ textAlign: 'center', padding: 32 }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 80, height: 80, margin: '0 auto', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg, #806828, #c8a45a 55%, #806828)', border: '3px solid rgba(200,164,90,0.4)' }}>
               {React.createElement(getBadgeIcon(celebBadge.icon), { size: 28, strokeWidth: 1.2, style: { color: 'rgba(255,255,255,0.9)' } })}
             </div>
-            <h3 className="text-lg text-primary mt-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>{celebBadge.name}</h3>
-            <p className="text-[10px] mt-1" style={{ fontFamily: 'var(--font-cond)', color: 'var(--gold-h)' }}>
-              {celebBadge.tier ? tierLabel(celebBadge.tier) : 'Bronze'}
-            </p>
-            <p className="text-xs mt-2" style={{ color: 'var(--t3)' }}>{stripRpReferences(celebBadge.description || 'Badge earned')}</p>
-            <p className="text-[10px] mt-3" style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--t4)' }}>
-              {celebBadge.tier || 'Bronze'} tier
-            </p>
-            <button className="spot-btn px-8 mt-6" onClick={() => setCelebBadge(null)}>Done</button>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginTop: 16 }}>{celebBadge.name}</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', marginTop: 8 }}>{stripRpReferences(celebBadge.description || 'Badge earned')}</div>
+            <button
+              onClick={() => setCelebBadge(null)}
+              style={{ marginTop: 24, padding: '10px 32px', background: '#F97316', border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}
+            >
+              Done
+            </button>
           </div>
         </div>
       )}

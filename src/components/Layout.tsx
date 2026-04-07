@@ -100,10 +100,9 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         {/* Center — FAB Spot button */}
         <button onClick={() => onNavigate('scan')} aria-label="Spot a vehicle"
           style={{
-            width: 52, height: 52, borderRadius: 16,
+            width: 52, height: 52, borderRadius: 8,
             background: '#F97316', border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 20px rgba(249,115,22,0.4)',
             cursor: 'pointer', marginTop: -10,
           }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">

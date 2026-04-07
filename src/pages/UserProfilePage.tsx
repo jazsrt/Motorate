@@ -437,7 +437,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
                   {vehicles.slice(1).map(v => {
                     const vPhoto = v.profile_image_url || v.stock_image_url;
                     return (
-                      <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 130, borderRadius: 10, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                      <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 130, overflow: 'hidden', background: '#0a0d14', borderRight: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
                         {vPhoto ? <img src={vPhoto} alt="" style={{ width: '100%', height: 80, objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: 80, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>}
                         <div style={{ padding: '6px 8px' }}>
                           <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>{v.make}</div>

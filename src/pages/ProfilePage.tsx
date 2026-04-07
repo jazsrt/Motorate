@@ -747,7 +747,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               {vehicles.slice(1).map(v => {
                 const vPhoto = v.profile_image_url || v.stock_image_url;
                 return (
-                  <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 140, borderRadius: 10, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                  <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 140, overflow: 'hidden', background: '#0a0d14', borderRight: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
                     {vPhoto ? (
                       <img src={vPhoto} alt="" style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} />
                     ) : (
