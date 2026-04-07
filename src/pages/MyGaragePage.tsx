@@ -1,15 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import {
-  Plus,
-  Car,
-  Sparkles,
-  Calendar,
-  Crosshair,
-  ChevronRight,
-  X,
-  User,
-  Album,
-} from 'lucide-react';
+import { Plus, Car, Crosshair, X, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -17,15 +7,9 @@ import { Layout } from '../components/Layout';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { AddRetiredVehicleModal } from '../components/AddRetiredVehicleModal';
 import { RetireVehicleModal } from '../components/RetireVehicleModal';
-import { VinClaimModal } from '../components/VinClaimModal';
-import { PhotoLightbox } from '../components/PhotoLightbox';
-import { uploadImage } from '../lib/storage';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
-import { Search } from 'lucide-react';
 import type { GarageVehicle } from '../types/garage';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
-import { NearMissBadgeNudge } from '../components/NearMissBadgeNudge';
-import { ProfileInsights } from '../components/ProfileInsights';
 
 /** Owner columns + avg_rating + joins needed by garage */
 const GARAGE_VEHICLE_SELECT = VEHICLE_OWNER_COLUMNS + `, avg_rating, photos:vehicle_images(*), modifications(*)`;
@@ -45,20 +29,10 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const [showAddRetiredVehicle, setShowAddRetiredVehicle] = useState(false);
   const [vehicleToRetire, setVehicleToRetire] = useState<GarageVehicle | null>(null);
   const [showAllRetiredModal, setShowAllRetiredModal] = useState(false);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const [vehicleToVerify, setVehicleToVerify] = useState<(GarageVehicle & { [key: string]: any }) | null>(null);
   const [stockImages, setStockImages] = useState<Record<string, string>>({});
-  const [showClaimSearch, setShowClaimSearch] = useState(false);
-  const [claimSearchQuery, setClaimSearchQuery] = useState('');
-  const [claimSearchLoading, setClaimSearchLoading] = useState(false);
-  const [claimSearchResult, setClaimSearchResult] = useState<any>(null);
-  const [claimSearchError, setClaimSearchError] = useState('');
-  const [showClaimModal, setShowClaimModal] = useState(false);
   const [, setUserBadgesForGarage] = useState<any[]>([]);
   const [retiredStockImages, setRetiredStockImages] = useState<Record<string, string>>({});
 
-  // Albums
-  const [garageAlbums, setGarageAlbums] = useState<{ id: string; title: string; cover_image_url: string | null; photo_count: number }[]>([]);
 
   // Garage hero + stats state
   const [userProfile, setUserProfile] = useState<{ handle: string; full_name: string | null; avatar_url: string | null; reputation_tier: string | null; reputation_score: number } | null>(null);
@@ -295,36 +269,6 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     }
   }, [user, loadGarageData]);
 
-  const handleClaimSearch = async () => {
-    const query = claimSearchQuery.trim().toUpperCase().replace(/\s+/g, '');
-    if (!query) return;
-
-    setClaimSearchLoading(true);
-    setClaimSearchResult(null);
-    setClaimSearchError('');
-
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('id, make, model, year, color, plate_number, plate_state, is_claimed, owner_id')
-        .ilike('plate_number', query)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!data) {
-        setClaimSearchError('Plate not found. Try spotting it first on the Spot tab.');
-      } else if (data.is_claimed && data.owner_id) {
-        setClaimSearchError('This plate is already claimed by another user.');
-      } else {
-        setClaimSearchResult(data);
-      }
-    } catch {
-      setClaimSearchError('Search failed. Please try again.');
-    } finally {
-      setClaimSearchLoading(false);
-    }
-  };
 
   const handleNavigate = (page: string, data?: unknown) => {
     if (onNavigate) {
@@ -342,208 +286,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
   const avatarUrl = userProfile?.avatar_url || user?.user_metadata?.avatar_url;
   const totalRP = vehicles.reduce((sum, v) => sum + ((v as unknown as Record<string, number>).reputation_score ?? 0), 0);
 
-  // FleetTile component
-  const FleetTile = ({ vehicle }: { vehicle: GarageVehicle & { [key: string]: any } }) => {
-    const [imgError, setImgError] = useState(false);
-    const [lightboxOpen, setLightboxOpen] = useState(false);
-    const [lightboxIndex, setLightboxIndex] = useState(0);
-    const [uploading, setUploading] = useState(false);
-
-    const userPhoto = vehicle.photos?.[0]?.url || vehicle.photo_url;
-    const stockPhoto = vehicle.stock_image_url || stockImages[vehicle.id];
-    const photoUrl: string | null = imgError ? null : (userPhoto || stockPhoto) as string | null;
-
-    const isPending = vehicle._claimStatus === 'pending' || (vehicle.verification_tier as string) === 'pending';
-    const isClaimed = !isPending && (vehicle.owner_id || vehicle.is_claimed);
-    const isVerified = vehicle.verification_tier === 'verified' || vehicle.verification_tier === 'vin_verified';
-
-    const statusLabel = isPending ? 'Pending' : isVerified ? 'Verified' : isClaimed ? 'Claimed' : 'Unclaimed';
-    const statusBg = isPending ? 'rgba(249,115,22,0.1)' : isVerified ? 'rgba(34,197,94,0.1)' : isClaimed ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.04)';
-    const statusBorder = isPending ? 'rgba(249,115,22,0.25)' : isVerified ? 'rgba(34,197,94,0.3)' : isClaimed ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.08)';
-    const statusColor = isPending ? '#F97316' : isVerified ? '#22c55e' : isClaimed ? '#22c55e' : '#556677';
-
-    const spotCount = vehicle.spot_count ?? vehicle.spots_count ?? 0;
-    const vehiclePhotos = (vehicle.photos as unknown as Array<{ url: string; uploaded_at: string }>) || [];
-    const photoUrls = vehiclePhotos.map(p => p.url);
-
-    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      if (vehiclePhotos.length >= 10) {
-        showToast('Maximum 10 photos per vehicle', 'error');
-        return;
-      }
-
-      setUploading(true);
-      try {
-        const photoUrl = await uploadImage(file, 'vehicles');
-        const updatedPhotos = [
-          ...vehiclePhotos,
-          { url: photoUrl, uploaded_at: new Date().toISOString() }
-        ];
-
-        const { error } = await supabase
-          .from('vehicles')
-          .update({ photos: updatedPhotos })
-          .eq('id', vehicle.id);
-
-        if (error) throw error;
-
-        showToast('Photo uploaded successfully', 'success');
-        loadGarageData();
-      } catch (error) {
-        console.error('Failed to upload photo:', error);
-        showToast('Failed to upload photo', 'error');
-      } finally {
-        setUploading(false);
-      }
-    };
-
-    const claimedTag = isClaimed || isVerified;
-    const tagLabel = isPending ? 'Pending' : isVerified ? 'Verified' : isClaimed ? 'Claimed' : 'Unclaimed';
-    const tagBg = claimedTag ? 'rgba(32,192,96,0.10)' : 'rgba(249,115,22,0.10)';
-    const tagBorder = claimedTag ? '1px solid rgba(32,192,96,0.20)' : '1px solid rgba(249,115,22,0.20)';
-    const tagColor = claimedTag ? '#20c060' : '#F97316';
-
-    return (
-      <div
-        style={{
-          background: '#0d1117', borderRadius: 10, overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.05)',
-          cursor: 'pointer',
-        }}
-        onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })}
-      >
-        {/* Image */}
-        {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-            style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div style={{ width: '100%', height: 100, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2">
-              <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </div>
-        )}
-
-        {/* Card body */}
-        <div style={{ padding: '10px 12px 12px' }}>
-          {/* Make */}
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
-            {vehicle.make}
-          </div>
-          {/* Model + year */}
-          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 6 }}>
-            {vehicle.year ? `${vehicle.year} ` : ''}{vehicle.model || vehicle.make}
-          </div>
-          {/* Stats row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
-              {((vehicle as any).reputation_score ?? 0).toLocaleString()} RP
-            </span>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#5a6e7e', letterSpacing: '0.08em' }}>
-              {spotCount} SPOTS
-            </span>
-            <span style={{
-              marginLeft: 'auto',
-              background: tagBg, border: tagBorder, color: tagColor,
-              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
-              textTransform: 'uppercase' as const, padding: '2px 7px', borderRadius: 4,
-            }}>
-              {tagLabel}
-            </span>
-          </div>
-        </div>
-
-        {lightboxOpen && photoUrls.length > 0 && (
-          <PhotoLightbox
-            photos={photoUrls}
-            initialIndex={lightboxIndex}
-            onClose={() => setLightboxOpen(false)}
-          />
-        )}
-      </div>
-    );
-  };
-
-  // RetiredTimeline component
-  const RetiredTimeline = ({ vehicles: rv, limit }: { vehicles: any[]; limit?: number }) => {
-    const list = limit ? rv.slice(0, limit) : rv;
-    return (
-      <div style={{ position: 'relative', paddingLeft: 24 }}>
-        <div style={{
-          position: 'absolute', left: 8, top: 8, bottom: 8, width: 2,
-          background: 'linear-gradient(to bottom, rgba(249,115,22,0.5), rgba(255,255,255,0.04), rgba(255,255,255,0.04))',
-        }} />
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
-          {list.map((vehicle) => {
-            const stockUrl = retiredStockImages[vehicle.id];
-            return (
-              <div key={vehicle.id} style={{ position: 'relative' }}>
-                <div style={{
-                  position: 'absolute', left: -18, top: 12, width: 16, height: 16,
-                  borderRadius: '50%', background: '#070a0f', border: '2px solid #F97316', zIndex: 10,
-                }} />
-                <div style={{
-                  background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)',
-                  borderRadius: 10, overflow: 'hidden',
-                }}>
-                  {(vehicle.photo_url_1 || vehicle.photo_url_2) ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: '#0e1320' }}>
-                      {vehicle.photo_url_1 && (
-                        <img src={vehicle.photo_url_1} alt="" style={{ width: '100%', height: 112, objectFit: 'cover' }} />
-                      )}
-                      {vehicle.photo_url_2 ? (
-                        <img src={vehicle.photo_url_2} alt="" style={{ width: '100%', height: 112, objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: 112, background: '#0e1320', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Car style={{ width: 32, height: 32, color: '#334455', opacity: 0.4 }} strokeWidth={1.2} />
-                        </div>
-                      )}
-                    </div>
-                  ) : stockUrl ? (
-                    <div style={{ height: 112, overflow: 'hidden' }}>
-                      <img src={stockUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  ) : (
-                    <div style={{ height: 96, background: 'linear-gradient(135deg, #0e1320, #111827)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Car style={{ width: 40, height: 40, color: '#334455', opacity: 0.3 }} strokeWidth={1.2} />
-                    </div>
-                  )}
-                  <div style={{ padding: '10px 12px' }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
-                      {vehicle.make}
-                    </div>
-                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>
-                      {vehicle.year ? `${vehicle.year} ` : ''}{vehicle.model || vehicle.make}
-                      {vehicle.trim && <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', fontWeight: 600, marginLeft: 6 }}>{vehicle.trim}</span>}
-                    </div>
-                    {vehicle.ownership_period && (
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: '#5a6e7e', marginTop: 2 }}>
-                        {vehicle.ownership_period}
-                      </div>
-                    )}
-                    {vehicle.notes && (
-                      <p style={{
-                        fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 6, lineHeight: 1.4,
-                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
-                      }}>{vehicle.notes}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
+  // Removed FleetTile + RetiredTimeline — replaced with inline image rows
 
   // Helper: relative time
   function timeAgo(dateStr: string): string {
@@ -568,205 +311,262 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
     <Layout currentPage="my-garage" onNavigate={handleNavigate}>
       <div style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
 
-        {/* ── 1. HERO — vehicle-image driven ── */}
-        <div style={{ position: 'relative', width: '100%', height: 240, overflow: 'hidden' }}>
+        {/* ── 1. FLEET HERO ── */}
+        <div style={{ position: 'relative', width: '100%', height: 260, minHeight: 200, overflow: 'hidden' }}>
           {heroImage ? (
             <img src={heroImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0a0d14, #070a0f)' }} />
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0a0d14, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Car style={{ width: 48, height: 48, color: '#1e2a38' }} strokeWidth={1.2} />
+            </div>
           )}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.95) 0%, rgba(3,5,8,0.5) 50%, transparent 100%)' }} />
-          <div style={{ position: 'absolute', bottom: 16, left: 16, zIndex: 2 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.97) 0%, rgba(3,5,8,0.5) 50%, transparent 100%)' }} />
+          <div style={{ position: 'absolute', bottom: 16, left: 16, zIndex: 2, display: 'flex', alignItems: 'flex-end', gap: 12 }}>
             <div
               onClick={() => user && handleNavigate('profile')}
-              style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 26, fontWeight: 700, color: '#eef4f8', lineHeight: 1, cursor: 'pointer' }}
+              style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', background: '#1e2a38', flexShrink: 0, cursor: 'pointer', border: '2px solid rgba(249,115,22,0.4)' }}
             >
-              @{handle}
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <User size={18} color="#5a6e7e" />
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
-                {(userProfile?.reputation_score ?? totalRP).toLocaleString()}
-              </span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#F97316' }}>RP</span>
+            <div>
+              <div
+                onClick={() => user && handleNavigate('profile')}
+                style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1, cursor: 'pointer' }}
+              >
+                @{handle}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 3 }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
+                  {(userProfile?.reputation_score ?? totalRP).toLocaleString()}
+                </span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#F97316' }}>RP</span>
+                {userProfile?.reputation_tier && (
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginLeft: 4 }}>{userProfile.reputation_tier}</span>
+                )}
+              </div>
             </div>
           </div>
+          {!heroImage && vehicles.length === 0 && (
+            <div style={{ position: 'absolute', bottom: 16, right: 16, zIndex: 2 }}>
+              <button
+                onClick={() => handleNavigate('search')}
+                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, padding: '8px 14px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316' }}
+              >
+                Claim Your First Vehicle
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* ── 2. STAT STRIP (all live) ── */}
+        {/* ── 2. STAT STRIP ── */}
         <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {[
-            { label: 'Vehicles', value: vehicles.length },
-            { label: 'Spots', value: userSpotCount },
-            { label: 'Followers', value: vehicleFollowerTotal },
-            { label: 'Badges', value: badgeCount },
+            { label: 'RP', value: (userProfile?.reputation_score ?? totalRP).toLocaleString(), accent: true },
+            { label: 'Vehicles', value: vehicles.length, accent: false },
+            { label: 'Spots', value: userSpotCount, accent: false },
+            { label: 'Badges', value: badgeCount, accent: false },
           ].map((stat, i, arr) => (
             <div key={stat.label} style={{
               flex: 1, padding: '12px 0', textAlign: 'center' as const,
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
             }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: (stat.label === 'Followers' || stat.label === 'Badges') ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.accent ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.accent ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
         </div>
 
-        {/* ── 3. FLEET — 2x2 image grid ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px 8px' }}>
+        {/* ── 3. FLEET — full-width image rows ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 6px' }}>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
             Fleet{vehicles.length > 0 ? ` \u00B7 ${vehicles.length}` : ''}
           </span>
         </div>
 
         {vehicles.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
             {vehicles.map(vehicle => {
               const img = (vehicle as any).profile_image_url || vehicle.stock_image_url || stockImages[vehicle.id];
-              const topSticker = vehicleStickerCounts[vehicle.id]?.[0];
-              const fans = (vehicle as any)._vehicleFollowerCount ?? 0;
+              const vHandle = (vehicle as any).vehicle_handle;
+              const isPending = (vehicle as any)._claimStatus === 'pending' || (vehicle.verification_tier as string) === 'pending';
               const isVerified = vehicle.verification_tier === 'vin_verified';
+              const isClaimed = !isPending && (vehicle.owner_id || vehicle.is_claimed);
+              const statusLabel = isPending ? 'Pending' : isVerified ? 'Verified' : isClaimed ? 'Claimed' : 'Unclaimed';
+              const statusColor = isPending ? '#F97316' : (isVerified || isClaimed) ? '#20c060' : '#5a6e7e';
+              const spotCount = (vehicle as any).spot_count ?? (vehicle as any).spots_count ?? 0;
+              const rp = (vehicle as any).reputation_score ?? 0;
 
               return (
                 <div
                   key={vehicle.id}
                   onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })}
-                  style={{
-                    position: 'relative', height: 90, overflow: 'hidden', cursor: 'pointer',
-                    background: 'linear-gradient(135deg, #0d1117, #070a0f)',
-                    ...(fans > 50 ? { boxShadow: 'inset 0 0 0 1px rgba(249,115,22,0.35)' } : {}),
-                  }}
+                  style={{ position: 'relative', width: '100%', height: 140, minHeight: 140, overflow: 'hidden', cursor: 'pointer', background: '#0a0d14' }}
                 >
-                  {img && <img src={img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(0.85) brightness(0.9)' }} />}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,5,8,0) 20%, rgba(3,5,8,0.92) 100%)' }} />
-                  {/* VIN chip */}
-                  {isVerified && (
-                    <div style={{ position: 'absolute', top: 5, left: 5, zIndex: 3, background: 'rgba(3,5,8,0.8)', border: '1px solid rgba(249,115,22,0.4)', borderRadius: 2, padding: '1px 5px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, color: '#F97316' }}>VIN</div>
-                  )}
-                  {/* Follower count */}
-                  <div style={{ position: 'absolute', top: 5, right: 5, zIndex: 3, background: 'rgba(3,5,8,0.8)', borderRadius: 2, padding: '2px 5px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#eef4f8' }}>{fans} Followers</div>
-                  {/* Bottom meta */}
-                  <div style={{ position: 'absolute', bottom: 6, left: 6, right: 6, zIndex: 2 }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316', lineHeight: 1 }}>{vehicle.make}</div>
-                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
-                      {(vehicle as any).vehicle_handle ? `@${(vehicle as any).vehicle_handle}` : vehicle.model || vehicle.make}
+                  {img ? (
+                    <img src={img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  ) : (
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0d1117, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Car style={{ width: 36, height: 36, color: '#1e2a38' }} strokeWidth={1.2} />
                     </div>
-                    {topSticker && (
-                      <div style={{ marginTop: 2, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, color: '#F97316', background: 'rgba(249,115,22,0.1)', borderRadius: 2, padding: '1px 5px', display: 'inline-block' }}>{topSticker.name}</div>
+                  )}
+                  {/* Left gradient for text legibility */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(3,5,8,0.85) 0%, rgba(3,5,8,0.4) 50%, transparent 100%)' }} />
+                  {/* Bottom gradient */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.7) 0%, transparent 50%)' }} />
+
+                  {/* Status badge top-right */}
+                  <div style={{
+                    position: 'absolute', top: 8, right: 8, zIndex: 3,
+                    background: 'rgba(3,5,8,0.8)', border: `1px solid ${statusColor}40`, borderRadius: 3,
+                    padding: '2px 7px',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: statusColor,
+                  }}>
+                    {statusLabel}
+                  </div>
+
+                  {/* Bottom-left content */}
+                  <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12, zIndex: 2 }}>
+                    {vHandle && (
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#F97316', letterSpacing: '0.06em', lineHeight: 1, marginBottom: 2 }}>
+                        @{vHandle}
+                      </div>
                     )}
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+                      {vehicle.model || vehicle.make}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                      {vehicle.year && (
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#7a8e9e' }}>{vehicle.year}</span>
+                      )}
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
+                        {rp.toLocaleString()} RP
+                      </span>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                        {spotCount} Spots
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div style={{ padding: '32px 24px', textAlign: 'center' as const, display: 'flex', flexDirection: 'column' as const, alignItems: 'center' }}>
-            <Car style={{ width: 32, height: 32, color: '#1e2a38', marginBottom: 12 }} strokeWidth={1.2} />
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>No vehicles claimed yet</div>
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 16 }}>Search for your plate and claim your first vehicle.</p>
-            <button onClick={() => handleNavigate('search')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-              Search a Plate
-            </button>
+          <div style={{ padding: '32px 24px', textAlign: 'center' as const }}>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>No vehicles claimed yet</div>
           </div>
         )}
 
-        {/* ── 4. ACHIEVEMENTS PREVIEW ── */}
-        <NearMissBadgeNudge userId={user?.id} />
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 6px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-            Badges · {badgeCount}
+        {/* ── 4. LIFETIME RIDES (retired) ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 6px' }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+            Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
           </span>
-          <span
-            onClick={() => handleNavigate('badges')}
-            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}
-          >
-            View All
+          <span onClick={() => setShowAddRetiredVehicle(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+            + Add Past Vehicle
           </span>
         </div>
 
-        {latestBadge ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 16px 14px' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 700, color: '#eef4f8' }}>
-              {latestBadge.name}
-            </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-              Most Recent
-            </div>
+        {retiredVehicles.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
+            {retiredVehicles.map(rv => {
+              const rvImg = rv.photo_url_1 || retiredStockImages[rv.id];
+              return (
+                <div key={rv.id} style={{ position: 'relative', width: '100%', height: 120, overflow: 'hidden', background: '#0a0d14' }}>
+                  {rvImg ? (
+                    <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'saturate(0.4) brightness(0.7)' }} />
+                  ) : (
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0d1117, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Car style={{ width: 32, height: 32, color: '#1e2a38', opacity: 0.5 }} strokeWidth={1.2} />
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(3,5,8,0.85) 0%, rgba(3,5,8,0.3) 60%, transparent 100%)' }} />
+
+                  {/* Retired tag top-right */}
+                  <div style={{
+                    position: 'absolute', top: 8, right: 8, zIndex: 3,
+                    background: 'rgba(3,5,8,0.8)', border: '1px solid rgba(90,110,126,0.3)', borderRadius: 3,
+                    padding: '2px 7px',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e',
+                  }}>
+                    Retired
+                  </div>
+
+                  <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 2 }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#a8bcc8', lineHeight: 1 }}>
+                      {rv.year ? `${rv.year} ` : ''}{rv.model || rv.make}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#5a6e7e' }}>{rv.make}</span>
+                      {rv.ownership_period && (
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 600, color: '#3a4e60' }}>{rv.ownership_period}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <div style={{ padding: '6px 16px 14px' }}>
-            <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e' }}>Spot vehicles to earn badges</span>
+          <div style={{ padding: '20px 16px', textAlign: 'center' as const }}>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#3a4e60' }}>No past rides added yet</div>
           </div>
         )}
 
-        {/* ── 5. RECENT SPOT ACTIVITY ── */}
-        <div style={{ padding: '0 14px 16px' }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
-            Recent Spots
+        {/* ── 5. RECENT ACTIVITY ── */}
+        <div style={{ padding: '16px 0 0' }}>
+          <div style={{ padding: '0 16px 8px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+            Recent Activity
           </div>
           {recentSpots.length > 0 ? (
-            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden' }}>
-              {recentSpots.map((spot, i) => (
+            <div>
+              {recentSpots.slice(0, 8).map((spot, i) => (
                 <div
                   key={spot.id}
                   onClick={() => handleNavigate('vehicle-detail', { vehicleId: spot.vehicle_id })}
                   style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', cursor: 'pointer',
-                    borderBottom: i < recentSpots.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', cursor: 'pointer',
+                    borderBottom: '1px solid rgba(255,255,255,0.03)',
                   }}
                 >
-                  <div>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#eef4f8', letterSpacing: '0.06em' }}>
-                      {spot.plate_number || [spot.make, spot.model].filter(Boolean).join(' ') || 'Vehicle'}
-                    </span>
-                    {spot.plate_number && spot.make && (
-                      <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginLeft: 8 }}>
-                        {spot.make} {spot.model}
-                      </span>
-                    )}
-                  </div>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 600, color: '#5a6e7e', flexShrink: 0 }}>
+                  <Crosshair size={12} color="#F97316" style={{ flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#eef4f8', flex: 1 }}>
+                    Spotted {[spot.make, spot.model].filter(Boolean).join(' ') || spot.plate_number || 'vehicle'}
+                  </span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#3a4e60', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                     {timeAgo(spot.created_at)}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '20px 16px', textAlign: 'center' as const }}>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e' }}>No spots yet</div>
+            <div style={{ padding: '16px', textAlign: 'center' as const }}>
+              <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#3a4e60' }}>No recent activity</span>
             </div>
           )}
         </div>
 
-        {/* ── 6. LIFETIME RIDES ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-            Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
-          </span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {retiredVehicles.length > 2 && (
-              <span onClick={() => setShowAllRetiredModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}>
+        {/* ── 6. BADGES (compact) ── */}
+        {badgeCount > 0 && (
+          <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+                Badges · {badgeCount}
+              </span>
+              <span
+                onClick={() => handleNavigate('badges')}
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}
+              >
                 View All
               </span>
-            )}
-            <span onClick={() => setShowAddRetiredVehicle(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-              + Add Ride
-            </span>
-          </div>
-        </div>
-
-        {retiredVehicles.length > 0 ? (
-          <div style={{ margin: '0 14px 16px' }}>
-            <RetiredTimeline vehicles={retiredVehicles} limit={2} />
-          </div>
-        ) : (
-          <div style={{ margin: '0 14px 16px', padding: '20px 16px', background: '#0d1117', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', textAlign: 'center' as const }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1.2" style={{ marginBottom: 8 }}><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', marginBottom: 2 }}>No Past Rides</div>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginBottom: 10 }}>Remember vehicles you've owned</div>
-            <button onClick={() => setShowAddRetiredVehicle(true)} style={{ background: 'transparent', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
-              + Add Ride
-            </button>
+            </div>
           </div>
         )}
 
@@ -793,60 +593,44 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
       {/* All Retired Vehicles Modal */}
       {showAllRetiredModal && (
         <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-            zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowAllRetiredModal(false)}
         >
           <div
-            style={{
-              position: 'relative', width: '100%', maxWidth: 512,
-              background: '#070a0f', border: '1px solid rgba(255,255,255,0.05)',
-              borderRadius: 16, overflow: 'hidden', maxHeight: '85vh',
-            }}
+            style={{ position: 'relative', width: '100%', maxWidth: 512, background: '#070a0f', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden', maxHeight: '85vh' }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Sparkles style={{ width: 16, height: 16, color: '#F97316' }} strokeWidth={1.5} />
-                <div>
-                  <h3 style={{ fontWeight: 600, fontSize: 14, color: '#eef4f8', lineHeight: 1 }}>Lifetime Rides</h3>
-                  <p style={{ fontSize: 10, color: '#7a8e9e', marginTop: 2 }}>{retiredVehicles.length} vehicles</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAllRetiredModal(false)}
-                style={{
-                  width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.04)',
-                }}
-              >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>Lifetime Rides · {retiredVehicles.length}</span>
+              <button onClick={() => setShowAllRetiredModal(false)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)' }}>
                 <X style={{ width: 16, height: 16, color: '#9ab0c0' }} />
               </button>
             </div>
-            <div style={{ overflowY: 'auto' as const, padding: 20, maxHeight: 'calc(85vh - 70px)' }}>
-              <RetiredTimeline vehicles={retiredVehicles} />
+            <div style={{ overflowY: 'auto' as const, maxHeight: 'calc(85vh - 60px)' }}>
+              {retiredVehicles.map(rv => {
+                const rvImg = rv.photo_url_1 || retiredStockImages[rv.id];
+                return (
+                  <div key={rv.id} style={{ position: 'relative', width: '100%', height: 120, overflow: 'hidden', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    {rvImg ? (
+                      <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(0.4) brightness(0.7)' }} />
+                    ) : (
+                      <div style={{ position: 'absolute', inset: 0, background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Car style={{ width: 32, height: 32, color: '#1e2a38', opacity: 0.5 }} strokeWidth={1.2} />
+                      </div>
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(3,5,8,0.85) 0%, transparent 100%)' }} />
+                    <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 2 }}>
+                      <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#a8bcc8', lineHeight: 1 }}>{rv.year ? `${rv.year} ` : ''}{rv.model || rv.make}</div>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#5a6e7e', marginTop: 2 }}>{rv.make}{rv.ownership_period ? ` · ${rv.ownership_period}` : ''}</div>
+                    </div>
+                  </div>
+                );
+              })}
               <button
-                onClick={() => {
-                  setShowAllRetiredModal(false);
-                  setShowAddRetiredVehicle(true);
-                }}
-                style={{
-                  width: '100%', marginTop: 16, padding: '10px 0',
-                  background: 'rgba(255,255,255,0.02)', border: '1.5px dashed rgba(255,255,255,0.08)',
-                  borderRadius: 12, cursor: 'pointer',
-                  fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em',
-                  color: '#9ab0c0',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
+                onClick={() => { setShowAllRetiredModal(false); setShowAddRetiredVehicle(true); }}
+                style={{ width: '100%', padding: '14px 0', background: 'none', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               >
-                <Plus style={{ width: 14, height: 14 }} />
-                Add Another Vehicle
+                <Plus style={{ width: 12, height: 12 }} /> Add Past Vehicle
               </button>
             </div>
           </div>
