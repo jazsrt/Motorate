@@ -27,15 +27,38 @@ export async function trackSpotEvent(
   } catch { /* analytics must never break the user flow */ }
 }
 
+const DEFAULT_LOOKUP_CREDITS = 10;
+
 export async function getLookupCredits(userId: string): Promise<number> {
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_lookup_credits')
       .select('balance')
       .eq('user_id', userId)
       .maybeSingle();
-    return data?.balance ?? 0;
-  } catch { return 0; }
+
+    if (error) {
+      // Table may not exist — grant default credits so API can be called
+      console.warn('[getLookupCredits] query error:', error.message);
+      return DEFAULT_LOOKUP_CREDITS;
+    }
+
+    if (!data) {
+      // No row for this user — create one with default credits
+      console.log('[getLookupCredits] No credit row found, granting default credits');
+      await supabase.from('user_lookup_credits').insert({
+        user_id: userId,
+        balance: DEFAULT_LOOKUP_CREDITS,
+        lifetime_consumed: 0,
+      }).select().maybeSingle();
+      return DEFAULT_LOOKUP_CREDITS;
+    }
+
+    return data.balance ?? DEFAULT_LOOKUP_CREDITS;
+  } catch {
+    // If anything fails, still allow lookups
+    return DEFAULT_LOOKUP_CREDITS;
+  }
 }
 
 export async function consumeLookupCredit(userId: string): Promise<boolean> {

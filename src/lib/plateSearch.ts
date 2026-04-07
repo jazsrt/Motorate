@@ -78,8 +78,10 @@ export async function searchPlate(
     }
 
     const credits = await getLookupCredits(userId);
+    console.log('[plateSearch] Lookup credits for user:', credits);
 
     if (credits <= 0) {
+      console.warn('[plateSearch] No credits — skipping API call');
       return { status: 'not-found', plateHash: hash, creditsRemaining: 0, noCredits: true };
     }
 
