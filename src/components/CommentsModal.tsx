@@ -221,16 +221,6 @@ export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavi
           console.error('Reputation award error:', repError);
         }
 
-        // AUTO-AWARD: Check for tiered comment badges
-        try {
-          await supabase.rpc('check_and_award_badges', {
-            p_user_id: user.id,
-            p_action: 'comment'
-          });
-        } catch (autoAwardError) {
-          console.error('Auto-award badge error:', autoAwardError);
-        }
-
         // Load badges and rating for the new comment
         let authorBadges: Badge[] = [];
         let driverRating = { avg_driver_rating: 0, driver_rating_count: 0 };

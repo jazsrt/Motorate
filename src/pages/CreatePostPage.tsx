@@ -321,19 +321,6 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         console.error('Badge award error:', badgeError);
       }
 
-      // AUTO-AWARD: Check for tiered post badges
-      try {
-        const { data: _awardedBadges } = await supabase
-          .rpc('check_and_award_badges', {
-            p_user_id: user.id,
-            p_action: 'post'
-          });
-
-        // Badges auto-awarded if applicable
-      } catch (autoAwardError) {
-        console.error('Auto-award badge error:', autoAwardError);
-      }
-
       // Admin notifications and moderation handled by database triggers
 
       if (coordinates) {

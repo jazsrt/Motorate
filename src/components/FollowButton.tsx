@@ -110,15 +110,6 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
             } catch { /* intentionally empty */ }
           }
 
-          // AUTO-AWARD: Check for tiered follower badges (follower_id = the user who followed)
-          try {
-            await supabase.rpc('check_and_award_badges', {
-              p_user_id: user.id,
-              p_action: 'follow'
-            });
-          } catch (autoAwardError) {
-            console.error('Auto-award badge error:', autoAwardError);
-          }
         }
       }
     } catch (error) {

@@ -102,14 +102,6 @@ export function RateDriverModal({
             referenceId: review.id,
           });
 
-          try {
-            await supabase.rpc('check_and_award_badges', {
-              p_user_id: user.id,
-              p_action: 'spot'
-            });
-          } catch (autoAwardError) {
-            console.error('Auto-award badge error:', autoAwardError);
-          }
         }
       }
 

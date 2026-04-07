@@ -342,12 +342,6 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
       trackSpotEvent('spot_created', user.id, { vehicleId, plate: plateNumber });
 
-      // Badges
-      try {
-        await supabase.rpc('check_and_award_badges', { p_user_id: user.id, p_action: 'spot' });
-        await supabase.rpc('check_and_award_badges', { p_user_id: user.id, p_action: 'review' });
-      } catch { /* intentionally empty */ }
-
       // Stickers
       for (const stickerId of selectedStickerIds) {
         await giveSticker(vehicleId, stickerId, user.id);

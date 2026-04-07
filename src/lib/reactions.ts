@@ -93,15 +93,6 @@ export async function addReaction(postId: string, userId: string, reactionType: 
       console.error('Failed to send reaction notification:', notifError);
     }
 
-    // AUTO-AWARD: Check for tiered reaction badges for the USER WHO REACTED
-    try {
-      await supabase.rpc('check_and_award_badges', {
-        p_user_id: userId,
-        p_action: 'like'
-      });
-    } catch (autoAwardError) {
-      console.error('Auto-award badge error:', autoAwardError);
-    }
 
     return { removed: false, reactionType };
   }

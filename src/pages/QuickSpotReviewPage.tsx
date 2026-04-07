@@ -339,20 +339,6 @@ export function QuickSpotReviewPage({ onNavigate, wizardData }: QuickSpotReviewP
         plate: wizardData.plateNumber,
       });
 
-      // STEP 5: Check for badge awards (counts from spot_history and reviews)
-      try {
-        await supabase.rpc('check_and_award_badges', {
-          p_user_id: user.id,
-          p_action: 'spot'
-        });
-        await supabase.rpc('check_and_award_badges', {
-          p_user_id: user.id,
-          p_action: 'review'
-        });
-      } catch (autoAwardError) {
-        console.error('Auto-award badge error:', autoAwardError);
-      }
-
       // Save bumper stickers
       if (selectedStickerIds.length > 0 && user) {
         for (const stickerId of selectedStickerIds) {
