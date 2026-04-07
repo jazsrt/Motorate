@@ -112,7 +112,7 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
   };
 
   // Aspect ratio: 4:5 portrait for images, 9:16 for video, square for badge/fallback
-  const aspectPadding = isVideo ? '177%' : (isBadgePost && !imageUrl) ? '100%' : '125%';
+  const aspectPadding = isVideo ? '177%' : (isBadgePost && !imageUrl) ? '100%' : '56.25%';
 
   return (
     <>
@@ -143,7 +143,7 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
             <img
               src={imageUrl}
               alt=""
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block', filter: 'saturate(0.9) brightness(0.95)' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center center', display: 'block', background: '#030508', filter: 'saturate(0.9) brightness(0.95)' }}
               onError={() => setImgError(true)}
             />
           ) : (
