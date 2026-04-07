@@ -252,7 +252,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
               plate_number: plateNumber,
               make: foundVehicle?.make || null,
               model: foundVehicle?.model || null,
-              color: foundVehicle?.color || null,
+              color: foundVehicle?.color || 'Unknown',
               year: foundVehicle?.year || null,
               trim: foundVehicle?.trim || null,
               stock_image_url: foundVehicle?.stock_image_url || null,
