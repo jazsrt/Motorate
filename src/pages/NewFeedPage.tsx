@@ -7,7 +7,6 @@ import { useFeed } from '../hooks/useFeed';
 import { supabase } from '../lib/supabase';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { StoryRail } from '../components/feed/StoryRail';
-import { AchievementCarousel } from '../components/feed/AchievementCarousel';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 interface NewFeedPageProps {
@@ -191,8 +190,6 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       {/* Story rail — vehicles the user tracks */}
       {user && <StoryRail onNavigate={onNavigate} />}
 
-      {/* Achievement carousel */}
-      <AchievementCarousel />
 
       {/* Live activity ticker */}
       {tickerItems.length > 0 && (
