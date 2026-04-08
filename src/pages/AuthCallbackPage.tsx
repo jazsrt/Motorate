@@ -16,41 +16,41 @@ export function AuthCallbackPage({ onSuccess }: AuthCallbackPageProps) {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const fullHash = window.location.hash;
+        const hashParams = new URLSearchParams(fullHash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const type = hashParams.get('type');
 
-        if (type === 'signup' || type === 'email_change') {
-          if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
+        if (accessToken && refreshToken) {
+          // Email confirmation or OAuth with tokens in hash
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-            if (error) {
-              console.error('Session error:', error);
-              setErrorMessage(error.message);
-              setStatus('error');
-              return;
-            }
-
-            setStatus('success');
-            setTimeout(() => {
-              onSuccess();
-            }, 2000);
-          } else {
-            setErrorMessage('Invalid confirmation link. Please try signing up again.');
+          if (error) {
+            console.error('Session error:', error);
+            setErrorMessage(error.message);
             setStatus('error');
+            return;
           }
-        } else if (user) {
+
           setStatus('success');
-          setTimeout(() => {
-            onSuccess();
-          }, 1000);
+          setTimeout(() => onSuccess(), 1500);
+        } else if (user) {
+          // OAuth redirect — session already established via onAuthStateChange
+          setStatus('success');
+          setTimeout(() => onSuccess(), 500);
         } else {
-          setErrorMessage('No confirmation data found. Please check the link in your email.');
-          setStatus('error');
+          // No tokens and no user yet — wait for onAuthStateChange to fire
+          const timeout = setTimeout(() => {
+            if (!user) {
+              setErrorMessage('Authentication timed out. Please try again.');
+              setStatus('error');
+            }
+          }, 5000);
+          return () => clearTimeout(timeout);
         }
       } catch (error) {
         console.error('Callback error:', error);
@@ -63,38 +63,34 @@ export function AuthCallbackPage({ onSuccess }: AuthCallbackPageProps) {
   }, [user, onSuccess]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md text-center">
+    <div style={{ minHeight: '100vh', background: '#030508', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+      <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' as const }}>
         <Logo size="large" />
-        <div className="mt-8 card-crisp bg-surface border-accent-primary">
+        <div style={{ marginTop: 32, padding: '32px 24px' }}>
           {status === 'loading' && (
             <>
-              <Loader className="w-16 h-16 mx-auto mb-4 text-accent-primary animate-spin" />
-              <h2 className="font-heading font-bold text-2xl mb-4">Confirming Your Email</h2>
-              <p className="text-secondary">
-                Please wait while we verify your email address...
-              </p>
+              <Loader size={48} style={{ margin: '0 auto 16px', color: '#F97316', animation: 'spin 1s linear infinite' }} />
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>Confirming...</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Please wait while we verify your account</div>
             </>
           )}
 
           {status === 'success' && (
             <>
-              <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
-              <h2 className="font-heading font-bold text-2xl mb-4">Email Confirmed!</h2>
-              <p className="text-secondary mb-6">
-                Your account has been verified. Redirecting you now...
-              </p>
+              <CheckCircle size={48} style={{ margin: '0 auto 16px', color: '#20c060' }} />
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>You're In</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e' }}>Redirecting you now...</div>
             </>
           )}
 
           {status === 'error' && (
             <>
-              <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
-              <h2 className="font-heading font-bold text-2xl mb-4">Confirmation Failed</h2>
-              <p className="text-secondary mb-6">{errorMessage}</p>
+              <XCircle size={48} style={{ margin: '0 auto 16px', color: '#ef4444' }} />
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>Something Went Wrong</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', marginBottom: 24 }}>{errorMessage}</div>
               <button
                 onClick={() => window.location.hash = ''}
-                className="btn-primary w-full"
+                style={{ width: '100%', padding: 14, background: '#F97316', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}
               >
                 Return to Login
               </button>

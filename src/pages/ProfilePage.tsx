@@ -674,8 +674,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 Admin
               </button>
             )}
-            <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#3a4e60', cursor: 'pointer' }}>
-              <LogOut size={12} />
+            <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <LogOut size={11} /> Sign Out
             </button>
           </div>
 
