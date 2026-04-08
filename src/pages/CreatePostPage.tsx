@@ -236,6 +236,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         fuzzedLng = fuzzed.longitude;
       }
 
+      console.error('[DEBUG] About to call check_rate_limit');
       const { data: rateLimitCheck, error: rateLimitError } = await supabase
         .rpc('check_rate_limit', {
           p_user_id: user.id,
@@ -244,14 +245,19 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
           p_window_minutes: 10
         });
 
+      console.error('[DEBUG] Rate limit result:', JSON.stringify(rateLimitCheck), rateLimitError?.message, rateLimitError?.code);
+
       if (rateLimitError) {
         console.error('Rate limit check error:', rateLimitError);
       }
 
-      if (rateLimitCheck === false) {
+      // RPC returns jsonb: { allowed: bool, count, limit, remaining, ... }
+      const rateLimitAllowed = rateLimitCheck?.allowed !== false;
+      if (!rateLimitAllowed) {
         throw new Error('Rate limit exceeded. Please wait a few minutes before posting again.');
       }
 
+      console.error('[DEBUG] About to insert post', JSON.stringify({ author_id: user.id, vehicle_id: selectedVehicleId, post_type: contentType }));
       const { data: post, error: postError} = await supabase
         .from('posts')
         .insert({
@@ -272,6 +278,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         .select()
         .single();
 
+      console.error('[DEBUG] Insert result:', post?.id, postError?.message, postError?.code, postError?.details);
       if (postError || !post) throw postError || new Error('Failed to create post');
 
       await supabase.rpc('record_rate_limit_action', {
