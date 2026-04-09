@@ -457,9 +457,9 @@ export async function notifyFriendRequest(toUserId: string, fromUserId: string):
     const { data: sender } = await supabase.from('profiles').select('handle').eq('id', fromUserId).maybeSingle();
     if (!sender) return;
     const handle = sender.handle || 'Someone';
-    const message = `@${handle} wants to follow you`;
-    await createNotification(toUserId, 'friend_request', 'Follow Request', message, 'profile', fromUserId);
-    await sendPushNotification(toUserId, 'Follow Request', message, { type: 'friend_request', fromUserId, url: `/profile/${fromUserId}` });
+    const message = `@${handle} sent you a friend request`;
+    await createNotification(toUserId, 'friend_request', 'Friend Request', message, 'profile', fromUserId);
+    await sendPushNotification(toUserId, 'Friend Request', message, { type: 'friend_request', fromUserId, url: `/profile/${fromUserId}` });
   } catch (error) { console.error('Error sending friend request notification:', error); }
 }
 
@@ -468,9 +468,9 @@ export async function notifyFriendAccepted(toUserId: string, fromUserId: string)
     const { data: accepter } = await supabase.from('profiles').select('handle').eq('id', fromUserId).maybeSingle();
     if (!accepter) return;
     const handle = accepter.handle || 'Someone';
-    const message = `@${handle} is now following you`;
-    await createNotification(toUserId, 'friend_accepted', 'New Follower', message, 'profile', fromUserId);
-    await sendPushNotification(toUserId, 'New Follower', message, { type: 'friend_accepted', fromUserId, url: `/profile/${fromUserId}` });
+    const message = `@${handle} accepted your friend request`;
+    await createNotification(toUserId, 'friend_accepted', 'Friends', message, 'profile', fromUserId);
+    await sendPushNotification(toUserId, 'Friends', message, { type: 'friend_accepted', fromUserId, url: `/profile/${fromUserId}` });
   } catch (error) { console.error('Error sending friend accepted notification:', error); }
 }
 
@@ -486,9 +486,9 @@ export async function notifyVehicleFollow(vehicleId: string, followerUserId: str
     const { data: follower } = await supabase.from('profiles').select('handle').eq('id', followerUserId).maybeSingle();
     const followerHandle = follower?.handle || 'Someone';
     const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
-    const message = `@${followerHandle} is now following your ${vehicleName}`;
-    await createNotification(vehicle.owner_id, 'vehicle_follow', 'New Vehicle Follower', message, 'vehicle', vehicleId);
-    await sendPushNotification(vehicle.owner_id, 'New Vehicle Follower', message, { type: 'vehicle_follow', vehicleId, followerUserId, url: `/vehicle/${vehicleId}` });
+    const message = `Your ${vehicleName} gained a new fan! @${followerHandle}`;
+    await createNotification(vehicle.owner_id, 'vehicle_follow', 'New Fan', message, 'vehicle', vehicleId);
+    await sendPushNotification(vehicle.owner_id, 'New Fan', message, { type: 'vehicle_follow', vehicleId, followerUserId, url: `/vehicle/${vehicleId}` });
   } catch (error) { console.error('Error sending vehicle follow notification:', error); }
 }
 
@@ -499,9 +499,9 @@ export async function notifyVehicleFollowRequest(vehicleId: string, requesterUse
     const { data: requester } = await supabase.from('profiles').select('handle').eq('id', requesterUserId).maybeSingle();
     const requesterHandle = requester?.handle || 'Someone';
     const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
-    const message = `@${requesterHandle} wants to follow your ${vehicleName}`;
-    await createNotification(vehicle.owner_id, 'vehicle_follow_request', 'Follow Request', message, 'vehicle', vehicleId);
-    await sendPushNotification(vehicle.owner_id, 'Follow Request', message, { type: 'vehicle_follow_request', vehicleId, requesterUserId, url: `/vehicle/${vehicleId}` });
+    const message = `@${requesterHandle} wants to become a fan of your ${vehicleName}`;
+    await createNotification(vehicle.owner_id, 'vehicle_follow_request', 'Fan Request', message, 'vehicle', vehicleId);
+    await sendPushNotification(vehicle.owner_id, 'Fan Request', message, { type: 'vehicle_follow_request', vehicleId, requesterUserId, url: `/vehicle/${vehicleId}` });
   } catch (error) { console.error('Error sending vehicle follow request notification:', error); }
 }
 
@@ -512,8 +512,8 @@ export async function notifyVehicleFollowApproved(followerUserId: string, vehicl
     const { data: owner } = await supabase.from('profiles').select('handle').eq('id', vehicle.owner_id).maybeSingle();
     const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
     const ownerHandle = owner?.handle || 'The owner';
-    const message = `${ownerHandle} approved your follow request for their ${vehicleName}`;
-    await createNotification(followerUserId, 'vehicle_follow_approved', 'Follow Approved', message, 'vehicle', vehicleId);
-    await sendPushNotification(followerUserId, 'Follow Approved', message, { type: 'vehicle_follow_approved', vehicleId, url: `/vehicle/${vehicleId}` });
+    const message = `You're now a fan of ${ownerHandle}'s ${vehicleName}!`;
+    await createNotification(followerUserId, 'vehicle_follow_approved', 'Fan Approved', message, 'vehicle', vehicleId);
+    await sendPushNotification(followerUserId, 'Fan Approved', message, { type: 'vehicle_follow_approved', vehicleId, url: `/vehicle/${vehicleId}` });
   } catch (error) { console.error('Error sending vehicle follow approved notification:', error); }
 }

@@ -90,6 +90,9 @@ export function MotoFanButton({ vehicleId, ownerId, onCountChange }: MotoFanButt
         const next = fanCount + 1;
         setFanCount(next);
         onCountChange?.(next);
+        try { const { notifyVehicleFollow } = await import('../lib/notifications'); await notifyVehicleFollow(vehicleId, user.id); } catch { /* intentionally empty */ }
+      } else {
+        try { const { notifyVehicleFollowRequest } = await import('../lib/notifications'); await notifyVehicleFollowRequest(vehicleId, user.id); } catch { /* intentionally empty */ }
       }
     }
     setLoading(false);

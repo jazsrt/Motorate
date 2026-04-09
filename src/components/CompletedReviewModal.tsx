@@ -74,6 +74,15 @@ function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: st
       setStatus('idle');
     } else {
       setStatus(newStatus === 'pending' ? 'pending' : 'done');
+      try {
+        if (newStatus === 'accepted') {
+          const { notifyVehicleFollow } = await import('../lib/notifications');
+          await notifyVehicleFollow(vehicleId, userId);
+        } else {
+          const { notifyVehicleFollowRequest } = await import('../lib/notifications');
+          await notifyVehicleFollowRequest(vehicleId, userId);
+        }
+      } catch { /* intentionally empty */ }
     }
   };
 
