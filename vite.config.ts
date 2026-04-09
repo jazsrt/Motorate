@@ -6,11 +6,8 @@ import removeConsole from 'vite-plugin-remove-console';
 export default defineConfig({
   plugins: [
     react(),
-    // Remove console.log in production builds
-    removeConsole({
-      includes: ['log', 'debug', 'info'],
-      excludes: ['error', 'warn'],
-    }),
+    // Remove console.log and console.warn in production builds
+    removeConsole({ includes: ['log', 'warn'] }),
   ],
   optimizeDeps: {
     exclude: ['lucide-react'],

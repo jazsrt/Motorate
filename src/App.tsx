@@ -43,15 +43,12 @@ const EventsPage = lazy(() => import('./pages/EventsPage').then(m => ({ default:
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })));
 const MyGaragePage = lazy(() => import('./pages/MyGaragePage').then(m => ({ default: m.MyGaragePage })));
 const BadgesPage = lazy(() => import('./pages/BadgesPage').then(m => ({ default: m.BadgesPage })));
-const BadgeTestingPage = lazy(() => import('./pages/BadgeTestingPage').then(m => ({ default: m.BadgeTestingPage })));
-const BrowseVehiclesPage = lazy(() => import('./pages/BrowseVehiclesPage').then(m => ({ default: m.BrowseVehiclesPage })));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
-const GloveboxPage = lazy(() => import('./pages/GloveboxPage').then(m => ({ default: m.GloveboxPage })));
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
 const ClaimVehiclePage = lazy(() => import('./pages/ClaimVehiclePage').then(m => ({ default: m.ClaimVehiclePage })));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'badge-testing' | 'browse-vehicles' | 'notifications' | 'completed-review' | 'glovebox' | 'claim-vehicle';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'notifications' | 'completed-review' | 'claim-vehicle';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -153,7 +150,7 @@ function AppContent() {
       } else if (hash && !page) {
         // Handle simple page routes (feed, scan, rankings, etc.)
         const simplePage = hash.split('?')[0].split('/')[0];
-        const validPages: Page[] = ['feed', 'rankings', 'scan', 'safety', 'profile', 'create-post', 'challenges', 'search', 'explore', 'messages', 'followers', 'albums', 'privacy', 'terms', 'admin', 'init-admin', 'events', 'premium', 'my-garage', 'badges', 'badge-testing', 'browse-vehicles', 'notifications'];
+        const validPages: Page[] = ['feed', 'rankings', 'scan', 'safety', 'profile', 'create-post', 'challenges', 'search', 'explore', 'messages', 'followers', 'albums', 'privacy', 'terms', 'admin', 'init-admin', 'events', 'premium', 'my-garage', 'badges', 'notifications'];
         if (validPages.includes(simplePage as Page)) {
           setCurrentPage(simplePage as Page);
         }
@@ -401,12 +398,6 @@ function AppContent() {
     case 'badges':
       pageContent = <BadgesPage onNavigate={handleNavigate} />;
       break;
-    case 'badge-testing':
-      pageContent = <BadgeTestingPage />;
-      break;
-    case 'browse-vehicles':
-      pageContent = <BrowseVehiclesPage onNavigate={handleNavigate} />;
-      break;
     case 'notifications':
       pageContent = <NotificationsPage onNavigate={handleNavigate} />;
       break;
@@ -469,9 +460,6 @@ function AppContent() {
       break;
     case 'post-detail':
       pageContent = <NewFeedPage onNavigate={handleNavigate} focusPostId={selectedPostId} />;
-      break;
-    case 'glovebox':
-      pageContent = <GloveboxPage onNavigate={handleNavigate} />;
       break;
     case 'claim-vehicle':
       pageContent = claimData ? (
