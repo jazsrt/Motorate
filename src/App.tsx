@@ -481,9 +481,9 @@ function AppContent() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <div key={currentPage}>
+      <ErrorBoundary>
         {pageContent}
-      </div>
+      </ErrorBoundary>
       {unlockedBadge && (
         <BadgeCelebration
           badgeName={unlockedBadge.name}

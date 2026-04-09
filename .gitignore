@@ -24,3 +24,5 @@ dist-ssr
 
 .claude/
 .netlify
+PROMPT_V12_*.md
+SHARE_MOCKUP.html

@@ -208,7 +208,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
   const handleCommentClick = () => setShowComments(true);
 
   const postRecord = post as any;
-  const hasRatings = postRecord.rating_vehicle || postRecord.rating_driver || postRecord.rating_driving;
+  const hasRatings = postRecord.rating_vehicle;
   const hasDetailRatings = postRecord.spot_type === 'full' && (
     postRecord.looks_rating || postRecord.sound_rating || postRecord.condition_rating
   );
@@ -328,12 +328,6 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
         {/* ── RATINGS ROW ──────────────────────────────────── */}
         {hasRatings && (
           <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(7,10,15,0.3)' }}>
-            {postRecord.rating_driver && (
-              <RatingStars value={postRecord.rating_driver as number} label="Driver" />
-            )}
-            {postRecord.rating_driving && (
-              <RatingStars value={postRecord.rating_driving as number} label="Driving" />
-            )}
             {postRecord.rating_vehicle && (
               <RatingStars value={postRecord.rating_vehicle as number} label="Vehicle" />
             )}

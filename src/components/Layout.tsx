@@ -105,10 +105,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', marginTop: -10,
           }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
-          </svg>
+          <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1 }}>M</span>
         </button>
 
         {/* Right items */}

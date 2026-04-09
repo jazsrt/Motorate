@@ -793,8 +793,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       const vals = reviews.map(fn).filter((v): v is number => v != null && v > 0);
       if (vals.length > 0) cats.push({ label, avg: vals.reduce((s, v) => s + v, 0) / vals.length, count: vals.length });
     };
-    calc(r => r.rating_driver, 'Driver');
-    calc(r => r.rating_driving, 'Driving');
     calc(r => r.rating_vehicle, 'Vehicle');
     calc(r => r.looks_rating, 'Looks');
     calc(r => r.sound_rating, 'Sound');

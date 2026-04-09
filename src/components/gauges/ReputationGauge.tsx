@@ -23,19 +23,19 @@ export function ReputationGauge({ score, maxScore = 10000, tierName }: Reputatio
   }, [targetOffset]);
 
   return (
-    <div className="card-v3 mx-4 mb-4 stg p-4 card-lift">
-      <div className="relative flex flex-col items-center justify-center">
-        <svg viewBox="0 0 180 100" className="w-full max-w-[220px]">
+    <div style={{ margin: '0 16px 16px', padding: 16 }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <svg viewBox="0 0 180 100" style={{ width: '100%', maxWidth: 220 }}>
           <path
             d="M 15 90 A 75 75 0 0 1 165 90"
-            style={{ fill: 'none', stroke: 'var(--s3)', strokeWidth: 6, strokeLinecap: 'round' }}
+            style={{ fill: 'none', stroke: '#0e1320', strokeWidth: 6, strokeLinecap: 'round' }}
           />
           <path
             ref={fillRef}
             d="M 15 90 A 75 75 0 0 1 165 90"
             style={{
               fill: 'none',
-              stroke: 'var(--orange)',
+              stroke: '#F97316',
               strokeWidth: 6,
               strokeLinecap: 'round',
               strokeDasharray: totalArc,
@@ -45,12 +45,18 @@ export function ReputationGauge({ score, maxScore = 10000, tierName }: Reputatio
             }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
-          <span className="font-mono text-2xl font-bold text-primary rep-score">
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8,
+        }}>
+          <span style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 24, fontWeight: 700,
+            color: '#eef4f8', lineHeight: 1,
+          }}>
             {score.toLocaleString()}
           </span>
-          <span className="text-[10px] text-tertiary mt-0.5">Reputation</span>
-          <span className="text-[10px] font-medium mt-0.5" style={{ color: '#F97316' }}>{tierName}</span>
+          <span style={{ fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>Reputation</span>
+          <span style={{ fontSize: 10, fontWeight: 600, marginTop: 2, color: '#F97316' }}>{tierName}</span>
         </div>
       </div>
     </div>

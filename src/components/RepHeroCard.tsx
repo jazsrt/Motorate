@@ -38,55 +38,56 @@ export function RepHeroCard({ score }: RepHeroCardProps) {
   const tier = getTier(score);
 
   return (
-    <div className="card-v3 px-4 py-3 flex items-center gap-4">
+    <div style={{
+      padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 16,
+      background: '#0a0d14', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)',
+    }}>
       {/* Score */}
-      <div className="flex-shrink-0">
-        <span
-          className="font-mono font-bold"
-          style={{ fontSize: '28px', color: 'var(--orange)', lineHeight: 1 }}
-        >
+      <div style={{ flexShrink: 0 }}>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace", fontWeight: 700,
+          fontSize: 28, color: '#F97316', lineHeight: 1,
+        }}>
           {score.toLocaleString()}
         </span>
       </div>
 
       {/* Tier + Progress */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1.5">
-          <span
-            className="font-bold uppercase"
-            style={{ fontSize: '12px', color: 'var(--t2)', letterSpacing: '2px' }}
-          >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{
+            fontWeight: 700, textTransform: 'uppercase' as const,
+            fontSize: 12, color: '#7a8e9e', letterSpacing: 2,
+            fontFamily: "'Barlow Condensed', sans-serif",
+          }}>
             {tier.name}
           </span>
           {!tier.isMax && (
-            <span style={{ fontSize: '10px', color: 'var(--t4)' }}>
+            <span style={{ fontSize: 10, color: '#3a4e60' }}>
               {tier.nextMin.toLocaleString()} next
             </span>
           )}
         </div>
-        <div
-          className="w-full rounded-full overflow-hidden"
-          style={{ height: '6px', background: 'var(--s3)' }}
-        >
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${tier.progress}%`,
-              background: 'linear-gradient(90deg, var(--orange), var(--accent-2))',
-            }}
-          />
+        <div style={{
+          width: '100%', borderRadius: 3, overflow: 'hidden',
+          height: 6, background: '#0e1320',
+        }}>
+          <div style={{
+            height: '100%', borderRadius: 3,
+            transition: 'width 0.5s ease',
+            width: `${tier.progress}%`,
+            background: 'linear-gradient(90deg, #F97316, #f0a030)',
+          }} />
         </div>
       </div>
 
       {/* Icon */}
-      <div
-        className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-        style={{
-          background: 'var(--orange-dim)',
-          border: '1px solid var(--orange-muted)',
-        }}
-      >
-        <Trophy className="w-5 h-5" strokeWidth={1.5} style={{ color: 'var(--orange)' }} />
+      <div style={{
+        flexShrink: 0, width: 40, height: 40, borderRadius: '50%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)',
+      }}>
+        <Trophy style={{ width: 20, height: 20, color: '#F97316' }} strokeWidth={1.5} />
       </div>
     </div>
   );

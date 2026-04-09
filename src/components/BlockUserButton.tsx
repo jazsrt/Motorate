@@ -72,16 +72,21 @@ export function BlockUserButton({ userId, userName, variant = 'button' }: BlockU
       <button
         onClick={handleToggleBlock}
         disabled={isLoading}
-        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2"
+        style={{
+          width: '100%', padding: '8px 16px', textAlign: 'left' as const,
+          fontSize: 14, background: 'transparent', border: 'none', cursor: 'pointer',
+          opacity: isLoading ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 8,
+          color: '#eef4f8', fontFamily: "'Barlow', sans-serif",
+        }}
       >
         {isBlocked ? (
           <>
-            <Check className="w-4 h-4" />
+            <Check style={{ width: 16, height: 16 }} />
             <span>Unblock {userName}</span>
           </>
         ) : (
           <>
-            <Ban className="w-4 h-4" />
+            <Ban style={{ width: 16, height: 16 }} />
             <span>Block {userName}</span>
           </>
         )}
@@ -94,46 +99,77 @@ export function BlockUserButton({ userId, userName, variant = 'button' }: BlockU
       <button
         onClick={handleToggleBlock}
         disabled={isLoading}
-        className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2 ${
-          isBlocked
-            ? 'bg-green-600 hover:bg-green-700 text-white'
-            : 'bg-red-600 hover:bg-red-700 text-white'
-        }`}
+        style={{
+          padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer',
+          opacity: isLoading ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 8,
+          background: isBlocked ? '#16a34a' : '#dc2626',
+          color: '#fff', border: 'none',
+          fontFamily: "'Barlow', sans-serif", fontSize: 14,
+        }}
       >
         {isBlocked ? (
           <>
-            <Check className="w-4 h-4" />
+            <Check style={{ width: 16, height: 16 }} />
             <span>Unblock</span>
           </>
         ) : (
           <>
-            <Ban className="w-4 h-4" />
+            <Ban style={{ width: 16, height: 16 }} />
             <span>Block User</span>
           </>
         )}
       </button>
 
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowConfirm(false)}>
-          <div className="card-v3 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <div className="px-4 py-3 border-b border-surfacehighlight">
-              <h3 className="text-lg font-heading font-bold text-primary">Block {userName}?</h3>
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)', zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            style={{
+              background: '#0e1320', border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 8, width: '100%', maxWidth: 448,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <h3 style={{
+                fontSize: 18, fontWeight: 700, color: '#eef4f8',
+                fontFamily: "'Rajdhani', sans-serif",
+              }}>
+                Block {userName}?
+              </h3>
             </div>
-            <div className="p-4">
-              <p className="text-sm text-secondary mb-4">
+            <div style={{ padding: 16 }}>
+              <p style={{ fontSize: 14, color: '#7a8e9e', marginBottom: 16, fontFamily: "'Barlow', sans-serif" }}>
                 Blocking {userName} will prevent them from messaging you and their content will be hidden from your feed.
               </p>
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-surfacehighlight hover:bg-surfacehighlight/80 text-primary font-medium transition-colors"
+                  style={{
+                    flex: 1, padding: '8px 16px', borderRadius: 8,
+                    background: '#0e1320', border: '1px solid rgba(255,255,255,0.06)',
+                    color: '#eef4f8', fontWeight: 600, cursor: 'pointer',
+                    fontFamily: "'Barlow', sans-serif", fontSize: 14,
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmBlock}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors disabled:opacity-50"
+                  style={{
+                    flex: 1, padding: '8px 16px', borderRadius: 8,
+                    background: '#dc2626', color: '#fff', border: 'none',
+                    fontWeight: 600, cursor: 'pointer',
+                    opacity: isLoading ? 0.5 : 1,
+                    fontFamily: "'Barlow', sans-serif", fontSize: 14,
+                  }}
                 >
                   {isLoading ? 'Blocking...' : 'Block User'}
                 </button>

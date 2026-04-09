@@ -244,8 +244,6 @@ export function CompletedReviewModal({
 
           {/* Ratings */}
           <div style={{ padding: '12px 14px', borderRadius: 8, background: '#131920', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 14 }}>
-            <StarDisplay label="Driver" value={driverRating} />
-            <StarDisplay label="Driving" value={drivingRating} />
             <StarDisplay label="Vehicle" value={vehicleRating} />
             {looksRating ? <StarDisplay label="Looks" value={looksRating} /> : null}
             {soundRating ? <StarDisplay label="Sound" value={soundRating} /> : null}

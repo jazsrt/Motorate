@@ -414,8 +414,6 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <StarLine label="Driver" value={ratings.driver_avg} count={ratings.spot_count} />
-                    <StarLine label="Driving" value={ratings.driving_avg} count={ratings.spot_count} />
                     <StarLine label="Vehicle" value={ratings.vehicle_avg} count={ratings.spot_count} />
                     {ratings.looks_avg != null && <StarLine label="Looks" value={ratings.looks_avg} count={ratings.full_review_count} />}
                     {ratings.sound_avg != null && <StarLine label="Sound" value={ratings.sound_avg} count={ratings.full_review_count} />}
@@ -704,7 +702,7 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
                       </div>
 
                       {/* Star ratings grid */}
-                      {review.rating_driver > 0 || review.rating_driving > 0 || review.rating_vehicle > 0 ? (
+                      {review.rating_vehicle > 0 ? (
                         <div style={{
                           display: 'grid',
                           gridTemplateColumns: '1fr 1fr 1fr',
@@ -712,8 +710,6 @@ export function AllReviewsModal({ vehicleId, vehicleName, onClose, onLeaveReview
                           marginBottom: 12,
                         }}>
                           {[
-                            { l: 'Driver', v: review.rating_driver },
-                            { l: 'Driving', v: review.rating_driving },
                             { l: 'Vehicle', v: review.rating_vehicle },
                             ...(review.looks_rating ? [{ l: 'Looks', v: review.looks_rating }] : []),
                             ...(review.sound_rating ? [{ l: 'Sound', v: review.sound_rating }] : []),

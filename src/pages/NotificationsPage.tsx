@@ -80,10 +80,13 @@ interface NotificationItemProps {
   onDelete: (id: string) => void;
   onMarkAsRead: (id: string) => void;
   onClick: (notification: Notification) => void;
+  onAcceptFriend: (notification: Notification) => void;
+  onApproveVehicleFollow: (notification: Notification) => void;
   isDeadLink: boolean;
+  actionLoading: boolean;
 }
 
-function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDeadLink }: NotificationItemProps) {
+function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, onAcceptFriend, onApproveVehicleFollow, isDeadLink, actionLoading }: NotificationItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { Icon, color } = getIcon(notification.type);
 
@@ -132,6 +135,7 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
 
   const isBadge = ['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(notification.type);
   const isFriendRequest = notification.type === 'friend_request';
+  const isVehicleFollowRequest = notification.type === 'vehicle_follow_request';
   const displayMessage = notification.message || notification.body || '';
 
   return (
@@ -178,19 +182,37 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, isDea
       {/* Friend request accept button */}
       {isFriendRequest && !notification.is_read && (
         <button
-          onClick={e => { e.stopPropagation(); onMarkAsRead(notification.id); }}
+          onClick={e => { e.stopPropagation(); onAcceptFriend(notification); }}
+          disabled={actionLoading}
           style={{
-            padding: '5px 10px', borderRadius: 5, background: '#F97316', border: 'none',
+            padding: '5px 10px', borderRadius: 5, background: actionLoading ? '#7a4a10' : '#F97316', border: 'none',
             fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
-            textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', flexShrink: 0,
+            textTransform: 'uppercase' as const, color: '#030508', cursor: actionLoading ? 'default' : 'pointer',
+            flexShrink: 0, letterSpacing: '0.1em', opacity: actionLoading ? 0.6 : 1,
           }}
         >
-          Accept
+          {actionLoading ? '...' : 'Accept'}
+        </button>
+      )}
+
+      {/* Vehicle follow request approve button */}
+      {isVehicleFollowRequest && !notification.is_read && (
+        <button
+          onClick={e => { e.stopPropagation(); onApproveVehicleFollow(notification); }}
+          disabled={actionLoading}
+          style={{
+            padding: '5px 10px', borderRadius: 5, background: actionLoading ? '#7a4a10' : '#F97316', border: 'none',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
+            textTransform: 'uppercase' as const, color: '#030508', cursor: actionLoading ? 'default' : 'pointer',
+            flexShrink: 0, letterSpacing: '0.1em', opacity: actionLoading ? 0.6 : 1,
+          }}
+        >
+          {actionLoading ? '...' : 'Approve'}
         </button>
       )}
 
       {/* Unread dot */}
-      {!notification.is_read && !isFriendRequest && (
+      {!notification.is_read && !isFriendRequest && !isVehicleFollowRequest && (
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F97316', flexShrink: 0, marginTop: 6 }} />
       )}
     </div>
@@ -205,6 +227,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [deadLinkNotifications, setDeadLinkNotifications] = useState<Set<string>>(new Set());
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
@@ -251,6 +274,105 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch {
       showToast('Failed to delete notification', 'error');
+    }
+  };
+
+  const handleAcceptFriend = async (notification: Notification) => {
+    if (!user || actionLoadingId) return;
+    const requesterId = notification.link_id || notification.reference_id;
+    if (!requesterId) { showToast('Cannot determine requester', 'error'); return; }
+
+    setActionLoadingId(notification.id);
+    try {
+      // 1) Accept the pending follow row (requester -> me)
+      const { error: updateErr } = await supabase
+        .from('follows')
+        .update({ status: 'accepted' })
+        .eq('follower_id', requesterId)
+        .eq('following_id', user.id)
+        .eq('status', 'pending');
+
+      if (updateErr) throw updateErr;
+
+      // 2) Create the reverse follow for mutual friendship (me -> requester)
+      await supabase
+        .from('follows')
+        .upsert({
+          follower_id: user.id,
+          following_id: requesterId,
+          status: 'accepted',
+        }, { onConflict: 'follower_id,following_id' });
+
+      // 3) Notify the requester that their request was accepted
+      try {
+        const { notifyFriendAccepted } = await import('../lib/notifications');
+        await notifyFriendAccepted(requesterId, user.id);
+      } catch { /* intentionally empty */ }
+
+      // 4) Mark this notification as read
+      await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
+      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
+
+      showToast('Friend request accepted', 'success');
+    } catch (err) {
+      console.error('Failed to accept friend request:', err);
+      showToast('Failed to accept request', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleApproveVehicleFollow = async (notification: Notification) => {
+    if (!user || actionLoadingId) return;
+    const vehicleId = notification.link_id || notification.reference_id;
+    const requesterId = (notification.data?.requesterUserId as string) || '';
+    if (!vehicleId) { showToast('Cannot determine vehicle', 'error'); return; }
+
+    setActionLoadingId(notification.id);
+    try {
+      // Find the pending vehicle_follows row for this vehicle + requester
+      let query = supabase
+        .from('vehicle_follows')
+        .select('id, follower_id')
+        .eq('vehicle_id', vehicleId)
+        .eq('status', 'pending');
+
+      if (requesterId) {
+        query = query.eq('follower_id', requesterId);
+      }
+
+      const { data: pendingFollows } = await query.limit(1);
+
+      if (!pendingFollows || pendingFollows.length === 0) {
+        showToast('Request no longer pending', 'error');
+        // Mark notification as read anyway
+        await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
+        setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
+        setActionLoadingId(null);
+        return;
+      }
+
+      const follow = pendingFollows[0];
+
+      // 1) Approve the vehicle follow
+      await supabase.from('vehicle_follows').update({ status: 'accepted' }).eq('id', follow.id);
+
+      // 2) Notify the follower
+      try {
+        const { notifyVehicleFollowApproved } = await import('../lib/notifications');
+        await notifyVehicleFollowApproved(follow.follower_id, vehicleId);
+      } catch { /* intentionally empty */ }
+
+      // 3) Mark notification as read
+      await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
+      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
+
+      showToast('Fan request approved', 'success');
+    } catch (err) {
+      console.error('Failed to approve vehicle follow:', err);
+      showToast('Failed to approve request', 'error');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -470,7 +592,10 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
                         onDelete={deleteNotification}
                         onMarkAsRead={markAsRead}
                         onClick={handleNotificationClick}
+                        onAcceptFriend={handleAcceptFriend}
+                        onApproveVehicleFollow={handleApproveVehicleFollow}
                         isDeadLink={deadLinkNotifications.has(notification.id)}
+                        actionLoading={actionLoadingId === notification.id}
                       />
                     ))}
                   </div>
