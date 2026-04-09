@@ -46,12 +46,12 @@ function StarDisplay({ label, value }: { label: string; value: number }) {
 }
 
 function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: string }) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'already'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'pending' | 'already'>('idle');
 
   useEffect(() => {
     supabase
       .from('vehicle_follows')
-      .select('id')
+      .select('id, status')
       .eq('vehicle_id', vehicleId)
       .eq('follower_id', userId)
       .maybeSingle()
@@ -60,10 +60,21 @@ function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: st
 
   const handleBecomeFan = async () => {
     setStatus('loading');
+    // Check if vehicle is private
+    const { data: vData } = await supabase
+      .from('vehicles')
+      .select('is_private')
+      .eq('id', vehicleId)
+      .maybeSingle();
+    const newStatus = vData?.is_private ? 'pending' : 'accepted';
     const { error } = await supabase
       .from('vehicle_follows')
-      .insert({ vehicle_id: vehicleId, follower_id: userId, status: 'accepted' });
-    setStatus(error ? 'idle' : 'done');
+      .insert({ vehicle_id: vehicleId, follower_id: userId, status: newStatus });
+    if (error) {
+      setStatus('idle');
+    } else {
+      setStatus(newStatus === 'pending' ? 'pending' : 'done');
+    }
   };
 
   if (status === 'already' || status === 'done') {
@@ -71,6 +82,16 @@ function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: st
       <div style={{ padding: '10px 20px', textAlign: 'center' as const }}>
         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
           {status === 'done' ? 'You\'re now a fan!' : 'Already a fan'}
+        </span>
+      </div>
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <div style={{ padding: '10px 20px', textAlign: 'center' as const }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#f0a030' }}>
+          Request sent — waiting for owner approval
         </span>
       </div>
     );
