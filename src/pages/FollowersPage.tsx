@@ -274,56 +274,78 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     return (
       <div
         key={userData.id}
-        className={`bg-surface border border-surfacehighlight rounded-xl p-4 ${
-          isBlocked ? 'opacity-50' : ''
-        }`}
+        style={{
+          background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 8, padding: 16, opacity: isBlocked ? 0.5 : 1,
+        }}
       >
-        <div className="flex items-center gap-4">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
             onClick={() => onNavigate('user-profile', { userId: userData.id })}
-            className="flex items-center gap-4 flex-1 text-left hover:opacity-80 transition-opacity"
             disabled={isBlocked}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 16, flex: 1,
+              textAlign: 'left' as const, background: 'none', border: 'none',
+              cursor: isBlocked ? 'default' : 'pointer', padding: 0,
+              color: 'inherit', fontFamily: 'inherit',
+            }}
           >
             {displayAvatar ? (
               <img
                 src={displayAvatar}
                 alt={userData.handle || 'User'}
-                className="w-12 h-12 rounded-full object-cover"
+                style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }}
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-surfacehighlight flex items-center justify-center">
-                <User className="w-6 h-6 text-secondary" />
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%', background: '#0e1320',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <User style={{ width: 24, height: 24, color: '#7a8e9e' }} />
               </div>
             )}
 
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold">@{userData.handle || 'anonymous'}</h3>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{
+                  fontWeight: 700, fontSize: 14, color: '#eef4f8',
+                  fontFamily: "'Barlow', sans-serif", margin: 0,
+                }}>
+                  @{userData.handle || 'anonymous'}
+                </h3>
                 {isFavorite && (
-                  <Star className="w-4 h-4 text-[#F97316] fill-[#F97316]" />
+                  <Star style={{ width: 16, height: 16, color: '#F97316', fill: '#F97316' }} />
                 )}
-                {isMuted && <VolumeX className="w-4 h-4 text-gray-500" />}
-                {isBlocked && <Ban className="w-4 h-4 text-red-500" />}
+                {isMuted && <VolumeX style={{ width: 16, height: 16, color: '#5a6e7e' }} />}
+                {isBlocked && <Ban style={{ width: 16, height: 16, color: '#dc2626' }} />}
               </div>
               {userData.location && (
-                <p className="text-sm text-secondary">{userData.location}</p>
+                <p style={{ fontSize: 14, color: '#7a8e9e', margin: '2px 0 0', fontFamily: "'Barlow', sans-serif" }}>
+                  {userData.location}
+                </p>
               )}
               {userData.vehicle && (
-                <p className="text-xs text-secondary">
+                <p style={{ fontSize: 12, color: '#7a8e9e', margin: '2px 0 0', fontFamily: "'Barlow', sans-serif" }}>
                   {userData.vehicle.year} {userData.vehicle.make} {userData.vehicle.model}
                 </p>
               )}
-              <p className="text-xs text-secondary">
+              <p style={{ fontSize: 12, color: '#7a8e9e', margin: '2px 0 0', fontFamily: "'Barlow', sans-serif" }}>
                 {userData.reputation_score} reputation
               </p>
             </div>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isBlocked ? (
               <button
                 onClick={() => handleUnblock(userData.id)}
-                className="px-4 py-2 bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-xl text-sm font-bold uppercase tracking-wider transition-all"
+                style={{
+                  padding: '8px 16px', background: '#0e1320',
+                  border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
+                  fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const,
+                  letterSpacing: '0.08em', color: '#eef4f8', cursor: 'pointer',
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                }}
               >
                 Unblock
               </button>
@@ -349,57 +371,89 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
     return (
       <div
         key={userData.id}
-        className="bg-surface border border-surfacehighlight rounded-xl p-4"
+        style={{
+          background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 8, padding: 16,
+        }}
       >
-        <div className="flex items-center gap-4">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
             onClick={() => onNavigate('user-profile', { userId: userData.id })}
-            className="flex items-center gap-4 flex-1 text-left hover:opacity-80 transition-opacity"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 16, flex: 1,
+              textAlign: 'left' as const, background: 'none', border: 'none',
+              cursor: 'pointer', padding: 0, color: 'inherit', fontFamily: 'inherit',
+            }}
           >
             {displayAvatar ? (
               <img
                 src={displayAvatar}
                 alt={userData.handle || 'User'}
-                className="w-12 h-12 rounded-full object-cover"
+                style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }}
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-surfacehighlight flex items-center justify-center">
-                <User className="w-6 h-6 text-secondary" />
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%', background: '#0e1320',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <User style={{ width: 24, height: 24, color: '#7a8e9e' }} />
               </div>
             )}
 
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold">@{userData.handle || 'anonymous'}</h3>
-                <Clock className="w-4 h-4 text-yellow-500" />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{
+                  fontWeight: 700, fontSize: 14, color: '#eef4f8',
+                  fontFamily: "'Barlow', sans-serif", margin: 0,
+                }}>
+                  @{userData.handle || 'anonymous'}
+                </h3>
+                <Clock style={{ width: 16, height: 16, color: '#f0a030' }} />
               </div>
               {userData.location && (
-                <p className="text-sm text-secondary">{userData.location}</p>
+                <p style={{ fontSize: 14, color: '#7a8e9e', margin: '2px 0 0', fontFamily: "'Barlow', sans-serif" }}>
+                  {userData.location}
+                </p>
               )}
               {userData.vehicle && (
-                <p className="text-xs text-secondary">
+                <p style={{ fontSize: 12, color: '#7a8e9e', margin: '2px 0 0', fontFamily: "'Barlow', sans-serif" }}>
                   {userData.vehicle.year} {userData.vehicle.make} {userData.vehicle.model}
                 </p>
               )}
-              <p className="text-xs text-secondary">
+              <p style={{ fontSize: 12, color: '#7a8e9e', margin: '2px 0 0', fontFamily: "'Barlow', sans-serif" }}>
                 {userData.reputation_score} reputation
               </p>
             </div>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={() => handleApproveRequest(userData.id)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl transition-all active:scale-95 font-bold uppercase tracking-wider text-sm text-white"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 16px', background: '#16a34a', border: 'none',
+                borderRadius: 8, cursor: 'pointer',
+                fontWeight: 700, textTransform: 'uppercase' as const,
+                letterSpacing: '0.08em', fontSize: 12, color: '#fff',
+                fontFamily: "'Barlow Condensed', sans-serif",
+              }}
             >
-              <Check className="w-4 h-4" />
+              <Check style={{ width: 16, height: 16 }} />
               Accept
             </button>
             <button
               onClick={() => handleDenyRequest(userData.id)}
-              className="flex items-center gap-2 px-4 py-2 bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-xl transition-all active:scale-95 font-bold uppercase tracking-wider text-sm text-secondary"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 16px', background: '#0e1320',
+                border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
+                cursor: 'pointer', fontWeight: 700,
+                textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+                fontSize: 12, color: '#7a8e9e',
+                fontFamily: "'Barlow Condensed', sans-serif",
+              }}
             >
-              <X className="w-4 h-4" />
+              <X style={{ width: 16, height: 16 }} />
               Deny
             </button>
           </div>
@@ -412,47 +466,67 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div style={{ maxWidth: 672, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div>
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 style={{
+            fontSize: 24, fontWeight: 700, marginBottom: 8, color: '#eef4f8',
+            fontFamily: "'Rajdhani', sans-serif",
+          }}>
             Followers
           </h2>
-          <p className="text-secondary">Manage your followers and requests</p>
+          <p style={{ color: '#7a8e9e', fontSize: 14, fontFamily: "'Barlow', sans-serif", margin: 0 }}>
+            Manage your followers and requests
+          </p>
         </div>
 
-        <div className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
-          <div className="flex border-b border-surfacehighlight">
+        <div style={{
+          background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 8, overflow: 'hidden',
+        }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <button
               onClick={() => setActiveTab('friends')}
-              className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 ${
-                activeTab === 'friends'
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surface text-secondary hover:bg-surfacehighlight'
-              }`}
+              style={{
+                flex: 1, padding: '16px 24px', fontWeight: 700,
+                textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+                fontSize: 12, display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: 8, cursor: 'pointer', border: 'none',
+                fontFamily: "'Barlow Condensed', sans-serif",
+                background: activeTab === 'friends' ? '#F97316' : '#0a0d14',
+                color: activeTab === 'friends' ? '#fff' : '#7a8e9e',
+              }}
             >
-              <Users className="w-4 h-4" />
+              <Users style={{ width: 16, height: 16 }} />
               Followers
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                activeTab === 'friends' ? 'bg-white/20' : 'bg-surfacehighlight'
-              }`}>
+              <span style={{
+                padding: '2px 8px', borderRadius: 12, fontSize: 12,
+                background: activeTab === 'friends' ? 'rgba(255,255,255,0.2)' : '#0e1320',
+                color: activeTab === 'friends' ? '#fff' : '#7a8e9e',
+              }}>
                 {followers.length}
               </span>
             </button>
             {isOwnProfile && (
               <button
                 onClick={() => setActiveTab('pending')}
-                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === 'pending'
-                    ? 'bg-accent-primary text-white'
-                    : 'bg-surface text-secondary hover:bg-surfacehighlight'
-                }`}
+                style={{
+                  flex: 1, padding: '16px 24px', fontWeight: 700,
+                  textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+                  fontSize: 12, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', gap: 8, cursor: 'pointer', border: 'none',
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  background: activeTab === 'pending' ? '#F97316' : '#0a0d14',
+                  color: activeTab === 'pending' ? '#fff' : '#7a8e9e',
+                }}
               >
-                <Clock className="w-4 h-4" />
+                <Clock style={{ width: 16, height: 16 }} />
                 Requests
                 {pendingRequests.length > 0 && (
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    activeTab === 'pending' ? 'bg-white/20' : 'bg-yellow-500 text-black'
-                  }`}>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: 12, fontSize: 12,
+                    background: activeTab === 'pending' ? 'rgba(255,255,255,0.2)' : '#f0a030',
+                    color: activeTab === 'pending' ? '#fff' : '#070a0f',
+                  }}>
                     {pendingRequests.length}
                   </span>
                 )}
@@ -464,7 +538,10 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
         {loading ? (
           <LoadingSpinner size="lg" label="Loading..." />
         ) : currentList.length === 0 ? (
-          <div className="bg-surface border border-surfacehighlight rounded-xl">
+          <div style={{
+            background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 8,
+          }}>
             <EmptyState
               icon={activeTab === 'friends' ? Users : Clock}
               title={activeTab === 'friends' ? 'No Followers Yet' : 'No Pending Requests'}
@@ -478,7 +555,7 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
             />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {activeTab === 'pending'
               ? currentList.map(renderPendingRequestCard)
               : currentList.map(renderUserCard)}
