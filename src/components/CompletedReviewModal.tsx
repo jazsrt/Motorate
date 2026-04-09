@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Star, Heart, ThumbsDown, X, Zap, TrendingUp, Award, Share2 } from 'lucide-react';
 import type { SpotWizardData } from '../types/spot';
 import { floatPoints } from '../utils/floatPoints';
 import { shareToSocial } from './ShareCardGenerator';
+import { supabase } from '../lib/supabase';
 
 interface CompletedReviewModalProps {
   vehicleId: string;
@@ -40,6 +41,55 @@ function StarDisplay({ label, value }: { label: string; value: number }) {
         ))}
       </div>
       <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', width: 24, textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+    </div>
+  );
+}
+
+function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: string }) {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'already'>('idle');
+
+  useEffect(() => {
+    supabase
+      .from('vehicle_follows')
+      .select('id')
+      .eq('vehicle_id', vehicleId)
+      .eq('follower_id', userId)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setStatus('already'); });
+  }, [vehicleId, userId]);
+
+  const handleBecomeFan = async () => {
+    setStatus('loading');
+    const { error } = await supabase
+      .from('vehicle_follows')
+      .insert({ vehicle_id: vehicleId, follower_id: userId, status: 'accepted' });
+    setStatus(error ? 'idle' : 'done');
+  };
+
+  if (status === 'already' || status === 'done') {
+    return (
+      <div style={{ padding: '10px 20px', textAlign: 'center' as const }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+          {status === 'done' ? 'You\'re now a fan!' : 'Already a fan'}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.04)', textAlign: 'center' as const }}>
+      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginBottom: 8 }}>Want updates on this car?</div>
+      <button
+        onClick={handleBecomeFan}
+        disabled={status === 'loading'}
+        style={{
+          padding: '10px 24px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
+          fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+          color: '#F97316', cursor: 'pointer',
+        }}
+      >
+        {status === 'loading' ? 'Joining...' : 'Become a Fan'}
+      </button>
     </div>
   );
 }
@@ -231,6 +281,9 @@ export function CompletedReviewModal({
             </button>
           </div>
         </div>
+
+        {/* Become a Fan prompt */}
+        {userId && <BecomeAFanPrompt vehicleId={vehicleId} userId={userId} />}
 
         {/* Footer */}
         <div style={{

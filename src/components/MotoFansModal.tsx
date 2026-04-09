@@ -66,7 +66,7 @@ export function MotoFansModal({ vehicleId, vehicleName, fanCount, onClose, onNav
         }}>
           <div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8' }}>
-              Followers
+              Fans
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: '#F97316', marginLeft: 8, fontVariantNumeric: 'tabular-nums' }}>
                 {fanCount}
               </span>

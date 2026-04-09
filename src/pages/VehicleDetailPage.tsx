@@ -141,7 +141,7 @@ function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: str
   return (
     <div style={{ margin: '0 16px 16px' }}>
       <button onClick={() => setExpanded(!expanded)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', background: 'var(--carbon-2)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-cond)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--muted)', cursor: 'pointer' }}>
-        <span>Followers · {accepted.length}</span>
+        <span>Fans · {accepted.length}</span>
         {pending.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--black)', borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700 }}>{pending.length} pending</span>}
       </button>
       {expanded && (
@@ -210,6 +210,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
   const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);
   const [vBadges, setVBadges] = useState<any[]>([]);
+  const [fanAvatars, setFanAvatars] = useState<{ id: string; handle: string | null; avatar_url: string | null }[]>([]);
   const isOwner = user && vehicle?.owner_id === user.id;
   const isUnclaimed = vehicle && !vehicle.is_claimed;
   const canClaim = user && isUnclaimed && !vehicle?.owner_id;
@@ -269,6 +270,16 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       .eq('vehicle_id', vehicleId)
       .eq('status', 'accepted');
     if (vFollowerCount !== null) setFollowerCount(vFollowerCount);
+
+    // Fetch fan avatars for public display
+    const { data: fanData } = await supabase
+      .from('vehicle_follows')
+      .select('follower:profiles!vehicle_follows_follower_id_fkey(id, handle, avatar_url)')
+      .eq('vehicle_id', vehicleId)
+      .eq('status', 'accepted')
+      .order('created_at', { ascending: false })
+      .limit(8);
+    if (fanData) setFanAvatars(fanData.map((d: any) => d.follower).filter(Boolean));
 
     // Fetch reviews from reviews table
     const { data: reviewsData } = await supabase
@@ -549,7 +560,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       : [vehicle.state, vehicle.plate_number].filter(Boolean).join(' ');
     const ogTitle = [vName, handleOrPlate].filter(Boolean).join(' · ');
 
-    let ogDesc = `${spotCount} spots · ${followerCount} followers`;
+    let ogDesc = `${spotCount} spots · ${followerCount} fans`;
     if (vBadges.length > 0) ogDesc += ` · ${vBadges[0].badge_id}`;
 
     const ogImage = vehicle.profile_image_url || vehicle.stock_image_url || '';
@@ -892,7 +903,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               const shareTitle = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
                 + (handle ? ` · @${handle}` : plateLabel ? ` · ${plateLabel}` : '');
 
-              let shareText = `${spotCount} spots · ${followerCount} followers`;
+              let shareText = `${spotCount} spots · ${followerCount} fans`;
               if (vBadges.length > 0) shareText += ` · ${vBadges[0].badge_id}`;
 
               const shareUrl = handle
@@ -1058,7 +1069,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             { label: 'RP', value: rpScore, onClick: undefined as (() => void) | undefined },
             { label: 'Spots', value: spotCount, onClick: undefined as (() => void) | undefined },
             { label: 'Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014', onClick: undefined },
-            { label: 'Followers', value: followerCount, onClick: () => setShowMotoFansModal(true) },
+            { label: 'Fans', value: followerCount, onClick: () => setShowMotoFansModal(true) },
             ...(cityRank && cityRank > 0 ? [{ label: 'Rank', value: `#${cityRank}` as string | number, onClick: undefined as (() => void) | undefined }] : []),
           ].map((stat, i, arr) => (
             <div key={stat.label} onClick={stat.onClick} style={{
@@ -1066,7 +1077,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               cursor: stat.onClick ? 'pointer' : 'default',
             }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Followers' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Fans' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
@@ -1104,6 +1115,32 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             <div onClick={(e) => e.stopPropagation()}>
               <FollowButton targetUserId={vehicle.owner.id} />
             </div>
+          </div>
+        )}
+
+        {/* ── FANS ROW (public) ── */}
+        {followerCount > 0 && (
+          <div
+            onClick={() => setShowMotoFansModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex' }}>
+              {fanAvatars.slice(0, 5).map((fan, i) => (
+                <div key={fan.id} style={{
+                  width: 24, height: 24, borderRadius: '50%', background: '#1e2a38', border: '2px solid #0a0d14',
+                  overflow: 'hidden', marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {fan.avatar_url ? (
+                    <img src={fan.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>{(fan.handle || '?')[0].toUpperCase()}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
+              {followerCount} {followerCount === 1 ? 'Fan' : 'Fans'}
+            </span>
           </div>
         )}
 
@@ -1323,7 +1360,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           <div style={{ display: 'flex', background: C.carbon1, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
             {[
               { label: 'This Week', value: '\u2014' },
-              { label: 'New Followers', value: '\u2014' },
+              { label: 'New Fans', value: '\u2014' },
               { label: 'Avg Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
             ].map((stat, i, arr) => (
               <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
@@ -1622,7 +1659,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             }}>
               <div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.white }}>Private Vehicle</div>
-                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Followers need your approval</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Fans need your approval</div>
               </div>
               <button
                 onClick={async () => {
