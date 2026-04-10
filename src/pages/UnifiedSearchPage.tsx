@@ -379,142 +379,169 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
     const imgSrc = v.profile_image_url || v.stock_image_url;
 
     return (
-      <div style={{ padding: '0 16px' }}>
-        {/* Vehicle preview card */}
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
+      <div>
+        {/* Full-bleed image */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', overflow: 'hidden', background: '#0a0d12' }}>
           {imgSrc ? (
-            <div style={{ aspectRatio: '16/9' }}>
-              <img src={imgSrc} alt={vehicleName(v)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
+            <img
+              src={imgSrc}
+              alt={vehicleName(v)}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           ) : (
-            <div style={{ aspectRatio: '16/9', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Car style={{ width: 48, height: 48, color: C.text3 }} />
+            <div style={{
+              width: '100%', height: '100%',
+              background: 'linear-gradient(160deg, #0c1826 0%, #0a1220 40%, #030508 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Car style={{ width: 48, height: 48, color: '#1e2a38' }} />
             </div>
           )}
 
-          <div style={{ padding: 16 }}>
-            {/* Plate badge */}
-            <div style={{ marginBottom: 10 }}>
+          {/* Top gradient for status badge legibility */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(to bottom, rgba(3,5,8,0.5) 0%, transparent 100%)' }} />
+
+          {/* Bottom gradient for identity legibility */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to bottom, transparent 0%, rgba(3,5,8,0.8) 50%, #030508 100%)' }} />
+
+          {/* Status badge — top right */}
+          <div style={{
+            position: 'absolute', top: 10, right: 12,
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+            letterSpacing: '.8px', textTransform: 'uppercase',
+            padding: '3px 8px', borderRadius: 2,
+            ...(isClaimed
+              ? { color: '#20c060', background: 'rgba(32,192,96,0.12)', border: '1px solid rgba(32,192,96,0.3)' }
+              : { color: C.accent, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)' }
+            ),
+          }}>
+            {isClaimed ? 'Claimed' : 'Unclaimed'}
+          </div>
+
+          {/* Identity overlay — bottom of image */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 14px' }}>
+            {/* Plate */}
+            <div style={{ marginBottom: 6 }}>
               <LicensePlate plateNumber={plateNumber} plateState={plateStateCode} size="md" />
             </div>
-
-            {/* Name + claim status */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: C.text1, margin: 0, textTransform: 'uppercase' }}>
-                {vehicleName(v)}
-              </h3>
-              <span style={{
-                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 8, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase',
-                padding: '3px 8px', borderRadius: 4,
-                ...(isClaimed
-                  ? { color: '#20c060', background: 'rgba(32,192,96,0.1)', border: '1px solid rgba(32,192,96,0.25)' }
-                  : { color: C.accent, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)' }
-                ),
-              }}>
-                {isClaimed ? 'Claimed' : 'Unclaimed'}
-              </span>
+            {/* Make */}
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(249,115,22,0.8)', marginBottom: 2 }}>
+              {v.make || 'Unknown'}
             </div>
-
-            {/* Stats row */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: isClaimed ? 12 : 0 }}>
-              <div>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: C.text1 }}>{spotCount}</span>
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.text3, marginLeft: 4 }}>Spots</span>
-              </div>
-              <div>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: C.text1 }}>{followerCount}</span>
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.text3, marginLeft: 4 }}>Followers</span>
-              </div>
+            {/* Model */}
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: '.5px' }}>
+              {v.model || 'Vehicle'}
             </div>
-
-            {/* Owner row (claimed only) */}
-            {isClaimed && v.owner && (
-              <button
-                onClick={() => onNavigate('user-profile', v.owner_id)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', background: C.bg, border: `1px solid ${C.border}`,
-                  borderRadius: 8, cursor: 'pointer',
-                }}
-              >
-                <UserAvatar avatarUrl={v.owner.avatar_url} handle={v.owner.handle} size="sm" />
-                <div style={{ flex: 1, textAlign: 'left' }}>
-                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 600, color: C.text1 }}>@{v.owner.handle}</span>
-                </div>
-                <TierBadge tier={v.verification_tier} size="small" />
-              </button>
+            {/* Year + trim */}
+            {(v.year || v.trim) && (
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 3 }}>
+                {[v.year, v.trim].filter(Boolean).join(' · ')}
+              </div>
             )}
           </div>
         </div>
 
-        {/* CTAs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Stat strip */}
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(249,115,22,0.12)', borderTop: '1px solid rgba(249,115,22,0.12)' }}>
+          {[
+            { label: 'Spots', value: spotCount },
+            { label: 'Fans', value: followerCount },
+            { label: 'Status', value: isClaimed ? 'Claimed' : 'Unclaimed' },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} style={{
+              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 1, padding: '10px 0',
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+              background: '#030508',
+            }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 500, color: i === 2 && isClaimed ? '#20c060' : '#fff', lineHeight: 1 }}>
+                {stat.value}
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: '#4B5563' }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Owner row (claimed only) */}
+        {isClaimed && v.owner && (
+          <div
+            onClick={() => onNavigate('user-profile', v.owner_id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 16px',
+              background: '#030508',
+              borderBottom: '1px solid rgba(255,255,255,0.04)',
+              cursor: 'pointer',
+            }}
+          >
+            <UserAvatar avatarUrl={v.owner.avatar_url} handle={v.owner.handle} size="sm" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 600, color: '#fff', lineHeight: 1.1 }}>
+                @{v.owner.handle}
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#4B5563', letterSpacing: '.5px', marginTop: 1 }}>
+                Owner
+              </div>
+            </div>
+            <TierBadge tier={v.verification_tier} size="small" />
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ background: '#030508', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
             onClick={() => handleViewVehicle(v.id)}
             style={{
-              width: '100%', padding: '13px',
-              background: C.accent, border: 'none', borderRadius: 8,
-              fontFamily: 'Barlow Condensed, sans-serif', fontSize: 12, fontWeight: 700,
-              letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000',
+              width: '100%', padding: '12px',
+              background: C.accent, border: 'none', borderRadius: 2,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+              letterSpacing: '1.2px', textTransform: 'uppercase', color: '#000',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            <Eye style={{ width: 16, height: 16 }} />
+            <Eye style={{ width: 15, height: 15 }} />
             View Vehicle
           </button>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={() => handleSpotVehicle(v)}
               style={{
-                padding: '12px',
-                background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 8,
-                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text1,
+                flex: 1, padding: '11px',
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 2,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                letterSpacing: '1px', textTransform: 'uppercase', color: '#fff',
                 cursor: 'pointer',
               }}
             >
               Leave a Spot
             </button>
-
-            {!isClaimed ? (
-              <button
-                onClick={handleClaimVehicle}
-                style={{
-                  padding: '12px',
-                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700,
-                  letterSpacing: '0.14em', textTransform: 'uppercase', color: C.accent,
-                  cursor: 'pointer',
-                }}
-              >
-                Claim Vehicle
-              </button>
-            ) : (
-              <button
-                onClick={handleClaimVehicle}
-                style={{
-                  padding: '12px',
-                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
-                  fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700,
-                  letterSpacing: '0.14em', textTransform: 'uppercase', color: C.accent,
-                  cursor: 'pointer',
-                }}
-              >
-                Claim Vehicle
-              </button>
-            )}
+            <button
+              onClick={handleClaimVehicle}
+              style={{
+                flex: 1, padding: '11px',
+                background: isClaimed ? 'transparent' : 'rgba(249,115,22,0.08)',
+                border: `1px solid ${isClaimed ? 'rgba(255,255,255,0.09)' : 'rgba(249,115,22,0.3)'}`,
+                borderRadius: 2,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                letterSpacing: '1px', textTransform: 'uppercase',
+                color: isClaimed ? '#4B5563' : C.accent,
+                cursor: isClaimed ? 'not-allowed' : 'pointer',
+              }}
+              disabled={!!isClaimed}
+            >
+              {isClaimed ? 'Claimed' : 'Claim Vehicle'}
+            </button>
           </div>
 
           <button
             onClick={handleClearPlateResult}
             style={{
-              width: '100%', padding: '10px',
-              background: 'none', border: `1px solid ${C.border}`, borderRadius: 8,
-              fontFamily: 'Barlow Condensed, sans-serif', fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text3,
-              cursor: 'pointer',
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 600,
+              letterSpacing: '.5px', color: '#4B5563', padding: '4px 0', textAlign: 'center',
             }}
           >
             Search Again
@@ -701,50 +728,52 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
         {/* SECTION 3A: NOT FOUND                                           */}
         {/* ================================================================ */}
         {plateViewState === 'not-found' && (
-          <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-            <div style={{ marginBottom: 20 }}>
-              <LicensePlate plateNumber={plateNumber} plateState={plateStateCode} size="lg" />
+          <div>
+            {/* Void hero — no vehicle found */}
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: 'linear-gradient(160deg, #0a0a0c, #030508)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to bottom, transparent 0%, #030508 100%)' }} />
+              <div style={{ opacity: 0.08 }}>
+                <Car style={{ width: 80, height: 80, color: '#fff' }} />
+              </div>
+              {/* Plate overlaid at bottom */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 16px' }}>
+                <div style={{ marginBottom: 8 }}>
+                  <LicensePlate plateNumber={plateNumber} plateState={plateStateCode} size="md" />
+                </div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#4B5563', lineHeight: 1 }}>
+                  No vehicle found
+                </div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#374151', marginTop: 4, lineHeight: 1.4 }}>
+                  Be the first to log this plate on MotoRate.
+                </div>
+              </div>
             </div>
 
-            <div style={{
-              fontFamily: 'Rajdhani, sans-serif', fontSize: 18, fontWeight: 700,
-              color: C.text1, marginBottom: 6,
-            }}>
-              No vehicle found for {plateStateCode} {plateNumber}
+            {/* Actions */}
+            <div style={{ background: '#030508', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid rgba(249,115,22,0.12)' }}>
+              <button
+                onClick={handleSpotNewVehicle}
+                style={{
+                  width: '100%', padding: '12px',
+                  background: C.accent, border: 'none', borderRadius: 2,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700,
+                  letterSpacing: '1.2px', textTransform: 'uppercase', color: '#000',
+                  cursor: 'pointer',
+                }}
+              >
+                Spot This Vehicle
+              </button>
+              <button
+                onClick={handleClearPlateResult}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 600,
+                  letterSpacing: '.5px', color: '#4B5563', padding: '4px 0', textAlign: 'center',
+                }}
+              >
+                Search Again
+              </button>
             </div>
-            <div style={{
-              fontFamily: 'Barlow, sans-serif', fontSize: 12, color: C.text3,
-              lineHeight: 1.55, marginBottom: 28,
-            }}>
-              Be the first to log this vehicle on MotoRate.
-            </div>
-
-            <button
-              onClick={handleSpotNewVehicle}
-              style={{
-                width: '100%', padding: '13px',
-                background: C.accent, border: 'none', borderRadius: 8,
-                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 12, fontWeight: 700,
-                letterSpacing: '0.18em', textTransform: 'uppercase', color: '#000',
-                cursor: 'pointer', marginBottom: 10,
-              }}
-            >
-              Spot This Vehicle
-            </button>
-
-            <button
-              onClick={handleClearPlateResult}
-              style={{
-                width: '100%', padding: '11px',
-                background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`,
-                borderRadius: 8,
-                fontFamily: 'Barlow Condensed, sans-serif', fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text3,
-                cursor: 'pointer',
-              }}
-            >
-              Search Again
-            </button>
           </div>
         )}
 
