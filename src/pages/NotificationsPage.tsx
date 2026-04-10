@@ -255,7 +255,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
     try {
       await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
       setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
-    } catch { /* intentionally empty */ }
+    } catch (err) { console.error('[NotificationsPage]', err); }
   };
 
   const markAllAsRead = async () => {
@@ -307,7 +307,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
       try {
         const { notifyFriendAccepted } = await import('../lib/notifications');
         await notifyFriendAccepted(requesterId, user.id);
-      } catch { /* intentionally empty */ }
+      } catch (err) { console.error('[NotificationsPage]', err); }
 
       // 4) Mark this notification as read
       await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
@@ -361,7 +361,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
       try {
         const { notifyVehicleFollowApproved } = await import('../lib/notifications');
         await notifyVehicleFollowApproved(follow.follower_id, vehicleId);
-      } catch { /* intentionally empty */ }
+      } catch (err) { console.error('[NotificationsPage]', err); }
 
       // 3) Mark notification as read
       await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
@@ -393,7 +393,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
             setSelectedBadge(badgeData as Badge);
             return;
           }
-        } catch { /* intentionally empty */ }
+        } catch (err) { console.error('[NotificationsPage]', err); }
       }
       onNavigate('badges');
       return;
@@ -413,7 +413,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
         try {
           const { data: spot } = await supabase.from('spot_history').select('vehicle_id').eq('id', refId).maybeSingle();
           if (spot?.vehicle_id) { onNavigate('vehicle-detail', { vehicleId: spot.vehicle_id }); return; }
-        } catch { /* intentionally empty */ }
+        } catch (err) { console.error('[NotificationsPage]', err); }
       }
       // Fallback: if we have any vehicle reference in the data
       if (notification.data?.vehicle_id) {

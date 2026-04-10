@@ -428,6 +428,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     loadVehicleData();
   }, [vehicleId, loadVehicleData]);
 
+  // Stable ref to loadVehicleData prevents the channel subscription from
+  // re-subscribing on every render (which would create duplicate channels).
+  const loadVehicleDataRef = useRef(loadVehicleData);
+  useEffect(() => { loadVehicleDataRef.current = loadVehicleData; }, [loadVehicleData]);
+
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -468,7 +473,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           filter: `vehicle_id=eq.${vehicleId}`
         },
         () => {
-          loadVehicleData();
+          loadVehicleDataRef.current();
         }
       )
       .subscribe();
@@ -476,7 +481,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [vehicleId, loadVehicleData]);
+  }, [vehicleId]);
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;

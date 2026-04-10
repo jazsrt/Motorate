@@ -84,7 +84,9 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
         if (combined.length > 0) {
           setTickerItems([...combined, ...combined]);
         }
-      } catch {}
+      } catch (err) {
+        console.error('[NewFeedPage] Ticker load failed:', err);
+      }
     }
     loadTicker();
   }, []);

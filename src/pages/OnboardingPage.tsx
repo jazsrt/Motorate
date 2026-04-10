@@ -354,6 +354,9 @@ export default function OnboardingPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setStep('handle')} disabled={isProcessing} style={{ ...ghostBtnStyle, flex: 0 }}>
+                Back
+              </button>
               <button onClick={handleSkipVehicle} disabled={isProcessing} style={ghostBtnStyle}>
                 Skip
               </button>
