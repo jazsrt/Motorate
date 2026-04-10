@@ -23,8 +23,8 @@ type PrivacyLevel = 'public' | 'friends' | 'private';
 
 export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const { user, profile } = useAuth();
-  const { isAllowed, checkAndConsume, remainingTime } = useRateLimit('post');
-  const { showToast, showRateLimitToast } = useToast();
+  const { isAllowed, remainingTime } = useRateLimit('post');
+  const { showToast } = useToast();
   const [image, setImage] = useState<string | null>(null);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [contentType, setContentType] = useState<'image' | 'video'>('image');
@@ -190,17 +190,13 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-
-    if (!image && !caption) {
-      setError('Please add a photo or caption');
+    if (!user) {
+      setError('You must be logged in to post');
       return;
     }
 
-    if (!checkAndConsume()) {
-      const minutes = Math.ceil(remainingTime / 60000);
-      showRateLimitToast('post', minutes);
-      setError('Rate limit exceeded. Please wait before creating another post.');
+    if (!image && !caption) {
+      setError('Please add a photo or caption');
       return;
     }
 
@@ -212,14 +208,16 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
       if (mediaFile && image) {
         const fileExt = mediaFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('posts')
           .upload(filePath, mediaFile);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
@@ -270,7 +268,9 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         .select()
         .single();
 
-      if (postError || !post) throw postError || new Error('Failed to create post');
+      if (postError || !post) {
+        throw new Error(postError ? `Post failed: ${postError.message}${postError.details ? ` (${postError.details})` : ''}` : 'Failed to create post');
+      }
 
       await supabase.rpc('record_rate_limit_action', {
         p_user_id: user.id,
@@ -364,7 +364,10 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
       onNavigate('feed');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create post');
+      const errMsg = err instanceof Error ? err.message : 'Failed to create post';
+      console.error('[CreatePost]', err);
+      setError(errMsg);
+      showToast(errMsg, 'error');
     } finally {
       setLoading(false);
     }

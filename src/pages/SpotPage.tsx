@@ -318,7 +318,10 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         .select('id')
         .single();
 
-      if (reviewErr) throw new Error('Failed to record review');
+      if (reviewErr) {
+        console.error('[SpotPage] Review error:', reviewErr);
+        throw new Error(`Failed to record review: ${reviewErr.message}${reviewErr.details ? ` (${reviewErr.details})` : ''}`);
+      }
 
       // Feed post (only if image available)
       let feedImage = photoUrl;
@@ -327,13 +330,14 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         feedImage = vImg?.profile_image_url || vImg?.stock_image_url || null;
       }
       if (feedImage) {
-        await supabase.from('posts').insert({
+        const { error: postErr } = await supabase.from('posts').insert({
           author_id: user.id, vehicle_id: vehicleId, post_type: 'spot', spot_type: 'quick',
           caption: comment.trim() || null, image_url: feedImage, spot_history_id: spotId, review_id: reviewData.id,
           rating_vehicle: vehicleRating,
           looks_rating: looksRating, sound_rating: soundRating, condition_rating: conditionRating,
           sentiment, moderation_status: 'approved', privacy_level: 'public',
         });
+        if (postErr) console.error('[SpotPage] Feed post insert error (non-fatal):', postErr);
       }
 
       // Reputation
@@ -364,7 +368,9 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       setSuccessVehicleId(vehicleId);
       setViewState('success');
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Failed to submit', 'error');
+      const errMsg = err instanceof Error ? err.message : 'Failed to submit';
+      console.error('[SpotPage] Submit error:', err);
+      showToast(errMsg, 'error');
     } finally {
       setSubmitting(false);
     }

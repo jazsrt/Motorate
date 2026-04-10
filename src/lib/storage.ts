@@ -26,7 +26,7 @@ export async function uploadImage(
   const fileToUpload = optimized;
 
   const { data, error } = await supabase.storage
-    .from('motorate-images')
+    .from('vehicles')
     .upload(fileName, fileToUpload, {
       cacheControl: '3600',
       upsert: false,
@@ -36,16 +36,16 @@ export async function uploadImage(
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from('motorate-images').getPublicUrl(data.path);
+  } = supabase.storage.from('vehicles').getPublicUrl(data.path);
 
   return publicUrl;
 }
 
 export async function deleteImage(url: string): Promise<void> {
-  const path = url.split('/storage/v1/object/public/motorate-images/')[1];
+  const path = url.split('/storage/v1/object/public/vehicles/')[1];
   if (!path) throw new Error('Invalid image URL');
 
-  const { error } = await supabase.storage.from('motorate-images').remove([path]);
+  const { error } = await supabase.storage.from('vehicles').remove([path]);
 
   if (error) throw error;
 }
