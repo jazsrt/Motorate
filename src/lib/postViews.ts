@@ -64,15 +64,3 @@ export async function trackPostView(postId: string, userId?: string | null): Pro
   }
 }
 
-export async function getPostViewCount(postId: string): Promise<number> {
-  try {
-    const { data } = await supabase
-      .from('posts')
-      .select('view_count')
-      .eq('id', postId)
-      .maybeSingle();
-    return data?.view_count || 0;
-  } catch {
-    return 0;
-  }
-}

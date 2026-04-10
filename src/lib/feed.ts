@@ -77,36 +77,6 @@ export interface FeedResult {
 }
 
 /**
- * Load user feed using offset-based pagination.
- *
- * This uses a single optimized database query that:
- * - Filters approved content only
- * - Excludes muted and blocked users
- * - Joins author profile data
- * - Marks favorite authors
- * - Sorts by favorites first, then by date
- *
- * @param userId - The user ID to load feed for
- * @param limit - Number of posts to fetch (default: 50)
- * @param offset - Offset for pagination (default: 0)
- * @returns Array of feed posts
- */
-export async function loadFeed(
-  userId: string,
-  limit = 50,
-  offset = 0
-): Promise<FeedPost[]> {
-  const { data, error } = await supabase.rpc('get_user_feed', {
-    p_user_id: userId,
-    p_limit: limit,
-    p_offset: offset
-  });
-
-  if (error) throw error;
-  return data || [];
-}
-
-/**
  * Load user feed using cursor-based pagination (recommended for infinite scroll).
  *
  * This implementation uses an optimized approach:
@@ -381,21 +351,11 @@ async function getMutedUserIds(userId: string): Promise<Set<string>> {
 }
 
 /**
- * Refresh feed - load from the beginning with cursor pagination
- */
-export async function refreshFeed(
-  userId: string,
-  limit = 20
-): Promise<FeedResult> {
-  return loadFeedCursor(userId, limit);
-}
-
-/**
  * Apply ranking multiplier to sort feed posts by weighted engagement.
  * Posts with higher vehicle ranking_multiplier surface higher.
  * Falls back to 1.0 if multiplier is not set.
  */
-export function applyRankingMultiplier(posts: any[]): any[] {
+function applyRankingMultiplier(posts: any[]): any[] {
   return posts.sort((a, b) => {
     const aMultiplier = a.vehicles?.ranking_multiplier ?? 1.0;
     const bMultiplier = b.vehicles?.ranking_multiplier ?? 1.0;
@@ -405,46 +365,3 @@ export function applyRankingMultiplier(posts: any[]): any[] {
   });
 }
 
-/**
- * Minimal input for building spot feed signals.
- * Keeps the call site clean — no need to fabricate a full FeedPost.
- */
-export interface SpotSignalInput {
-  postId: string;
-  spotType: 'quick' | 'full' | null | undefined;
-  spotsCount: number | null | undefined;
-  reputationScore: number | null | undefined;
-}
-
-/**
- * Build impact-driven feed signals for spot posts.
- * Returns a primary signal label and an impact line.
- */
-export function buildSpotFeedSignals(input: SpotSignalInput): {
-  primarySignal: string;
-  impactSignal: string;
-} {
-  const spotsCount = input.spotsCount ?? 0;
-  const isQuick = input.spotType === 'quick';
-
-  // Primary signal — varies by context to break repetition
-  const primarySignals = spotsCount <= 1
-    ? ['New Spot', '+1 Spot', 'Spotted']
-    : ['Seen Again', '+1 Spot', 'Spotted'];
-  // Deterministic pick based on postId to keep it stable across renders
-  const hash = input.postId.charCodeAt(0) + input.postId.charCodeAt(input.postId.length - 1);
-  const primarySignal = primarySignals[hash % primarySignals.length];
-
-  // Impact signal — shows vehicle momentum
-  const rpScore = input.reputationScore ?? 0;
-  let impactSignal: string;
-  if (spotsCount > 1) {
-    impactSignal = `${spotsCount} spots total`;
-  } else if (rpScore > 0) {
-    impactSignal = `${rpScore >= 1000 ? `${(rpScore / 1000).toFixed(1)}K` : rpScore} RP`;
-  } else {
-    impactSignal = isQuick ? '+10 RP' : '+15 RP';
-  }
-
-  return { primarySignal, impactSignal };
-}

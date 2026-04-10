@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { uploadFile } from './storage';
 
-export interface VerificationClaim {
+interface VerificationClaim {
   id: string;
   vehicle_id: string;
   user_id: string;
@@ -44,17 +44,12 @@ export interface ClaimDocuments {
   selfie: File | null;
 }
 
-export interface LegacyClaimDocuments {
-  files: File[];
-  notes?: string;
-}
-
-export interface CanClaimResult {
+interface CanClaimResult {
   canClaim: boolean;
   reason?: string;
 }
 
-export async function canClaimVehicle(
+async function canClaimVehicle(
   vehicleId: string,
   userId: string
 ): Promise<CanClaimResult> {
@@ -161,78 +156,6 @@ export async function submitVehicleClaim(
   }
 }
 
-export async function getUserClaims(userId: string): Promise<VerificationClaim[]> {
-  try {
-    const { data, error } = await supabase
-      .from('verification_claims')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching user claims:', error);
-    return [];
-  }
-}
-
-export async function getClaimById(claimId: string): Promise<ClaimWithDetails | null> {
-  try {
-    const { data, error } = await supabase
-      .from('verification_claims')
-      .select(`
-        *,
-        vehicle:vehicles (
-          id,
-          year,
-          make,
-          model,
-          plate_hash,
-          color,
-          stock_image_url
-        ),
-        user:profiles!verification_claims_user_id_fkey (
-          id,
-          handle,
-          avatar_url,
-          location
-        ),
-        reviewer:profiles!verification_claims_reviewed_by_fkey (
-          id,
-          handle
-        )
-      `)
-      .eq('id', claimId)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching claim:', error);
-    return null;
-  }
-}
-
-export async function getVehicleClaims(vehicleId: string): Promise<VerificationClaim[]> {
-  try {
-    const { data, error } = await supabase
-      .from('verification_claims')
-      .select('*')
-      .eq('vehicle_id', vehicleId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching vehicle claims:', error);
-    return [];
-  }
-}
-
 export async function getPendingClaims(): Promise<ClaimWithDetails[]> {
   try {
     const { data, error } = await supabase
@@ -335,119 +258,6 @@ export async function rejectClaim(
   }
 }
 
-export async function getClaimStats(): Promise<{
-  pending: number;
-  approved: number;
-  rejected: number;
-  total: number;
-}> {
-  try {
-    const { data, error } = await supabase
-      .from('verification_claims')
-      .select('status');
-
-    if (error) throw error;
-
-    const stats = {
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-      total: data?.length || 0
-    };
-
-    data?.forEach((claim) => {
-      if (claim.status === 'pending') stats.pending++;
-      else if (claim.status === 'approved') stats.approved++;
-      else if (claim.status === 'rejected') stats.rejected++;
-    });
-
-    return stats;
-  } catch (error) {
-    console.error('Error fetching claim stats:', error);
-    return {
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-      total: 0
-    };
-  }
-}
-
-export async function getClaimStatus(
-  vehicleId: string,
-  userId: string
-): Promise<{
-  hasClaim: boolean;
-  status?: 'pending' | 'approved' | 'rejected';
-  claimId?: string;
-  reviewedAt?: string;
-  adminNotes?: string;
-}> {
-  try {
-    const { data, error } = await supabase
-      .from('verification_claims')
-      .select('id, status, reviewed_at, admin_notes')
-      .eq('vehicle_id', vehicleId)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!data) {
-      return { hasClaim: false };
-    }
-
-    return {
-      hasClaim: true,
-      status: data.status,
-      claimId: data.id,
-      reviewedAt: data.reviewed_at,
-      adminNotes: data.admin_notes
-    };
-  } catch (error) {
-    console.error('Error fetching claim status:', error);
-    return { hasClaim: false };
-  }
-}
-
-export async function cancelClaim(claimId: string, userId: string): Promise<boolean> {
-  try {
-    const { data: claim, error: fetchError } = await supabase
-      .from('verification_claims')
-      .select('user_id, status')
-      .eq('id', claimId)
-      .maybeSingle();
-
-    if (fetchError) throw fetchError;
-
-    if (!claim) {
-      throw new Error('Claim not found');
-    }
-
-    if (claim.user_id !== userId) {
-      throw new Error('Unauthorized');
-    }
-
-    if (claim.status !== 'pending') {
-      throw new Error('Can only cancel pending claims');
-    }
-
-    const { error: deleteError } = await supabase
-      .from('verification_claims')
-      .delete()
-      .eq('id', claimId);
-
-    if (deleteError) throw deleteError;
-
-    return true;
-  } catch (error) {
-    console.error('Error canceling claim:', error);
-    return false;
-  }
-}
-
 export function getClaimDocumentUrl(url: string | null): string | null {
   if (!url) return null;
 
@@ -460,45 +270,6 @@ export function getClaimDocumentUrl(url: string | null): string | null {
     .getPublicUrl(url);
 
   return data.publicUrl;
-}
-
-export async function getRecentApprovedClaims(limit: number = 10): Promise<ClaimWithDetails[]> {
-  try {
-    const { data, error } = await supabase
-      .from('verification_claims')
-      .select(`
-        *,
-        vehicle:vehicles (
-          id,
-          year,
-          make,
-          model,
-          plate_hash,
-          color,
-          stock_image_url
-        ),
-        user:profiles!verification_claims_user_id_fkey (
-          id,
-          handle,
-          avatar_url,
-          location
-        ),
-        reviewer:profiles!verification_claims_reviewed_by_fkey (
-          id,
-          handle
-        )
-      `)
-      .eq('status', 'approved')
-      .order('reviewed_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching recent approved claims:', error);
-    return [];
-  }
 }
 
 export interface ClaimedVehicle {

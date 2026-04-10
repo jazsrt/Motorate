@@ -6,15 +6,6 @@ export interface ProfileViewStats {
   unique_visitors: number;
 }
 
-export interface RecentVisitor {
-  visitor_id: string;
-  visitor_handle: string;
-  visitor_avatar_url: string | null;
-  visitor_is_private: boolean;
-  last_visit: string;
-  visit_count: number;
-}
-
 function getOrCreateSessionId(): string {
   const SESSION_KEY = 'motorate_pv_session';
   try {
@@ -85,45 +76,3 @@ export async function getProfileViewStats(profileId: string): Promise<ProfileVie
   }
 }
 
-export async function getRecentVisitors(
-  profileId: string,
-  days: number = 7
-): Promise<RecentVisitor[]> {
-  try {
-    const { data, error } = await supabase.rpc('get_recent_visitors', {
-      profile_id: profileId,
-      days
-    });
-
-    if (error) {
-      console.error('Error getting recent visitors:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (err) {
-    console.error('Error getting recent visitors:', err);
-    return [];
-  }
-}
-
-export async function checkIfFollowing(userId: string, targetUserId: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', userId)
-      .eq('following_id', targetUserId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error checking follow status:', error);
-      return false;
-    }
-
-    return !!data;
-  } catch (err) {
-    console.error('Error checking follow status:', err);
-    return false;
-  }
-}
