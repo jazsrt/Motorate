@@ -161,7 +161,7 @@ export async function loadFeedCursor(
       view_count,
       comment_count,
       author:profiles!posts_author_id_fkey(handle, avatar_url, location, is_admin),
-      vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
+      vehicles:vehicle_id(id, year, make, model, color, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
     `)
     .order('created_at', { ascending: false })
     .limit(limit + 20);

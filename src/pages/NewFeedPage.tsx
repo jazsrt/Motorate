@@ -99,7 +99,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
         location_label, vehicle_id, created_at, view_count, comment_count,
         rating_driver, rating_driving, rating_vehicle, looks_rating, sound_rating, condition_rating,
         author:profiles!posts_author_id_fkey(handle, avatar_url, is_admin),
-        vehicles:vehicle_id(id, year, make, model, color, plate_state, plate_number, stock_image_url, profile_image_url, reputation_score, spots_count)
+        vehicles:vehicle_id(id, year, make, model, color, stock_image_url, profile_image_url, reputation_score, spots_count)
       `)
       .eq('id', focusPostId)
       .maybeSingle()

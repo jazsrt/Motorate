@@ -175,27 +175,24 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
       .limit(50);
 
     if (data && !error) {
-      const postsWithCounts = await Promise.all(
-        data.map(async (post) => {
-          const { count: likeCount } = await supabase
-            .from('reactions')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
+      const postIds = data.map(p => p.id);
 
-          const { count: commentCount } = await supabase
-            .from('post_comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
+      // Batch fetch all reactions + comments in 2 queries instead of 2N
+      const [reactionsRes, commentsRes] = await Promise.all([
+        supabase.from('reactions').select('post_id').in('post_id', postIds),
+        supabase.from('post_comments').select('post_id').in('post_id', postIds),
+      ]);
 
-          return {
-            ...post,
-            like_count: likeCount || 0,
-            comment_count: commentCount || 0,
-          };
-        })
-      );
+      const likeCounts: Record<string, number> = {};
+      const commentCounts: Record<string, number> = {};
+      (reactionsRes.data || []).forEach((r: any) => { likeCounts[r.post_id] = (likeCounts[r.post_id] || 0) + 1; });
+      (commentsRes.data || []).forEach((c: any) => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
 
-      setUserPosts(postsWithCounts);
+      setUserPosts(data.map(post => ({
+        ...post,
+        like_count: likeCounts[post.id] || 0,
+        comment_count: commentCounts[post.id] || 0,
+      })));
     }
     setLoadingPosts(false);
   }, [user]);

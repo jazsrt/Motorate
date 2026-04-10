@@ -675,11 +675,6 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
                     </div>
                   ))}
                 </div>
-                {foundVehicle.vin && (
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', background: '#070a0f', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: '#3a4e60', letterSpacing: '0.06em' }}>VIN {foundVehicle.vin}</span>
-                  </div>
-                )}
               </>
             );
           })()}

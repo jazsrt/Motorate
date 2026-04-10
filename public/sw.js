@@ -1,9 +1,7 @@
-const CACHE_NAME = 'motorated-v2';
-const RUNTIME_CACHE = 'motorated-runtime-v2';
+const CACHE_NAME = 'motorated-v3';
+const RUNTIME_CACHE = 'motorated-runtime-v3';
 
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json'
 ];
 
@@ -22,10 +20,12 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
+        // Delete ALL old caches including v1, v2 — fixes stale CSS/JS bug
         return cacheNames.filter((cacheName) => !currentCaches.includes(cacheName));
       })
       .then((cachesToDelete) => {
         return Promise.all(cachesToDelete.map((cacheToDelete) => {
+          console.log('Deleting old cache:', cacheToDelete);
           return caches.delete(cacheToDelete);
         }));
       })
@@ -34,27 +34,39 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
   // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   // Skip Supabase API requests (always fetch fresh)
-  if (event.request.url.includes('supabase.co')) {
+  if (event.request.url.includes('supabase.co')) return;
+
+  // CRITICAL: NEVER cache HTML — it references hashed assets that change on every deploy.
+  // Caching HTML causes the browser to load old asset hashes that no longer exist on the server.
+  const isHTML = event.request.mode === 'navigate'
+    || event.request.destination === 'document'
+    || url.pathname === '/'
+    || url.pathname.endsWith('.html');
+
+  if (isHTML) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/index.html'))
+    );
     return;
   }
 
+  // For hashed assets (CSS/JS/images): cache-first since hash guarantees uniqueness
   event.respondWith(
     caches.open(RUNTIME_CACHE).then((cache) => {
-      return fetch(event.request).then((response) => {
-        // Cache successful responses
-        if (response.status === 200) {
-          cache.put(event.request, response.clone());
-        }
-        return response;
-      }).catch(() => {
-        // Return cached version if offline
-        return cache.match(event.request);
+      return cache.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.status === 200) {
+            cache.put(event.request, response.clone());
+          }
+          return response;
+        });
       });
     })
   );

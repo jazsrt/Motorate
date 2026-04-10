@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { LogOut } from 'lucide-react';
 
 interface SetHandleModalProps {
   userId: string;
@@ -193,6 +194,25 @@ export function SetHandleModal({ userId, onComplete }: SetHandleModalProps) {
           }}
         >
           {submitting ? 'Saving...' : 'Continue'}
+        </button>
+
+        {/* Sign Out escape */}
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            window.location.hash = '';
+            window.location.reload();
+          }}
+          style={{
+            width: '100%', marginTop: 12, padding: 10, borderRadius: 8, border: 'none',
+            background: 'transparent',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase' as const,
+            color: '#5a6e7e', cursor: 'pointer',
+          }}
+        >
+          <LogOut size={11} /> Sign Out
         </button>
       </div>
 

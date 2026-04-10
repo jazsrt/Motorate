@@ -242,7 +242,7 @@ export default function PostCard({ post, onNavigate }: PostCardProps) {
               {vehicleDisplay || `@${post.author.handle}`}
             </div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--dim)' }}>
-              {vehicleData?.plate_state && vehicleData?.plate_number ? `${vehicleData.plate_state} · ${vehicleData.plate_number}` : formatTimeAgo(post.created_at)}
+              {formatTimeAgo(post.created_at)}
             </div>
           </div>
           <span style={{ fontFamily: 'var(--font-cond)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '3px', background: typeLabel === 'OWNER POST' ? 'var(--accent-dim)' : typeLabel === 'CLAIMED' ? 'rgba(32,192,96,0.12)' : 'rgba(255,255,255,0.06)', color: typeLabel === 'OWNER POST' ? 'var(--accent)' : typeLabel === 'CLAIMED' ? 'var(--green)' : 'var(--dim)' }}>
