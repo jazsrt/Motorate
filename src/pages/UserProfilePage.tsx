@@ -44,7 +44,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [loadingRatings, setLoadingRatings] = useState(false);
-  const [activeTab, setActiveTab] = useState<'garage' | 'posts' | 'badges' | 'reviews'>('garage');
+  const [activeTab, setActiveTab] = useState<'fleet' | 'spots' | 'friends' | 'posts'>('fleet');
   const [profileViewCount, _setProfileViewCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted'>('none');
@@ -282,12 +282,10 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   useEffect(() => {
     if (!userId || !canViewContent) return;
 
-    if (activeTab === 'garage' && !vehiclesLoaded) {
+    if (activeTab === 'fleet' && !vehiclesLoaded) {
       loadVehicles();
-    } else if (activeTab === 'posts' && !postsLoaded) {
+    } else if ((activeTab === 'posts' || activeTab === 'spots') && !postsLoaded) {
       loadUserPosts();
-    } else if (activeTab === 'reviews' && !ratingsLoaded) {
-      loadRatings();
     }
   }, [activeTab, userId, canViewContent, loadVehicles, loadUserPosts, loadRatings, vehiclesLoaded, postsLoaded, ratingsLoaded]);
 
@@ -321,86 +319,103 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
       <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 100 }}>
-        {/* ── 1. HERO ── */}
-        <div style={{ background: '#0a0d14', position: 'relative' }}>
-          {/* Cover strip */}
-          <div style={{ height: 80, background: '#0d1117', overflow: 'hidden', position: 'relative' }}>
-            {featuredPhoto && <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />}
-          </div>
+        {/* ── 1. HERO — Full bleed vehicle image, identity overlaid ── */}
+        {!isPrivate || followStatus === 'accepted' ? (
+          <div style={{ position: 'relative', width: '100%', height: 300, overflow: 'hidden', flexShrink: 0 }}>
+            {featuredPhoto ? (
+              <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            ) : (
+              <div style={{ width: '100%', height: '100%', background: 'linear-gradient(160deg, #120a04 0%, #0c0602 40%, #030508 100%)' }} />
+            )}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to bottom, rgba(3,5,8,0.6) 0%, transparent 100%)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to bottom, transparent 0%, rgba(3,5,8,0.75) 45%, #030508 100%)' }} />
 
-          {/* Back button */}
-          <button onClick={onBack} style={{ position: 'absolute', top: 14, left: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}>
-            <ArrowLeft size={14} color="#eef4f8" />
-          </button>
+            {/* Floating back pill */}
+            <button onClick={onBack} style={{ position: 'absolute', top: 52, left: 14, zIndex: 10, display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: '.3px', color: 'rgba(255,255,255,0.85)', padding: '5px 12px 5px 8px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, background: 'rgba(3,5,8,0.5)', cursor: 'pointer' }}>
+              <ArrowLeft size={14} color="rgba(255,255,255,0.85)" />
+              Profile
+            </button>
+            {/* More button */}
+            <button onClick={() => setShowReportModal(true)} style={{ position: 'absolute', top: 52, right: 14, zIndex: 10, width: 32, height: 32, border: '1px solid rgba(255,255,255,0.18)', borderRadius: '50%', background: 'rgba(3,5,8,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
 
-          {/* Avatar */}
-          <div style={{ marginTop: -28, position: 'relative', zIndex: 2, padding: '0 16px' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#1e2a38', border: '3px solid #0a0d14', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8' }}>{(profile?.handle || '?')[0].toUpperCase()}</span>
+            {/* Identity overlay */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 14px' }}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 30, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: '.5px' }}>
+                {profile?.handle || 'Anonymous'}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 8px', border: `1px solid ${userTier.name === 'Certified' ? 'rgba(52,211,153,0.4)' : 'rgba(96,165,250,0.4)'}`, borderRadius: 2, color: userTier.name === 'Certified' ? '#34d399' : '#60a5fa', background: userTier.name === 'Certified' ? 'rgba(52,211,153,0.08)' : 'rgba(96,165,250,0.08)' }}>
+                  {userTier.name}
+                </span>
+                {followStatus === 'accepted' && (
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '.5px', textTransform: 'uppercase', padding: '2px 7px', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 2, color: '#34d399', background: 'rgba(52,211,153,0.06)' }}>Mutual</span>
+                )}
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: 'rgba(249,115,22,0.7)', letterSpacing: '.3px' }}>
+                  {(profile?.reputation_score || 0).toLocaleString()} RP
+                </span>
+              </div>
+              {profile?.bio && (
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4, lineHeight: 1.35 }}>{profile.bio}</div>
               )}
             </div>
           </div>
+        ) : (
+          /* Private — void hero */
+          <div style={{ position: 'relative', width: '100%', height: 300, overflow: 'hidden', background: 'linear-gradient(160deg, #0a0a0c, #030508)' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to bottom, rgba(3,5,8,0.6) 0%, transparent 100%)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to bottom, transparent 0%, #030508 100%)' }} />
 
-          {/* Name + Handle */}
-          <div style={{ padding: '8px 16px 0' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
-              {profile?.handle || 'Anonymous'}
-            </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2, letterSpacing: '0.05em' }}>
-              @{profile?.handle || 'user'} · {userTier.name} Tier
-              {isPrivate && <span style={{ color: '#3a4e60', marginLeft: 6 }}>Private</span>}
-            </div>
-            {profile?.bio && (
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 4, lineHeight: 1.4 }}>{profile.bio}</div>
-            )}
-          </div>
+            <button onClick={onBack} style={{ position: 'absolute', top: 52, left: 14, zIndex: 10, display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: '.3px', color: 'rgba(255,255,255,0.85)', padding: '5px 12px 5px 8px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, background: 'rgba(3,5,8,0.5)', cursor: 'pointer' }}>
+              <ArrowLeft size={14} color="rgba(255,255,255,0.85)" />
+              Profile
+            </button>
 
-          {/* Featured badges */}
-          {badges.length > 0 && (
-            <div style={{ display: 'flex', gap: 6, padding: '8px 16px 0', flexWrap: 'wrap' as const }}>
-              {badges.slice(0, 3).map((item: any) => {
-                const badge = item.badge || item;
-                return (
-                  <div key={badge.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.10)', border: '1px solid rgba(240,160,48,0.25)' }}>
-                    <BadgeCoin tier={((item.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat')} name={badge.name} icon_path={getBadgeImagePath(badge)} size="sm" />
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#f0a030' }}>{badge.name}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Actions */}
-          {!isOwnProfile && currentUser && (
-            <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0' }}>
-              <FollowButton targetUserId={userId} onFollowChange={(f) => { setFollowStatus(f ? 'accepted' : 'none'); setIsFollowing(f); }} />
-              <button onClick={() => onNavigate('messages', userId)} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <MessageCircle size={10} /> Message
-              </button>
-              <button onClick={() => setShowReportModal(true)} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#3a4e60', cursor: 'pointer' }}>
-                <Flag size={10} />
-              </button>
-            </div>
-          )}
-
-          {/* Stat strip */}
-          <div style={{ display: 'flex', gap: 20, padding: '12px 16px 14px' }}>
-            {[
-              { label: 'Spots', value: spotsCount },
-              { label: 'Badges', value: badges.length },
-              { label: 'Followers', value: followerCount },
-              { label: 'Vehicles', value: vehicles.length },
-            ].map(stat => (
-              <div key={stat.label}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8' }}>{stat.value}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#5a6e7e', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginLeft: 5 }}>{stat.label}</span>
+            {/* Lock centered in hero */}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, paddingBottom: 80 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Lock size={20} color="#374151" />
               </div>
-            ))}
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#2D3748' }}>Private</div>
+            </div>
+
+            {/* Barely visible handle */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 14px' }}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#2D3748', lineHeight: 1 }}>
+                {profile?.handle || 'private_user'}
+              </div>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 8px', border: '1px solid rgba(75,85,99,0.3)', borderRadius: 2, color: '#4B5563', display: 'inline-block', marginTop: 4 }}>Private</span>
+            </div>
           </div>
+        )}
+
+        {/* Stat strip */}
+        <div style={{ display: 'flex', borderTop: '1px solid rgba(249,115,22,0.12)', borderBottom: '1px solid rgba(249,115,22,0.12)', background: '#030508', opacity: isPrivate && followStatus !== 'accepted' ? 0.15 : 1, pointerEvents: isPrivate && followStatus !== 'accepted' ? 'none' : 'auto' }}>
+          {[
+            { label: 'RP', value: (profile?.reputation_score || 0).toLocaleString(), orange: true },
+            { label: 'Vehicles', value: vehicles.length },
+            { label: 'Friends', value: followerCount },
+            { label: 'Spots', value: spotsCount },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, padding: '11px 0', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500, color: stat.orange ? '#F97316' : (isPrivate && followStatus !== 'accepted' ? '#2D3748' : '#fff'), lineHeight: 1 }}>
+                {isPrivate && followStatus !== 'accepted' ? '—' : stat.value}
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: '#4B5563' }}>{stat.label}</div>
+            </div>
+          ))}
         </div>
+
+        {/* Actions */}
+        {!isOwnProfile && currentUser && (
+          <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: '#030508', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <FollowButton targetUserId={userId} onFollowChange={(f) => { setFollowStatus(f ? 'accepted' : 'none'); setIsFollowing(f); }} />
+            <button onClick={() => onNavigate('messages', userId)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '9px 16px', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 2, color: '#6B7280', background: 'rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+              Message
+            </button>
+          </div>
+        )}
 
         {/* Privacy gate */}
         {!canViewContent && (
@@ -409,69 +424,106 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
         {canViewContent && (
           <>
-            {/* ── 2. FEATURED VEHICLE ── */}
-            {featuredVehicle ? (
-              <div onClick={() => onViewVehicle(featuredVehicle.id)} style={{ position: 'relative', width: '100%', height: 160, overflow: 'hidden', background: '#0d1117', cursor: 'pointer', borderTop: '1px solid rgba(249,115,22,0.08)' }}>
-                {featuredPhoto ? (
-                  <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7, display: 'block' }} />
+            {/* Tabs */}
+            <div style={{ display: 'flex', background: '#030508', borderBottom: '1px solid rgba(249,115,22,0.14)' }}>
+              {(['fleet', 'spots', 'friends', 'posts'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    flex: 1, textAlign: 'center', padding: '10px 0',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                    letterSpacing: '1px', textTransform: 'uppercase',
+                    color: activeTab === tab ? '#F97316' : '#4B5563',
+                    background: 'none', border: 'none',
+                    borderBottom: activeTab === tab ? '2px solid #F97316' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === 'fleet' && (
+              <div>
+                {loadingVehicles ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}><div style={{ width: 20, height: 20, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /></div>
+                ) : vehicles.length === 0 ? (
+                  <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 600, color: '#6B7280' }}>No vehicles</div>
+                  </div>
                 ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, background: '#010203', padding: 2 }}>
+                      {vehicles.map(v => {
+                        const photo = v.profile_image_url || v.stock_image_url;
+                        return (
+                          <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden', background: '#0a0d12', cursor: 'pointer' }}>
+                            {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #0a1520, #060c16)' }} />}
+                            <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: '#F97316', boxShadow: '0 0 8px rgba(249,115,22,0.7)' }} />
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '5px 7px 6px', background: 'linear-gradient(transparent, rgba(3,5,8,0.85))' }}>
+                              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#F97316', letterSpacing: '1.5px' }}>{v.make || ''}</div>
+                              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: 'rgba(255,255,255,0.45)' }}>{(v.reputation_score || 0).toLocaleString()} RP</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {vehicles.map(v => {
+                      const photo = v.profile_image_url || v.stock_image_url;
+                      return (
+                        <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: '#030508', cursor: 'pointer' }}>
+                          <div style={{ width: 60, height: 40, borderRadius: 2, overflow: 'hidden', flexShrink: 0, background: '#0a0d12' }}>
+                            {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 600, color: '#fff', lineHeight: 1.1 }}>{[v.year, v.make, v.model].filter(Boolean).join(' ')}</div>
+                            <div style={{ display: 'flex', gap: 12, marginTop: 3 }}>
+                              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#4B5563' }}><span style={{ color: '#9CA3AF' }}>{(v.reputation_score || 0).toLocaleString()}</span> RP</span>
+                              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#4B5563' }}><span style={{ color: '#9CA3AF' }}>{v.fans_count || 0}</span> Fans</span>
+                            </div>
+                          </div>
+                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '3px 7px', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 2, color: '#F97316', background: 'rgba(249,115,22,0.06)', whiteSpace: 'nowrap' }}>Owner</div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'spots' && (
+              <div>
+                {!postsLoaded ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}><div style={{ width: 20, height: 20, border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /></div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, background: '#010203', padding: 2 }}>
+                    {userPosts.filter(p => p.post_type === 'spot').map(post => (
+                      <div key={post.id} style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden', background: '#0a0d12' }}>
+                        {post.image_url ? <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #0a1520, #060c16)' }} />}
+                      </div>
+                    ))}
                   </div>
                 )}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 60%)' }} />
-                <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14 }}>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>{featuredVehicle.make}</div>
-                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{featuredVehicle.model}</div>
-                </div>
-              </div>
-            ) : null}
-
-            {/* ── 3. FLEET ── */}
-            {vehicles.length > 1 && (
-              <div>
-                <div style={{ padding: '12px 16px 8px' }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Fleet · {vehicles.length}</span>
-                </div>
-                <div style={{ display: 'flex', gap: 10, padding: '0 14px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-                  {vehicles.slice(1).map(v => {
-                    const vPhoto = v.profile_image_url || v.stock_image_url;
-                    return (
-                      <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 130, overflow: 'hidden', background: '#0a0d14', borderRight: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-                        {vPhoto ? <img src={vPhoto} alt="" style={{ width: '100%', height: 80, objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: 80, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>}
-                        <div style={{ padding: '6px 8px' }}>
-                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316' }}>{v.make}</div>
-                          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{v.model}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             )}
 
-            {/* ── 4. BADGES ── */}
-            {badges.length > 0 && (
+            {activeTab === 'friends' && (
               <div>
-                <div style={{ padding: '12px 16px 8px' }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Badges · {badges.length}</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 14px 14px' }}>
-                  {badges.slice(0, 8).map((item: any) => {
-                    const badge = item.badge || item;
-                    return (
-                      <div key={badge.id} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
-                        <BadgeCoin tier={((item.tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat')} name={badge.name} icon_path={getBadgeImagePath(badge)} size="md" />
-                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#5a6e7e', textAlign: 'center' as const, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{badge.name}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <MotoFansSection userId={userId} onNavigate={onNavigate} />
               </div>
             )}
 
-            {/* ── 5. MOTOFANS ── */}
-            <MotoFansSection userId={userId} onNavigate={onNavigate} />
+            {activeTab === 'posts' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, background: '#010203', padding: 2 }}>
+                {userPosts.map(post => (
+                  <div key={post.id} style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden', background: '#0a0d12' }}>
+                    {post.image_url ? <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #0a1520, #060c16)' }} />}
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

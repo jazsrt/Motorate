@@ -72,7 +72,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [showBadgesModal, setShowBadgesModal] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spots' | 'fleet' | 'badges'>('spots');
+  const [activeTab, setActiveTab] = useState<'fleet' | 'spots' | 'friends' | 'posts'>('fleet');
   const [spotsLoaded, setSpotsLoaded] = useState(false);
   const [spotsGiven, setSpotsGiven] = useState<any[]>([]);
   const [spotsReceived, setSpotsReceived] = useState<any[]>([]);
@@ -580,267 +580,267 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     <Layout currentPage="profile" onNavigate={onNavigate}>
       <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 100 }}>
 
-        {/* ── 1. HERO — Identity Block ── */}
-        <div style={{ background: '#0a0d14', position: 'relative' }}>
-          {/* Cover strip — use featured vehicle image or dark fallback */}
-          <div style={{ height: 120, background: '#0d1117', overflow: 'hidden', position: 'relative' }}>
-            {featuredPhoto && (
-              <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
-            )}
-          </div>
+        {/* ── 1. HERO — Full bleed vehicle image, identity overlaid ── */}
+        <div style={{ position: 'relative', width: '100%', height: 300, overflow: 'hidden', flexShrink: 0 }}>
+          {/* Vehicle image fills entire hero */}
+          {featuredPhoto ? (
+            <img
+              src={featuredPhoto}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              background: 'linear-gradient(160deg, #0c1826 0%, #0a1220 30%, #060c16 60%, #030508 100%)',
+            }} />
+          )}
 
-          {/* Avatar overlapping cover */}
-          <div style={{ marginTop: -28, position: 'relative', zIndex: 2, padding: '0 16px' }}>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: '50%', background: '#1e2a38',
-                border: '3px solid #0a0d14', overflow: 'hidden',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8' }}>
-                    {(profile?.handle || '?')[0].toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: '50%', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                <Upload size={10} color="#7a8e9e" />
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
-            </div>
-          </div>
+          {/* Top fade — status bar legibility */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 80,
+            background: 'linear-gradient(to bottom, rgba(3,5,8,0.6) 0%, transparent 100%)',
+          }} />
 
-          {/* Name + Handle + Tier */}
-          <div style={{ padding: '8px 16px 0' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+          {/* Bottom fade — identity legibility */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(3,5,8,0.75) 45%, #030508 100%)',
+          }} />
+
+          {/* Edit pill — floating top right */}
+          <button
+            onClick={() => setShowEditModal(true)}
+            style={{
+              position: 'absolute', top: 52, right: 16, zIndex: 10,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+              letterSpacing: '.8px', textTransform: 'uppercase',
+              padding: '5px 13px',
+              border: '1px solid rgba(255,255,255,0.2)', borderRadius: 20,
+              color: 'rgba(255,255,255,0.85)', background: 'rgba(3,5,8,0.5)',
+              cursor: 'pointer',
+            }}
+          >
+            Edit Profile
+          </button>
+
+          {/* Identity — overlaid at bottom of hero */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 14px' }}>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 30, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: '.5px' }}>
               {profile?.handle || 'Anonymous'}
             </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2, letterSpacing: '0.05em' }}>
-              @{profile?.handle || 'user'} · {tierInfo.name} Tier
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
+              <span style={{
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+                letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 8px',
+                border: '1px solid rgba(96,165,250,0.4)', borderRadius: 2,
+                color: '#60a5fa', background: 'rgba(96,165,250,0.08)',
+              }}>
+                {tierInfo.name}
+              </span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: 'rgba(249,115,22,0.7)', letterSpacing: '.3px' }}>
+                {repScore.toLocaleString()} RP
+              </span>
             </div>
             {profile?.bio && (
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', marginTop: 4, lineHeight: 1.4 }}>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4, lineHeight: 1.35 }}>
                 {profile.bio}
               </div>
             )}
-          </div>
-
-          {/* Featured badges in hero */}
-          {userBadges.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-              {userBadges.slice(0, 6).map((ub) => (
-                <div key={ub.badge.id} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '4px 10px 4px 5px', borderRadius: 20, flexShrink: 0,
-                  background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.14)',
-                }}>
-                  <BadgeCoin
-                    tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
-                    name={ub.badge.name}
-                    icon_path={getBadgeImagePath(ub.badge)}
-                    size="sm"
-                  />
-                  <span style={{
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.06em', textTransform: 'uppercase' as const,
-                    color: '#9aaebc', whiteSpace: 'nowrap' as const,
-                  }}>
-                    {ub.badge.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Actions row */}
-          <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0' }}>
-            <button onClick={() => setShowEditModal(true)} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.25)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-              Edit Profile
-            </button>
-            <button onClick={() => { if (user) shareToSocial({ type: 'profile', title: `@${profile?.handle || 'user'}`, userHandle: profile?.handle || 'user', userRep: repScore, deepLinkUrl: `${window.location.origin}/#/user-profile/${user.id}` }, user.id); }} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
-              Share
-            </button>
-            {profile?.role === 'admin' && (
-              <button onClick={() => onNavigate('admin')} style={{ padding: '6px 14px', borderRadius: 6, background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.25)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                Admin
+            {/* Sign out and share — minimal, bottom right */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button
+                onClick={() => shareToSocial({ type: 'profile', title: `@${profile?.handle || 'user'}`, userHandle: profile?.handle || 'user', userRep: repScore, deepLinkUrl: `${window.location.origin}/#/user-profile/${user!.id}` }, user!.id)}
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 2, color: 'rgba(255,255,255,0.4)', background: 'transparent', cursor: 'pointer' }}
+              >
+                Share
               </button>
-            )}
-            <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <LogOut size={11} /> Sign Out
-            </button>
-          </div>
-
-          {/* Stat strip — inline in hero per mockup */}
-          <div style={{ display: 'flex', gap: 20, padding: '12px 16px 14px' }}>
-            {[
-              { label: 'Spots', value: spotCount },
-              { label: 'Badges', value: userBadges.length },
-              { label: 'Followers', value: followerCount },
-            ].map(stat => (
-              <div key={stat.label}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#eef4f8' }}>{stat.value}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#5a6e7e', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginLeft: 5 }}>{stat.label}</span>
-              </div>
-            ))}
+              {profile?.role === 'admin' && (
+                <button onClick={() => onNavigate('admin')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 2, color: '#F97316', background: 'rgba(249,115,22,0.06)', cursor: 'pointer' }}>
+                  Admin
+                </button>
+              )}
+              <button
+                onClick={signOut}
+                style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 2, color: 'rgba(255,255,255,0.25)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ── 2. FEATURED VEHICLE — cinematic card ── */}
-        {featuredVehicle ? (
-          <div
-            onClick={() => onViewVehicle(featuredVehicle.id)}
-            style={{ position: 'relative', width: '100%', height: 180, overflow: 'hidden', background: '#0d1117', cursor: 'pointer', borderTop: '1px solid rgba(249,115,22,0.08)' }}
-          >
-            {featuredPhoto ? (
-              <img src={featuredPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7, display: 'block' }} />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </div>
-            )}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,5,8,0.9) 0%, transparent 60%)' }} />
-            <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>
-                {featuredVehicle.make || 'Vehicle'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
-                  {featuredVehicle.model || '—'}
-                </div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>
-                  {(featuredVehicle.reputation_score ?? 0).toLocaleString()} RP
-                </div>
-              </div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#5a6e7e', letterSpacing: '0.08em', marginTop: 2 }}>
-                {[featuredVehicle.year, featuredVehicle.trim, featuredVehicle.color].filter(Boolean).join(' · ')}
-              </div>
+        {/* ── Stat strip ── */}
+        <div style={{ display: 'flex', borderTop: '1px solid rgba(249,115,22,0.12)', borderBottom: '1px solid rgba(249,115,22,0.12)', background: '#030508' }}>
+          {[
+            { label: 'RP', value: repScore.toLocaleString(), orange: true },
+            { label: 'Vehicles', value: vehicles.length },
+            { label: 'Friends', value: followerCount },
+            { label: 'Spots', value: spotCount },
+          ].map((stat, i, arr) => (
+            <div key={stat.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, padding: '11px 0', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500, color: stat.orange ? '#F97316' : '#fff', lineHeight: 1 }}>{stat.value}</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: '#4B5563' }}>{stat.label}</div>
             </div>
-          </div>
-        ) : (
-          <div style={{ padding: '24px 16px', textAlign: 'center' as const, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>No Vehicle Yet</div>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginBottom: 12 }}>Claim your first vehicle to anchor your profile.</div>
-            <button onClick={() => onNavigate('scan')} style={{ padding: '8px 20px', background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}>
-              Spot a Car
+          ))}
+        </div>
+
+        {/* ── Tabs ── */}
+        <div style={{ display: 'flex', background: '#030508', borderBottom: '1px solid rgba(249,115,22,0.14)' }}>
+          {(['fleet', 'spots', 'friends', 'posts'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1, textAlign: 'center', padding: '10px 0',
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                letterSpacing: '1px', textTransform: 'uppercase',
+                color: activeTab === tab ? '#F97316' : '#4B5563',
+                background: 'none', border: 'none',
+                borderBottom: activeTab === tab ? '2px solid #F97316' : '2px solid transparent',
+                cursor: 'pointer',
+              }}
+            >
+              {tab}
             </button>
+          ))}
+        </div>
+
+        {/* ── Tab content ── */}
+        {activeTab === 'fleet' && (
+          <div>
+            {vehicles.length === 0 ? (
+              <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 600, color: '#6B7280', marginBottom: 8 }}>No vehicles yet</div>
+                <button onClick={() => onNavigate('scan')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '8px 20px', background: '#F97316', border: 'none', borderRadius: 2, color: '#030508', cursor: 'pointer' }}>Spot a Car</button>
+              </div>
+            ) : (
+              <>
+                {/* Photo grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, background: '#010203', padding: 2 }}>
+                  {vehicles.map(v => {
+                    const photo = v.profile_image_url || v.stock_image_url;
+                    return (
+                      <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden', background: '#0a0d12', cursor: 'pointer' }}>
+                        {photo ? (
+                          <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #0a1520, #060c16)' }} />
+                        )}
+                        {/* owner dot */}
+                        <div style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: '#F97316', boxShadow: '0 0 8px rgba(249,115,22,0.7)' }} />
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '5px 7px 6px', background: 'linear-gradient(transparent, rgba(3,5,8,0.85))' }}>
+                          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#F97316', letterSpacing: '1.5px' }}>
+                            {v.plate_number ? `${v.plate_number} · ${v.plate_state || ''}` : `${v.make || ''}`}
+                          </div>
+                          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
+                            {(v.reputation_score || 0).toLocaleString()} RP
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Detail rows */}
+                {vehicles.map(v => {
+                  const photo = v.profile_image_url || v.stock_image_url;
+                  return (
+                    <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: '#030508', cursor: 'pointer' }}>
+                      <div style={{ width: 60, height: 40, borderRadius: 2, overflow: 'hidden', flexShrink: 0, background: '#0a0d12' }}>
+                        {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 15, fontWeight: 600, color: '#fff', lineHeight: 1.1 }}>
+                          {[v.year, v.make, v.model].filter(Boolean).join(' ')}
+                        </div>
+                        {v.plate_number && (
+                          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#F97316', letterSpacing: '2px', marginTop: 1 }}>
+                            {v.plate_number} · {v.plate_state}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 12, marginTop: 3 }}>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#4B5563' }}><span style={{ color: '#9CA3AF' }}>{(v.reputation_score || 0).toLocaleString()}</span> RP</span>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#4B5563' }}><span style={{ color: '#9CA3AF' }}>{v.fans_count || 0}</span> Fans</span>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: '#4B5563' }}><span style={{ color: '#9CA3AF' }}>{v.spots_count || 0}</span> Spots</span>
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '3px 7px', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 2, color: '#F97316', background: 'rgba(249,115,22,0.06)', whiteSpace: 'nowrap' }}>Owner</div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
 
-        {/* ── 3. FLEET — horizontal scroll ── */}
-        {vehicles.length > 1 && (
+        {activeTab === 'spots' && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                Fleet · {vehicles.length}
+            {userPosts.filter(p => p.post_type === 'spot').length === 0 ? (
+              <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 600, color: '#6B7280', marginBottom: 4 }}>No spots yet</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#374151' }}>Get out there and spot some cars.</div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, background: '#010203', padding: 2 }}>
+                {userPosts.filter(p => p.post_type === 'spot').map(post => (
+                  <div key={post.id} style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden', background: '#0a0d12' }}>
+                    {post.image_url ? (
+                      <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #0a1520, #060c16)' }} />
+                    )}
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '5px 7px 6px', background: 'linear-gradient(transparent, rgba(3,5,8,0.85))' }}>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>
+                        {new Date(post.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'friends' && (
+          <div>
+            <div style={{ padding: '12px 16px 6px' }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#4B5563' }}>
+                {followerCount} Friends
               </span>
             </div>
-            <div style={{ display: 'flex', gap: 10, padding: '0 14px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-              {vehicles.slice(1).map(v => {
-                const vPhoto = v.profile_image_url || v.stock_image_url;
-                return (
-                  <div key={v.id} onClick={() => onViewVehicle(v.id)} style={{ flexShrink: 0, width: 140, overflow: 'hidden', background: '#0a0d14', borderRight: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-                    {vPhoto ? (
-                      <img src={vPhoto} alt="" style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} />
+            {/* MotoFans section lives here */}
+            {user && <MotoFansSection userId={user.id} onNavigate={onNavigate} />}
+          </div>
+        )}
+
+        {activeTab === 'posts' && (
+          <div>
+            {userPosts.length === 0 ? (
+              <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 600, color: '#6B7280' }}>No posts yet</div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, background: '#010203', padding: 2 }}>
+                {userPosts.map(post => (
+                  <div key={post.id} style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden', background: '#0a0d12' }}>
+                    {post.image_url ? (
+                      <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
-                      <div style={{ width: '100%', height: 90, background: '#111720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a4e60" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #0a1520, #060c16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, color: '#2D3748', letterSpacing: '.5px' }}>No Photo</span>
                       </div>
                     )}
-                    <div style={{ padding: '8px 10px' }}>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 1 }}>{v.make}</div>
-                      <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>{v.model}</div>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* ── 4. BADGES — visual showcase ── */}
-        {userBadges.length > 0 && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                Badges · {userBadges.length}
-              </span>
-              <span onClick={() => onNavigate('badges')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                View All
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, padding: '0 16px 16px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
-              {userBadges.map((ub) => (
-                <div key={ub.badge.id} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
-                  <BadgeCoin
-                    tier={((ub as any).tier?.toLowerCase() || 'bronze') as 'bronze' | 'silver' | 'gold' | 'plat'}
-                    name={ub.badge.name}
-                    icon_path={getBadgeImagePath(ub.badge)}
-                    size="md"
-                  />
-                  <span style={{
-                    fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700,
-                    letterSpacing: '0.06em', textTransform: 'uppercase' as const,
-                    color: '#5a6e7e', textAlign: 'center' as const, whiteSpace: 'nowrap' as const,
-                  }}>
-                    {ub.badge.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── 5. ALBUMS ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Albums</span>
-          <span onClick={() => setShowAlbumsModal(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-            Manage
-          </span>
-        </div>
-
-        {/* ── 6. MOTOFANS — vehicles this user is a fan of ── */}
-        {user && <MotoFansSection userId={user.id} onNavigate={onNavigate} />}
-
-        {/* ── 6. ACTIVITY — compact recent posts ── */}
-        {userPosts.length > 0 && (
-          <div>
-            <div style={{ padding: '12px 16px 8px' }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                Recent Activity
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
-              {userPosts.slice(0, 5).map(post => (
-                <div key={post.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                  {post.image_url && (
-                    <div style={{ width: 40, height: 30, borderRadius: 4, overflow: 'hidden', flexShrink: 0, background: '#111720' }}>
-                      <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {post.caption || (post.post_type === 'spot' ? 'Spotted a vehicle' : 'Posted')}
-                    </div>
-                  </div>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#3a4e60', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                    {new Date(post.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── FOOTER ── */}
+        {/* Footer links */}
         <div style={{ display: 'flex', gap: 12, padding: '16px 16px 8px' }}>
-          <button onClick={() => onNavigate('privacy')} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#3a4e60', background: 'none', border: 'none', cursor: 'pointer' }}>Privacy</button>
-          <button onClick={() => onNavigate('terms')} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#3a4e60', background: 'none', border: 'none', cursor: 'pointer' }}>Terms</button>
+          <button onClick={() => onNavigate('privacy')} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#374151', background: 'none', border: 'none', cursor: 'pointer' }}>Privacy</button>
+          <button onClick={() => onNavigate('terms')} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#374151', background: 'none', border: 'none', cursor: 'pointer' }}>Terms</button>
         </div>
       </div>
 
