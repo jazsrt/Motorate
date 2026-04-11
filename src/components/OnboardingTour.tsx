@@ -3,42 +3,38 @@ import { useState, useEffect } from 'react';
 interface OnboardingTourProps {
   userId: string;
   onDismiss: () => void;
+  onSpot: () => void;
 }
 
 const STEPS = [
   {
-    position: 'left-feed',
     title: 'Feed',
-    body: 'Your home base. Every spot, rating, and build from the MotoRate community shows up here in real time.',
+    body: 'Every car that gets spotted ends up here. Full-bleed photos, ratings, bumper stickers, and reputation scores — scroll through what the community is seeing on the streets right now.',
     navIndex: 0,
   },
   {
-    position: 'left-explore',
     title: 'Explore',
-    body: 'Search any plate number, vehicle handle, or make and model. Find vehicles that have been spotted near you.',
+    body: 'Type any plate, vehicle handle, or make and model and pull up its full MotoRate profile. Every spot it\'s ever received, every sticker it\'s been given, its reputation score — all of it.',
     navIndex: 1,
   },
   {
-    position: 'center',
     title: 'Spot',
-    body: 'This is the main event. Tap here to scan any plate and log a vehicle to MotoRate. Rate it, sticker it, make it official.',
+    body: 'See a clean build in a parking lot? Tap here, enter the plate, rate the vehicle, slap a sticker on it, and log it to MotoRate permanently. Every spot you make earns you RP.',
     navIndex: 2,
   },
   {
-    position: 'right-rankings',
     title: 'Rankings',
-    body: 'The leaderboard for real cars. See which vehicles have earned the most reputation in your area and nationally.',
+    body: 'Which cars in your city have the highest reputation? Which make and model is dominating nationwide? Rankings update in real time. Your car can climb this board.',
     navIndex: 3,
   },
   {
-    position: 'right-garage',
     title: 'Garage',
-    body: 'Your profile and your vehicles. Claim your plate, manage your build, and track your reputation score.',
+    body: 'Your home on MotoRate. Claim your vehicle with your VIN, upload photos of your build, track your reputation score, and see every spot your car has ever received.',
     navIndex: 4,
   },
 ];
 
-export function OnboardingTour({ userId, onDismiss }: OnboardingTourProps) {
+export function OnboardingTour({ userId, onDismiss, onSpot }: OnboardingTourProps) {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
 
@@ -62,7 +58,10 @@ export function OnboardingTour({ userId, onDismiss }: OnboardingTourProps) {
   const handleFinish = () => {
     localStorage.setItem(`motorate_tour_seen_${userId}`, 'true');
     setVisible(false);
-    setTimeout(onDismiss, 300);
+    setTimeout(() => {
+      onDismiss();
+      onSpot();
+    }, 300);
   };
 
   const current = STEPS[step];

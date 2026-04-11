@@ -3,10 +3,11 @@ import { X } from 'lucide-react';
 
 interface BetaWelcomeModalProps {
   userId: string;
+  handle: string;
   onDismiss: () => void;
 }
 
-export function BetaWelcomeModal({ userId, onDismiss }: BetaWelcomeModalProps) {
+export function BetaWelcomeModal({ userId, handle, onDismiss }: BetaWelcomeModalProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export function BetaWelcomeModal({ userId, onDismiss }: BetaWelcomeModalProps) {
               fontFamily: "'Rajdhani', sans-serif",
               fontSize: 28, fontWeight: 700, color: '#eef4f8', lineHeight: 1,
             }}>
-              You're In.
+              You're In, <span style={{ color: '#F97316' }}>@{handle}</span>
             </div>
           </div>
           <button

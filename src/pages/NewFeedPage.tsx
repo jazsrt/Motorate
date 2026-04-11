@@ -7,6 +7,7 @@ import { useFeed } from '../hooks/useFeed';
 import { supabase } from '../lib/supabase';
 import { FeedPostCard } from '../components/feed/FeedPostCard';
 import { StoryRail } from '../components/feed/StoryRail';
+import { FirstStepsCard } from '../components/FirstStepsCard';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 interface NewFeedPageProps {
@@ -31,6 +32,13 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
   const [focusPost, setFocusPost] = useState<any>(null);
   const [focusLoading, setFocusLoading] = useState(!!focusPostId);
   const [tickerItems, setTickerItems] = useState<{text: string, handle: string, detail: string, color: string, ts: string}[]>([]);
+  const [showFirstSteps, setShowFirstSteps] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const dismissed = localStorage.getItem(`motorate_first_steps_dismissed_${user.id}`);
+    if (!dismissed) setShowFirstSteps(true);
+  }, [user]);
 
   useEffect(() => {
     async function loadTicker() {
@@ -189,6 +197,18 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
   return (
     <Layout currentPage="feed" onNavigate={onNavigate}>
+      {/* First Steps onboarding card — shown until dismissed */}
+      {showFirstSteps && user && (
+        <FirstStepsCard
+          userId={user.id}
+          onNavigate={onNavigate}
+          onDismiss={() => {
+            localStorage.setItem(`motorate_first_steps_dismissed_${user.id}`, 'true');
+            setShowFirstSteps(false);
+          }}
+        />
+      )}
+
       {/* Story rail — vehicles the user tracks */}
       {user && <StoryRail onNavigate={onNavigate} />}
 

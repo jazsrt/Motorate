@@ -518,6 +518,7 @@ function AppContent() {
       {showBetaWelcome && user && (
         <BetaWelcomeModal
           userId={user.id}
+          handle={profile?.handle || 'driver'}
           onDismiss={() => {
             setShowBetaWelcome(false);
             const tourSeen = localStorage.getItem(`motorate_tour_seen_${user.id}`);
@@ -531,6 +532,7 @@ function AppContent() {
         <OnboardingTour
           userId={user.id}
           onDismiss={() => setShowOnboardingTour(false)}
+          onSpot={() => handleNavigate('scan')}
         />
       )}
       {currentPage === 'completed-review' && completedReviewData && (
