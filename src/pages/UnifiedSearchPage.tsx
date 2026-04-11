@@ -183,16 +183,21 @@ export default function UnifiedSearchPage({ onNavigate, onViewVehicle, initialQu
       }
 
       const ftsQuery = searchTerm.replace(/\s+/g, ' & ');
+      // FTS requires minimum 2 characters; for short terms, skip FTS
+      const useFts = searchTerm.length >= 3;
 
-      const [vehiclesResult, plateResult, userResult] = await Promise.all([
-        supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).textSearch('fts', ftsQuery).limit(10),
+      const [vehiclesResult, plateResult, handleResult, userResult] = await Promise.all([
+        useFts
+          ? supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).textSearch('fts', ftsQuery).limit(10)
+          : supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).ilike('make', `%${searchTerm}%`).limit(10),
         supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).ilike('plate_number', `%${searchTerm}%`).eq('is_private', false).limit(10),
+        supabase.from('vehicles').select(VEHICLE_PUBLIC_COLUMNS).ilike('vehicle_handle', `%${searchTerm}%`).eq('is_private', false).limit(10),
         supabase.from('profiles').select('id, handle, avatar_url').ilike('handle', `%${searchTerm}%`).limit(5),
       ]);
 
       const allIds = new Set<string>();
       const merged: Vehicle[] = [];
-      [...(vehiclesResult.data || []), ...(plateResult.data || [])].forEach((v: any) => {
+      [...(vehiclesResult.data || []), ...(plateResult.data || []), ...(handleResult.data || [])].forEach((v: any) => {
         if (!allIds.has(v.id)) { allIds.add(v.id); merged.push(v); }
       });
       setVehicles(merged);
