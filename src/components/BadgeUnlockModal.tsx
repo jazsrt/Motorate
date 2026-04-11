@@ -97,15 +97,13 @@ export function BadgeUnlockModal({ badge, onClose }: BadgeUnlockModalProps) {
             {isNegativeBadge ? 'Warning Issued' : getTierMessage(badge.level_name)}
           </div>
 
-          {/* Badge coin */}
-          <div style={{
-            width: 112, height: 112, borderRadius: '50%',
-            background: isNegativeBadge ? 'rgba(239,68,68,0.2)' : getTierBg(badge.level_name),
-            border: `2px solid ${isNegativeBadge ? 'rgba(239,68,68,0.4)' : tierColor}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: isNegativeBadge ? 'none' : `0 0 40px ${tierColor}33`,
-          }}>
-            <BadgeIcon iconPath={badge.icon_path} size={72} alt={badge.name} />
+          {/* Badge image — standalone, no circle */}
+          <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <BadgeIcon
+              iconPath={badge.icon_path}
+              size={120}
+              alt={badge.name}
+            />
           </div>
 
           {/* Badge info */}

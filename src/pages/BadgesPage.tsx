@@ -363,8 +363,8 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
           style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)' }}
           onClick={() => setCelebBadge(null)}>
           <div style={{ textAlign: 'center', padding: 32 }} onClick={e => e.stopPropagation()}>
-            <div style={{ width: 80, height: 80, margin: '0 auto', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg, #806828, #c8a45a 55%, #806828)', border: '3px solid rgba(200,164,90,0.4)' }}>
-              {React.createElement(getBadgeIcon(celebBadge.icon), { size: 28, strokeWidth: 1.2, style: { color: 'rgba(255,255,255,0.9)' } })}
+            <div style={{ width: 100, height: 100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {React.createElement(getBadgeIcon(celebBadge.icon), { size: 80, strokeWidth: 1.2, style: { color: '#F97316' } })}
             </div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginTop: 16 }}>{celebBadge.name}</div>
             <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', marginTop: 8 }}>{stripRpReferences(celebBadge.description || 'Badge earned')}</div>

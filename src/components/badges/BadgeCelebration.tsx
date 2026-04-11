@@ -15,13 +15,6 @@ interface BadgeCelebrationProps {
   onViewBadges?: () => void;
 }
 
-const tierGradients = {
-  bronze: 'linear-gradient(145deg, #5a4228, #7a6040 40%, #9a7a58 55%, #7a6040 70%, #5a4228)',
-  silver: 'linear-gradient(145deg, #4a5668, #6a7688 40%, #909aaa 55%, #6a7688 70%, #4a5668)',
-  gold:   'linear-gradient(145deg, #806828, #a8883e 40%, #c8a85a 55%, #a8883e 70%, #806828)',
-  platinum: 'linear-gradient(145deg, #585678, #706e90 40%, #8a88a8 55%, #706e90 70%, #585678)',
-};
-
 const tierTextColors = {
   bronze: '#9a7a58',
   silver: '#909aaa',
@@ -85,28 +78,19 @@ export function BadgeCelebration({
         />
       ))}
 
-      {/* Badge Coin */}
+      {/* Badge image — standalone, no circle */}
       <div
         style={{
-          width: 100, height: 100, borderRadius: '50%',
-          background: tierGradients[tier],
+          width: 120, height: 120,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          position: 'relative', overflow: 'hidden',
           opacity: 0,
           animation: 'coin-in 0.7s cubic-bezier(.25,.46,.45,.94) forwards',
           animationDelay: '0.2s',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,.3), 0 4px 16px rgba(0,0,0,.4)',
         }}
       >
-        {/* Metallic flash */}
-        <div style={{
-          position: 'absolute', top: 0, bottom: 0, width: '50%',
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent)',
-          left: '-100%',
-          animation: 'metal-flash 0.4s cubic-bezier(.25,.46,.45,.94) forwards',
-          animationDelay: '0.7s',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>{icon}</div>
+        <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {icon}
+        </div>
       </div>
 
       {/* Text reveals — staggered fade-up */}
