@@ -6,7 +6,7 @@ import { LiveStatsBar } from './LiveStatsBar';
 
 interface LayoutProps {
   children: ReactNode;
-  currentPage: 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'events' | 'my-garage' | 'notifications' | 'search' | 'explore' | 'badges';
+  currentPage: string;
   onNavigate: (page: string, data?: unknown) => void;
 }
 
