@@ -16,6 +16,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 import { CompletedReviewModal } from './components/CompletedReviewModal';
 import { SetHandleModal } from './components/SetHandleModal';
+import { BetaWelcomeModal } from './components/BetaWelcomeModal';
 import './index.css';
 
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then(m => ({ default: m.CreatePostPage })));
@@ -121,6 +122,7 @@ function AppContent() {
   const [previousPage, setPreviousPage] = useState<Page>('feed');
   const [, setPreviousPageData] = useState<any>(null);
   const [claimData, setClaimData] = useState<any>(null);
+  const [showBetaWelcome, setShowBetaWelcome] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -165,7 +167,14 @@ function AppContent() {
     };
   }, [user]);
 
-
+  // Show beta welcome modal once per user, only after onboarding is complete
+  useEffect(() => {
+    if (!user || !profile || !profile.onboarding_completed) return;
+    const seen = localStorage.getItem(`motorate_beta_seen_${user.id}`);
+    if (!seen) {
+      setShowBetaWelcome(true);
+    }
+  }, [user, profile]);
 
 
   const handleViewVehicle = (vehicleId: string) => {
@@ -498,6 +507,12 @@ function AppContent() {
           userId={user?.id}
           onClose={dismissBadge}
           onViewBadges={() => { dismissBadge(); handleNavigate('badges'); }}
+        />
+      )}
+      {showBetaWelcome && user && (
+        <BetaWelcomeModal
+          userId={user.id}
+          onDismiss={() => setShowBetaWelcome(false)}
         />
       )}
       {currentPage === 'completed-review' && completedReviewData && (
