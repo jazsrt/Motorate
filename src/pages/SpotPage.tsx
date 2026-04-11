@@ -24,7 +24,7 @@ import type { SpotWizardData } from '../types/spot';
 
 interface SpotPageProps { onNavigate: OnNavigate; }
 
-type SpotViewState = 'plate-entry' | 'loading' | 'found' | 'not-found' | 'review' | 'success' | 'error';
+type SpotViewState = 'plate-entry' | 'loading' | 'found' | 'not-found' | 'manual-entry' | 'review' | 'success' | 'error';
 
 interface RecentSpot {
   plateState: string;
@@ -139,6 +139,12 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
   const [spotCount, setSpotCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [noCredits, setNoCredits] = useState(false);
+
+  // Manual entry (when plate is not found in DB or API)
+  const [manualMake, setManualMake] = useState('');
+  const [manualModel, setManualModel] = useState('');
+  const [manualYear, setManualYear] = useState('');
+  const [manualColor, setManualColor] = useState('');
 
   // Review (4 required vehicle ratings — driver/driving removed)
   const [vehicleRating, setVehicleRating] = useState(0);
@@ -413,6 +419,10 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     setLooksRating(0); setSoundRating(0); setConditionRating(0);
     setSentiment(null); setComment(''); clearPhoto();
     setSelectedStickerIds([]);
+    setManualMake('');
+    setManualModel('');
+    setManualYear('');
+    setManualColor('');
   };
 
   const vehicleName = foundVehicle ? [foundVehicle.year, foundVehicle.make, foundVehicle.model].filter(Boolean).join(' ') : '';
@@ -604,13 +614,78 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             </div>
           )}
           <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button onClick={() => setViewState('review')} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer' }}>
+            <button onClick={() => setViewState('manual-entry')} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer' }}>
               Spot This Vehicle
             </button>
             <button onClick={resetToPlateEntry} style={{ width: '100%', minHeight: 44, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.text3, cursor: 'pointer' }}>
               Search Again
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ================================================================ */}
+      {/* SCREEN: MANUAL VEHICLE ENTRY (plate not found in DB or API)     */}
+      {/* ================================================================ */}
+      {viewState === 'manual-entry' && (
+        <div style={{ padding: '24px 20px' }}>
+          <button
+            onClick={() => setViewState('not-found')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', padding: 0 }}
+          >
+            ← Back
+          </button>
+
+          <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>
+            What's the vehicle?
+          </div>
+          <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 24 }}>
+            We couldn't identify this plate. Tell us what you see so we can log it correctly.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6 }}>Make *</label>
+              <input type="text" value={manualMake} onChange={e => setManualMake(e.target.value)} placeholder="e.g. Honda" autoCapitalize="words" style={{ width: '100%', padding: '12px 14px', borderRadius: 8, background: '#070a0f', border: `1px solid ${manualMake ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.06)'}`, fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6 }}>Model *</label>
+              <input type="text" value={manualModel} onChange={e => setManualModel(e.target.value)} placeholder="e.g. Civic" autoCapitalize="words" style={{ width: '100%', padding: '12px 14px', borderRadius: 8, background: '#070a0f', border: `1px solid ${manualModel ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.06)'}`, fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6 }}>Year *</label>
+              <input type="number" value={manualYear} onChange={e => setManualYear(e.target.value)} placeholder="e.g. 2019" min="1900" max={new Date().getFullYear() + 1} style={{ width: '100%', padding: '12px 14px', borderRadius: 8, background: '#070a0f', border: `1px solid ${manualYear ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.06)'}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: '#eef4f8', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6 }}>Color</label>
+              <input type="text" value={manualColor} onChange={e => setManualColor(e.target.value)} placeholder="e.g. Black" autoCapitalize="words" style={{ width: '100%', padding: '12px 14px', borderRadius: 8, background: '#070a0f', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              if (!manualMake.trim() || !manualModel.trim() || !manualYear.trim()) return;
+              setFoundVehicle({
+                make: manualMake.trim(),
+                model: manualModel.trim(),
+                year: parseInt(manualYear),
+                color: manualColor.trim() || 'Unknown',
+                trim: null,
+                stock_image_url: null,
+                profile_image_url: null,
+                is_claimed: false,
+                verification_tier: 'shadow',
+                owner_id: null,
+                plate_state: stateCode,
+                plate_number: plateNumber,
+              });
+              setViewState('review');
+            }}
+            disabled={!manualMake.trim() || !manualModel.trim() || !manualYear.trim()}
+            style={{ width: '100%', minHeight: 48, marginTop: 24, background: (manualMake.trim() && manualModel.trim() && manualYear.trim()) ? '#F97316' : 'rgba(249,115,22,0.3)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: (manualMake.trim() && manualModel.trim() && manualYear.trim()) ? 'pointer' : 'not-allowed', opacity: (manualMake.trim() && manualModel.trim() && manualYear.trim()) ? 1 : 0.5 }}
+          >
+            Continue to Rating
+          </button>
         </div>
       )}
 
