@@ -1000,27 +1000,48 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Photos · {vehicleImages.length}</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, padding: 0 }}>
-              {vehicleImages.map((img) => (
-                <div key={img.id} style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: '#0a0d14' }}>
-                  <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0a0d14' }} />
-                  {img.is_primary && (
-                    <div style={{ position: 'absolute', top: 6, left: 6, background: '#F97316', color: '#030508', fontSize: 7, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>Primary</div>
-                  )}
-                  {isOwner && (
-                    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
-                      {!img.is_primary && (
-                        <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Star size={11} color="#F97316" />
+            <div style={{ display: 'flex', gap: 2, padding: 0, height: 240 }}>
+              {(() => {
+                const primary = vehicleImages.find(i => i.is_primary) || vehicleImages[0];
+                const others = vehicleImages.filter(i => i.id !== primary.id).slice(0, 2);
+                const renderImg = (img: typeof vehicleImages[number], big: boolean) => (
+                  <div key={img.id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#0a0d14' }}>
+                    <img src={img.image_url} alt="Vehicle" style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#0a0d14' }} />
+                    {img.is_primary && big && (
+                      <div style={{ position: 'absolute', top: 6, left: 6, background: '#F97316', color: '#030508', fontSize: 7, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '2px 6px', borderRadius: 3 }}>Primary</div>
+                    )}
+                    {isOwner && (
+                      <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 3 }}>
+                        {!img.is_primary && (
+                          <button onClick={() => handleSetPrimary(img.id)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Star size={11} color="#F97316" />
+                          </button>
+                        )}
+                        <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <X size={11} color="#fca5a5" />
                         </button>
-                      )}
-                      <button onClick={() => handleDeleteImage(img.id, img.image_url)} style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <X size={11} color="#fca5a5" />
-                      </button>
+                      </div>
+                    )}
+                  </div>
+                );
+                return (
+                  <>
+                    <div style={{ flex: 2, height: '100%' }}>{renderImg(primary, true)}</div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>
+                      {others[0] ? <div style={{ flex: 1, minHeight: 0 }}>{renderImg(others[0], false)}</div> : isOwner ? (
+                        <button onClick={() => fileInputRef.current?.click()} style={{ flex: 1, minHeight: 0, background: 'rgba(249,115,22,0.06)', border: '1px dashed rgba(249,115,22,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Camera size={20} color="#F97316" />
+                        </button>
+                      ) : null}
+                      {others[1] ? <div style={{ flex: 1, minHeight: 0 }}>{renderImg(others[1], false)}</div> : isOwner && vehicleImages.length < 3 ? (
+                        <button onClick={() => fileInputRef.current?.click()} style={{ flex: 1, minHeight: 0, background: 'rgba(249,115,22,0.06)', border: '1px dashed rgba(249,115,22,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Camera size={20} color="#F97316" />
+                        </button>
+                      ) : null}
                     </div>
-                  )}
-                </div>
-              ))}
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -1080,7 +1101,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               cursor: stat.onClick ? 'pointer' : 'default',
             }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.label === 'Fans' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
+              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: stat.label === 'RP' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
@@ -1150,29 +1171,32 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         {/* ── 6. PUBLIC ACTIONS ── */}
         {!isOwner && (
           <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' as const, gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            {vehicle.is_claimed && vehicle.owner_id && (
-              <div onClick={(e) => e.stopPropagation()}>
-                <MotoFanButton
-                  vehicleId={vehicleId}
-                  ownerId={vehicle.owner_id}
-                  onCountChange={(c) => setFollowerCount(c)}
-                />
-              </div>
-            )}
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => {
                   if (guestMode || !user) { setGuestJoinAction('spot a vehicle'); setShowGuestJoinModal(true); return; }
                   onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
                 }}
-                style={{ flex: 1, minHeight: 44, background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                style={{
+                  flex: 1, minHeight: 44,
+                  background: '#F97316', border: 'none', borderRadius: 2,
+                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
               >
-                Spot Vehicle
+                Spot This Vehicle
               </button>
-              {vehicle.is_claimed && vehicle.owner && (
+              {vehicle.is_claimed && vehicle.owner_id ? (
                 <div style={{ flex: 1 }} onClick={e => e.stopPropagation()}>
-                  <FollowButton targetUserId={vehicle.owner.id} />
+                  <MotoFanButton
+                    vehicleId={vehicleId}
+                    ownerId={vehicle.owner_id}
+                    onCountChange={(c) => setFollowerCount(c)}
+                  />
                 </div>
+              ) : (
+                <div style={{ flex: 1 }} />
               )}
             </div>
             {isUnclaimed && (
@@ -1191,7 +1215,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 }}
                 style={{
                   width: '100%', padding: '11px',
-                  background: 'rgba(32,192,96,0.08)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: 8,
+                  background: 'rgba(32,192,96,0.08)', border: '1px solid rgba(32,192,96,0.25)', borderRadius: 2,
                   fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
                   letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#20c060',
                   cursor: 'pointer',
@@ -1224,11 +1248,16 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 10 }}>
               Ratings
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
               {ratingCategories.map(cat => (
-                <div key={cat.label} style={{ background: '#0d1117', borderRadius: 8, padding: '8px 6px', textAlign: 'center' as const, border: '1px solid rgba(255,255,255,0.04)' }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e', display: 'block', marginTop: 2 }}>{cat.label}</span>
+                <div key={cat.label} style={{ padding: '4px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>{cat.label}</span>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
+                  </div>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(cat.avg / 5) * 100}%`, background: '#F97316', transition: 'width 0.5s ease' }} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -1358,100 +1387,85 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
         {/* ═══════════ OWNER-ONLY SECTIONS ═══════════ */}
 
-        {/* ── 10. OWNER ANALYTICS STRIP ── */}
+        {/* ── OWNER SECTION (consolidated) ── */}
         {isOwner && (
-          <div style={{ display: 'flex', background: C.carbon1, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            {[
-              { label: 'This Week', value: '\u2014' },
-              { label: 'New Fans', value: '\u2014' },
-              { label: 'Avg Rating', value: ratingCategories.length > 0 ? (ratingCategories.reduce((s, c) => s + c.avg, 0) / ratingCategories.length).toFixed(1) : '\u2014' },
-            ].map((stat, i, arr) => (
-              <div key={stat.label} style={{ flex: 1, padding: '8px 0', textAlign: 'center' as const, borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#3a4e60', display: 'block', marginTop: 1 }}>{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── 11. OWNER ACTION BAR ── */}
-        {isOwner && (
-          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' as const, gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => {
-                  onNavigate('scan', { plateNumber: vehicle.plate_number || '', plateState: vehicle.state || '' });
-                }}
-                style={{
-                  flex: 1, padding: '11px 0',
-                  background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.accent,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
-              >
-                <Camera size={14} /> Leave a Spot
-              </button>
-              <button
-                onClick={() => setShowManageSheet(true)}
-                style={{
-                  flex: 1, padding: '11px 0',
-                  background: C.carbon1, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
-                  fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
-                  letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.white,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
-              >
-                <Settings size={14} /> Manage Vehicle
-              </button>
+          <div style={{ borderTop: '2px solid rgba(249,115,22,0.25)', padding: '16px', display: 'flex', flexDirection: 'column' as const, gap: 12, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            {/* Owner header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#F97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', padding: '3px 8px', borderRadius: 2 }}>Owner</span>
+              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8' }}>Manage Your Ride</span>
             </div>
+
+            {/* 3-button quick actions */}
             <div style={{ display: 'flex', gap: 8 }}>
               {[
                 { icon: <Image size={16} />, label: 'Upload Photos', action: () => fileInputRef.current?.click() },
-                { icon: <Settings size={16} />, label: 'Edit Info', action: () => {} },
-                { icon: <BarChart3 size={16} />, label: 'Insights', action: () => {} },
+                { icon: <Settings size={16} />, label: 'Edit Info', action: () => setShowManageSheet(true) },
+                { icon: <BarChart3 size={16} />, label: 'Analytics', action: () => {
+                  const el = document.getElementById('owner-toast');
+                  if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
+                } },
               ].map(item => (
                 <button
                   key={item.label}
-                  onClick={() => {
-                    if (item.label === 'Insights' || item.label === 'Edit Info') {
-                      const el = document.getElementById('owner-toast');
-                      if (el) { el.textContent = 'Coming Soon'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1500); }
-                    } else {
-                      item.action();
-                    }
-                  }}
+                  onClick={item.action}
                   style={{
-                    flex: 1, padding: '10px 4px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
-                    background: C.carbon1, border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8,
-                    cursor: 'pointer', color: C.dim,
+                    flex: 1, padding: '12px 4px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                    background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 2,
+                    cursor: 'pointer', color: '#F97316',
                   }}
                 >
                   {item.icon}
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.dim }}>{item.label}</span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>{item.label}</span>
                 </button>
               ))}
             </div>
-            <div id="owner-toast" style={{ textAlign: 'center' as const, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: C.accent, opacity: 0, transition: 'opacity 0.3s', height: 0, overflow: 'visible' }} />
-          </div>
-        )}
+            <div id="owner-toast" style={{ textAlign: 'center' as const, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#F97316', opacity: 0, transition: 'opacity 0.3s', height: 0, overflow: 'visible' }} />
 
-        {/* ── 12. OWNER PHOTOS UPLOAD ── */}
-        {isOwner && (
-          <div style={{ margin: '12px 16px' }}>
+            {/* Privacy toggle */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 14px', background: '#0d1117', borderRadius: 2,
+              border: '1px solid rgba(255,255,255,0.04)',
+            }}>
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>Private Vehicle</div>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>Fans need your approval</div>
+              </div>
+              <button
+                onClick={async () => {
+                  const { error } = await supabase.from('vehicles').update({ is_private: !vehicle.is_private }).eq('id', vehicleId);
+                  if (!error) loadVehicleData();
+                }}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, cursor: 'pointer', border: 'none',
+                  background: vehicle.is_private ? '#F97316' : 'rgba(255,255,255,0.1)',
+                  position: 'relative', transition: 'background 0.2s',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 3,
+                  left: vehicle.is_private ? 22 : 3,
+                  width: 18, height: 18, borderRadius: '50%', background: '#eef4f8', transition: 'left 0.2s',
+                }} />
+              </button>
+            </div>
+
+            {/* MotoFans pending panel */}
+            <MotoFansPendingPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />
+
+            {/* Manage Vehicle CTA */}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              onClick={() => setShowManageSheet(true)}
               style={{
-                width: '100%', padding: '10px 0', borderRadius: 6, cursor: 'pointer',
-                background: 'transparent', border: '1px solid rgba(249,115,22,0.25)',
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                width: '100%', padding: '12px 0',
+                background: 'transparent', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 2,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#F97316',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              <Upload size={12} />
-              {uploading ? 'Uploading...' : '+ Add Photo'}
+              <Settings size={14} /> Manage Vehicle
             </button>
           </div>
         )}
@@ -1585,10 +1599,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         {/* ── 12. OWNER GARAGE ── */}
         {isOwner && (
           <div style={{ padding: '0 18px 24px' }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim, marginBottom: 12 }}>
-              Owner Garage
-            </div>
-
             {/* Owner's Manual row */}
             <div
               onClick={() => {
@@ -1653,38 +1663,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                 )}
               </div>
             )}
-
-            {/* Privacy toggle */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 14px', background: C.carbon1, borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.04)', marginBottom: 12,
-            }}>
-              <div>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.white }}>Private Vehicle</div>
-                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: C.dim, marginTop: 2 }}>Fans need your approval</div>
-              </div>
-              <button
-                onClick={async () => {
-                  const { error } = await supabase.from('vehicles').update({ is_private: !vehicle.is_private }).eq('id', vehicleId);
-                  if (!error) loadVehicleData();
-                }}
-                style={{
-                  width: 44, height: 24, borderRadius: 12, cursor: 'pointer', border: 'none',
-                  background: vehicle.is_private ? C.accent : 'rgba(255,255,255,0.1)',
-                  position: 'relative', transition: 'background 0.2s',
-                }}
-              >
-                <div style={{
-                  position: 'absolute', top: 3,
-                  left: vehicle.is_private ? 22 : 3,
-                  width: 18, height: 18, borderRadius: '50%', background: C.white, transition: 'left 0.2s',
-                }} />
-              </button>
-            </div>
-
-            {/* MotoFans pending panel */}
-            <MotoFansPendingPanel vehicleId={vehicleId} onFollowerUpdated={loadVehicleData} />
 
             {/* Modifications */}
             <div style={{ background: C.carbon1, borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
