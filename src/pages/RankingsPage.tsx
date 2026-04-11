@@ -26,6 +26,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
   const [userVehicle, setUserVehicle] = useState<{ id: string; make: string | null; model: string | null; state: string | null } | null>(null);
   const [initDone, setInitDone] = useState(false);
   const [fallbackReason, setFallbackReason] = useState<string | null>(null);
+  const [showAllVehicles, setShowAllVehicles] = useState(false);
 
   // Load user's top claimed vehicle for scope defaults
   useEffect(() => {
@@ -78,10 +79,14 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
       }
     }
 
+    if (!showAllVehicles) {
+      query = query.eq('is_claimed', true);
+    }
+
     const { data } = await query;
     if (data) setRanked(data);
     setLoading(false);
-  }, [scope, userVehicle, initDone]);
+  }, [scope, userVehicle, initDone, showAllVehicles]);
 
   useEffect(() => {
     loadRankings();
@@ -130,6 +135,21 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
               </button>
             );
           })}
+        </div>
+
+        {/* Claimed-only toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 16px 2px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          <button
+            onClick={() => setShowAllVehicles(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}
+          >
+            <div style={{ width: 28, height: 14, borderRadius: 7, background: showAllVehicles ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.06)', border: `1px solid ${showAllVehicles ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.1)'}`, position: 'relative', transition: 'background 0.2s' }}>
+              <div style={{ position: 'absolute', top: 2, left: showAllVehicles ? 14 : 2, width: 10, height: 10, borderRadius: '50%', background: showAllVehicles ? '#F97316' : '#5a6e7e', transition: 'left 0.2s, background 0.2s' }} />
+            </div>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: showAllVehicles ? '#F97316' : '#5a6e7e' }}>
+              Include Unowned
+            </span>
+          </button>
         </div>
 
         {/* ── FALLBACK NOTICE ── */}
@@ -347,9 +367,19 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
             </p>
             <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e', lineHeight: 1.5, marginBottom: 20 }}>
               {scope === 'your-model'
-                ? `No other ${userVehicle?.make || ''} ${userVehicle?.model || ''} builds have been spotted yet. Be the first to climb.`
-                : 'Spot vehicles to start building the leaderboard.'}
+                ? `No claimed ${userVehicle?.make || ''} ${userVehicle?.model || ''} vehicles ranked yet.`
+                : showAllVehicles
+                ? 'No vehicles ranked in this scope yet. Spot some cars to get it started.'
+                : 'No claimed vehicles ranked here yet.'}
             </p>
+            {!showAllVehicles && (
+              <button
+                onClick={() => setShowAllVehicles(true)}
+                style={{ marginBottom: 12, padding: '8px 18px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', cursor: 'pointer' }}
+              >
+                Show All Vehicles
+              </button>
+            )}
             <button onClick={() => onNavigate('scan')} style={{
               padding: '10px 24px', background: '#F97316', color: '#030508', border: 'none', borderRadius: 6,
               fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700,
