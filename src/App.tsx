@@ -55,6 +55,12 @@ type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
   const hash = window.location.hash.slice(1);
+
+  // PKCE flow: code is in query string, not hash
+  if (window.location.search.includes('code=')) {
+    return { page: 'auth-callback', params: {} };
+  }
+
   if (!hash) return { page: null, params: {} };
 
   if (hash.includes('access_token')) {
@@ -128,6 +134,11 @@ function AppContent() {
 
   useEffect(() => {
     const handleHashChange = () => {
+      // PKCE: code in query string
+      if (window.location.search.includes('code=')) {
+        setCurrentPage('auth-callback');
+        return;
+      }
       const hash = window.location.hash.slice(1);
       const { page, params } = parseUrl();
 

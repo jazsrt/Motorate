@@ -130,11 +130,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
+    const redirectTo = import.meta.env.PROD
+      ? 'https://motorate.vercel.app/#/auth/callback'
+      : `${window.location.origin}/#/auth/callback`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/#/auth/callback`,
+        emailRedirectTo: redirectTo,
       },
     });
     return { data, error: error || null };

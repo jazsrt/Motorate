@@ -16,42 +16,60 @@ export function AuthCallbackPage({ onSuccess }: AuthCallbackPageProps) {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        // PKCE flow: code is in the URL query string (not hash)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code) {
+          // Exchange the code for a session (PKCE flow)
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.error('PKCE exchange error:', error);
+            setErrorMessage(error.message);
+            setStatus('error');
+            return;
+          }
+          setStatus('success');
+          setTimeout(() => onSuccess(), 1500);
+          return;
+        }
+
+        // Legacy implicit flow: tokens in hash (keep for backward compatibility)
         const fullHash = window.location.hash;
         const hashParams = new URLSearchParams(fullHash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
 
         if (accessToken && refreshToken) {
-          // Email confirmation or OAuth with tokens in hash
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
-
           if (error) {
             console.error('Session error:', error);
             setErrorMessage(error.message);
             setStatus('error');
             return;
           }
-
           setStatus('success');
           setTimeout(() => onSuccess(), 1500);
-        } else if (user) {
-          // OAuth redirect — session already established via onAuthStateChange
+          return;
+        }
+
+        if (user) {
           setStatus('success');
           setTimeout(() => onSuccess(), 500);
-        } else {
-          // No tokens and no user yet — wait for onAuthStateChange to fire
-          const timeout = setTimeout(() => {
-            if (!user) {
-              setErrorMessage('Authentication timed out. Please try again.');
-              setStatus('error');
-            }
-          }, 5000);
-          return () => clearTimeout(timeout);
+          return;
         }
+
+        // Nothing in URL and no user — wait briefly for onAuthStateChange
+        const timeout = setTimeout(() => {
+          if (!user) {
+            setErrorMessage('Verification link may have expired. Please request a new one.');
+            setStatus('error');
+          }
+        }, 5000);
+        return () => clearTimeout(timeout);
       } catch (error) {
         console.error('Callback error:', error);
         setErrorMessage('An error occurred during confirmation. Please try again.');
