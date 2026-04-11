@@ -4,8 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { Layout } from '../components/Layout';
 import { Album, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
-import { EmptyState } from '../components/ui/EmptyState';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 interface AlbumType {
   id: string;
@@ -120,172 +118,125 @@ export function AlbumsPage({ onNavigate }: AlbumsPageProps) {
   if (loading) {
     return (
       <Layout currentPage="profile" onNavigate={onNavigate}>
-        <LoadingSpinner size="lg" label="Loading albums..." />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid rgba(249,115,22,0.3)', borderTopColor: '#F97316', animation: 'spin 0.8s linear infinite' }} />
+        </div>
       </Layout>
     );
   }
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div style={{ paddingBottom: 40 }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0 20px' }}>
           <div>
-            <h2 className="text-2xl font-bold mb-2">My Albums</h2>
-            <p className="text-secondary">Organize your car photos into collections</p>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 4 }}>Albums</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e' }}>Organize your vehicle photos into collections</div>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-3 bg-accent-primary hover:bg-accent-hover rounded-xl font-bold uppercase tracking-wider text-sm transition-all active:scale-95 flex items-center gap-2"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: '#F97316', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#030508' }}
           >
-            <Plus className="w-5 h-5" />
-            New Album
+            <Plus size={14} /> New Album
           </button>
         </div>
 
+        {/* Empty state */}
         {albums.length === 0 ? (
-          <div className="bg-surface border border-surfacehighlight rounded-xl">
-            <EmptyState
-              icon={Album}
-              title="No Albums Yet"
-              description="Organize your car photos into albums. Create collections for shows, meets, modifications, and more."
-              actionLabel="Create Your First Album"
-              onAction={() => setShowCreateModal(true)}
-            />
+          <div style={{ padding: '48px 24px', textAlign: 'center', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8 }}>
+            <Album size={40} style={{ color: '#1e2a38', margin: '0 auto 16px', display: 'block' }} strokeWidth={1.2} />
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', marginBottom: 6 }}>No Albums Yet</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', marginBottom: 20, lineHeight: 1.5 }}>
+              Organize your vehicle photos into collections — shows, meets, modifications.
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{ padding: '10px 24px', background: '#F97316', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#030508' }}
+            >
+              Create Your First Album
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {albums.map((album) => (
-              <div
-                key={album.id}
-                className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden hover:border-accent-primary transition-all"
-              >
+              <div key={album.id} style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                {/* Cover image */}
                 {album.cover_image_url ? (
-                  <div
-                    className="w-full h-48 bg-surfacehighlight bg-cover bg-center"
-                    style={{ backgroundImage: `url(${album.cover_image_url})` }}
-                  />
+                  <div style={{ width: '100%', height: 160, backgroundImage: `url(${album.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 ) : (
-                  <div className="w-full h-48 bg-surfacehighlight flex items-center justify-center">
-                    <Album className="w-12 h-12 text-secondary" />
+                  <div style={{ width: '100%', height: 120, background: '#0a0d14', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Album size={32} style={{ color: '#1e2a38' }} strokeWidth={1.2} />
                   </div>
                 )}
 
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold">{album.title}</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toggleAlbumVisibility(album.id, album.is_public)}
-                        className="p-1 hover:bg-surfacehighlight rounded transition"
-                      >
-                        {album.is_public ? (
-                          <Eye className="w-4 h-4 text-accent-primary" />
-                        ) : (
-                          <EyeOff className="w-4 h-4 text-secondary" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => deleteAlbum(album.id)}
-                        className="p-1 hover:bg-surfacehighlight rounded transition"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
+                {/* Info row */}
+                <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', lineHeight: 1, marginBottom: 3 }}>{album.title}</div>
+                    {album.description && (
+                      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.description}</div>
+                    )}
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#3a4e60' }}>
+                      {album.photo_count} {album.photo_count === 1 ? 'photo' : 'photos'} · {album.is_public ? 'Public' : 'Private'}
                     </div>
                   </div>
 
-                  {album.description && (
-                    <p className="text-sm text-secondary mb-3">{album.description}</p>
-                  )}
-
-                  <div className="flex items-center justify-between text-xs text-secondary mb-3">
-                    <span>{album.photo_count} {album.photo_count === 1 ? 'photo' : 'photos'}</span>
-                    <span>{album.is_public ? 'Public' : 'Private'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 12 }}>
+                    <button
+                      onClick={() => toggleAlbumVisibility(album.id, album.is_public)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: album.is_public ? '#F97316' : '#5a6e7e' }}
+                    >
+                      {album.is_public ? <Eye size={16} /> : <EyeOff size={16} />}
+                    </button>
+                    <button
+                      onClick={() => deleteAlbum(album.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#5a6e7e' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => onNavigate('create-post')}
-                    className="w-full py-2 bg-accent-primary hover:bg-accent-hover rounded-lg font-bold text-sm uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Photo
-                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
+        {/* Create modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-surface border border-surfacehighlight rounded-xl p-6 max-w-md w-full">
-              <h3 className="text-xl font-bold mb-4">Create New Album</h3>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+            onClick={() => { setShowCreateModal(false); setNewAlbumName(''); setNewAlbumDescription(''); }}
+          >
+            <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 24, maxWidth: 440, width: '100%' }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 20 }}>New Album</div>
 
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-                    Album Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newAlbumName}
-                    onChange={(e) => setNewAlbumName(e.target.value)}
-                    className="w-full bg-surfacehighlight border border-surfacehighlight rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                    placeholder="e.g., Summer Car Shows 2024"
-                    autoFocus
-                  />
+                  <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6 }}>Album Name *</label>
+                  <input type="text" value={newAlbumName} onChange={e => setNewAlbumName(e.target.value)} placeholder="e.g. Summer Car Shows 2025" autoFocus style={{ width: '100%', padding: '11px 14px', borderRadius: 8, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider text-secondary mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={newAlbumDescription}
-                    onChange={(e) => setNewAlbumDescription(e.target.value)}
-                    rows={3}
-                    className="w-full bg-surfacehighlight border border-surfacehighlight rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
-                    placeholder="What's this album about?"
-                  />
+                  <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', marginBottom: 6 }}>Description</label>
+                  <textarea value={newAlbumDescription} onChange={e => setNewAlbumDescription(e.target.value)} rows={3} placeholder="What's this album about?" style={{ width: '100%', padding: '11px 14px', borderRadius: 8, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#eef4f8', outline: 'none', boxSizing: 'border-box', resize: 'none' }} />
                 </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={newAlbumPublic} onChange={e => setNewAlbumPublic(e.target.checked)} style={{ width: 16, height: 16 }} />
+                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e' }}>Make album public</span>
+                </label>
+              </div>
 
-                <div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={newAlbumPublic}
-                      onChange={(e) => setNewAlbumPublic(e.target.checked)}
-                      className="w-5 h-5 rounded border-surfacehighlight"
-                    />
-                    <span className="text-sm font-bold uppercase tracking-wider text-secondary">
-                      Make album public
-                    </span>
-                  </label>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowCreateModal(false);
-                      setNewAlbumName('');
-                      setNewAlbumDescription('');
-                    }}
-                    className="flex-1 px-4 py-3 bg-surfacehighlight hover:bg-surfacehighlight/80 rounded-xl font-bold uppercase tracking-wider text-sm transition-all active:scale-95"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={createAlbum}
-                    disabled={!newAlbumName.trim()}
-                    className="flex-1 px-4 py-3 bg-accent-primary hover:bg-accent-hover rounded-xl font-bold uppercase tracking-wider text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Create
-                  </button>
-                </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                <button onClick={() => { setShowCreateModal(false); setNewAlbumName(''); setNewAlbumDescription(''); }} style={{ flex: 1, padding: '12px 0', borderRadius: 2, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a8e9e' }}>Cancel</button>
+                <button onClick={createAlbum} disabled={!newAlbumName.trim()} style={{ flex: 1, padding: '12px 0', borderRadius: 2, background: newAlbumName.trim() ? '#F97316' : 'rgba(249,115,22,0.3)', border: 'none', cursor: newAlbumName.trim() ? 'pointer' : 'not-allowed', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#030508', opacity: newAlbumName.trim() ? 1 : 0.5 }}>Create</button>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Layout>
   );
 }
