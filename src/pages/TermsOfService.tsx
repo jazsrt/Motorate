@@ -1,200 +1,89 @@
-import { Layout } from '../components/Layout';
 import { type OnNavigate } from '../types/navigation';
-import { FileText, AlertTriangle, Scale, Ban } from 'lucide-react';
+import { Layout } from '../components/Layout';
+import { ArrowLeft } from 'lucide-react';
 
 interface TermsOfServicePageProps {
   onNavigate: OnNavigate;
 }
 
+const S = {
+  page: { maxWidth: 600, margin: '0 auto', padding: '52px 20px 120px' } as React.CSSProperties,
+  h1: { fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700, color: '#eef4f8', margin: '0 0 4px' } as React.CSSProperties,
+  date: { fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginBottom: 28 },
+  sectionHead: { fontFamily: "'Rajdhani', sans-serif", fontSize: 16, fontWeight: 700, color: '#eef4f8', margin: '24px 0 8px' } as React.CSSProperties,
+  body: { fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.7, margin: '0 0 8px' } as React.CSSProperties,
+  divider: { height: 1, background: 'rgba(255,255,255,0.04)', margin: '20px 0' } as React.CSSProperties,
+  warn: { background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 8, padding: '12px 16px', marginBottom: 12, fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#F97316', lineHeight: 1.6 } as React.CSSProperties,
+};
+
 export function TermsOfServicePage({ onNavigate }: TermsOfServicePageProps) {
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div className="max-w-4xl mx-auto space-y-8 pb-24">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <FileText className="w-16 h-16 text-accent-primary" />
-          </div>
-          <h1 className="text-3xl font-bold">Terms of Service</h1>
-          <p className="text-secondary">Effective Date: December 2025</p>
+      <div style={S.page}>
+        <button onClick={() => onNavigate('profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6e7e', padding: 0 }}>
+          <ArrowLeft size={14} /> Back
+        </button>
+
+        <h1 style={S.h1}>Terms of Service</h1>
+        <p style={S.date}>Effective Date: April 10, 2026</p>
+
+        <p style={S.body}>These Terms of Service ("Terms") govern your access to and use of MotoRate, operated by MotoRate ("we," "our," or "us"). By using MotoRate, you agree to these Terms. If you do not agree, do not use the service.</p>
+
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>1. The Platform</h2>
+        <p style={S.body}>MotoRate is a vehicle-first social network. Users can spot vehicles in public, rate them, claim ownership of their own vehicles, follow vehicles, and earn reputation points and badges through community engagement. Vehicle profiles are based on public observations of vehicles operated in publicly accessible spaces.</p>
+
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>2. Eligibility</h2>
+        <p style={S.body}>You must be at least 13 years old to use MotoRate. By using the service, you represent that you meet this requirement. Users under 18 must have parental or guardian consent.</p>
+
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>3. Your Account</h2>
+        <p style={S.body}>You are responsible for maintaining the security of your account credentials. You are responsible for all activity that occurs under your account. You may not share your login credentials with others or create accounts on behalf of others without their consent. You must provide accurate information when registering.</p>
+
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>4. Anti-Stalking Policy</h2>
+        <div style={S.warn}>
+          MotoRate is strictly prohibited from being used to stalk, harass, track, or monitor specific individuals. This platform records public vehicle observations — not people. Any use of MotoRate to track the movements of a specific person is a violation of these Terms and may be reported to law enforcement.
         </div>
+        <p style={S.body}>To reduce real-time tracking risk, spot posts by non-owners are subject to a publication delay. Vehicle owners can make their vehicle profile private at any time. Violations of this policy result in immediate account termination.</p>
 
-        <div className="bg-surface border border-surfacehighlight rounded-xl p-6 space-y-6">
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Acceptance of Terms</h2>
-            <p className="text-secondary leading-relaxed">
-              By accessing or using Reputation, you agree to be bound by these Terms of Service and 
-              all applicable laws and regulations. If you do not agree with any of these terms, 
-              you are prohibited from using this service.
-            </p>
-          </section>
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>5. Content Rules</h2>
+        <p style={S.body}>You are responsible for any content you post on MotoRate. You agree not to post content that: is false or deliberately misleading, is defamatory, abusive, threatening, or harassing toward any person, contains personal identifying information of individuals (home addresses, phone numbers, etc.), violates intellectual property rights, is sexually explicit or inappropriate, promotes illegal activities, or is designed to manipulate reputation scores fraudulently.</p>
+        <p style={S.body}>MotoRate reserves the right to remove content that violates these rules and to suspend or terminate accounts of repeat offenders.</p>
 
-          <div className="border-t border-surfacehighlight" />
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>6. Vehicle Ownership Claims</h2>
+        <p style={S.body}>By submitting a VIN or ownership documents to claim a vehicle, you represent that you are the current registered owner or authorized lessee of that vehicle. Submitting false ownership claims or fraudulent documents is a violation of these Terms and may be reported to appropriate authorities. Fraudulent claims result in immediate account termination and reversal of the claim.</p>
 
-          <section className="space-y-3">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-6 h-6 text-accent-primary flex-shrink-0 mt-1" />
-              <div>
-                <h2 className="text-xl font-bold mb-2">Anti-Stalking Policy</h2>
-                <div className="bg-amber-900/20 border border-amber-800 rounded-xl p-4 mb-3">
-                  <p className="text-accent-primary leading-relaxed font-semibold">
-                    Do not use Reputation to track, harass, or stalk individuals. This platform is 
-                    intended for vehicle reputation tracking based on public observations, not for 
-                    monitoring or following specific individuals.
-                  </p>
-                </div>
-                <p className="text-secondary leading-relaxed">
-                  Violation of this policy results in immediate account termination and may be 
-                  reported to law enforcement authorities. We implement a 1-hour delay on "spotting" 
-                  posts by non-owners to prevent real-time tracking.
-                </p>
-              </div>
-            </div>
-          </section>
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>7. Prohibited Activities</h2>
+        <p style={S.body}>You may not: use MotoRate to stalk or harass any individual; create false, defamatory, or misleading reviews; use automated scripts or bots to interact with the platform; attempt to reverse-engineer, decompile, or modify the application; use the platform for commercial solicitation without our written authorization; attempt to access other users' accounts or data without authorization; or circumvent any security measures we implement.</p>
 
-          <div className="border-t border-surfacehighlight" />
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>8. Intellectual Property</h2>
+        <p style={S.body}>MotoRate and its design, branding, and code are owned by us. By posting content on MotoRate, you grant us a non-exclusive, royalty-free license to display, store, and distribute that content as part of operating the platform. You retain ownership of your content.</p>
 
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">User Responsibilities</h2>
-            <p className="text-secondary leading-relaxed mb-3">
-              You agree to:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-secondary">
-              <li>Provide accurate and truthful information</li>
-              <li>Maintain the security of your account credentials</li>
-              <li>Not impersonate others or create fake profiles</li>
-              <li>Not post harassing, threatening, or illegal content</li>
-              <li>Not attempt to circumvent security measures</li>
-              <li>Not use automated tools to scrape or collect data</li>
-            </ul>
-          </section>
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>9. Disclaimers</h2>
+        <p style={S.body}>MotoRate is provided "as is" without warranties of any kind. Vehicle ratings and spot reports represent opinions of individual users and are not verified facts. We do not guarantee the accuracy of user-generated content. We do not guarantee continuous availability of the service.</p>
 
-          <div className="border-t border-surfacehighlight" />
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>10. Limitation of Liability</h2>
+        <p style={S.body}>To the maximum extent permitted by applicable law, MotoRate and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the service or any content on it, even if we have been advised of the possibility of such damages.</p>
 
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Content Guidelines</h2>
-            <p className="text-secondary leading-relaxed mb-3">
-              User-generated content must:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-secondary">
-              <li>Be based on factual observations</li>
-              <li>Not contain personal information (addresses, phone numbers)</li>
-              <li>Not include hate speech or discriminatory language</li>
-              <li>Not violate intellectual property rights</li>
-              <li>Not contain explicit or inappropriate material</li>
-            </ul>
-          </section>
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>11. Termination</h2>
+        <p style={S.body}>We may suspend or terminate your account at any time for violations of these Terms or for any other reason at our discretion. You may delete your account at any time through your account settings. Upon termination, your right to use the service ends immediately.</p>
 
-          <div className="border-t border-surfacehighlight" />
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>12. Changes to These Terms</h2>
+        <p style={S.body}>We may update these Terms from time to time. We will notify you of material changes. Continued use of MotoRate after changes take effect constitutes your acceptance of the revised Terms.</p>
 
-          <section className="space-y-3">
-            <div className="flex items-start gap-3">
-              <Scale className="w-6 h-6 text-accent-primary flex-shrink-0 mt-1" />
-              <div>
-                <h2 className="text-xl font-bold mb-2">Vehicle Profiles & Public Interest</h2>
-                <p className="text-secondary leading-relaxed">
-                  Vehicle profiles on Reputation are created based on public observations of vehicles 
-                  in public spaces. This information is collected under the legal basis of 
-                  Legitimate Interest for community safety and reputation tracking purposes.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Verification & Ownership Claims</h2>
-            <p className="text-secondary leading-relaxed">
-              Vehicle ownership verification is processed using AI technology. By submitting 
-              verification documents, you consent to automated processing. False claims of 
-              ownership or submission of fraudulent documents will result in account termination.
-            </p>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <div className="flex items-start gap-3">
-              <Ban className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
-              <div>
-                <h2 className="text-xl font-bold mb-2">Prohibited Activities</h2>
-                <p className="text-secondary leading-relaxed mb-3">
-                  The following activities are strictly prohibited:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-secondary">
-                  <li>Stalking or harassing individuals through vehicle tracking</li>
-                  <li>Creating false or defamatory reviews</li>
-                  <li>Attempting to manipulate reputation scores</li>
-                  <li>Sharing login credentials with others</li>
-                  <li>Reverse engineering or decompiling the application</li>
-                  <li>Using the service for commercial purposes without authorization</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Moderation & Enforcement</h2>
-            <p className="text-secondary leading-relaxed">
-              We reserve the right to moderate, remove, or reject any content that violates 
-              these terms. We may suspend or terminate accounts for violations. Users have the 
-              right to appeal moderation decisions.
-            </p>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Disclaimer of Warranties</h2>
-            <p className="text-secondary leading-relaxed">
-              Reputation is provided "as is" without warranties of any kind. We do not guarantee 
-              the accuracy, completeness, or reliability of user-generated content. Vehicle 
-              ratings and reviews represent opinions of individual users.
-            </p>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Limitation of Liability</h2>
-            <p className="text-secondary leading-relaxed">
-              To the maximum extent permitted by law, Reputation and its operators shall not be 
-              liable for any indirect, incidental, special, or consequential damages arising 
-              from your use of the service.
-            </p>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Changes to Terms</h2>
-            <p className="text-secondary leading-relaxed">
-              We reserve the right to modify these Terms of Service at any time. Continued use 
-              of the service after changes constitutes acceptance of the modified terms.
-            </p>
-          </section>
-
-          <div className="border-t border-surfacehighlight" />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-bold">Contact & Disputes</h2>
-            <p className="text-secondary leading-relaxed">
-              For questions about these terms or to report violations, contact us through our 
-              support channels. Any disputes shall be resolved through binding arbitration.
-            </p>
-          </section>
-        </div>
-
-        <div className="text-center">
-          <button
-            onClick={() => onNavigate('profile')}
-            className="text-accent-primary hover:underline"
-          >
-            Back to Profile
-          </button>
-        </div>
+        <div style={S.divider} />
+        <h2 style={S.sectionHead}>13. Contact</h2>
+        <p style={S.body}>For questions about these Terms or to report violations: <span style={{ color: '#eef4f8' }}>support@motorate.app</span></p>
       </div>
     </Layout>
   );
