@@ -46,8 +46,9 @@ const BadgesPage = lazy(() => import('./pages/BadgesPage').then(m => ({ default:
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const ClaimVehiclePage = lazy(() => import('./pages/ClaimVehiclePage').then(m => ({ default: m.ClaimVehiclePage })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 
-type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'notifications' | 'completed-review' | 'claim-vehicle';
+type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'about' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'notifications' | 'completed-review' | 'claim-vehicle';
 type AuthView = 'login' | 'register';
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
@@ -149,7 +150,7 @@ function AppContent() {
       } else if (hash && !page) {
         // Handle simple page routes (feed, scan, rankings, etc.)
         const simplePage = hash.split('?')[0].split('/')[0];
-        const validPages: Page[] = ['feed', 'rankings', 'scan', 'safety', 'profile', 'create-post', 'challenges', 'search', 'explore', 'messages', 'followers', 'albums', 'privacy', 'terms', 'admin', 'init-admin', 'events', 'premium', 'my-garage', 'badges', 'notifications'];
+        const validPages: Page[] = ['feed', 'rankings', 'scan', 'safety', 'profile', 'create-post', 'challenges', 'search', 'explore', 'messages', 'followers', 'albums', 'privacy', 'terms', 'about', 'admin', 'init-admin', 'events', 'premium', 'my-garage', 'badges', 'notifications'];
         if (validPages.includes(simplePage as Page)) {
           setCurrentPage(simplePage as Page);
         }
@@ -378,6 +379,9 @@ function AppContent() {
       break;
     case 'terms':
       pageContent = <TermsOfServicePage onNavigate={handleNavigate} />;
+      break;
+    case 'about':
+      pageContent = <AboutPage onNavigate={handleNavigate} />;
       break;
     case 'admin':
       pageContent = <AdminDashboard onNavigate={handleNavigate} />;
