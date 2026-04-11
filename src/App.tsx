@@ -488,7 +488,8 @@ function AppContent() {
           badgeName={unlockedBadge.name}
           badgeDescription={unlockedBadge.description}
           tier={unlockedBadge.level_name?.toLowerCase() === 'platinum' ? 'platinum' : unlockedBadge.level_name?.toLowerCase() === 'gold' ? 'gold' : unlockedBadge.level_name?.toLowerCase() === 'silver' ? 'silver' : 'bronze'}
-          icon={<BadgeIcon iconPath={unlockedBadge.icon_path} size={40} alt={unlockedBadge.name} />}
+          icon={<BadgeIcon iconPath={unlockedBadge.icon_path} size={160} alt={unlockedBadge.name} />}
+          iconPath={unlockedBadge.icon_path}
           userHandle={profile?.handle || ''}
           userId={user?.id}
           onClose={dismissBadge}
