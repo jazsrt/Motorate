@@ -17,6 +17,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { CompletedReviewModal } from './components/CompletedReviewModal';
 import { SetHandleModal } from './components/SetHandleModal';
 import { BetaWelcomeModal } from './components/BetaWelcomeModal';
+import { OnboardingTour } from './components/OnboardingTour';
 import './index.css';
 
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then(m => ({ default: m.CreatePostPage })));
@@ -123,6 +124,7 @@ function AppContent() {
   const [, setPreviousPageData] = useState<any>(null);
   const [claimData, setClaimData] = useState<any>(null);
   const [showBetaWelcome, setShowBetaWelcome] = useState(false);
+  const [showOnboardingTour, setShowOnboardingTour] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -167,12 +169,16 @@ function AppContent() {
     };
   }, [user]);
 
-  // Show beta welcome modal once per user, only after onboarding is complete
+  // Show beta welcome modal once per user, only after onboarding is complete.
+  // If welcome already seen but tour was not, fire the tour directly.
   useEffect(() => {
     if (!user || !profile || !profile.onboarding_completed) return;
-    const seen = localStorage.getItem(`motorate_beta_seen_${user.id}`);
-    if (!seen) {
+    const betaSeen = localStorage.getItem(`motorate_beta_seen_${user.id}`);
+    const tourSeen = localStorage.getItem(`motorate_tour_seen_${user.id}`);
+    if (!betaSeen) {
       setShowBetaWelcome(true);
+    } else if (!tourSeen) {
+      setTimeout(() => setShowOnboardingTour(true), 800);
     }
   }, [user, profile]);
 
@@ -512,7 +518,19 @@ function AppContent() {
       {showBetaWelcome && user && (
         <BetaWelcomeModal
           userId={user.id}
-          onDismiss={() => setShowBetaWelcome(false)}
+          onDismiss={() => {
+            setShowBetaWelcome(false);
+            const tourSeen = localStorage.getItem(`motorate_tour_seen_${user.id}`);
+            if (!tourSeen) {
+              setTimeout(() => setShowOnboardingTour(true), 400);
+            }
+          }}
+        />
+      )}
+      {showOnboardingTour && user && (
+        <OnboardingTour
+          userId={user.id}
+          onDismiss={() => setShowOnboardingTour(false)}
         />
       )}
       {currentPage === 'completed-review' && completedReviewData && (
