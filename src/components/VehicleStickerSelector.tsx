@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { giveSticker } from '../lib/stickerService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { AlertCircle, ThumbsUp, ThumbsDown, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import { sounds } from '../lib/sounds';
 import { floatPoints, haptic } from '../utils/floatPoints';
 
@@ -19,11 +19,15 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
   const { user } = useAuth();
   const { showToast } = useToast();
   const stickerContainerRef = useRef<HTMLDivElement>(null);
+
   const [stickers, setStickers] = useState<any[]>([]);
   const [giving, setGiving] = useState<string | null>(null);
   const [positiveCount, setPositiveCount] = useState(0);
   const [negativeCount, setNegativeCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'positive' | 'negative'>('positive');
+  const [selected, setSelected] = useState<any | null>(null);
 
   const loadData = useCallback(async function loadData() {
     setLoading(true);
@@ -33,19 +37,16 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
         .from('sticker_catalog')
         .select('*')
         .order('category', { ascending: false });
-
       if (data) setStickers(data);
     }
 
     async function loadUserStickerCounts() {
       if (!user) return;
-
       const { data: givenStickers } = await supabase
         .from('vehicle_stickers')
         .select(`sticker_id, sticker_definitions!vehicle_stickers_sticker_id_fkey(category)`)
         .eq('vehicle_id', vehicleId)
         .eq('given_by', user.id);
-
       if (givenStickers) {
         let positive = 0;
         let negative = 0;
@@ -63,23 +64,23 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
     setLoading(false);
   }, [vehicleId, user]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  async function handleGiveSticker(sticker: any) {
-    if (!user) {
-      showToast('You must be logged in to give stickers', 'error');
-      return;
-    }
+  // Reset selection when tab changes
+  useEffect(() => { setSelected(null); }, [activeTab]);
 
+  async function handleGiveSticker() {
+    if (!user || !selected || giving) return;
+
+    const sticker = selected;
     const isPositive = sticker.category === 'Positive';
+
     if (isPositive && positiveCount >= MAX_POSITIVE_STICKERS) {
-      showToast(`You can only give up to ${MAX_POSITIVE_STICKERS} positive stickers to this vehicle`, 'error');
+      showToast(`Max ${MAX_POSITIVE_STICKERS} positive stickers per vehicle`, 'error');
       return;
     }
     if (!isPositive && negativeCount >= MAX_NEGATIVE_STICKERS) {
-      showToast(`You can only give up to ${MAX_NEGATIVE_STICKERS} negative stickers to this vehicle`, 'error');
+      showToast(`Max ${MAX_NEGATIVE_STICKERS} negative stickers per vehicle`, 'error');
       return;
     }
 
@@ -90,12 +91,13 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
       sounds.pop();
       haptic(25);
       floatPoints(stickerContainerRef.current, '+5');
-      // Add fly-in animation to the sticker container
       stickerContainerRef.current?.classList.add('sticker-flying');
       setTimeout(() => stickerContainerRef.current?.classList.remove('sticker-flying'), 500);
       showToast(`${sticker.name} sticker given! ${isPositive ? '+2 rep' : '-3 rep'} to owner`, 'success');
       if (isPositive) setPositiveCount(prev => prev + 1);
       else setNegativeCount(prev => prev + 1);
+      setSelected(null);
+      setExpanded(false);
       onStickerGiven?.();
     } else if (result.alreadyGiven) {
       showToast(result.message || 'You already gave this sticker', 'error');
@@ -111,135 +113,162 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
   const canGiveMorePositive = positiveCount < MAX_POSITIVE_STICKERS;
   const canGiveMoreNegative = negativeCount < MAX_NEGATIVE_STICKERS;
   const atLimit = !canGiveMorePositive && !canGiveMoreNegative;
+  const tabStickers = activeTab === 'positive' ? positiveStickers : negativeStickers;
+  const canGiveOnTab = activeTab === 'positive' ? canGiveMorePositive : canGiveMoreNegative;
 
-  if (loading) {
+  if (loading) return null;
+
+  // ── COLLAPSED STATE ──
+  if (!expanded) {
     return (
-      <div className="bg-surface border border-surfacehighlight rounded-xl p-6">
-        <div className="text-center text-secondary text-sm">Loading stickers...</div>
+      <div
+        ref={stickerContainerRef}
+        onClick={() => !atLimit && setExpanded(true)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '11px 0',
+          cursor: atLimit ? 'default' : 'pointer',
+          borderTop: '1px solid rgba(255,255,255,0.04)',
+          marginTop: 8,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
+            🏷️
+          </div>
+          <div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: atLimit ? '#5a6e7e' : '#F97316' }}>
+              {atLimit ? 'Sticker Limit Reached' : 'Leave a Sticker'}
+            </div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 1 }}>
+              {canGiveMorePositive ? `${MAX_POSITIVE_STICKERS - positiveCount} positive` : 'No positive left'} · {canGiveMoreNegative ? `${MAX_NEGATIVE_STICKERS - negativeCount} negative remaining` : 'No negative left'}
+            </div>
+          </div>
+        </div>
+        {!atLimit && (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e7e" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+        )}
       </div>
     );
   }
 
+  // ── EXPANDED STATE ──
   return (
-    <div ref={stickerContainerRef} className="bg-surface border border-surfacehighlight rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-accent-primary" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-primary">Give a Bumper Sticker</h3>
-        </div>
-        <div className="flex items-center gap-3 text-[11px] font-bold">
-          <span className="flex items-center gap-1 text-green-400">
-            <ThumbsUp className="w-3 h-3" />
-            {positiveCount}/{MAX_POSITIVE_STICKERS}
+    <div ref={stickerContainerRef} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', marginTop: 8, background: '#070a0f' }}>
+
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 8px' }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#F97316' }}>
+          Leave a Sticker
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Limit counters */}
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: canGiveMorePositive ? '#4ade80' : '#3a4e60', display: 'flex', alignItems: 'center', gap: 3, fontVariantNumeric: 'tabular-nums' }}>
+            👍 {positiveCount}/{MAX_POSITIVE_STICKERS}
           </span>
-          <span className="flex items-center gap-1 text-red-400">
-            <ThumbsDown className="w-3 h-3" />
-            {negativeCount}/{MAX_NEGATIVE_STICKERS}
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: canGiveMoreNegative ? '#f87171' : '#3a4e60', display: 'flex', alignItems: 'center', gap: 3, fontVariantNumeric: 'tabular-nums' }}>
+            👎 {negativeCount}/{MAX_NEGATIVE_STICKERS}
           </span>
+          {/* Close */}
+          <button
+            onClick={() => { setExpanded(false); setSelected(null); }}
+            style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <X size={10} color="#7a8e9e" />
+          </button>
         </div>
       </div>
 
-      <div className="p-5 space-y-5">
-        {atLimit && (
-          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/25">
-            <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-orange-300">
-              <strong className="block mb-0.5">Sticker limit reached</strong>
-              You've given the maximum number of stickers to this vehicle.
-            </p>
-          </div>
-        )}
-
-        {positiveStickers.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <ThumbsUp className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-green-400">Positive Vibes</span>
-              </div>
-              {!canGiveMorePositive && (
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Limit Reached</span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {positiveStickers.map((sticker) => {
-                const isDisabled = giving !== null || !canGiveMorePositive;
-                const isGiving = giving === sticker.id;
-                return (
-                  <button
-                    key={sticker.id}
-                    onClick={() => handleGiveSticker(sticker)}
-                    disabled={isDisabled}
-                    className={`
-                      relative flex flex-col items-center gap-1.5 p-3.5 rounded-xl border transition-all duration-200 text-center
-                      ${isDisabled && !isGiving
-                        ? 'opacity-35 cursor-not-allowed border-white/[0.06] bg-white/[0.02]'
-                        : 'border-green-500/40 bg-green-500/5 hover:bg-green-500/12 hover:border-green-400/60 hover:scale-[1.03] active:scale-[0.97] cursor-pointer'}
-                      ${isGiving ? 'scale-95 opacity-70' : ''}
-                    `}
-                  >
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                      background: sticker.category === 'Positive' ? 'rgba(32,192,96,0.12)' : 'rgba(239,68,68,0.12)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18,
-                    }}>
-                      {sticker.icon_name || '\uD83D\uDE97'}
-                    </div>
-                    <span className="text-[11px] font-bold leading-tight text-primary">{sticker.name}</span>
-                    <span className="text-[10px] font-semibold text-green-400">+2 rep</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {negativeStickers.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <ThumbsDown className="w-3.5 h-3.5 text-red-400" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-red-400">Constructive Feedback</span>
-              </div>
-              {!canGiveMoreNegative && (
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Limit Reached</span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {negativeStickers.map((sticker) => {
-                const isDisabled = giving !== null || !canGiveMoreNegative;
-                const isGiving = giving === sticker.id;
-                return (
-                  <button
-                    key={sticker.id}
-                    onClick={() => handleGiveSticker(sticker)}
-                    disabled={isDisabled}
-                    className={`
-                      relative flex flex-col items-center gap-1.5 p-3.5 rounded-xl border transition-all duration-200 text-center
-                      ${isDisabled && !isGiving
-                        ? 'opacity-35 cursor-not-allowed border-white/[0.06] bg-white/[0.02]'
-                        : 'border-red-500/40 bg-red-500/5 hover:bg-red-500/12 hover:border-red-400/60 hover:scale-[1.03] active:scale-[0.97] cursor-pointer'}
-                      ${isGiving ? 'scale-95 opacity-70' : ''}
-                    `}
-                  >
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                      background: sticker.category === 'Positive' ? 'rgba(32,192,96,0.12)' : 'rgba(239,68,68,0.12)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18,
-                    }}>
-                      {sticker.icon_name || '\uD83D\uDE97'}
-                    </div>
-                    <span className="text-[11px] font-bold leading-tight text-primary">{sticker.name}</span>
-                    <span className="text-[10px] font-semibold text-red-400">-3 rep</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+      {/* Tab toggle */}
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: 0 }}>
+        <button
+          onClick={() => setActiveTab('positive')}
+          style={{
+            flex: 1, padding: '7px 0', textAlign: 'center' as const, background: 'none', border: 'none',
+            cursor: canGiveMorePositive ? 'pointer' : 'default',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+            color: activeTab === 'positive' ? '#4ade80' : '#3a4e60',
+            borderBottom: activeTab === 'positive' ? '2px solid #4ade80' : '2px solid transparent',
+            opacity: canGiveMorePositive ? 1 : 0.45,
+          }}
+        >
+          👍 Positive {!canGiveMorePositive && '· Limit reached'}
+        </button>
+        <button
+          onClick={() => canGiveMoreNegative && setActiveTab('negative')}
+          style={{
+            flex: 1, padding: '7px 0', textAlign: 'center' as const, background: 'none', border: 'none',
+            cursor: canGiveMoreNegative ? 'pointer' : 'default',
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+            color: activeTab === 'negative' ? '#f87171' : '#3a4e60',
+            borderBottom: activeTab === 'negative' ? '2px solid #f87171' : '2px solid transparent',
+            opacity: canGiveMoreNegative ? 1 : 0.45,
+          }}
+        >
+          👎 Negative {!canGiveMoreNegative && '· Limit reached'}
+        </button>
       </div>
+
+      {/* Emoji tile row — horizontal scroll */}
+      <div style={{ display: 'flex', gap: 4, padding: '10px 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {tabStickers.map(sticker => {
+          const isSelected = selected?.id === sticker.id;
+          const isPos = sticker.category === 'Positive';
+          const selColor = isPos ? 'rgba(34,197,94,' : 'rgba(239,68,68,';
+          return (
+            <button
+              key={sticker.id}
+              onClick={() => canGiveOnTab && setSelected(isSelected ? null : sticker)}
+              disabled={!canGiveOnTab}
+              style={{
+                flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3,
+                padding: '8px 10px', borderRadius: 8, minWidth: 56, cursor: canGiveOnTab ? 'pointer' : 'not-allowed',
+                border: `1px solid ${isSelected ? `${selColor}0.4)` : 'rgba(255,255,255,0.06)'}`,
+                background: isSelected ? `${selColor}0.1)` : '#0a0d14',
+                opacity: !canGiveOnTab ? 0.35 : 1,
+                transition: 'all 0.12s',
+              }}
+            >
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{sticker.icon_name || '🚗'}</span>
+              <span style={{
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
+                letterSpacing: '0.06em', textTransform: 'uppercase' as const, textAlign: 'center' as const,
+                color: isSelected ? (isPos ? '#4ade80' : '#f87171') : '#5a6e7e',
+                whiteSpace: 'nowrap' as const,
+              }}>
+                {sticker.name}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Confirm bar — appears when a sticker is selected */}
+      {selected && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <span style={{ fontSize: 18 }}>{selected.icon_name || '🚗'}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#eef4f8' }}>
+              {selected.name}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: selected.category === 'Positive' ? '#4ade80' : '#f87171', marginTop: 1 }}>
+              {selected.category === 'Positive' ? '+2 RP to owner' : '-3 RP to owner'}
+            </div>
+          </div>
+          <button
+            onClick={handleGiveSticker}
+            disabled={!!giving}
+            style={{
+              padding: '7px 16px', background: '#F97316', border: 'none', borderRadius: 2,
+              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508',
+              cursor: giving ? 'not-allowed' : 'pointer', opacity: giving ? 0.6 : 1, flexShrink: 0,
+            }}
+          >
+            {giving ? 'Giving...' : 'Give Sticker'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
