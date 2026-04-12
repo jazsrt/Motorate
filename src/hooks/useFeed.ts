@@ -63,6 +63,7 @@ export function useFeed(userId?: string): UseFeedReturn {
           comment_count: post.comment_count,
           view_count: post.view_count || 0,
           vehicle_id: post.vehicle_id,
+          badge_icon_path: (post as any).badge_icon_path || null,
           rating_driver: post.rating_driver,
           rating_driving: post.rating_driving,
           rating_vehicle: post.rating_vehicle,

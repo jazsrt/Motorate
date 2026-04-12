@@ -21,6 +21,7 @@ export interface FeedPost {
   location_label: string | null;
   vehicle_id: string | null;
   badge_id: string | null;
+  badge_icon_path: string | null;
   recipient_vehicle_id: string | null;
   created_at: string;
   privacy_level: string;
@@ -112,6 +113,7 @@ export async function loadFeedCursor(
       location_label,
       vehicle_id,
       badge_id,
+      badge_info:badge_id(name, tier, icon_path),
       recipient_vehicle_id,
       created_at,
       published_at,
@@ -211,6 +213,7 @@ export async function loadFeedCursor(
           location_label: post.location_label,
           vehicle_id: post.vehicle_id,
           badge_id: post.badge_id,
+          badge_icon_path: (post.badge_info as any)?.icon_path || null,
           recipient_vehicle_id: post.recipient_vehicle_id,
           created_at: post.created_at,
           privacy_level: post.privacy_level,
@@ -253,6 +256,7 @@ export async function loadFeedCursor(
           location_label: post.location_label,
           vehicle_id: post.vehicle_id,
           badge_id: post.badge_id,
+          badge_icon_path: (post.badge_info as any)?.icon_path || null,
           recipient_vehicle_id: post.recipient_vehicle_id,
           created_at: post.created_at,
           privacy_level: post.privacy_level,

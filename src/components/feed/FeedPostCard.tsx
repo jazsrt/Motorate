@@ -40,6 +40,7 @@ interface FeedPostCardProps {
     location?: string | null;
     location_label?: string | null;
     badge_id?: string | null;
+    badge_icon_path?: string | null;
   };
   vehicleRank?: number | null;
   currentUserId?: string | null;
@@ -96,6 +97,7 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
 
   const isVideo = post.video_url && (post.content_type === 'video' || post.post_type === 'video');
   const isBadgePost = post.post_type === 'badge' || post.post_type === 'badge_given';
+  const badgeImageUrl = post.badge_icon_path ? `/badges/${post.badge_icon_path}` : null;
 
   // No media = no render for spot/badge posts
   if (!imageUrl && !isVideo && !isBadgePost) {
@@ -144,18 +146,47 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#000' }}
             />
           ) : isBadgePost && !imageUrl ? (
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, #131d2a 0%, #060a10 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, #131d2a 0%, #060a10 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <div style={{ position: 'absolute', width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(240,160,48,0.18) 0%, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+              {badgeImageUrl ? (
+                <img
+                  src={badgeImageUrl}
+                  alt=""
+                  style={{ width: 96, height: 96, objectFit: 'contain', display: 'block', position: 'relative', zIndex: 2, filter: 'drop-shadow(0 0 16px rgba(240,160,48,0.4))' }}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                />
+              ) : (
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.2" style={{ position: 'relative', zIndex: 2 }}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              )}
               <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#f0a030', textAlign: 'center', zIndex: 2, position: 'relative' }}>Badge Earned</span>
             </div>
           ) : imageUrl && !imgError ? (
-            <img
-              src={imageUrl}
-              alt=""
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block', background: '#030508' }}
-              onLoad={handleImageLoad}
-              onError={() => setImgError(true)}
-            />
+            <>
+              <img
+                src={imageUrl}
+                alt=""
+                style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%',
+                  objectFit: 'cover', objectPosition: 'center center', display: 'block',
+                  background: '#030508',
+                  filter: isBadgePost ? 'saturate(0.3) brightness(0.45)' : 'none',
+                }}
+                onLoad={handleImageLoad}
+                onError={() => setImgError(true)}
+              />
+              {isBadgePost && badgeImageUrl && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+                  <div style={{ width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(240,160,48,0.15) 0%, transparent 70%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img
+                      src={badgeImageUrl}
+                      alt=""
+                      style={{ width: 90, height: 90, objectFit: 'contain', filter: 'drop-shadow(0 0 14px rgba(240,160,48,0.5))' }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1a2535, #0d1520, #08101a)' }}>
               {/* HUD grid texture */}
@@ -213,6 +244,42 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
               {modelLabel || (isBadgePost ? (post.caption || 'Badge Earned') : '---')}
             </div>
 
+            {/* Ratings strip — spot posts with ratings only */}
+            {post.post_type === 'spot' && (post.looks_rating || post.sound_rating || post.condition_rating) && (
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, marginBottom: 2 }}>
+                {post.looks_rating != null && (
+                  <>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#f0a030' }}>★ {post.looks_rating}.0</span>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>Looks</span>
+                  </>
+                )}
+                {post.sound_rating != null && (
+                  <>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#f0a030' }}>★ {post.sound_rating}.0</span>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>Sound</span>
+                  </>
+                )}
+                {post.condition_rating != null && (
+                  <>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, color: '#f0a030' }}>★ {post.condition_rating}.0</span>
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#3a4e60' }}>Cond.</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Caption — non-badge posts only, 2 lines max */}
+            {post.caption && !isBadgePost && (
+              <div style={{
+                fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#a8bcc8',
+                lineHeight: 1.4, marginTop: 3, marginBottom: 2,
+                display: '-webkit-box', WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
+              }}>
+                {post.caption}
+              </div>
+            )}
+
             {/* Row C: Action row */}
             <div style={{
               display: 'flex', alignItems: 'center',
@@ -229,6 +296,15 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                 {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
               </button>
+              {(post.view_count ?? 0) > 0 && (
+                <>
+                  <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#3a4e60' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    {formatCount(post.view_count)}
+                  </div>
+                </>
+              )}
               <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60' }}>
                 by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
               </span>
