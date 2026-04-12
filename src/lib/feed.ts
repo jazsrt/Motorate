@@ -113,7 +113,6 @@ export async function loadFeedCursor(
       location_label,
       vehicle_id,
       badge_id,
-      badge_info:badge_id(name, tier, icon_path),
       recipient_vehicle_id,
       created_at,
       published_at,
@@ -193,6 +192,19 @@ export async function loadFeedCursor(
     });
   }
 
+  // Batch: fetch badge icon_path for badge posts
+  const badgeIds = [...new Set(visiblePosts.map((p) => p.badge_id).filter(Boolean))] as string[];
+  const badgeIconMap: Record<string, string> = {};
+  if (badgeIds.length > 0) {
+    const { data: badgeRows } = await supabase
+      .from('badge_catalog')
+      .select('id, icon_path')
+      .in('id', badgeIds);
+    (badgeRows || []).forEach((b: any) => {
+      if (b.icon_path) badgeIconMap[b.id] = b.icon_path;
+    });
+  }
+
   const enrichedPosts = visiblePosts.map((post: any) => {
       try {
         const likeCount = likeCounts[post.id] || 0;
@@ -213,7 +225,7 @@ export async function loadFeedCursor(
           location_label: post.location_label,
           vehicle_id: post.vehicle_id,
           badge_id: post.badge_id,
-          badge_icon_path: (post.badge_info as any)?.icon_path || null,
+          badge_icon_path: post.badge_id ? (badgeIconMap[post.badge_id] || null) : null,
           recipient_vehicle_id: post.recipient_vehicle_id,
           created_at: post.created_at,
           privacy_level: post.privacy_level,
@@ -256,7 +268,7 @@ export async function loadFeedCursor(
           location_label: post.location_label,
           vehicle_id: post.vehicle_id,
           badge_id: post.badge_id,
-          badge_icon_path: (post.badge_info as any)?.icon_path || null,
+          badge_icon_path: post.badge_id ? (badgeIconMap[post.badge_id] || null) : null,
           recipient_vehicle_id: post.recipient_vehicle_id,
           created_at: post.created_at,
           privacy_level: post.privacy_level,
