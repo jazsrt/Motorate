@@ -222,7 +222,7 @@ export function VinClaimModal({
                 margin: 0,
                 lineHeight: 1,
               }}>
-                {step === 'done' ? 'Verified!' : step === 'handle' ? 'Your Handle' : 'Claim via VIN'}
+                {step === 'done' ? 'Verified!' : step === 'handle' ? 'Your Username' : 'Claim via VIN'}
               </h3>
             </div>
           </div>
@@ -471,16 +471,16 @@ export function VinClaimModal({
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
             <div>
               <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', marginBottom: 4 }}>
-                Choose a Handle
+                Choose a Username
               </div>
               <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', margin: 0, lineHeight: 1.5 }}>
-                This is your vehicle's permanent identity on MotoRate. It can't be changed after claiming.
+                This is your vehicle's permanent username on MotoRate. It can't be changed after claiming.
               </p>
             </div>
 
             <div>
               <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#7a8e9e', marginBottom: 8 }}>
-                Vehicle Handle
+                Vehicle Username
               </label>
               <div style={{ position: 'relative' as const, display: 'flex', alignItems: 'center' }}>
                 <span style={{ position: 'absolute' as const, left: 14, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, color: '#F97316', pointerEvents: 'none' as const }}>@</span>

@@ -42,7 +42,7 @@ export function SetHandleModal({ userId, onComplete }: SetHandleModalProps) {
         .maybeSingle();
 
       if (data) {
-        setError('This handle is taken');
+        setError('That username is taken');
         setAvailable(false);
       } else {
         setError('');
@@ -121,7 +121,7 @@ export function SetHandleModal({ userId, onComplete }: SetHandleModalProps) {
           fontFamily: "'Rajdhani', sans-serif", fontSize: 28, fontWeight: 700,
           color: '#eef4f8', textAlign: 'center' as const, margin: '0 0 8px', lineHeight: 1,
         }}>
-          Choose Your Handle
+          Choose Your Username
         </h1>
         <p style={{
           fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#5a6e7e',
@@ -141,7 +141,7 @@ export function SetHandleModal({ userId, onComplete }: SetHandleModalProps) {
             type="text"
             value={handle}
             onChange={e => setHandle(e.target.value.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20))}
-            placeholder="yourhandle"
+            placeholder="yourusername"
             autoFocus
             onKeyDown={e => e.key === 'Enter' && canSubmit && handleSubmit()}
             style={{
@@ -175,7 +175,7 @@ export function SetHandleModal({ userId, onComplete }: SetHandleModalProps) {
             <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#ef4444', margin: 0 }}>{error}</p>
           )}
           {available && !error && (
-            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#22c55e', margin: 0 }}>Handle is available</p>
+            <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#22c55e', margin: 0 }}>Username is available</p>
           )}
         </div>
 

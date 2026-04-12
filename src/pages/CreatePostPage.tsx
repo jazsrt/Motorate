@@ -36,7 +36,6 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [showSpectatorModal, setShowSpectatorModal] = useState(false);
-  const [upgradereRequested, setUpgradeRequested] = useState(false);
   const [ownerVehicles, setOwnerVehicles] = useState<Array<{
     id: string;
     make: string | null;
@@ -165,28 +164,6 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   useEffect(() => {
     detectLocation();
   }, []);
-
-  const handleUpgradeRequest = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: user.id,
-          type: 'upgrade_request',
-          message: 'User has requested upgrade from spectator to user role',
-          data: { role: 'spectator', requested_role: 'user' }
-        });
-
-      if (error) throw error;
-
-      setUpgradeRequested(true);
-      showToast('Upgrade request submitted! An admin will review it soon.', 'success');
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Failed to submit upgrade request', 'error');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,55 +369,46 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
               </div>
             </div>
 
-            {upgradereRequested ? (
-              <div style={{ textAlign: 'center' }}>
-                <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#4ade80', marginBottom: 8 }}>Request Submitted!</h3>
-                <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.55 }}>
-                  An admin will review your upgrade request soon. You'll receive a notification once it's been processed.
-                </p>
+            <div style={{ textAlign: 'center', marginBottom: 18 }}>
+              <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#eef4f8', marginBottom: 8 }}>Claim Your Vehicle to Post</h3>
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.55 }}>
+                Posting to the feed is for verified vehicle owners. Claim your ride first — or spot someone else's car using the Spot flow.
+              </p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14, marginBottom: 18 }}>
+              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#F97316', marginBottom: 10 }}>Two ways to contribute</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', margin: '0 0 2px' }}>Claim your vehicle</p>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', margin: 0, lineHeight: 1.4 }}>Search your plate, verify with your VIN, and unlock posting, albums, and your full garage.</p>
+                </div>
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.04)' }} />
+                <div>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', margin: '0 0 2px' }}>Spot a ride</p>
+                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', margin: 0, lineHeight: 1.4 }}>See something cool on the street? Use Spot to rate it, slap a sticker on it, and earn RP — no claim needed.</p>
+                </div>
               </div>
-            ) : (
-              <>
-                <div style={{ textAlign: 'center', marginBottom: 18 }}>
-                  <h3 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#eef4f8', marginBottom: 8 }}>Upgrade Required</h3>
-                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: '#7a8e9e', lineHeight: 1.55 }}>
-                    Spectator accounts can browse and engage, but creating posts requires a User account.
-                  </p>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14, marginBottom: 18 }}>
-                  <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8', marginBottom: 8 }}>To create content, you can:</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {['Request upgrade to User account (quick & free)', 'Claim your vehicle to get full access', 'Browse community content as spectator'].map(item => (
-                      <span key={item} style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-              {!upgradereRequested && (
-                <>
-                  <button
-                    onClick={handleUpgradeRequest}
-                    style={{ ...primaryBtnStyle, borderRadius: 10 }}
-                  >
-                    Request Upgrade
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowSpectatorModal(false);
-                      onNavigate('profile');
-                    }}
-                    style={{ width: '100%', padding: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#eef4f8', cursor: 'pointer' }}
-                  >
-                    Claim Vehicle
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => {
+                  setShowSpectatorModal(false);
+                  onNavigate('explore');
+                }}
+                style={{ ...primaryBtnStyle, borderRadius: 10 }}
+              >
+                Find My Car
+              </button>
+              <button
+                onClick={() => {
+                  setShowSpectatorModal(false);
+                  onNavigate('scan');
+                }}
+                style={{ width: '100%', padding: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#eef4f8', cursor: 'pointer' }}
+              >
+                Spot a Ride Instead
+              </button>
               <button
                 onClick={() => {
                   setShowSpectatorModal(false);
@@ -448,7 +416,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                 }}
                 style={{ width: '100%', padding: 13, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#7a8e9e', cursor: 'pointer' }}
               >
-                {upgradereRequested ? 'Close' : 'Cancel'}
+                Cancel
               </button>
             </div>
           </div>
