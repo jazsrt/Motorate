@@ -314,7 +314,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         {/* ── 1. FLEET HERO ── */}
         <div style={{ position: 'relative', width: '100%', height: 260, minHeight: 200, overflow: 'hidden' }}>
           {heroImage ? (
-            <img src={heroImage} alt="" className="mr-hero-pan" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img src={heroImage} alt="" className="mr-hero-pan" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0a0d14, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Car style={{ width: 48, height: 48, color: '#1e2a38' }} strokeWidth={1.2} />
@@ -407,10 +407,10 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   key={vehicle.id}
                   className="card-v3-lift"
                   onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })}
-                  style={{ position: 'relative', width: '100%', height: 140, minHeight: 140, overflow: 'hidden', cursor: 'pointer', background: '#0a0d14', transition: 'transform 0.25s, border-color 0.3s, box-shadow 0.3s' }}
+                  style={{ position: 'relative', width: '100%', aspectRatio: '16 / 7', overflow: 'hidden', cursor: 'pointer', background: '#0a0d14', transition: 'transform 0.25s, border-color 0.3s, box-shadow 0.3s' }}
                 >
                   {img ? (
-                    <img src={img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block' }} />
                   ) : (
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0d1117, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Car style={{ width: 36, height: 36, color: '#1e2a38' }} strokeWidth={1.2} />
@@ -479,9 +479,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
             {retiredVehicles.map(rv => {
               const rvImg = rv.photo_url_1 || retiredStockImages[rv.id];
               return (
-                <div key={rv.id} style={{ position: 'relative', width: '100%', height: 120, overflow: 'hidden', background: '#0a0d14' }}>
+                <div key={rv.id} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 7', overflow: 'hidden', background: '#0a0d14' }}>
                   {rvImg ? (
-                    <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'saturate(0.4) brightness(0.7)' }} />
+                    <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block', filter: 'saturate(0.4) brightness(0.7)' }} />
                   ) : (
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0d1117, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Car style={{ width: 32, height: 32, color: '#1e2a38', opacity: 0.5 }} strokeWidth={1.2} />
@@ -612,9 +612,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               {retiredVehicles.map(rv => {
                 const rvImg = rv.photo_url_1 || retiredStockImages[rv.id];
                 return (
-                  <div key={rv.id} style={{ position: 'relative', width: '100%', height: 120, overflow: 'hidden', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <div key={rv.id} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 7', overflow: 'hidden', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                     {rvImg ? (
-                      <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(0.4) brightness(0.7)' }} />
+                      <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', filter: 'saturate(0.4) brightness(0.7)' }} />
                     ) : (
                       <div style={{ position: 'absolute', inset: 0, background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Car style={{ width: 32, height: 32, color: '#1e2a38', opacity: 0.5 }} strokeWidth={1.2} />
