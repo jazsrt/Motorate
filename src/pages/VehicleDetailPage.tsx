@@ -1100,8 +1100,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               flex: 1, padding: '12px 0', textAlign: 'center' as const,
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               cursor: stat.onClick ? 'pointer' : 'default',
+              transition: 'background 0.15s',
             }}>
-              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: stat.label === 'RP' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animation: 'motorate-fade-in 0.5s ease-out', animationDelay: `${i * 0.1}s`, animationFillMode: 'both' }}>{stat.value}</span>
+              <span className="mr-stat-num" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: stat.label === 'RP' ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animationDelay: `${i * 0.08}s` }}>{stat.value}</span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.onClick ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
@@ -1112,6 +1113,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
             borderBottom: '1px solid rgba(255,255,255,0.04)',
+            transition: 'background 0.15s',
           }}>
             <div
               onClick={() => vehicle.owner && onNavigate('user-profile', vehicle.owner.id)}
@@ -1256,7 +1258,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', fontVariantNumeric: 'tabular-nums' }}>{cat.avg.toFixed(1)}</span>
                   </div>
                   <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(cat.avg / 5) * 100}%`, background: '#F97316', transition: 'width 0.5s ease' }} />
+                    <div className="mr-bar" style={{ height: '100%', background: '#F97316', '--bar-w': `${(cat.avg / 5) * 100}%` } as React.CSSProperties} />
                   </div>
                 </div>
               ))}

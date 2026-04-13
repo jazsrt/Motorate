@@ -22,6 +22,7 @@ const pillStyle = (active: boolean): React.CSSProperties => ({
   fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
   letterSpacing: '0.1em', textTransform: 'uppercase' as const,
   color: active ? '#F97316' : '#3a4e60', cursor: 'pointer', whiteSpace: 'nowrap' as const,
+  transition: 'all 0.2s',
 });
 
 export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
@@ -317,15 +318,16 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
 
       {/* Feed posts */}
       {displayPosts.length > 0 && (
-        <div>
-          {displayPosts.map((post) => (
-            <FeedPostCard
-              key={post.id}
-              post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
-              vehicleRank={null}
-              currentUserId={user?.id}
-              onNavigate={onNavigate}
-            />
+        <div className="page-enter">
+          {displayPosts.map((post, i) => (
+            <div key={post.id} className={i < 7 ? `v3-stagger v3-stagger-${i + 1}` : undefined}>
+              <FeedPostCard
+                post={post as unknown as Parameters<typeof FeedPostCard>[0]['post']}
+                vehicleRank={null}
+                currentUserId={user?.id}
+                onNavigate={onNavigate}
+              />
+            </div>
           ))}
 
           {/* Infinite scroll sentinel */}

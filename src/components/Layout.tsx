@@ -31,6 +31,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         padding: '14px 16px 10px',
         background: '#070a0f',
         borderBottom: '1px solid rgba(249,115,22,0.10)',
+        transition: 'background 0.3s',
       }}>
         <button
           onClick={() => onNavigate('feed')}
@@ -90,9 +91,13 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             <button key={item.id} onClick={() => onNavigate(item.id)} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               gap: 3, cursor: 'pointer', padding: 0, background: 'none', border: 'none',
+              position: 'relative',
             }}>
-              <Icon size={20} strokeWidth={1.5} style={{ color: isActive ? '#F97316' : '#3a4e60' }} />
+              <Icon size={20} strokeWidth={1.5} style={{ color: isActive ? '#F97316' : '#3a4e60', transition: 'color 0.2s' }} />
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: isActive ? '#F97316' : '#3a4e60' }}>{item.label}</span>
+              {isActive && (
+                <div style={{ position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', width: 3, height: 3, borderRadius: '50%', background: '#F97316' }} />
+              )}
             </button>
           );
         })}
@@ -104,6 +109,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             background: '#F97316', border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', marginTop: -10,
+            transition: 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s',
           }}>
           <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1 }}>M</span>
         </button>
@@ -116,9 +122,13 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             <button key={item.id} onClick={() => onNavigate(item.id)} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               gap: 3, cursor: 'pointer', padding: 0, background: 'none', border: 'none',
+              position: 'relative',
             }}>
-              <Icon size={20} strokeWidth={1.5} style={{ color: isActive ? '#F97316' : '#3a4e60' }} />
+              <Icon size={20} strokeWidth={1.5} style={{ color: isActive ? '#F97316' : '#3a4e60', transition: 'color 0.2s' }} />
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: isActive ? '#F97316' : '#3a4e60' }}>{item.label}</span>
+              {isActive && (
+                <div style={{ position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', width: 3, height: 3, borderRadius: '50%', background: '#F97316' }} />
+              )}
             </button>
           );
         })}

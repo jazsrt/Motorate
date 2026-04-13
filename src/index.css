@@ -1,8 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: 'Barlow', sans-serif;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    MotoRate V3 Design System — "Instrument Cluster"
@@ -13,22 +17,22 @@
   --black:        #030508;
   --carbon-0:     #070a0f;
   --carbon-1:     #0a0d14;
-  --carbon-2:     #0e1320;
-  --carbon-3:     #121a2c;
+  --carbon-2:     #0d1117;
+  --carbon-3:     #111720;
   --carbon-4:     #182036;
   --surface-1:    #1c2840;
   --surface-2:    #22304c;
-  --steel:        #2c3a50;
-  --muted:        #445566;
+  --steel:        #1e2a38;
+  --muted:        #3a4e60;
   --subtle:       #607080;
   --dim:          #7a8e9e;
-  --light:        #a8bcc8;
+  --light:        #9aaebc;
   --bright:       #d8e8f0;
   --white:        #eef4f8;
 
   --accent:       #F97316;
   --accent-hot:   #ff9030;
-  --accent-dim:   rgba(249,115,22,0.12);
+  --accent-dim:   rgba(249,115,22,0.10);
   --accent-glow:  rgba(249,115,22,0.40);
   --accent-hard:  rgba(249,115,22,0.85);
 
@@ -1222,4 +1226,65 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── Stagger / Hero / Bar / Count / Tab Animations ─────────── */
+@keyframes motorate-stagger-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motorate-hero-pan {
+  0%   { transform: scale(1.05) translateX(-1%); }
+  100% { transform: scale(1.05) translateX(1%); }
+}
+
+@keyframes motorate-bar-fill {
+  from { width: 0; }
+  to   { width: var(--bar-w, 60%); }
+}
+
+@keyframes motorate-count-up {
+  from { opacity: 0; transform: translateY(6px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motorate-tab-slide {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ─── Utility Classes ───────────────────────────────────────── */
+.mr-s1 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.05s both; }
+.mr-s2 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.10s both; }
+.mr-s3 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.15s both; }
+.mr-s4 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.20s both; }
+.mr-s5 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.25s both; }
+.mr-s6 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.30s both; }
+.mr-s7 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.35s both; }
+.mr-s8 { animation: motorate-stagger-in 0.4s cubic-bezier(0.22,0.61,0.36,1) 0.40s both; }
+
+.mr-hero-pan {
+  animation: motorate-hero-pan 12s ease-in-out infinite alternate;
+}
+
+.mr-pressable {
+  transition: transform 0.12s cubic-bezier(0.22,0.61,0.36,1), opacity 0.12s;
+  cursor: pointer;
+}
+.mr-pressable:hover  { transform: scale(0.98); opacity: 0.9; }
+.mr-pressable:active { transform: scale(0.95); }
+
+.mr-stat-num {
+  animation: motorate-count-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+.mr-bar {
+  animation: motorate-bar-fill 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+  width: var(--bar-w, 60%);
+}
+
+.mr-tab-underline {
+  animation: motorate-tab-slide 0.25s cubic-bezier(0.16,1,0.3,1) both;
+  transform-origin: left;
 }

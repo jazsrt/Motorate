@@ -116,9 +116,10 @@ export default {
         'cat-community': '#F97316',
       },
       fontFamily: {
-        heading: ['Space Grotesk', 'system-ui', 'sans-serif'],
-        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
+        heading: ["'Rajdhani'", 'sans-serif'],
+        sans: ["'Barlow'", 'sans-serif'],
+        cond: ["'Barlow Condensed'", 'sans-serif'],
+        mono: ["'JetBrains Mono'", 'ui-monospace', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
       },
       letterSpacing: {
         'micro': '2.5px',
