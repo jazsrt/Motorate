@@ -289,7 +289,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{Math.round(nextBadge.progressPercent)}%</span>
             </div>
             <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${nextBadge.progressPercent}%`, background: '#F97316', transition: 'width 0.5s' }} />
+              <div className="mr-bar" style={{ height: '100%', background: '#F97316', '--bar-w': `${nextBadge.progressPercent}%` } as React.CSSProperties} />
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#5a6e7e', marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>
               {nextBadge.currentCount} / {nextBadge.badge.tier_threshold} — <span style={{ color: '#F97316' }}>{nextBadge.remaining} to go</span>
@@ -307,6 +307,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
                 background: activeSection === key ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
                 color: activeSection === key ? '#F97316' : '#5a6e7e',
                 border: `1px solid ${activeSection === key ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                transition: 'all 0.2s',
               }}>
               {key === 'earned' ? `Earned \u00B7 ${earned.length}` : key === 'progress' ? `In Progress \u00B7 ${inProgress.length}` : `Locked \u00B7 ${locked.length}`}
             </button>
@@ -326,7 +327,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
             return (
               <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: isEarned ? 'pointer' : 'default' }}
                 onClick={() => { if (isEarned) { setCelebBadge(badge); try { sounds.badge(); haptics.medium(); } catch { /* intentionally empty */ } } }}>
-                <div style={{ position: 'relative', filter: isLocked ? 'grayscale(1)' : 'none', opacity: isLocked ? 0.4 : 1, transition: 'opacity 0.2s' }}>
+                <div style={{ position: 'relative', filter: isLocked ? 'grayscale(1)' : 'none', opacity: isLocked ? 0.4 : 1, transition: 'opacity 0.2s, filter 0.2s, transform 0.2s' }}>
                   <BadgeCoin tier={tier} name={isLocked ? '???' : badge.name} icon_path={getBadgeImagePath(badge)} locked={isLocked} size="sm" />
                   {/* Progress ring for in-progress badges */}
                   {isInProgressBadge && badge.tier_threshold && (() => {

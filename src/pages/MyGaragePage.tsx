@@ -309,12 +309,12 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
 
   return (
     <Layout currentPage="my-garage" onNavigate={handleNavigate}>
-      <div style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
+      <div className="page-enter" style={{ background: '#070a0f', minHeight: '100vh', paddingBottom: 100 }}>
 
         {/* ── 1. FLEET HERO ── */}
         <div style={{ position: 'relative', width: '100%', height: 260, minHeight: 200, overflow: 'hidden' }}>
           {heroImage ? (
-            <img src={heroImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img src={heroImage} alt="" className="mr-hero-pan" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0a0d14, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Car style={{ width: 48, height: 48, color: '#1e2a38' }} strokeWidth={1.2} />
@@ -376,7 +376,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               flex: 1, padding: '12px 0', textAlign: 'center' as const,
               borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
             }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.accent ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</span>
+              <span className="mr-stat-num" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: stat.accent ? '#F97316' : '#eef4f8', display: 'block', fontVariantNumeric: 'tabular-nums', animationDelay: `${i * 0.08}s` }}>{stat.value}</span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: stat.accent ? '#F97316' : '#3a4e60', display: 'block', marginTop: 2 }}>{stat.label}</span>
             </div>
           ))}
@@ -405,8 +405,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
               return (
                 <div
                   key={vehicle.id}
+                  className="card-v3-lift"
                   onClick={() => handleNavigate('vehicle-detail', { vehicleId: vehicle.id })}
-                  style={{ position: 'relative', width: '100%', height: 140, minHeight: 140, overflow: 'hidden', cursor: 'pointer', background: '#0a0d14' }}
+                  style={{ position: 'relative', width: '100%', height: 140, minHeight: 140, overflow: 'hidden', cursor: 'pointer', background: '#0a0d14', transition: 'transform 0.25s, border-color 0.3s, box-shadow 0.3s' }}
                 >
                   {img ? (
                     <img src={img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -534,6 +535,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', cursor: 'pointer',
                     borderBottom: '1px solid rgba(255,255,255,0.03)',
+                    transition: 'background 0.15s',
                   }}
                 >
                   <Crosshair size={12} color="#F97316" style={{ flexShrink: 0 }} />

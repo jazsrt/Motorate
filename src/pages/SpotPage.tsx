@@ -81,7 +81,7 @@ function StarRow({ label, value, onChange }: { label: string; value: number; onC
         {[1, 2, 3, 4, 5].map(star => (
           <button key={star} onClick={() => onChange(star)} onMouseEnter={() => setHovered(star)} onMouseLeave={() => setHovered(0)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
-            <Star style={{ width: 14, height: 14, fill: star <= (hovered || value) ? '#f0a030' : 'none', color: star <= (hovered || value) ? '#f0a030' : '#3a4e60' }} />
+            <Star style={{ width: 14, height: 14, fill: star <= (hovered || value) ? '#f0a030' : 'none', color: star <= (hovered || value) ? '#f0a030' : '#3a4e60', transition: 'fill 0.1s, color 0.1s' }} />
           </button>
         ))}
       </div>
@@ -484,7 +484,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
           <button
             onClick={() => plateNumber.trim() && handlePlateSearch(plateState, plateNumber)}
             disabled={!plateNumber.trim()}
-            style={{ width: 'calc(100% - 32px)', margin: '0 16px 8px', minHeight: 44, padding: '12px', background: plateNumber.trim() ? C.accent : 'rgba(249,115,22,0.3)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: plateNumber.trim() ? 'pointer' : 'not-allowed', opacity: plateNumber.trim() ? 1 : 0.4 }}
+            style={{ width: 'calc(100% - 32px)', margin: '0 16px 8px', minHeight: 44, padding: '12px', background: plateNumber.trim() ? C.accent : 'rgba(249,115,22,0.3)', border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: plateNumber.trim() ? 'pointer' : 'not-allowed', opacity: plateNumber.trim() ? 1 : 0.4, transition: 'opacity 0.2s, background 0.2s' }}
           >
             Find Vehicle
           </button>
@@ -781,7 +781,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             ]).map(opt => {
               const active = sentiment === opt.value;
               return (
-                <button key={opt.value} onClick={() => setSentiment(opt.value)} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 0', borderRadius: 7, cursor: 'pointer', ...(active ? { background: opt.bg, border: `1px solid ${opt.bd}`, color: opt.ac } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', color: '#3a4e60' }) }}>
+                <button key={opt.value} onClick={() => setSentiment(opt.value)} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 0', borderRadius: 7, cursor: 'pointer', transition: 'all 0.2s', ...(active ? { background: opt.bg, border: `1px solid ${opt.bd}`, color: opt.ac } : { background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', color: '#3a4e60' }) }}>
                   {opt.icon}
                   <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>{opt.label}</span>
                 </button>
@@ -881,7 +881,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
 
           {/* 3i. Submit button */}
           <div style={{ margin: '0 16px 16px' }}>
-            <button onClick={handleSubmitSpot} disabled={!canSubmit || submitting} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: canSubmit && !submitting ? 'pointer' : 'not-allowed', opacity: canSubmit && !submitting ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button onClick={handleSubmitSpot} disabled={!canSubmit || submitting} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#030508', cursor: canSubmit && !submitting ? 'pointer' : 'not-allowed', opacity: canSubmit && !submitting ? 1 : 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.2s, transform 0.15s' }}>
               {submitting ? <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : null}
               {submitting ? 'Submitting...' : existingSpotId ? 'Update Spot' : 'Submit Spot +10 RP'}
             </button>

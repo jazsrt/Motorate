@@ -578,7 +578,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
 
   return (
     <Layout currentPage="profile" onNavigate={onNavigate}>
-      <div style={{ background: '#030508', minHeight: '100vh', paddingBottom: 100 }}>
+      <div className="page-enter" style={{ background: '#030508', minHeight: '100vh', paddingBottom: 100 }}>
 
         {/* ── 1. HERO — Full bleed vehicle image, identity overlaid ── */}
         <div style={{ position: 'relative', width: '100%', height: 300, overflow: 'hidden', flexShrink: 0 }}>
@@ -679,7 +679,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             { label: 'Spots', value: spotCount },
           ].map((stat, i, arr) => (
             <div key={stat.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, padding: '11px 0', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500, color: stat.orange ? '#F97316' : '#fff', lineHeight: 1 }}>{stat.value}</div>
+              <div className="mr-stat-num" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500, color: stat.orange ? '#F97316' : '#fff', lineHeight: 1, animationDelay: `${i * 0.07}s` }}>{stat.value}</div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: '#4B5563' }}>{stat.label}</div>
             </div>
           ))}
@@ -697,11 +697,20 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 letterSpacing: '1px', textTransform: 'uppercase',
                 color: activeTab === tab ? '#F97316' : '#4B5563',
                 background: 'none', border: 'none',
-                borderBottom: activeTab === tab ? '2px solid #F97316' : '2px solid transparent',
+                borderBottom: '2px solid transparent',
                 cursor: 'pointer',
+                position: 'relative' as const,
+                transition: 'color 0.2s',
               }}
             >
               {tab}
+              {activeTab === tab && (
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: 2,
+                  background: '#F97316', transformOrigin: 'left',
+                  animation: 'motorate-tab-slide 0.25s cubic-bezier(0.16,1,0.3,1) both',
+                }} />
+              )}
             </button>
           ))}
         </div>

@@ -130,6 +130,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                   background: isOn ? 'rgba(249,115,22,0.06)' : 'transparent',
                   border: 'none', cursor: 'pointer',
                   borderBottom: isOn ? '2px solid #F97316' : '2px solid transparent',
+                  transition: 'color 0.2s, background 0.2s, border-bottom-color 0.2s',
                 }}>
                 {label}
               </button>
@@ -202,7 +203,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 {/* Wider image */}
                 <div style={{ position: 'relative', width: '100%', height: 140, overflow: 'hidden', background: '#0d1117' }}>
                   {photoUrl ? (
-                    <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.65, display: 'block' }} />
+                    <img src={photoUrl} alt="" className="mr-hero-pan" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.65, display: 'block' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1e2a38" strokeWidth="1"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17H3v-6l2-5h9l4 5h3v6h-2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -228,7 +229,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                         {v.model || '—'}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{repScore.toLocaleString()}</span>
+                        <span className="mr-stat-num" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{repScore.toLocaleString()}</span>
                         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(249,115,22,0.6)' }}>RP</span>
                       </div>
                     </div>
@@ -244,6 +245,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
           // Rows 2+ — standard list rows with stronger top-3 treatment
           return (
             <div key={v.id}
+              className={i < 7 ? `v3-stagger v3-stagger-${i + 1}` : undefined}
               onClick={() => onNavigate('vehicle-detail', { vehicleId: v.id })}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
@@ -251,6 +253,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
                 borderBottom: '1px solid rgba(249,115,22,0.05)',
                 background: isUserVehicle ? 'rgba(249,115,22,0.05)' : isTop3 ? 'rgba(249,115,22,0.02)' : 'transparent',
                 cursor: 'pointer',
+                transition: 'background 0.15s',
               }}>
               {/* Rank badge */}
               <div style={{
@@ -311,7 +314,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
 
               {/* Score */}
               <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
-                <div style={{
+                <div className="mr-stat-num" style={{
                   fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600,
                   color: rank === 1 ? '#F97316' : '#eef4f8', fontVariantNumeric: 'tabular-nums',
                 }}>
