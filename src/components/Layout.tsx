@@ -1,8 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Home, Search, LayoutGrid, Activity, Compass } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationBell } from './NotificationBell';
 import { LiveStatsBar } from './LiveStatsBar';
+import { PageIntroModal, hasSeenIntro } from './PageIntroModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,8 +11,19 @@ interface LayoutProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
 
+const INTRO_PAGES = ['feed', 'search', 'scan', 'rankings', 'my-garage'];
+
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const { user } = useAuth();
+  const [introPage, setIntroPage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!INTRO_PAGES.includes(currentPage)) return;
+    if (hasSeenIntro(currentPage, user.id)) return;
+    const t = setTimeout(() => setIntroPage(currentPage), 500);
+    return () => clearTimeout(t);
+  }, [currentPage, user]);
 
   const navLeft = [
     { id: 'feed' as const, icon: LayoutGrid, label: 'Feed' },
@@ -133,6 +145,14 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           );
         })}
       </nav>
+
+      {introPage && user && (
+        <PageIntroModal
+          page={introPage}
+          userId={user.id}
+          onDismiss={() => setIntroPage(null)}
+        />
+      )}
     </>
   );
 }
