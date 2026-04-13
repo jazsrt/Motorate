@@ -197,7 +197,7 @@ export async function loadFeedCursor(
   const badgeIconMap: Record<string, string> = {};
   if (badgeIds.length > 0) {
     const { data: badgeRows } = await supabase
-      .from('badge_catalog')
+      .from('badges')
       .select('id, icon_path')
       .in('id', badgeIds);
     (badgeRows || []).forEach((b: any) => {
