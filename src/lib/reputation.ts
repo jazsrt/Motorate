@@ -447,6 +447,16 @@ export async function awardBadge(userId: string, badgeName: string) {
 
     if (error) throw error;
 
+    // Create a feed post for the badge earned event
+    await supabase.from('posts').insert({
+      author_id: userId,
+      post_type: 'badge_given',
+      badge_id: badge.id,
+      caption: `Earned the ${badge.display_name || badge.name} badge`,
+      privacy_level: 'public',
+      moderation_status: 'approved',
+    });
+
     await calculateAndAwardReputation({
       userId,
       action: 'BADGE_EARNED',
