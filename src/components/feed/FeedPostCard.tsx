@@ -54,6 +54,14 @@ function formatCount(n: number | null | undefined): string {
   return n.toString();
 }
 
+function getBadgeTierColors(caption: string | null | undefined): { color: string; glow: string; atmo: string } {
+  const c = (caption || '').toLowerCase();
+  if (c.includes('platinum')) return { color: '#D0D0CE', glow: 'rgba(208,208,206,0.9)', atmo: 'rgba(195,210,240,0.1)' };
+  if (c.includes('gold'))     return { color: '#C4921A', glow: 'rgba(196,146,26,0.9)',  atmo: 'rgba(185,138,22,0.14)' };
+  if (c.includes('silver'))   return { color: '#A8A8A8', glow: 'rgba(168,168,168,0.8)', atmo: 'rgba(160,160,160,0.08)' };
+  return                             { color: '#9B6B3A', glow: 'rgba(155,107,58,0.8)',  atmo: 'rgba(140,90,30,0.1)' };
+}
+
 // Accent bar + chip config per post type
 function getPostTypeConfig(postType: string | null | undefined) {
   switch (postType) {
@@ -98,6 +106,7 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
   const isVideo = post.video_url && (post.content_type === 'video' || post.post_type === 'video');
   const isBadgePost = post.post_type === 'badge' || post.post_type === 'badge_given';
   const badgeImageUrl = post.badge_icon_path ? `/badges/${post.badge_icon_path}` : null;
+  const tierColors = isBadgePost ? getBadgeTierColors(post.caption) : { color: '#C4921A', glow: 'rgba(196,146,26,0.9)', atmo: 'rgba(185,138,22,0.14)' };
 
   // No media = no render for spot/badge posts
   if (!imageUrl && !isVideo && !isBadgePost) {
@@ -123,14 +132,18 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
     }
   };
 
-  const aspectPadding = isVideo ? '177%' : (isBadgePost && !imageUrl) ? '40%' : `${imageAspect}%`;
+  const aspectPadding = isVideo ? '177%' : isBadgePost ? undefined : `${imageAspect}%`;
 
   return (
     <>
       {/* Outer wrapper: aspect-ratio via padding trick */}
       <div
         ref={cardRef}
-        style={{ position: 'relative', width: '100%', paddingBottom: aspectPadding, overflow: 'hidden', marginBottom: 3, cursor: 'pointer', animation: 'motorate-fade-in 0.3s ease-out' }}
+        style={{
+          position: 'relative', width: '100%', overflow: 'hidden', marginBottom: 3, cursor: 'pointer',
+          animation: 'motorate-fade-in 0.3s ease-out',
+          ...(isBadgePost ? { height: 340 } : { paddingBottom: aspectPadding }),
+        }}
         onClick={handleCardClick}
       >
         {/* Inner absolute container */}
@@ -146,19 +159,72 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#000' }}
             />
           ) : isBadgePost && !imageUrl ? (
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, #131d2a 0%, #060a10 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-              <div style={{ position: 'absolute', width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(240,160,48,0.18) 0%, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-              {badgeImageUrl ? (
-                <img
-                  src={badgeImageUrl}
-                  alt=""
-                  style={{ width: 96, height: 96, objectFit: 'contain', display: 'block', position: 'relative', zIndex: 2, filter: 'drop-shadow(0 0 16px rgba(240,160,48,0.4))' }}
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                />
-              ) : (
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#f0a030" strokeWidth="1.2" style={{ position: 'relative', zIndex: 2 }}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-              )}
-              <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#f0a030', textAlign: 'center', zIndex: 2, position: 'relative' }}>Badge Earned</span>
+            <div style={{ position: 'absolute', inset: 0, background: '#000', overflow: 'hidden' }}>
+              {/* Atmospheric color */}
+              <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 65% 55% at 50% 33%, ${tierColors.atmo} 0%, transparent 100%)`, zIndex: 1 }} />
+              {/* Image zone: top:32px, bottom:130px — badge centered here */}
+              <div style={{ position: 'absolute', top: 32, left: 0, right: 0, bottom: 130, zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Glow bloom */}
+                <div style={{ position: 'absolute', top: '50%', left: '50%', width: 200, height: 200, marginTop: -100, marginLeft: -100, borderRadius: '50%', background: `radial-gradient(circle, ${tierColors.glow.replace('0.9', '0.28')} 0%, transparent 70%)`, animation: 'badge-glow-bloom 3s cubic-bezier(.4,0,.2,1) forwards', zIndex: 1 }} />
+                {/* Badge image — flex centered */}
+                {badgeImageUrl ? (
+                  <img
+                    src={badgeImageUrl}
+                    alt=""
+                    style={{ width: 118, height: 118, objectFit: 'contain', display: 'block', position: 'relative', zIndex: 2, filter: `drop-shadow(0 0 28px ${tierColors.glow}) drop-shadow(0 0 10px ${tierColors.color}88)`, animation: 'badge-focus-reveal 3s cubic-bezier(.4,0,.2,1) forwards' }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={tierColors.color} strokeWidth="1.1" style={{ display: 'block', position: 'relative', zIndex: 2, filter: `drop-shadow(0 0 16px ${tierColors.glow})`, animation: 'badge-focus-reveal 3s cubic-bezier(.4,0,.2,1) forwards' }}>
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                    <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                  </svg>
+                )}
+              </div>
+              {/* Text zone: absolute bottom 130px */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 130, zIndex: 8, padding: '10px 14px 12px', display: 'flex', flexDirection: 'column' as const, justifyContent: 'flex-end', background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.99) 42%, #000 100%)' }}>
+                {/* Separator line */}
+                <div style={{ position: 'absolute', top: 0, left: '8%', right: '8%', height: 1, background: `linear-gradient(90deg, transparent, ${tierColors.color}80, transparent)`, animation: 'badge-line-draw 3s ease-out forwards' }} />
+                {/* Eyebrow */}
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: `${tierColors.color}CC`, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, animation: 'badge-text-rise 3s ease-out forwards', opacity: 0 }}>
+                  <span style={{ height: 1, width: 12, background: `${tierColors.color}4D`, display: 'inline-block' }} />
+                  Achievement Unlocked
+                  <span style={{ height: 1, flex: 1, background: `${tierColors.color}1A`, display: 'inline-block' }} />
+                </div>
+                {/* Badge name */}
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: '#eef4f8', lineHeight: 1, letterSpacing: '0.01em', animation: 'badge-text-rise 3s ease-out forwards', animationDelay: '0.07s', opacity: 0 }}>
+                  {(post.caption || 'Badge Earned').split(' · ')[0]}
+                </div>
+                {/* Tier pill */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, animation: 'badge-text-rise 3s ease-out forwards', animationDelay: '0.14s', opacity: 0 }}>
+                  <div style={{ width: 4, height: 4, borderRadius: '50%', background: tierColors.color, boxShadow: `0 0 6px ${tierColors.glow}` }} />
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: tierColors.color }}>
+                    {(post.caption || '').split(' · ')[1] || ''}
+                  </span>
+                  {(post.caption || '').split(' · ')[2] && (
+                    <>
+                      <span style={{ color: 'rgba(255,255,255,0.08)', margin: '0 2px' }}>·</span>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>{(post.caption || '').split(' · ')[2]}</span>
+                    </>
+                  )}
+                </div>
+                {/* Action row */}
+                <div style={{ display: 'flex', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6, animation: 'badge-text-rise 3s ease-out forwards', animationDelay: '0.21s', opacity: 0 }}>
+                  <div onClick={e => e.stopPropagation()}>
+                    <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+                  </div>
+                  <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', margin: '0 4px' }} />
+                  <button onClick={e => { e.stopPropagation(); setShowComments(true); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
+                  </button>
+                  <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60' }}>
+                    by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
+                  </span>
+                </div>
+              </div>
             </div>
           ) : imageUrl && !imgError ? (
             <>
@@ -316,6 +382,7 @@ export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: F
       {showComments && (
         <CommentsModal postId={post.id} postAuthor={ownerHandle} onClose={() => setShowComments(false)} onNavigate={onNavigate} />
       )}
+
     </>
   );
 }
