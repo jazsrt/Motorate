@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { useNavigation } from '../contexts/NavigationContext';
 import { ModerationStatus } from '../components/ModerationStatus';
 import { useModerationSubscription } from '../hooks/useModerationSubscription';
 import { uploadImage, deleteImage } from '../lib/storage';
@@ -176,8 +175,6 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { goBack, getReturnLabel } = useNavigation();
-  const _returnLabel = getReturnLabel();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [modifications, setModifications] = useState<Modification[]>([]);
@@ -891,7 +888,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
           {/* Back button */}
           <button
-            onClick={goBack}
+            onClick={onBack}
             style={{ position: 'absolute', top: 14, left: 14, width: 32, height: 32, borderRadius: 8, background: 'rgba(3,5,8,0.7)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
           >
             <ArrowLeft size={14} color="#eef4f8" strokeWidth={2} />

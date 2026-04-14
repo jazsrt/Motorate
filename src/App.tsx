@@ -174,9 +174,11 @@ function AppContent() {
 
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
     };
   }, [user]);
 
@@ -197,11 +199,30 @@ function AppContent() {
   const handleViewVehicle = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
     setCurrentPage('vehicle-detail');
+    window.history.pushState(null, '', `#vehicle/${vehicleId}`);
   };
 
   const handleEditBuildSheet = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
     setCurrentPage('build-sheet');
+    window.history.pushState(null, '', '#build-sheet');
+  };
+
+  const pageToHash = (page: string, data?: unknown): string => {
+    const obj = (typeof data === 'object' && data !== null ? data : {}) as Record<string, unknown>;
+    if (page === 'vehicle-detail') {
+      const vehicleId = typeof data === 'string' ? data : (obj.vehicleId as string | undefined);
+      if (vehicleId) return `vehicle/${vehicleId}`;
+    }
+    if (page === 'user-profile') {
+      const userId = typeof data === 'string' ? data : (obj.userId as string | undefined);
+      if (userId) return `user-profile/${userId}`;
+    }
+    if (page === 'shadow-profile') {
+      const plate = typeof data === 'string' ? data : '';
+      if (plate) return `shadow/${plate}`;
+    }
+    return page;
   };
 
   const handleNavigate = (page: string, data?: unknown) => {
@@ -246,6 +267,7 @@ function AppContent() {
     } else {
       setCurrentPage(page as Page);
     }
+    window.history.pushState(null, '', `#${pageToHash(page, data)}`);
   };
 
   const handleSendMessage = (recipientId: string) => {
@@ -293,7 +315,7 @@ function AppContent() {
             <VehicleDetailPage
               vehicleId={selectedVehicleId}
               onNavigate={handleNavigate}
-              onBack={() => window.location.hash = ''}
+              onBack={() => window.history.back()}
               onEditBuildSheet={handleEditBuildSheet}
               guestMode={true}
             />
@@ -439,7 +461,7 @@ function AppContent() {
           userId={selectedUserId}
           onNavigate={handleNavigate}
           onViewVehicle={handleViewVehicle}
-          onBack={() => setCurrentPage(previousPage || 'feed')}
+          onBack={() => window.history.back()}
         />
       ) : (
         <UnifiedSearchPage onNavigate={handleNavigate} />
@@ -453,7 +475,7 @@ function AppContent() {
           onBack={() => {
             setVehicleDetailScrollTo(undefined);
             setVehicleDetailOpenReviewModal(false);
-            setCurrentPage(previousPage || 'feed');
+            window.history.back();
           }}
           onEditBuildSheet={handleEditBuildSheet}
           scrollTo={vehicleDetailScrollTo}
@@ -468,7 +490,7 @@ function AppContent() {
         <BuildSheetPage
           vehicleId={selectedVehicleId}
           onNavigate={handleNavigate}
-          onBack={() => setCurrentPage('vehicle-detail')}
+          onBack={() => window.history.back()}
         />
       ) : (
         <ProfilePage onNavigate={handleNavigate} onViewVehicle={handleViewVehicle} />
