@@ -38,7 +38,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
         {/* What it is */}
         <div style={S.sectionHead}>What Is MotoRate?</div>
         <p style={S.body}>
-          MotoRate is a vehicle-first social platform where cars, trucks, and motorcycles build real community reputation through spotting, ratings, and engagement. Every vehicle has its own profile. Every spot adds to its history. Owners can claim their plates, upload builds, respond to spots, and track their vehicle's standing in local and national rankings.
+          MotoRate is a vehicle-first social platform where cars, trucks, and motorcycles build real community reputation through spotting, ratings, and engagement. Every vehicle has its own profile. Every spot adds to its history. Owners can claim their plates, upload builds, respond to spots, and track their vehicle's standing on the local and national leaderboard.
         </p>
         <p style={S.body}>
           Unlike driver-rating apps, MotoRate rates the vehicles — not the people. Your car's reputation is built from the ground up by the community of spotters who encounter it.
@@ -50,7 +50,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
         <div style={S.sectionHead}>Core Features</div>
         <p style={S.body}><b style={{ color: '#eef4f8' }}>Spot:</b> Scan any plate, rate the vehicle, and log it to the MotoRate database. Every spot is permanent and contributes to the vehicle's reputation score.</p>
         <p style={S.body}><b style={{ color: '#eef4f8' }}>Claim:</b> Own the vehicle? Verify via VIN to unlock your vehicle's profile, upload photos, build out your spec sheet, and manage your reputation.</p>
-        <p style={S.body}><b style={{ color: '#eef4f8' }}>Rankings:</b> Vehicles compete for top positions by make/model, city, state, and nationally. Rankings are driven by reputation points earned through community activity.</p>
+        <p style={S.body}><b style={{ color: '#eef4f8' }}>Leaderboard:</b> Vehicles compete for top positions by make/model, city, state, and nationally. Leaderboard positions are driven by reputation points earned through community activity.</p>
         <p style={S.body}><b style={{ color: '#eef4f8' }}>Badges:</b> Vehicles and spotters earn badges for milestones — first spot, 100 spots, building out your spec sheet, earning fans, and more.</p>
         <p style={S.body}><b style={{ color: '#eef4f8' }}>Bumper Stickers:</b> The community can slap stickers on any vehicle — Civic Menace, Parking Lot Hero, Daily Driver. They stick.</p>
 

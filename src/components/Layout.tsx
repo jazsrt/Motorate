@@ -30,7 +30,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'search' as const, icon: Compass, label: 'Explore' },
   ];
   const navRight = [
-    { id: 'rankings' as const, icon: Activity, label: 'Rankings' },
+    { id: 'rankings' as const, icon: Activity, label: 'Leaderboard' },
     { id: 'my-garage' as const, icon: Home, label: 'Garage' },
   ];
 

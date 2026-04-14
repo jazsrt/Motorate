@@ -42,7 +42,7 @@ export function PrivacyPolicyPage({ onNavigate }: PrivacyPolicyPageProps) {
 
         <div style={S.divider} />
         <h2 style={S.sectionHead}>How We Use Your Information</h2>
-        <p style={S.body}>We use the information we collect to: operate and improve the MotoRate platform, authenticate you, display your profile and vehicle pages, calculate reputation scores and rankings, send in-app notifications about activity on your vehicles and content, and enforce our Terms of Service.</p>
+        <p style={S.body}>We use the information we collect to: operate and improve the MotoRate platform, authenticate you, display your profile and vehicle pages, calculate reputation scores and leaderboard positions, send in-app notifications about activity on your vehicles and content, and enforce our Terms of Service.</p>
 
         <div style={S.divider} />
         <h2 style={S.sectionHead}>License Plate Data</h2>

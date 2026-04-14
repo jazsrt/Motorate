@@ -75,7 +75,7 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
         query = query.eq('state', userVehicle.state);
       } else {
         effectiveScope = 'national';
-        setFallbackReason('Vehicle location not set. Showing national rankings.');
+        setFallbackReason('Vehicle location not set. Showing national leaderboard.');
       }
     }
 

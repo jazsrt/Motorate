@@ -53,7 +53,7 @@ const INTROS: PageIntro[] = [
   },
   {
     page: 'rankings',
-    title: 'Rankings',
+    title: 'Leaderboard',
     subtitle: 'Reputation is earned on the street. This is where it gets ranked.',
     sections: [
       { label: 'Your Model', detail: 'How does your specific make and model stack up against every other one on the platform? This scope filters to vehicles identical to yours and ranks them by reputation score.' },

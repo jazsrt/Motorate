@@ -23,8 +23,8 @@ const STEPS = [
     navIndex: 2,
   },
   {
-    title: 'Rankings',
-    body: 'Which cars in your city have the highest reputation? Which make and model is dominating nationwide? Rankings update in real time. Your car can climb this board.',
+    title: 'Leaderboard',
+    body: 'Which cars in your city have the highest reputation? Which make and model is dominating nationwide? The leaderboard updates in real time. Your car can climb this board.',
     navIndex: 3,
   },
   {

@@ -47,7 +47,7 @@ const HOW_IT_WORKS = [
   },
   {
     icon: (_active: boolean) => <Activity size={22} strokeWidth={2} />,
-    title: 'Rankings',
+    title: 'Leaderboard',
     desc: 'Vehicles ranked by community reputation, not followers.',
   },
   {
