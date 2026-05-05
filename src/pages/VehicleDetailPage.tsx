@@ -11,7 +11,7 @@ import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { type VerificationTier } from '../components/TierBadge';
-import { ArrowLeft, AlertCircle, X, Star, Shield, Share2, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, AlertCircle, X, Star, Shield, Share2, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send, Eye, EyeOff } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { GuestBottomNav } from '../components/GuestBottomNav';
@@ -494,16 +494,25 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
-  const _handleToggleHidden = async (review: Review) => {
+  const handleToggleHidden = async (review: Review) => {
+    if (!isOwner) return;
+
+    const nextHiddenState = !review.is_hidden_by_owner;
+    if (nextHiddenState && !confirm('Hide this review from public view? You can restore it later.')) return;
+
     const { error: updateError } = await supabase
       .from('reviews')
-      .update({ is_hidden_by_owner: !review.is_hidden_by_owner })
+      .update({ is_hidden_by_owner: nextHiddenState })
       .eq('id', review.id);
 
     if (updateError) {
       setError(updateError.message);
     } else {
-      loadVehicleData();
+      setReviews(prev => prev.map(r => (
+        r.id === review.id ? { ...r, is_hidden_by_owner: nextHiddenState } : r
+      )));
+      setError('');
+      showToast(nextHiddenState ? 'Review hidden from public view' : 'Review restored', 'success');
     }
   };
 
@@ -778,20 +787,24 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
-  const avgDriverScore = reviews.length > 0
-    ? Math.round(reviews.reduce((acc, r) => acc + (r.rating_driver ?? 0), 0) / reviews.length)
+  const publicReviews = reviews.filter(review => !review.is_hidden_by_owner);
+  const visibleReviews = isOwner ? reviews : publicReviews;
+  const hiddenReviewCount = reviews.filter(review => review.is_hidden_by_owner).length;
+
+  const avgDriverScore = publicReviews.length > 0
+    ? Math.round(publicReviews.reduce((acc, r) => acc + (r.rating_driver ?? 0), 0) / publicReviews.length)
     : 0;
 
-  const avgCoolScore = reviews.length > 0
-    ? Math.round(reviews.reduce((acc, r) => acc + (r.rating_vehicle ?? 0), 0) / reviews.length)
+  const avgCoolScore = publicReviews.length > 0
+    ? Math.round(publicReviews.reduce((acc, r) => acc + (r.rating_vehicle ?? 0), 0) / publicReviews.length)
     : 0;
 
   // Compute averages for all 6 rating categories
   const ratingCategories = (() => {
-    if (reviews.length === 0) return [];
+    if (publicReviews.length === 0) return [];
     const cats: { label: string; avg: number; count: number }[] = [];
     const calc = (fn: (r: Review) => number | null | undefined, label: string) => {
-      const vals = reviews.map(fn).filter((v): v is number => v != null && v > 0);
+      const vals = publicReviews.map(fn).filter((v): v is number => v != null && v > 0);
       if (vals.length > 0) cats.push({ label, avg: vals.reduce((s, v) => s + v, 0) / vals.length, count: vals.length });
     };
     calc(r => r.rating_vehicle, 'Vehicle');
@@ -801,14 +814,14 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     return cats;
   })();
 
-  const loveCount = reviews.filter(r => r.sentiment === 'love').length;
-  const hateCount = reviews.filter(r => r.sentiment === 'hate').length;
+  const loveCount = publicReviews.filter(r => r.sentiment === 'love').length;
+  const hateCount = publicReviews.filter(r => r.sentiment === 'hate').length;
 
   // Derive hero image
   const _vehicleImageUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
 
   // Derive encounter count from reviews
-  const _encounterCount = reviews.length;
+  const _encounterCount = publicReviews.length;
 
   // Derive RP score (sum of all avg ratings)
   const rpScore = ratingCategories.length > 0
@@ -1269,27 +1282,33 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-              Encounter Log{reviews.length > 0 ? ` · ${reviews.length}` : ''}
+              Encounter Log{visibleReviews.length > 0 ? ` · ${visibleReviews.length}` : ''}{isOwner && hiddenReviewCount > 0 ? ` · ${hiddenReviewCount} hidden` : ''}
             </span>
-            {reviews.length > 1 && (
+            {visibleReviews.length > 1 && (
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
                 See All
               </span>
             )}
           </div>
           <div style={{ padding: '0 16px 12px' }}>
-            {reviews.length === 0 ? (
+            {visibleReviews.length === 0 ? (
               <div style={{ textAlign: 'center' as const, padding: '24px 0', color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", fontSize: 12 }}>
                 No reviews yet. Spot this plate to leave the first one.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-                {reviews.slice(0, 3).map((review) => {
+                {visibleReviews.slice(0, 3).map((review) => {
                   const avgRating = [review.rating_vehicle, review.rating_driver, review.rating_driving].filter(r => r != null).reduce((s, r) => s + r!, 0) / [review.rating_vehicle, review.rating_driver, review.rating_driving].filter(r => r != null).length || 0;
                   const replies = ownerReplies[review.id] || [];
                   return (
                     <div key={review.id}>
-                      <div style={{ background: '#0d1117', borderRadius: 8, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{
+                        background: '#0d1117',
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: review.is_hidden_by_owner ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.04)',
+                        opacity: review.is_hidden_by_owner ? 0.68 : 1,
+                      }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                           <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1e2a38', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {review.author.avatar_url ? (
@@ -1299,6 +1318,22 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                             )}
                           </div>
                           <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>@{review.author.handle || 'Anonymous'}</span>
+                          {review.is_hidden_by_owner && (
+                            <span style={{
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: 'rgba(249,115,22,0.12)',
+                              border: '1px solid rgba(249,115,22,0.25)',
+                              fontFamily: "'Barlow Condensed', sans-serif",
+                              fontSize: 8,
+                              fontWeight: 700,
+                              letterSpacing: '0.1em',
+                              textTransform: 'uppercase' as const,
+                              color: C.accent,
+                            }}>
+                              Hidden
+                            </span>
+                          )}
                           <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
                             {[1, 2, 3, 4, 5].map(star => (
                               <svg key={star} width="14" height="14" viewBox="0 0 24 24" fill={star <= Math.round(avgRating) ? '#f0a030' : 'none'} stroke={star <= Math.round(avgRating) ? '#f0a030' : '#3a4e60'} strokeWidth="1.5">
@@ -1309,19 +1344,35 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         </div>
                         {review.comment && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.4, margin: 0 }}>{review.comment}</p>}
 
-                        {/* Owner reply button */}
+                        {/* Owner review controls */}
                         {isOwner && review.author_id !== user?.id && (
-                          <button
-                            onClick={() => setReplyingToReviewId(replyingToReviewId === review.id ? null : review.id)}
-                            style={{
-                              marginTop: 8, display: 'flex', alignItems: 'center', gap: 4,
-                              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                              letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.accent,
-                            }}
-                          >
-                            <MessageCircle size={11} /> Reply
-                          </button>
+                          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' as const }}>
+                            <button
+                              onClick={() => setReplyingToReviewId(replyingToReviewId === review.id ? null : review.id)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.accent,
+                              }}
+                            >
+                              <MessageCircle size={11} /> Reply
+                            </button>
+                            <button
+                              onClick={() => handleToggleHidden(review)}
+                              title={review.is_hidden_by_owner ? 'Restore this review' : 'Hide this review from public view'}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                                letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                                color: review.is_hidden_by_owner ? '#20c060' : '#f0a030',
+                              }}
+                            >
+                              {review.is_hidden_by_owner ? <Eye size={11} /> : <EyeOff size={11} />}
+                              {review.is_hidden_by_owner ? 'Restore' : 'Hide'}
+                            </button>
+                          </div>
                         )}
                       </div>
 
