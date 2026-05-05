@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { Trash2 } from 'lucide-react';
 import { ReactionButton } from '../ReactionButton';
 import { CommentsModal } from '../CommentsModal';
 import { trackPostView } from '../../lib/postViews';
+import { supabase } from '../../lib/supabase';
+import { useToast } from '../../contexts/ToastContext';
 
 interface FeedPostCardProps {
   post: {
@@ -79,8 +82,11 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
   const [showComments, setShowComments] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [imageAspect, setImageAspect] = useState<number>(56.25);
+  const [isDeleted, setIsDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const viewTracked = useRef(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!cardRef.current || viewTracked.current) return;
@@ -110,11 +116,14 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
   const isBadgePost = post.post_type === 'badge' || post.post_type === 'badge_given';
   const badgeImageUrl = post.badge_icon_path ? `/badges/${post.badge_icon_path}` : null;
   const tierColors = isBadgePost ? getBadgeTierColors(post.caption) : { color: '#C4921A', glow: 'rgba(196,146,26,0.9)', atmo: 'rgba(185,138,22,0.14)' };
+  const isPostAuthor = currentUserId === post.author_id;
 
   // No media = no render for spot/badge posts
   if (!imageUrl && !isVideo && !isBadgePost) {
     if (post.post_type === 'spot' || post.post_type === 'review') return null;
   }
+
+  if (isDeleted) return null;
 
   const repScore = vehicles?.reputation_score ?? 0;
   const makeLabel = vehicles?.make ?? null;
@@ -132,6 +141,34 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
       const ratio = img.naturalHeight / img.naturalWidth;
       const clamped = Math.max(52.36, Math.min(125, ratio * 100));
       setImageAspect(clamped);
+    }
+  };
+
+  const handleDeletePost = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (!isPostAuthor || deleting) return;
+    if (!window.confirm('Delete this post from the feed?')) return;
+
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('author_id', currentUserId)
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error('Post was not deleted');
+
+      setIsDeleted(true);
+      showToast('Post deleted', 'success');
+    } catch (error) {
+      console.error('[FeedPostCard] delete failed', error);
+      showToast('Failed to delete post', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -223,6 +260,20 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
                   </button>
+                  {isPostAuthor && (
+                    <>
+                      <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', margin: '0 4px' }} />
+                      <button
+                        onClick={handleDeletePost}
+                        disabled={deleting}
+                        title="Delete post"
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.45 : 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#f87171' }}
+                      >
+                        <Trash2 size={12} strokeWidth={2} />
+                        Delete
+                      </button>
+                    </>
+                  )}
                   <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60' }}>
                     by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
                   </span>
@@ -365,6 +416,20 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                 {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
               </button>
+              {isPostAuthor && (
+                <>
+                  <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                  <button
+                    onClick={handleDeletePost}
+                    disabled={deleting}
+                    title="Delete post"
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.45 : 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#f87171' }}
+                  >
+                    <Trash2 size={12} strokeWidth={2} />
+                    Delete
+                  </button>
+                </>
+              )}
               {(post.view_count ?? 0) > 0 && (
                 <>
                   <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
