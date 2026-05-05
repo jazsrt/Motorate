@@ -3,7 +3,7 @@ import { optimizeImage } from './imageOptimization';
 
 export async function uploadImage(
   file: File | string,
-  folder: 'profiles' | 'vehicles' | 'posts' | 'reviews'
+  folder: 'profiles' | 'vehicles' | 'posts' | 'reviews' | 'albums'
 ): Promise<string> {
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) throw new Error('Not authenticated');

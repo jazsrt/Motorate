@@ -149,7 +149,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
     });
   }, [posts, filterType]);
 
-  const hasActiveFilters = filterType !== 'all';
+  const _hasActiveFilters = filterType !== 'all';
 
   // Auth loading skeleton
   if (authLoading) {

@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { ModerationStatus } from '../components/ModerationStatus';
 import { useModerationSubscription } from '../hooks/useModerationSubscription';
 import { uploadImage, deleteImage } from '../lib/storage';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
@@ -12,8 +11,7 @@ import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { type VerificationTier } from '../components/TierBadge';
-import { parseVehicleSpecs } from '../lib/vehicleSpecs';
-import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, User, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, MapPin, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, AlertCircle, X, Star, Shield, Share2, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { GuestBottomNav } from '../components/GuestBottomNav';
@@ -21,12 +19,12 @@ import { GarageSection } from '../components/GarageSection';
 import { ModList } from '../components/ModList';
 import { StickerSlab } from '../components/StickerSlab';
 import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
-import { BADGE_TIER_THRESHOLDS, TIER_COLORS } from '../config/badgeConfig';
-import { UserAvatar } from '../components/UserAvatar';
+import { BADGE_TIER_THRESHOLDS } from '../config/badgeConfig';
 import { MotoFanButton } from '../components/MotoFanButton';
 import { MotoFansModal } from '../components/MotoFansModal';
 import { AlbumsModal } from '../components/AlbumsModal';
 import { FollowButton } from '../components/FollowButton';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 
 interface VehicleDetailPageProps {
   vehicleId: string;
@@ -80,7 +78,6 @@ interface Vehicle {
   is_private?: boolean;
   trim?: string | null;
   vehicle_handle?: string | null;
-  vin_raw_data?: Record<string, unknown> | null;
   owner?: {
     id: string;
     handle: string | null;
@@ -104,6 +101,7 @@ interface VehicleImage {
 }
 
 function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: string; onFollowerUpdated: () => void }) {
+  const { celebrateReward } = useRewardEvents();
   const [follows, setFollows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -127,6 +125,7 @@ function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: str
   const handleApprove = async (followId: string, followerId: string) => {
     await supabase.from('vehicle_follows').update({ status: 'accepted' }).eq('id', followId);
     try { const { notifyVehicleFollowApproved } = await import('../lib/notifications'); await notifyVehicleFollowApproved(followerId, vehicleId); } catch { /* intentionally empty */ }
+    celebrateReward({ type: 'follow', title: 'Fan Approved', message: 'They can now follow this ride.' });
     loadFollows(); onFollowerUpdated();
   };
 
@@ -193,7 +192,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   useModerationSubscription(() => !guestMode && loadVehicleData());
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [_uploading, setUploading] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [showGuestJoinModal, setShowGuestJoinModal] = useState(false);
@@ -205,7 +204,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [, setUploadingManual] = useState(false);
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
-  const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);
+  const [_vehicleBadges, setVehicleBadges] = useState<any[]>([]);
   const [vBadges, setVBadges] = useState<any[]>([]);
   const [fanAvatars, setFanAvatars] = useState<{ id: string; handle: string | null; avatar_url: string | null }[]>([]);
   const isOwner = user && vehicle?.owner_id === user.id;
@@ -249,7 +248,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     const { data: vehicleData } = await supabase
       .from('vehicles')
       // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
-      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', vehicle_handle, owners_manual_url, claimed_at, vin_raw_data, profiles!owner_id(id, handle, avatar_url)')
+      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', vehicle_handle, owners_manual_url, claimed_at, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 
@@ -480,7 +479,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     };
   }, [vehicleId]);
 
-  const handleDeleteReview = async (reviewId: string) => {
+  const _handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;
 
     const { error: deleteError } = await supabase
@@ -495,7 +494,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
-  const handleToggleHidden = async (review: Review) => {
+  const _handleToggleHidden = async (review: Review) => {
     const { error: updateError } = await supabase
       .from('reviews')
       .update({ is_hidden_by_owner: !review.is_hidden_by_owner })
@@ -691,7 +690,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
-  const canModerateReview = (review: Review) => {
+  const _canModerateReview = (review: Review) => {
     if (!isOwner || !vehicle?.claimed_at) return false;
     const reviewDate = new Date(review.created_at);
     const claimDate = new Date(vehicle.claimed_at);
@@ -809,23 +808,15 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const _vehicleImageUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
 
   // Derive encounter count from reviews
-  const encounterCount = reviews.length;
+  const _encounterCount = reviews.length;
 
   // Derive RP score (sum of all avg ratings)
   const rpScore = ratingCategories.length > 0
     ? Math.round(ratingCategories.reduce((s, c) => s + c.avg, 0) * 10)
     : 0;
 
-  // Specs grid — no VIN data, use basic fields only
-  const vinSpecs = vehicle ? [
-    { label: 'Color', value: vehicle.color },
-  ].filter(s => s.value) : [];
-
   // Powertrain string — no VIN data
   const _powertrain = '';
-
-  // Verification badge color
-  const verBadgeColor = vehicle?.verification_tier === 'vin_verified' ? C.green : vehicle?.is_claimed ? C.green : C.dim;
 
   if (loading) {
     return (
@@ -1043,16 +1034,15 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 4. SPECS STRIP (claimed vehicles with vin_raw_data) ── */}
+        {/* ── 4. SAFE SPECS STRIP (never sends VIN/raw VIN payloads to the browser) ── */}
         {vehicle.is_claimed && (() => {
-          const specs = parseVehicleSpecs(vehicle.vin_raw_data);
-          if (!specs) return null;
           const items: { value: string; label: string }[] = [];
-          if (specs.horsepower) items.push({ value: `${specs.horsepower}`, label: 'HP' });
-          if (specs.engine) items.push({ value: specs.engine, label: 'Engine' });
-          if (specs.displacement) items.push({ value: specs.displacement, label: 'Config' });
-          if (specs.drivetrain) items.push({ value: specs.drivetrain, label: 'Drive' });
-          if (specs.transmission) items.push({ value: specs.transmission, label: 'Trans' });
+          if (vehicle.year) items.push({ value: `${vehicle.year}`, label: 'Year' });
+          if (vehicle.trim) items.push({ value: vehicle.trim, label: 'Trim' });
+          if (vehicle.color) items.push({ value: vehicle.color, label: 'Color' });
+          if (vehicle.verification_tier) {
+            items.push({ value: vehicle.verification_tier === 'vin_verified' ? 'Verified' : 'Claimed', label: 'Owner' });
+          }
           if (items.length < 2) return null;
           return (
             <div style={{

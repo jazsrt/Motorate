@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Camera, Car, Check, Star, Heart, ThumbsDown, X, Send } from 'lucide-react';
+import { ArrowLeft, Camera, Car, Check, Star, Heart, ThumbsDown, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { hashPlate } from '../lib/hash';
 import { US_STATES } from '../lib/constants';
@@ -16,7 +17,6 @@ import { sounds } from '../lib/sounds';
 import { haptics } from '../lib/haptics';
 import { trackSpotEvent } from '../lib/spotAnalytics';
 import { searchPlate, type VehicleResult } from '../lib/plateSearch';
-import type { SpotWizardData } from '../types/spot';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -122,6 +122,7 @@ function getSuggestedStickerTags(vehicle: VehicleResult): string[] {
 export function SpotPage({ onNavigate }: SpotPageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
 
   // State machine
   const [viewState, setViewState] = useState<SpotViewState>('plate-entry');
@@ -193,9 +194,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
     setFoundVehicle(null);
     setNoCredits(false);
 
-    console.log('[SpotPage] searchPlate called with:', searchStateCode, normalized);
     const result = await searchPlate(searchStateCode, normalized, user?.id);
-    console.log('[SpotPage] searchPlate result:', result.status, result);
 
     if (result.plateHash) setPlateHash(result.plateHash);
 
@@ -273,6 +272,8 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         }
       }
 
+      if (!vehicleId) throw new Error('Vehicle could not be created.');
+
       // Duplicate check
       if (!existingSpotId) {
         const { data: existingSpot } = await supabase
@@ -297,7 +298,6 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       }
 
       // Spot history: insert or update
-      console.log('[SpotPage] vehicleId before spot insert:', vehicleId, 'userId:', user.id);
       let spotId: string;
       if (existingSpotId) {
         await supabase.from('spot_history').update({ spot_type: 'quick', ...(photoUrl ? { photo_url: photoUrl } : {}) }).eq('id', existingSpotId);
@@ -351,7 +351,13 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         await calculateAndAwardReputation({ userId: user.id, action: 'SPOT_QUICK_REVIEW', referenceType: 'review', referenceId: reviewData.id });
       }
 
-      trackSpotEvent('spot_created', user.id, { vehicleId, plate: plateNumber });
+      trackSpotEvent('quick_spot_created', user.id, { vehicleId });
+      celebrateReward({
+        type: existingSpotId ? 'spot' : 'rp',
+        title: existingSpotId ? 'Spot Updated' : 'Spot Submitted',
+        message: existingSpotId ? 'Your latest take is live.' : 'Reputation added to your garage.',
+        points: existingSpotId ? undefined : 10,
+      });
 
       // Stickers
       for (const stickerId of selectedStickerIds) {
@@ -367,6 +373,7 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
             user_id: vehicleData.owner_id, type: 'spot', title: 'Your vehicle was spotted!',
             body: `@${spotter?.handle || 'Someone'} spotted your vehicle`,
             reference_type: 'spot_history', reference_id: spotId,
+            data: { vehicle_id: vehicleId, spot_id: spotId, actorUserId: user.id },
           });
         }
       } catch { /* intentionally empty */ }
@@ -893,13 +900,19 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
       {/* SCREEN 6 — SUCCESS                                              */}
       {/* ================================================================ */}
       {viewState === 'success' && (
-        <div style={{ padding: '64px 20px', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', border: `3px solid ${C.green}`, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ padding: '56px 20px', textAlign: 'center' }}>
+          <div style={{ width: 78, height: 78, borderRadius: 12, border: `1px solid rgba(32,192,96,0.42)`, background: 'linear-gradient(135deg, rgba(32,192,96,0.16), rgba(249,115,22,0.08))', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 34px rgba(32,192,96,0.14)', animation: 'success-pop 420ms cubic-bezier(.22,.68,0,1.12) both' }}>
             <Check size={28} color={C.green} strokeWidth={2.5} />
           </div>
           <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 22, fontWeight: 700, color: C.text1, marginBottom: 4 }}>Spot Submitted</div>
           <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2, marginBottom: 6 }}>{vehicleName}</div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.accent, letterSpacing: '0.1em', marginBottom: 28 }}>{stateCode} {plateNumber}</div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 7, background: 'rgba(249,115,22,0.09)', border: '1px solid rgba(249,115,22,0.18)', marginBottom: 18 }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.accent, letterSpacing: '0.1em' }}>{stateCode} {plateNumber}</span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.green, fontWeight: 700 }}>+10 RP</span>
+          </div>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: C.text3, marginBottom: 22 }}>
+            Keep the streak moving
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {successVehicleId && (
               <button onClick={() => onNavigate('vehicle-detail', { vehicleId: successVehicleId })} style={{ width: '100%', minHeight: 44, background: C.accent, border: 'none', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#030508', cursor: 'pointer' }}>
@@ -939,7 +952,13 @@ export function SpotPage({ onNavigate }: SpotPageProps) {
         />
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes success-pop {
+          from { opacity: 0; transform: translateY(12px) scale(0.92); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </Layout>
   );
 }

@@ -94,7 +94,7 @@ function stripRpReferences(desc: string): string {
     .trim();
 }
 
-const tierLabel = (tier: string | null): string => {
+const _tierLabel = (tier: string | null): string => {
   if (!tier) return '';
   return tier.charAt(0).toUpperCase() + tier.slice(1);
 };

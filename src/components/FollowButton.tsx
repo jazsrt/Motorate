@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, UserCheck, Clock } from 'lucide-react';
 import { useRateLimit } from '../hooks/useRateLimit';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -14,6 +15,7 @@ type FollowStatus = 'none' | 'pending' | 'accepted';
 
 export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: FollowButtonProps) {
   const { user } = useAuth();
+  const { celebrateReward } = useRewardEvents();
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
   const [loading, setLoading] = useState(false);
   const { checkAndConsume } = useRateLimit('follow');
@@ -61,6 +63,12 @@ export function FollowButton({ targetUserId, onFollowChange, size = 'md' }: Foll
         if (!error) {
           setFollowStatus('pending');
           onFollowChange?.(false);
+          celebrateReward({
+            type: 'follow',
+            title: 'Friend Request Sent',
+            message: 'You will be connected when they accept.',
+            accent: '#f0a030',
+          });
           try {
             const { notifyFriendRequest } = await import('../lib/notifications');
             await notifyFriendRequest(targetUserId, user.id);

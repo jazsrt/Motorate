@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Bell, Check, Award, Heart, MessageCircle, UserPlus, Users, Shield, Car, Star, X, MapPin } from 'lucide-react';
+import { Bell, Check, Award, Heart, MessageCircle, UserPlus, Users, Shield, Car, Star, MapPin } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { type RewardEvent, useRewardEvents } from '../contexts/RewardEventContext';
 import { type OnNavigate } from '../types/navigation';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { useSwipe } from '../hooks/useSwipe';
@@ -41,6 +42,8 @@ function getIcon(type: string) {
       return { Icon: Award, color: '#f0a030' };
     case 'like':
       return { Icon: Heart, color: '#F97316' };
+    case 'share':
+      return { Icon: Star, color: '#f0a030' };
     case 'comment':
     case 'owner_reply':
       return { Icon: MessageCircle, color: '#7a8e9e' };
@@ -55,6 +58,9 @@ function getIcon(type: string) {
       return { Icon: Star, color: '#F97316' };
     case 'admin_action':
       return { Icon: Shield, color: '#F97316' };
+    case 'review_approved': return { Icon: Check, color: '#20c060' };
+    case 'review_rejected': return { Icon: Shield, color: '#ef4444' };
+    case 'challenge_complete': return { Icon: Award, color: '#f0a030' };
     case 'friend_request': return { Icon: UserPlus, color: '#F97316' };
     case 'friend_accepted': return { Icon: Users, color: '#20c060' };
     case 'vehicle_follow': return { Icon: Heart, color: '#F97316' };
@@ -75,6 +81,42 @@ function getDateGroup(dateString: string): 'today' | 'yesterday' | 'this_week' |
   return 'older';
 }
 
+function getNotificationReward(notification: Notification): RewardEvent | null {
+  switch (notification.type) {
+    case 'like':
+      return { type: 'rp', title: 'Reaction Received', message: 'Someone showed love on your post.', points: 2 };
+    case 'comment':
+    case 'owner_reply':
+      return { type: 'rp', title: 'Comment Received', message: 'Your post started a conversation.' };
+    case 'share':
+      return { type: 'rp', title: 'Post Shared', message: 'Someone pushed your spot beyond the feed.', points: 2 };
+    case 'spot':
+    case 'new_spot':
+    case 'review':
+      return { type: 'spot', title: 'Vehicle Spotted', message: 'Your ride got attention in the wild.' };
+    case 'vehicle_follow':
+    case 'new_follower':
+    case 'follow':
+      return { type: 'follow', title: notification.type === 'vehicle_follow' ? 'New Fan' : 'New Follower', message: 'Your network is growing.' };
+    case 'vehicle_follow_approved':
+      return { type: 'follow', title: 'Fan Request Approved', message: 'You are now connected to this ride.' };
+    case 'friend_accepted':
+      return { type: 'follow', title: 'Friend Request Accepted', message: 'Your MotoRate network grew.' };
+    case 'badge_received':
+    case 'badge_unlocked':
+    case 'badge_awarded':
+    case 'badge_unlock':
+      return { type: 'badge', title: 'Badge Moment', message: notification.message || notification.body || 'A new badge is waiting.' };
+    case 'milestone':
+    case 'challenge_complete':
+      return { type: 'level', title: notification.title || 'Milestone Hit', message: notification.message || notification.body || 'Progress added to your profile.' };
+    case 'review_approved':
+      return { type: 'rp', title: 'Content Approved', message: 'Your contribution is now live.' };
+    default:
+      return null;
+  }
+}
+
 interface NotificationItemProps {
   notification: Notification;
   onDelete: (id: string) => void;
@@ -86,7 +128,7 @@ interface NotificationItemProps {
   actionLoading: boolean;
 }
 
-function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, onAcceptFriend, onApproveVehicleFollow, isDeadLink, actionLoading }: NotificationItemProps) {
+function NotificationItem({ notification, onDelete, onMarkAsRead: _onMarkAsRead, onClick, onAcceptFriend, onApproveVehicleFollow, isDeadLink, actionLoading }: NotificationItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { Icon, color } = getIcon(notification.type);
 
@@ -118,7 +160,7 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, onAcc
   // Icon circle background
   const getIconBg = () => {
     switch (notification.type) {
-      case 'spot': case 'new_spot': case 'review': case 'milestone': case 'vehicle_follow': case 'vehicle_follow_request': case 'vehicle_follow_approved': case 'like':
+      case 'spot': case 'new_spot': case 'review': case 'milestone': case 'vehicle_follow': case 'vehicle_follow_request': case 'vehicle_follow_approved': case 'like': case 'share':
         return 'rgba(249,115,22,0.12)';
       case 'badge_received': case 'badge_unlocked': case 'badge_awarded': case 'badge_unlock':
         return 'rgba(240,160,48,0.12)';
@@ -133,7 +175,7 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, onAcc
     }
   };
 
-  const isBadge = ['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(notification.type);
+  const _isBadge = ['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(notification.type);
   const isFriendRequest = notification.type === 'friend_request';
   const isVehicleFollowRequest = notification.type === 'vehicle_follow_request';
   const displayMessage = notification.message || notification.body || '';
@@ -222,6 +264,7 @@ function NotificationItem({ notification, onDelete, onMarkAsRead, onClick, onAcc
 export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<NotificationFilter>('all');
@@ -314,6 +357,11 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
       setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
 
       showToast('Friend request accepted', 'success');
+      celebrateReward({
+        type: 'follow',
+        title: 'Friend Added',
+        message: 'Your MotoRate network grew.',
+      });
     } catch (err) {
       console.error('Failed to accept friend request:', err);
       showToast('Failed to accept request', 'error');
@@ -368,6 +416,11 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
       setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
 
       showToast('Fan request approved', 'success');
+      celebrateReward({
+        type: 'follow',
+        title: 'Fan Approved',
+        message: 'They can now follow this ride.',
+      });
     } catch (err) {
       console.error('Failed to approve vehicle follow:', err);
       showToast('Failed to approve request', 'error');
@@ -377,7 +430,12 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    const wasUnread = !notification.is_read;
     markAsRead(notification.id);
+    if (wasUnread) {
+      const reward = getNotificationReward(notification);
+      if (reward) celebrateReward(reward);
+    }
 
     // Badge notifications → badges page or modal
     if (['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(notification.type)) {
@@ -470,7 +528,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
   const getCategory = (type: string): NotificationFilter => {
     if (['badge_received', 'badge_unlocked', 'badge_awarded', 'badge_unlock'].includes(type)) return 'badges';
-    if (type === 'like' || type === 'vehicle_follow' || type === 'new_follower') return 'reactions';
+    if (type === 'like' || type === 'share' || type === 'vehicle_follow' || type === 'new_follower') return 'reactions';
     if (type === 'comment' || type === 'owner_reply') return 'comments';
     if (['follow', 'friend_request', 'friend_accepted', 'vehicle_follow_request', 'vehicle_follow_approved'].includes(type)) return 'social';
     if (['spot', 'new_spot', 'review', 'milestone'].includes(type)) return 'spots';

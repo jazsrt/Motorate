@@ -18,6 +18,9 @@ interface FeedPostCardProps {
     like_count?: number;
     comment_count?: number;
     view_count?: number;
+    looks_rating?: number | null;
+    sound_rating?: number | null;
+    condition_rating?: number | null;
     vehicles?: {
       id: string;
       make: string | null;
@@ -72,7 +75,7 @@ function getPostTypeConfig(postType: string | null | undefined) {
   }
 }
 
-export function FeedPostCard({ post, vehicleRank, currentUserId, onNavigate }: FeedPostCardProps) {
+export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [imageAspect, setImageAspect] = useState<number>(56.25);

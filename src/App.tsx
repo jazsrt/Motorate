@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { BadgeProvider, useBadges } from './contexts/BadgeContext';
 import { NavigationProvider } from './contexts/NavigationContext';
+import { RewardEventProvider } from './contexts/RewardEventContext';
 import { BadgeCelebration } from './components/badges/BadgeCelebration';
 import { BadgeIcon } from './components/BadgeIcon';
 import { LoginPage } from './pages/LoginPage';
@@ -52,6 +53,7 @@ const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m
 
 type Page = 'feed' | 'rankings' | 'scan' | 'safety' | 'profile' | 'user-profile' | 'vehicle-detail' | 'build-sheet' | 'create-post' | 'challenges' | 'search' | 'explore' | 'messages' | 'followers' | 'albums' | 'privacy' | 'terms' | 'about' | 'admin' | 'init-admin' | 'shadow-profile' | 'post-detail' | 'auth-callback' | 'reset-password' | 'events' | 'premium' | 'my-garage' | 'badges' | 'notifications' | 'completed-review' | 'claim-vehicle';
 type AuthView = 'login' | 'register';
+const PUBLIC_PAGES: Page[] = ['about', 'privacy', 'terms'];
 
 function parseUrl(): { page: Page | null; params: Record<string, string> } {
   const hash = window.location.hash.slice(1);
@@ -126,7 +128,7 @@ function AppContent() {
   const [guestMode, setGuestMode] = useState(false);
   const [vehicleDetailScrollTo, setVehicleDetailScrollTo] = useState<string | undefined>(undefined);
   const [vehicleDetailOpenReviewModal, setVehicleDetailOpenReviewModal] = useState<boolean>(false);
-  const [previousPage, setPreviousPage] = useState<Page>('feed');
+  const [, setPreviousPage] = useState<Page>('feed');
   const [, setPreviousPageData] = useState<any>(null);
   const [claimData, setClaimData] = useState<any>(null);
   const [showBetaWelcome, setShowBetaWelcome] = useState(false);
@@ -308,6 +310,21 @@ function AppContent() {
   }
 
   if (!user) {
+    if (PUBLIC_PAGES.includes(currentPage)) {
+      const publicContent =
+        currentPage === 'privacy' ? <PrivacyPolicyPage onNavigate={handleNavigate} /> :
+        currentPage === 'terms' ? <TermsOfServicePage onNavigate={handleNavigate} /> :
+        <AboutPage onNavigate={handleNavigate} />;
+
+      return (
+        <Suspense fallback={<LoadingScreen />}>
+          <ErrorBoundary>
+            {publicContent}
+          </ErrorBoundary>
+        </Suspense>
+      );
+    }
+
     if (guestMode && (currentPage === 'vehicle-detail' || currentPage === 'post-detail' || currentPage === 'shadow-profile')) {
       if (currentPage === 'vehicle-detail' && selectedVehicleId) {
         return (
@@ -618,11 +635,13 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ToastProvider>
-          <BadgeProvider>
-            <NavigationProvider>
-              <AppContent />
-            </NavigationProvider>
-          </BadgeProvider>
+          <RewardEventProvider>
+            <BadgeProvider>
+              <NavigationProvider>
+                <AppContent />
+              </NavigationProvider>
+            </BadgeProvider>
+          </RewardEventProvider>
         </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>

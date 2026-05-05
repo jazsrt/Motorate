@@ -28,7 +28,8 @@ async function createNotification(
   title: string,
   message: string,
   linkType?: string,
-  linkId?: string
+  linkId?: string,
+  data?: Record<string, unknown>
 ): Promise<void> {
   try {
     await supabase.from('notifications').insert({
@@ -38,6 +39,7 @@ async function createNotification(
       message,
       link_type: linkType,
       link_id: linkId,
+      data,
       is_read: false,
     });
   } catch (error) {
@@ -156,7 +158,8 @@ export async function notifyNewReview(
       'New Review',
       message,
       'vehicle',
-      vehicleId
+      vehicleId,
+      { vehicleId, reviewId, actorUserId: review?.author_id }
     );
 
     await sendPushNotification(
@@ -197,7 +200,8 @@ export async function notifyNewFollower(
       'New Follower',
       message,
       'profile',
-      followerUserId
+      followerUserId,
+      { followerUserId, actorUserId: followerUserId }
     );
 
     await sendPushNotification(followedUserId, 'New Follower', message, {
@@ -240,7 +244,8 @@ export async function notifyBadgeReceived(
       'Badge Received!',
       message,
       'vehicle',
-      vehicleId
+      vehicleId,
+      { badgeId, vehicleId }
     );
 
     await sendPushNotification(vehicle.owner_id, 'Badge Received!', message, {
@@ -268,7 +273,8 @@ export async function notifyBadgeAwarded(
       'Badge Unlocked!',
       message,
       'badge',
-      badgeId
+      badgeId,
+      { badgeId }
     );
 
     await sendPushNotification(userId, 'Badge Unlocked!', message, {
@@ -303,7 +309,8 @@ export async function notifyModerationResult(
       notifTitle,
       notifMessage,
       contentType,
-      contentId
+      contentId,
+      { contentType, contentId, status }
     );
 
     await sendPushNotification(
@@ -348,7 +355,8 @@ export async function notifyPostLike(
       'New Like',
       message,
       'post',
-      postId
+      postId,
+      { postId, likerId, actorUserId: likerId }
     );
 
     await sendPushNotification(authorId, 'New Like', message, {
@@ -392,7 +400,8 @@ export async function notifyPostComment(
       'New Comment',
       message,
       'post',
-      postId
+      postId,
+      { postId, commenterId, actorUserId: commenterId }
     );
 
     await sendPushNotification(authorId, 'New Comment', message, {
@@ -431,7 +440,8 @@ export async function notifyPostShare(
       'Post Shared',
       message,
       'post',
-      postId
+      postId,
+      { postId, sharerId, actorUserId: sharerId }
     );
 
     await sendPushNotification(authorId, 'Post Shared', message, {
@@ -458,7 +468,7 @@ export async function notifyFriendRequest(toUserId: string, fromUserId: string):
     if (!sender) return;
     const handle = sender.handle || 'Someone';
     const message = `@${handle} sent you a friend request`;
-    await createNotification(toUserId, 'friend_request', 'Friend Request', message, 'profile', fromUserId);
+    await createNotification(toUserId, 'friend_request', 'Friend Request', message, 'profile', fromUserId, { fromUserId, actorUserId: fromUserId });
     await sendPushNotification(toUserId, 'Friend Request', message, { type: 'friend_request', fromUserId, url: `/profile/${fromUserId}` });
   } catch (error) { console.error('Error sending friend request notification:', error); }
 }
@@ -469,7 +479,7 @@ export async function notifyFriendAccepted(toUserId: string, fromUserId: string)
     if (!accepter) return;
     const handle = accepter.handle || 'Someone';
     const message = `@${handle} accepted your friend request`;
-    await createNotification(toUserId, 'friend_accepted', 'Friends', message, 'profile', fromUserId);
+    await createNotification(toUserId, 'friend_accepted', 'Friends', message, 'profile', fromUserId, { fromUserId, actorUserId: fromUserId });
     await sendPushNotification(toUserId, 'Friends', message, { type: 'friend_accepted', fromUserId, url: `/profile/${fromUserId}` });
   } catch (error) { console.error('Error sending friend accepted notification:', error); }
 }
@@ -487,7 +497,7 @@ export async function notifyVehicleFollow(vehicleId: string, followerUserId: str
     const followerHandle = follower?.handle || 'Someone';
     const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
     const message = `Your ${vehicleName} gained a new fan! @${followerHandle}`;
-    await createNotification(vehicle.owner_id, 'vehicle_follow', 'New Fan', message, 'vehicle', vehicleId);
+    await createNotification(vehicle.owner_id, 'vehicle_follow', 'New Fan', message, 'vehicle', vehicleId, { vehicleId, followerUserId, actorUserId: followerUserId });
     await sendPushNotification(vehicle.owner_id, 'New Fan', message, { type: 'vehicle_follow', vehicleId, followerUserId, url: `/vehicle/${vehicleId}` });
   } catch (error) { console.error('Error sending vehicle follow notification:', error); }
 }
@@ -500,7 +510,7 @@ export async function notifyVehicleFollowRequest(vehicleId: string, requesterUse
     const requesterHandle = requester?.handle || 'Someone';
     const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
     const message = `@${requesterHandle} wants to become a fan of your ${vehicleName}`;
-    await createNotification(vehicle.owner_id, 'vehicle_follow_request', 'Fan Request', message, 'vehicle', vehicleId);
+    await createNotification(vehicle.owner_id, 'vehicle_follow_request', 'Fan Request', message, 'vehicle', vehicleId, { vehicleId, requesterUserId, actorUserId: requesterUserId });
     await sendPushNotification(vehicle.owner_id, 'Fan Request', message, { type: 'vehicle_follow_request', vehicleId, requesterUserId, url: `/vehicle/${vehicleId}` });
   } catch (error) { console.error('Error sending vehicle follow request notification:', error); }
 }
@@ -513,7 +523,7 @@ export async function notifyVehicleFollowApproved(followerUserId: string, vehicl
     const vehicleName = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ');
     const ownerHandle = owner?.handle || 'The owner';
     const message = `You're now a fan of ${ownerHandle}'s ${vehicleName}!`;
-    await createNotification(followerUserId, 'vehicle_follow_approved', 'Fan Approved', message, 'vehicle', vehicleId);
+    await createNotification(followerUserId, 'vehicle_follow_approved', 'Fan Approved', message, 'vehicle', vehicleId, { vehicleId, ownerUserId: vehicle.owner_id, actorUserId: vehicle.owner_id });
     await sendPushNotification(followerUserId, 'Fan Approved', message, { type: 'vehicle_follow_approved', vehicleId, url: `/vehicle/${vehicleId}` });
   } catch (error) { console.error('Error sending vehicle follow approved notification:', error); }
 }

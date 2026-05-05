@@ -4,23 +4,14 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Car, Award, Instagram, Music, Eye, MessageCircle, Calendar, Lock, Flag, Image, ImageIcon, MapPin } from 'lucide-react';
-import { EmptyState } from '../components/ui/EmptyState';
-import { TierBadge } from '../components/TierBadge';
-import { VerifiedBadge } from '../components/VerifiedBadge';
-import { BadgeCoin } from '../components/BadgeCoin';
-import { ReactionButton } from '../components/ReactionButton';
+import { ArrowLeft, Lock } from 'lucide-react';
 import { FollowButton } from '../components/FollowButton';
-import { BlockUserButton } from '../components/BlockUserButton';
 import { ReportModal } from '../components/ReportModal';
 import { PrivacyGate } from '../components/PrivacyGate';
-import { ProfileInsights } from '../components/ProfileInsights';
 import { trackProfileView } from '../lib/profileViews';
-import { ReviewProfileSection } from '../components/ReviewProfileSection';
 import { useWeeklyMetrics } from '../hooks/useWeeklyMetrics';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { getTierFromScore } from '../lib/tierConfig';
-import { getBadgeType, getBadgeImagePath } from '../lib/badgeUtils';
 import { MotoFansSection } from '../components/MotoFansSection';
 
 interface UserProfilePageProps {
@@ -34,18 +25,18 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
-  const [badges, setBadges] = useState<any[]>([]);
+  const [_badges, setBadges] = useState<any[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [_followingCount, setFollowingCount] = useState(0);
   const [spotsCount, setSpotsCount] = useState(0);
   const [_reviewsCount, setReviewsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<any[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [_loadingPosts, setLoadingPosts] = useState(false);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
-  const [loadingRatings, setLoadingRatings] = useState(false);
+  const [_loadingRatings, setLoadingRatings] = useState(false);
   const [activeTab, setActiveTab] = useState<'fleet' | 'spots' | 'friends' | 'posts'>('fleet');
-  const [profileViewCount, _setProfileViewCount] = useState(0);
+  const [_profileViewCount, _setProfileViewCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted'>('none');
   const [showReportModal, setShowReportModal] = useState(false);
@@ -54,13 +45,13 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const [ratingsLoaded, setRatingsLoaded] = useState(false);
   const [allPhotos, setAllPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [lockedBadges, setLockedBadges] = useState<any[]>([]);
+  const [lightboxIndex, _setLightboxIndex] = useState(0);
+  const [_lockedBadges, setLockedBadges] = useState<any[]>([]);
 
   const isOwnProfile = currentUser?.id === userId;
   const isPrivate = profile?.is_private === true;
   const canViewContent = !isPrivate || followStatus === 'accepted' || isOwnProfile;
-  const weeklyMetrics = useWeeklyMetrics(isOwnProfile ? profile?.id : undefined);
+  const _weeklyMetrics = useWeeklyMetrics(isOwnProfile ? profile?.id : undefined);
 
   const checkFollowStatus = useCallback(async () => {
     if (!currentUser || isOwnProfile) return;

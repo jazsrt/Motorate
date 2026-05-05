@@ -61,20 +61,16 @@ export function RankingsPage({ onNavigate }: RankingsPageProps) {
       .order('reputation_score', { ascending: false })
       .limit(50);
 
-    let effectiveScope = scope;
-
     if (scope === 'your-model') {
       if (userVehicle?.make && userVehicle?.model) {
         query = query.eq('make', userVehicle.make).eq('model', userVehicle.model);
       } else {
-        effectiveScope = 'national';
         setFallbackReason('Claim a vehicle to see how your model ranks against its peers.');
       }
     } else if (scope === 'city' || scope === 'state') {
       if (userVehicle?.state) {
         query = query.eq('state', userVehicle.state);
       } else {
-        effectiveScope = 'national';
         setFallbackReason('Vehicle location not set. Showing national leaderboard.');
       }
     }

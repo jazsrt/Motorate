@@ -4,6 +4,7 @@ import { decodeVin, isValidVinFormat, type VinResult } from '../lib/vinDecoder';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 
 interface VinClaimModalProps {
   vehicleId: string;
@@ -31,6 +32,7 @@ export function VinClaimModal({
 }: VinClaimModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
   const [step, setStep] = useState<Step>('enter');
   const [vin, setVin] = useState('');
   const [vinResult, setVinResult] = useState<VinResult | null>(null);
@@ -100,6 +102,11 @@ export function VinClaimModal({
       if (!updated || updated.length === 0) throw new Error('Could not claim vehicle. It may already be claimed by someone else.');
 
       showToast('Your ride is now verified!', 'success');
+      celebrateReward({
+        type: 'claim',
+        title: 'Ride Verified',
+        message: 'Owner tools and factory specs are unlocked.',
+      });
       setStep('done');
       onSuccess();
     } catch (err: unknown) {
@@ -528,11 +535,11 @@ export function VinClaimModal({
               </button>
               <button
                 onClick={handleCheckAndProceed}
-                disabled={vehicleHandle.length < 3 || checkingHandle}
-                style={{ flex: 2, padding: '12px 0', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em', background: vehicleHandle.length >= 3 ? '#F97316' : 'rgba(255,255,255,0.06)', color: vehicleHandle.length >= 3 ? '#030508' : '#5a6e7e', border: 'none', cursor: vehicleHandle.length < 3 || checkingHandle ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                disabled={vehicleHandle.length < 3 || checkingHandle || claiming}
+                style={{ flex: 2, padding: '12px 0', borderRadius: 8, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em', background: vehicleHandle.length >= 3 ? '#F97316' : 'rgba(255,255,255,0.06)', color: vehicleHandle.length >= 3 ? '#030508' : '#5a6e7e', border: 'none', cursor: vehicleHandle.length < 3 || checkingHandle || claiming ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
-                {checkingHandle ? (
-                  <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} /> Checking...</>
+                {checkingHandle || claiming ? (
+                  <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} /> {claiming ? 'Claiming...' : 'Checking...'}</>
                 ) : (
                   'Claim & Verify →'
                 )}

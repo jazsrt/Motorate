@@ -1,8 +1,7 @@
-// Plate-to-VIN via Supabase Edge Function → RapidAPI (us-plate-to-vin-lookup.p.rapidapi.com)
+// Plate lookup via Supabase Edge Function and RapidAPI.
 // Edge function: supabase/functions/lookup-plate
 
 export interface VehicleLookupResult {
-  vin: string;
   year: string;
   make: string;
   model: string;
@@ -23,9 +22,10 @@ export interface VehicleLookupResult {
 }
 
 /**
- * Execute the actual plate-to-VIN API call via Supabase Edge Function.
+ * Execute the actual plate lookup API call via Supabase Edge Function.
  * Handles flat, array, or nested response shapes from RapidAPI PostgREST.
  * Credit consumption happens in the caller (plateSearch.ts), not here.
+ * VIN is intentionally not exposed to the browser from this lookup path.
  */
 export async function executeLookup(
   plate: string,
@@ -48,7 +48,6 @@ export async function executeLookup(
     }
 
     const raw = await response.json();
-    console.log('[plateToVinApi] Raw response:', JSON.stringify(raw));
 
     if (!raw) return null;
 
@@ -66,7 +65,6 @@ export async function executeLookup(
     const trim      = isNested ? row.vehicle?.trim    : (row.trim    ?? row.Trim    ?? null);
     const type      = isNested ? row.vehicle?.type    : (row.type    ?? row.body_style ?? row.bodyStyle ?? null);
     const doors     = isNested ? row.vehicle?.doors   : (row.doors   ?? row.Doors   ?? null);
-    const vin       = row.vin    ?? row.Vin    ?? row.VIN    ?? '';
     const engine    = isNested ? (row.engine?.description ?? row.engine?.size ?? '') : (row.engine ?? row.engine_description ?? row.displacement ?? '');
     const cylinders = isNested ? (row.engine?.cylinders ?? '') : (row.cylinders ?? row.engine_cylinders ?? '');
     const fuel      = isNested ? (row.engine?.fuel_type ?? '') : (row.fuel_type ?? row.fuel ?? '');
@@ -74,8 +72,6 @@ export async function executeLookup(
     const msrp      = isNested ? (row.pricing?.msrp ?? '') : (row.msrp ?? row.price ?? '');
     const cityMpg   = isNested ? (row.fuel_economy?.city_mpg ?? '') : (row.city_mpg ?? row.mpg_city ?? '');
     const hwyMpg    = isNested ? (row.fuel_economy?.highway_mpg ?? '') : (row.highway_mpg ?? row.mpg_highway ?? '');
-
-    console.log('[plateToVinApi] Parsed make:', make, 'model:', model, 'vin:', vin);
 
     if (!make && !model) {
       console.warn('[plateToVinApi] No make/model in response — plate not in RapidAPI database');
@@ -85,7 +81,6 @@ export async function executeLookup(
     const capFirst = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 
     return {
-      vin:          String(vin),
       year:         year ? String(year) : '',
       make:         make ? capFirst(String(make)) : '',
       model:        model ? String(model).charAt(0).toUpperCase() + String(model).slice(1) : '',

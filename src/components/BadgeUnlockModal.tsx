@@ -19,7 +19,7 @@ function getTierColor(levelName?: string): string {
   return '#F97316';
 }
 
-function getTierBg(levelName?: string): string {
+function _getTierBg(levelName?: string): string {
   const tier = levelName?.toLowerCase() || '';
   if (tier === 'platinum') return 'linear-gradient(135deg, rgba(245,204,85,0.2), rgba(240,160,48,0.15))';
   if (tier === 'gold') return 'linear-gradient(135deg, rgba(240,160,48,0.2), rgba(240,160,48,0.1))';

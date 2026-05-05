@@ -211,7 +211,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         fuzzedLng = fuzzed.longitude;
       }
 
-      const { data: rateLimitCheck, error: rateLimitError } = await supabase
+      const { data: rateLimitCheck, error: _rateLimitError } = await supabase
         .rpc('check_rate_limit', {
           p_user_id: user.id,
           p_action_type: 'post',
