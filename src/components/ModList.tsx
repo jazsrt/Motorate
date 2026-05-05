@@ -19,7 +19,7 @@ const inputStyle: React.CSSProperties = {
 export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ part_name: '', brand: '', cost_usd: '' });
+  const [formData, setFormData] = useState({ part_name: '', brand: '', price_paid: '' });
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -34,11 +34,11 @@ export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
         category,
         part_name: formData.part_name,
         brand: formData.brand || null,
-        cost_usd: formData.cost_usd ? parseFloat(formData.cost_usd) : null
+        price_paid: formData.price_paid ? parseFloat(formData.price_paid) : null
       });
 
     if (!error) {
-      setFormData({ part_name: '', brand: '', cost_usd: '' });
+      setFormData({ part_name: '', brand: '', price_paid: '' });
       setShowForm(false);
       onUpdate();
     } else {
@@ -83,9 +83,9 @@ export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
                     {mod.brand}
                   </div>
                 )}
-                {mod.cost_usd && (
+                {mod.price_paid && (
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#20c060', fontWeight: 600, marginTop: 2 }}>
-                    ${parseFloat(mod.cost_usd).toFixed(2)}
+                    ${parseFloat(mod.price_paid).toFixed(2)}
                   </div>
                 )}
                 {mod.notes && (
@@ -131,8 +131,8 @@ export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
           <input type="text" placeholder="Brand (optional)" value={formData.brand}
             onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
             style={inputStyle} />
-          <input type="number" step="0.01" placeholder="Cost USD (optional)" value={formData.cost_usd}
-            onChange={(e) => setFormData({ ...formData, cost_usd: e.target.value })}
+          <input type="number" step="0.01" placeholder="Cost USD (optional)" value={formData.price_paid}
+            onChange={(e) => setFormData({ ...formData, price_paid: e.target.value })}
             style={inputStyle} />
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="submit" disabled={saving} style={{
@@ -143,7 +143,7 @@ export function ModList({ mods, category, vehicleId, onUpdate }: ModListProps) {
             }}>
               {saving ? 'Adding...' : 'Add Mod'}
             </button>
-            <button type="button" onClick={() => { setShowForm(false); setFormData({ part_name: '', brand: '', cost_usd: '' }); }}
+            <button type="button" onClick={() => { setShowForm(false); setFormData({ part_name: '', brand: '', price_paid: '' }); }}
               style={{
                 padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
                 background: 'transparent', fontFamily: "'Barlow Condensed', sans-serif",

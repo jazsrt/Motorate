@@ -100,6 +100,42 @@ interface VehicleImage {
   created_at: string;
 }
 
+const MOD_CATEGORIES = [
+  'Powertrain',
+  'Suspension & Brakes',
+  'Wheels & Tires',
+  'Exterior',
+  'Interior',
+  'Fluids & Consumables',
+] as const;
+
+function normalizeModCategory(category: string | null | undefined): typeof MOD_CATEGORIES[number] {
+  switch ((category || '').toLowerCase()) {
+    case 'engine':
+    case 'exhaust':
+    case 'electronics':
+    case 'powertrain':
+      return 'Powertrain';
+    case 'suspension':
+    case 'brakes':
+    case 'suspension & brakes':
+      return 'Suspension & Brakes';
+    case 'wheels':
+    case 'tires':
+    case 'wheels & tires':
+      return 'Wheels & Tires';
+    case 'interior':
+      return 'Interior';
+    case 'fluids':
+    case 'fluids & consumables':
+      return 'Fluids & Consumables';
+    case 'exterior':
+    case 'other':
+    default:
+      return 'Exterior';
+  }
+}
+
 function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: string; onFollowerUpdated: () => void }) {
   const { celebrateReward } = useRewardEvents();
   const [follows, setFollows] = useState<any[]>([]);
@@ -369,20 +405,15 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     if (modsData) {
       setModifications(modsData);
 
-      const categories: Record<string, any[]> = {
-        'Powertrain': [],
-        'Suspension & Brakes': [],
-        'Wheels & Tires': [],
-        'Exterior': [],
-        'Interior': [],
-        'Fluids & Consumables': []
-      };
+      const categories: Record<string, any[]> = Object.fromEntries(
+        MOD_CATEGORIES.map(category => [category, []])
+      );
 
       modsData.forEach((mod: any) => {
-        const category = mod.category || 'Exterior';
-        if (categories[category]) {
-          categories[category].push(mod);
-        }
+        categories[normalizeModCategory(mod.category)].push({
+          ...mod,
+          category: normalizeModCategory(mod.category),
+        });
       });
 
       setModsByCategory(categories);
@@ -1531,7 +1562,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   <input value={newModName} onChange={e => setNewModName(e.target.value)} placeholder="Part name" style={{ width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                   <div style={{ display: 'flex', gap: 6 }}>
                     <select value={newModCategory} onChange={e => setNewModCategory(e.target.value)} style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }}>
-                      {['Exterior', 'Interior', 'Engine', 'Suspension', 'Wheels', 'Exhaust', 'Electronics', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
+                        {MOD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <input value={newModBrand} onChange={e => setNewModBrand(e.target.value)} placeholder="Brand" style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                   </div>
@@ -1539,19 +1570,26 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                     <input value={newModCost} onChange={e => setNewModCost(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="Cost (optional)" style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                     <button
                       disabled={!newModName.trim()}
-                      onClick={async () => {
-                        if (!newModName.trim()) return;
-                        await supabase.from('vehicle_modifications').insert({
-                          vehicle_id: vehicleId,
-                          part_name: newModName.trim(),
-                          category: newModCategory,
-                          brand: newModBrand.trim() || null,
-                          cost_usd: newModCost ? parseFloat(newModCost) : null,
-                        });
-                        setNewModName(''); setNewModBrand(''); setNewModCost('');
-                        setShowAddModForm(false);
-                        loadVehicleData();
-                      }}
+                        onClick={async () => {
+                          if (!newModName.trim() || !user) return;
+                          const { error: insertError } = await supabase.from('vehicle_modifications').insert({
+                            vehicle_id: vehicleId,
+                            user_id: user.id,
+                            part_name: newModName.trim(),
+                            category: newModCategory,
+                            brand: newModBrand.trim() || null,
+                            price_paid: newModCost ? parseFloat(newModCost) : null,
+                          });
+                          if (insertError) {
+                            showToast('Failed to add modification', 'error');
+                            setError(insertError.message);
+                            return;
+                          }
+                          setNewModName(''); setNewModBrand(''); setNewModCost('');
+                          setShowAddModForm(false);
+                          showToast('Modification added', 'success');
+                          loadVehicleData();
+                        }}
                       style={{ padding: '8px 16px', background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', opacity: !newModName.trim() ? 0.4 : 1 }}
                     >
                       Save
@@ -1581,9 +1619,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>{mod.part_name}</div>
                         {mod.brand && <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>{mod.brand}</div>}
                       </div>
-                      {mod.cost != null && mod.cost > 0 && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${mod.cost}</span>
-                      )}
+                        {mod.price_paid != null && Number(mod.price_paid) > 0 && (
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${Number(mod.price_paid).toFixed(2)}</span>
+                        )}
                     </div>
                   ))}
                 </div>
