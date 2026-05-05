@@ -18,6 +18,7 @@ interface FeedPostCardProps {
     image_urls?: string[] | null;
     video_url?: string | null;
     vehicle_id?: string | null;
+    review_id?: string | null;
     like_count?: number;
     comment_count?: number;
     view_count?: number;
@@ -117,6 +118,9 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
   const badgeImageUrl = post.badge_icon_path ? `/badges/${post.badge_icon_path}` : null;
   const tierColors = isBadgePost ? getBadgeTierColors(post.caption) : { color: '#C4921A', glow: 'rgba(196,146,26,0.9)', atmo: 'rgba(185,138,22,0.14)' };
   const isPostAuthor = currentUserId === post.author_id;
+  const isVehicleOwner = !!currentUserId && currentUserId === vehicles?.owner_id;
+  const isSpotReviewPost = post.post_type === 'spot' || post.post_type === 'review';
+  const canRemovePost = isPostAuthor || (isVehicleOwner && isSpotReviewPost);
 
   // No media = no render for spot/badge posts
   if (!imageUrl && !isVideo && !isBadgePost) {
@@ -146,16 +150,26 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
 
   const handleDeletePost = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (!isPostAuthor || deleting) return;
-    if (!window.confirm('Delete this post from the feed?')) return;
+    if (!canRemovePost || deleting) return;
+    const confirmMessage = isPostAuthor
+      ? 'Delete this post from the feed?'
+      : 'Remove this spot review from your vehicle and the public feed?';
+    if (!window.confirm(confirmMessage)) return;
 
     setDeleting(true);
     try {
+      if (!isPostAuthor && post.review_id) {
+        const { error: reviewError } = await supabase
+          .from('reviews')
+          .update({ is_hidden_by_owner: true })
+          .eq('id', post.review_id);
+        if (reviewError) throw reviewError;
+      }
+
       const { data, error } = await supabase
         .from('posts')
         .delete()
         .eq('id', post.id)
-        .eq('author_id', currentUserId)
         .select('id')
         .maybeSingle();
 
@@ -163,7 +177,7 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
       if (!data) throw new Error('Post was not deleted');
 
       setIsDeleted(true);
-      showToast('Post deleted', 'success');
+      showToast(isPostAuthor ? 'Post deleted' : 'Spot review removed', 'success');
     } catch (error) {
       console.error('[FeedPostCard] delete failed', error);
       showToast('Failed to delete post', 'error');
@@ -260,17 +274,17 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
                   </button>
-                  {isPostAuthor && (
+                  {canRemovePost && (
                     <>
                       <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.06)', margin: '0 4px' }} />
                       <button
                         onClick={handleDeletePost}
                         disabled={deleting}
-                        title="Delete post"
+                        title={isPostAuthor ? 'Delete post' : 'Remove spot review'}
                         style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.45 : 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#f87171' }}
                       >
                         <Trash2 size={12} strokeWidth={2} />
-                        Delete
+                        {isPostAuthor ? 'Delete' : 'Remove'}
                       </button>
                     </>
                   )}
@@ -416,17 +430,17 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                 {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
               </button>
-              {isPostAuthor && (
+              {canRemovePost && (
                 <>
                   <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
                   <button
                     onClick={handleDeletePost}
                     disabled={deleting}
-                    title="Delete post"
+                    title={isPostAuthor ? 'Delete post' : 'Remove spot review'}
                     style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.45 : 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#f87171' }}
                   >
                     <Trash2 size={12} strokeWidth={2} />
-                    Delete
+                    {isPostAuthor ? 'Delete' : 'Remove'}
                   </button>
                 </>
               )}
