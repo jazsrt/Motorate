@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { Award, Crosshair, Edit, LogOut, Shield, Share2, Target, Users, Zap } from 'lucide-react';
+import { Award, BadgeCheck, Crosshair, Edit, LogOut, Shield, Share2, Target, Users, Wrench, Zap } from 'lucide-react';
 import { shareToSocial } from '../components/ShareCardGenerator';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PhotoLightbox } from '../components/PhotoLightbox';
@@ -55,7 +55,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [_loadingPosts, setLoadingPosts] = useState(false);
   const [, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
-  const [, setActiveQuests] = useState<any[]>([]);
+  const [activeQuests, setActiveQuests] = useState<any[]>([]);
   const [userStickers, setUserStickers] = useState<any[]>([]);
   const [pinnedBadges, setPinnedBadges] = useState<any[]>([]);
   const _fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,8 +75,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [_following, setFollowing] = useState<any[]>([]);
   const [cityRank, setCityRank] = useState<number | null>(null);
   const [weeklySpots, setWeeklySpots] = useState(0);
-  const [, setWeeklyReviews] = useState(0);
-  const [, setWeeklyStickers] = useState(0);
+  const [weeklyReviews, setWeeklyReviews] = useState(0);
+  const [weeklyStickers, setWeeklyStickers] = useState(0);
   const [fleetBadges, setFleetBadges] = useState<any[]>([]);
 
   const loadProfile = useCallback(async () => {
@@ -565,6 +565,47 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     { label: 'Following', value: followingCount, icon: Users, color: '#60a5fa' },
   ];
 
+  const nextActions = [
+    activeQuests[0] ? {
+      label: 'Active Quest',
+      title: activeQuests[0].title || activeQuests[0].name || 'Quest available',
+      detail: 'Complete it before it disappears',
+      icon: Target,
+      color: '#f0a030',
+      action: () => onNavigate('challenges'),
+    } : null,
+    {
+      label: 'Fastest RP',
+      title: weeklySpots > 0 ? 'Keep the week alive' : 'Log a spot',
+      detail: weeklySpots > 0 ? `${weeklySpots} spot${weeklySpots === 1 ? '' : 's'} this week` : 'Spot a car to start momentum',
+      icon: Crosshair,
+      color: '#F97316',
+      action: () => onNavigate('scan'),
+    },
+    vehicles.length > 0 ? {
+      label: 'Garage Move',
+      title: fleetBadges.length > 0 ? 'Upgrade the fleet story' : 'Add build proof',
+      detail: weeklyStickers > 0 ? `${weeklyStickers} sticker${weeklyStickers === 1 ? '' : 's'} earned this week` : 'Photos, mods, and stickers raise credibility',
+      icon: Wrench,
+      color: '#20c060',
+      action: () => onViewVehicle(vehicles[0].id),
+    } : {
+      label: 'Garage Move',
+      title: 'Claim your first vehicle',
+      detail: 'Your profile gets stronger once a car is attached',
+      icon: BadgeCheck,
+      color: '#20c060',
+      action: () => onNavigate('claim-vehicle'),
+    },
+  ].filter(Boolean) as Array<{
+    label: string;
+    title: string;
+    detail: string;
+    icon: typeof Crosshair;
+    color: string;
+    action: () => void;
+  }>;
+
 
   // Featured vehicle = first owned vehicle
   const featuredVehicle = vehicles[0] || null;
@@ -732,6 +773,55 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             })}
           </div>
         </section>
+
+        <section style={{ margin: '0 12px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {nextActions.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={`${item.label}-${item.title}`}
+                onClick={item.action}
+                style={{
+                  minWidth: 0,
+                  minHeight: 126,
+                  padding: '12px 10px',
+                  textAlign: 'left',
+                  background: '#0a0d14',
+                  border: `1px solid ${item.color}33`,
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  boxShadow: `0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.03)`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: item.color }}>
+                    {item.label}
+                  </span>
+                  <Icon size={15} color={item.color} strokeWidth={1.7} />
+                </div>
+                <div>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 17, fontWeight: 700, color: '#eef4f8', lineHeight: 1.02 }}>
+                    {item.title}
+                  </div>
+                  <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', lineHeight: 1.3 }}>
+                    {item.detail}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </section>
+
+        {(weeklyReviews > 0 || weeklyStickers > 0) && (
+          <div style={{ margin: '0 12px 16px', padding: '10px 12px', borderRadius: 8, background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#9aaebc', lineHeight: 1.35 }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#F97316', marginRight: 6 }}>Weekly Pulse</span>
+            {weeklyReviews} review{weeklyReviews === 1 ? '' : 's'} and {weeklyStickers} garage sticker{weeklyStickers === 1 ? '' : 's'} are already feeding your reputation loop.
+          </div>
+        )}
 
         <div style={{ display: 'flex', background: '#030508', borderBottom: '1px solid rgba(249,115,22,0.14)' }}>
           {(['fleet', 'spots', 'friends', 'posts'] as const).map(tab => (

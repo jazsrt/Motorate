@@ -182,6 +182,18 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
         ? await supabase.from('comment_likes').select('*', { count: 'exact', head: true }).in('comment_id', commentIds)
         : { count: 0 };
 
+      const { data: myVehicles } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('owner_id', user.id);
+      const vehicleIds = myVehicles?.map(v => v.id) || [];
+      const { count: modsCount } = vehicleIds.length > 0
+        ? await supabase
+          .from('vehicle_modifications')
+          .select('*', { count: 'exact', head: true })
+          .in('vehicle_id', vehicleIds)
+        : { count: 0 };
+
       return {
         spots: spotsCount || 0,
         reviews: reviewsCount || 0,
@@ -191,7 +203,7 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
         likesReceived: likesReceivedCount || 0,
         followers: followersCount || 0,
         photos: photosCount || 0,
-        mods: 0,
+        mods: modsCount || 0,
         commentLikes: commentLikesCount || 0,
       };
     }
@@ -281,18 +293,48 @@ export function BadgesPage({ onNavigate }: BadgesPageProps) {
 
         {/* NEXT BADGE HERO */}
         {nextBadge && (
-          <div style={{ margin: '12px 14px', padding: '14px 16px', background: '#0a0d14', borderTop: '1px solid rgba(249,115,22,0.16)', borderBottom: '1px solid rgba(249,115,22,0.16)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div>
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>{nextBadge.badge.name}</span>
+          <div style={{ margin: '12px 14px', padding: '15px 16px', background: 'linear-gradient(135deg, rgba(249,115,22,0.12), rgba(10,13,20,0.98) 46%, rgba(240,160,48,0.06))', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, marginBottom: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 4 }}>
+                  Next Unlock
+                </div>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, lineHeight: 1, fontWeight: 700, color: '#eef4f8' }}>{nextBadge.badge.name}</span>
+                <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#9aaebc', marginTop: 5, lineHeight: 1.35 }}>
+                  {nextBadge.remaining} more action{nextBadge.remaining === 1 ? '' : 's'} to earn it. Keep the loop moving.
+                </div>
               </div>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{Math.round(nextBadge.progressPercent)}%</span>
+              <div style={{ width: 54, height: 54, borderRadius: 8, background: 'rgba(3,5,8,0.55)', border: '1px solid rgba(249,115,22,0.22)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 700, color: '#F97316', fontVariantNumeric: 'tabular-nums' }}>{Math.round(nextBadge.progressPercent)}%</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>Done</span>
+              </div>
             </div>
-            <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', borderRadius: 6 }}>
               <div className="mr-bar" style={{ height: '100%', background: '#F97316', '--bar-w': `${nextBadge.progressPercent}%` } as React.CSSProperties} />
             </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#5a6e7e', marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>
-              {nextBadge.currentCount} / {nextBadge.badge.tier_threshold} — <span style={{ color: '#F97316' }}>{nextBadge.remaining} to go</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#5a6e7e', fontVariantNumeric: 'tabular-nums' }}>
+                {nextBadge.currentCount} / {nextBadge.badge.tier_threshold} <span style={{ color: '#F97316' }}>{nextBadge.remaining} to go</span>
+              </div>
+              <button
+                onClick={() => onNavigate('scan')}
+                style={{
+                  padding: '8px 12px',
+                  background: '#F97316',
+                  border: 'none',
+                  borderRadius: 4,
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase' as const,
+                  color: '#030508',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap' as const,
+                }}
+              >
+                Earn Now
+              </button>
             </div>
           </div>
         )}
