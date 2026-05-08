@@ -11,7 +11,7 @@ import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { type VerificationTier } from '../components/TierBadge';
-import { ArrowLeft, AlertCircle, X, Star, Shield, Share2, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, AlertCircle, X, Star, Shield, Share2, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { GuestBottomNav } from '../components/GuestBottomNav';
@@ -859,6 +859,21 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     ? Math.round(ratingCategories.reduce((s, c) => s + c.avg, 0) * 10)
     : 0;
 
+  const vehicleName = [vehicle?.year, vehicle?.make, vehicle?.model].filter(Boolean).join(' ') || 'This vehicle';
+  const showroomStats = [
+    { label: 'Reputation', value: rpScore || '—', accent: true },
+    { label: 'Fans', value: followerCount },
+    { label: 'Badges', value: vBadges.length },
+    { label: 'Photos', value: vehicleImages.length },
+  ];
+  const specHighlights = [
+    vehicle?.trim ? { label: 'Trim', value: vehicle.trim } : null,
+    vehicle?.color ? { label: 'Color', value: vehicle.color } : null,
+    vehicle?.year ? { label: 'Year', value: vehicle.year } : null,
+    { label: 'Owner', value: vehicle?.verification_tier === 'vin_verified' ? 'Verified' : vehicle?.is_claimed ? 'Claimed' : 'Unclaimed' },
+  ].filter(Boolean) as { label: string; value: string | number }[];
+  const topVehicleBadges = vBadges.slice(0, 3);
+
   // Powertrain string — no VIN data
   const _powertrain = '';
 
@@ -1025,6 +1040,93 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         {/* Hidden file inputs */}
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
         <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
+
+        {isOwner && vehicle.is_claimed && (
+          <section style={{ margin: '12px 14px 14px', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 10, background: 'linear-gradient(135deg, rgba(249,115,22,0.10), rgba(10,13,20,0.98) 46%, rgba(240,160,48,0.06))', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 14px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.6px', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 4 }}>
+                  Owner Garage
+                </div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 21, fontWeight: 700, color: C.white, lineHeight: 1.05 }}>
+                  Your hub for {vehicleName}.
+                </div>
+                <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.light, lineHeight: 1.35 }}>
+                  Photos, lifestyle albums, manual access, parts ideas, and useful ownership info in one place.
+                </div>
+              </div>
+              <button
+                onClick={() => setShowManageSheet(true)}
+                style={{ width: 42, height: 42, borderRadius: 8, border: '1px solid rgba(249,115,22,0.24)', background: 'rgba(3,5,8,0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+                title="Manage vehicle"
+              >
+                <Settings size={17} color={C.accent} />
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {[
+                { label: 'Photos', value: vehicleImages.length, icon: Image, action: () => fileInputRef.current?.click(), color: C.accent },
+                { label: 'Albums', value: 'Open', icon: Camera, action: () => setShowAlbumsModal(true), color: C.gold },
+                { label: 'Manual', value: vehicle.owners_manual_url ? 'View' : 'Upload', icon: BookOpen, action: () => vehicle.owners_manual_url ? window.open(vehicle.owners_manual_url, '_blank') : manualInputRef.current?.click(), color: C.green },
+                { label: 'Parts', value: 'Soon', icon: Sparkles, action: () => showToast('Parts recommendations coming soon', 'success'), color: '#60a5fa' },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    style={{ minWidth: 0, padding: '11px 6px', textAlign: 'center' as const, border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none', background: 'rgba(3,5,8,0.18)', cursor: 'pointer' }}
+                  >
+                    <Icon size={15} color={item.color} />
+                    <div style={{ marginTop: 4, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{item.value}</div>
+                    <div style={{ marginTop: 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '.9px', textTransform: 'uppercase' as const, color: C.dim, whiteSpace: 'nowrap' }}>{item.label}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {!isOwner && vehicle.is_claimed && (
+          <section style={{ margin: '12px 14px 14px', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, background: '#0a0d14', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 14px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.6px', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 4 }}>
+                  Showroom Snapshot
+                </div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 21, fontWeight: 700, color: C.white, lineHeight: 1.05 }}>
+                  {vehicleName}
+                </div>
+                <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.light, lineHeight: 1.35 }}>
+                  Owner-posted photos, public reputation, badges, fans, and clean specs without exposing private VIN data.
+                </div>
+              </div>
+              <Shield size={20} color={vehicle.verification_tier === 'vin_verified' ? C.green : C.accent} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {showroomStats.map((stat, i) => (
+                <div key={stat.label} style={{ padding: '11px 6px', textAlign: 'center' as const, borderRight: i < showroomStats.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: stat.accent ? C.accent : C.white, fontVariantNumeric: 'tabular-nums' }}>{stat.value}</div>
+                  <div style={{ marginTop: 2, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '.9px', textTransform: 'uppercase' as const, color: C.dim }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+            {(specHighlights.length > 0 || topVehicleBadges.length > 0) && (
+              <div style={{ padding: '10px 12px', display: 'flex', gap: 7, flexWrap: 'wrap' as const, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                {specHighlights.slice(0, 4).map(item => (
+                  <span key={item.label} style={{ padding: '5px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: C.light }}>
+                    {item.label}: <span style={{ color: C.white }}>{item.value}</span>
+                  </span>
+                ))}
+                {topVehicleBadges.map(badge => (
+                  <span key={badge.badge_id} style={{ padding: '5px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.08)', border: '1px solid rgba(240,160,48,0.18)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: C.gold }}>
+                    {badge.tier || 'Badge'} · {badge.sticker_count || 0}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* ── 2. PHOTOS ── */}
         {vehicleImages.length > 0 && (
@@ -1541,16 +1643,16 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 13. BUILD SHEET (owner only) ── */}
+        {/* ── 13. PARTS & NOTES (owner only) ── */}
         {isOwner && vehicle.is_claimed && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                Build Sheet{modifications.length > 0 ? ` · ${modifications.length}` : ''}
+                Parts & Notes{modifications.length > 0 ? ` · ${modifications.length}` : ''}
               </span>
               {isOwner && (
                 <span onClick={() => setShowAddModForm(!showAddModForm)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                  {showAddModForm ? 'Cancel' : '+ Add Mod'}
+                  {showAddModForm ? 'Cancel' : '+ Add Part'}
                 </span>
               )}
             </div>
@@ -1603,7 +1705,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             {modifications.length === 0 && !showAddModForm ? (
               <div style={{ padding: '0 16px 12px' }}>
                 <div style={{ textAlign: 'center' as const, padding: '16px', color: '#3a4e60', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
-                  {isOwner ? 'No modifications logged yet' : 'Stock'}
+                  {isOwner ? 'No parts or ownership notes logged yet' : 'Stock'}
                 </div>
               </div>
             ) : (
@@ -1718,7 +1820,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             {vehicle.is_claimed && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: C.steel, marginBottom: 8 }}>
-                  Modifications
+                  Parts Timeline
                 </div>
                 {modifications.length > 0 ? modifications.map((mod, i) => (
                   <div key={mod.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0' }}>
@@ -1742,11 +1844,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               </div>
             )}
 
-            {/* Modifications */}
+            {/* Parts and ownership notes */}
             <div style={{ background: C.carbon1, borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Wrench size={14} strokeWidth={1.5} color={C.dim} />
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Modifications</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Parts & Ownership Notes</span>
               </div>
 
               {/* Modification status progress */}
@@ -1757,11 +1859,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                       {(() => {
                         const totalMods = modifications.length;
                         const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
-                        if (totalMods >= thresholds.Platinum) return 'Platinum Mods';
-                        if (totalMods >= thresholds.Gold) return 'Gold Mods';
-                        if (totalMods >= thresholds.Silver) return 'Silver Mods';
-                        if (totalMods >= thresholds.Bronze) return 'Bronze Mods';
-                        return 'No Modifications';
+                        if (totalMods >= thresholds.Platinum) return 'Platinum Parts';
+                        if (totalMods >= thresholds.Gold) return 'Gold Parts';
+                        if (totalMods >= thresholds.Silver) return 'Silver Parts';
+                        if (totalMods >= thresholds.Bronze) return 'Bronze Parts';
+                        return 'No Parts Logged';
                       })()}
                     </span>
                     <p style={{ fontSize: 10, color: C.steel, fontFamily: "'Barlow', sans-serif" }}>
@@ -1769,10 +1871,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         const totalMods = modifications.length;
                         const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
                         if (totalMods >= thresholds.Platinum) return 'Max level reached!';
-                        if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} mods to Platinum`;
-                        if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} mods to Gold`;
-                        if (totalMods >= thresholds.Bronze) return `${totalMods}/${thresholds.Silver} mods to Silver`;
-                        return `${totalMods}/${thresholds.Bronze} mods to Bronze`;
+                        if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} parts to Platinum`;
+                        if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} parts to Gold`;
+                        if (totalMods >= thresholds.Bronze) return `${totalMods}/${thresholds.Silver} parts to Silver`;
+                        return `${totalMods}/${thresholds.Bronze} parts to Bronze`;
                       })()}
                     </p>
                   </div>
