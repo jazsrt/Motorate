@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_PUBLIC_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Award, Car, Crosshair, Lock, Shield, Users } from 'lucide-react';
 import { FollowButton } from '../components/FollowButton';
 import { ReportModal } from '../components/ReportModal';
 import { PrivacyGate } from '../components/PrivacyGate';
@@ -25,11 +25,11 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
-  const [_badges, setBadges] = useState<any[]>([]);
+  const [badges, setBadges] = useState<any[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [_followingCount, setFollowingCount] = useState(0);
   const [spotsCount, setSpotsCount] = useState(0);
-  const [_reviewsCount, setReviewsCount] = useState(0);
+  const [reviewsCount, setReviewsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [_loadingPosts, setLoadingPosts] = useState(false);
@@ -46,7 +46,7 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const [allPhotos, setAllPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, _setLightboxIndex] = useState(0);
-  const [_lockedBadges, setLockedBadges] = useState<any[]>([]);
+  const [lockedBadges, setLockedBadges] = useState<any[]>([]);
 
   const isOwnProfile = currentUser?.id === userId;
   const isPrivate = profile?.is_private === true;
@@ -283,6 +283,19 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
   const featuredVehicle = vehicles[0] || null;
   const featuredPhoto = featuredVehicle?.profile_image_url || featuredVehicle?.stock_image_url || null;
   const userTier = getTierFromScore(profile?.reputation_score || 0);
+  const topBadges = badges.slice(0, 3);
+  const nextLockedBadge = lockedBadges[0] || null;
+  const credibilityStats = [
+    { label: 'Garage', value: vehicles.length, icon: Car, color: '#F97316' },
+    { label: 'Badges', value: badges.length, icon: Award, color: '#f0a030' },
+    { label: 'Spots', value: spotsCount, icon: Crosshair, color: '#20c060' },
+    { label: 'MotoFans', value: followerCount, icon: Users, color: '#60a5fa' },
+  ];
+  const profileHighlights = [
+    vehicles.length > 0 ? `${vehicles.length} claimed vehicle${vehicles.length === 1 ? '' : 's'} in garage` : 'No public vehicles yet',
+    badges.length > 0 ? `${badges.length} badge${badges.length === 1 ? '' : 's'} earned` : 'Badge path not started yet',
+    reviewsCount > 0 ? `${reviewsCount} review${reviewsCount === 1 ? '' : 's'} posted` : 'No public reviews yet',
+  ];
 
   if (loading) {
     return (
@@ -415,6 +428,72 @@ export function UserProfilePage({ userId, onNavigate, onViewVehicle, onBack }: U
 
         {canViewContent && (
           <>
+            <section style={{ margin: '12px 12px 14px', border: '1px solid rgba(249,115,22,0.16)', borderRadius: 10, background: 'linear-gradient(135deg, rgba(249,115,22,0.08), rgba(10,13,20,0.96) 45%, rgba(96,165,250,0.06))', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 14px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.4px', textTransform: 'uppercase', color: '#F97316', marginBottom: 3 }}>
+                    Profile Signal
+                  </div>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1.05 }}>
+                    {profile?.handle || 'This driver'} is building a {userTier.name.toLowerCase()} reputation.
+                  </div>
+                  <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#9aaebc', lineHeight: 1.35 }}>
+                    {profileHighlights.join(' · ')}
+                  </div>
+                </div>
+                <div style={{ width: 56, height: 56, borderRadius: 8, border: '1px solid rgba(249,115,22,0.22)', background: 'rgba(3,5,8,0.65)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Shield size={16} color="#F97316" />
+                  <span style={{ marginTop: 3, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>{(profile?.reputation_score || 0).toLocaleString()}</span>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                {credibilityStats.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} style={{ padding: '10px 6px', textAlign: 'center' as const, borderRight: i < credibilityStats.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                      <Icon size={14} color={item.color} />
+                      <div style={{ marginTop: 4, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: '#eef4f8' }}>{item.value}</div>
+                      <div style={{ marginTop: 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.6px', textTransform: 'uppercase', color: '#5a6e7e', whiteSpace: 'nowrap' }}>{item.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {(topBadges.length > 0 || nextLockedBadge) && (
+              <section style={{ margin: '0 12px 14px', padding: '12px', borderRadius: 10, background: '#0a0d14', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.6px', textTransform: 'uppercase', color: '#7a8e9e' }}>
+                    Reputation Proof
+                  </div>
+                  {nextLockedBadge && (
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#5a6e7e', whiteSpace: 'nowrap' }}>
+                      Next: <span style={{ color: '#F97316' }}>{nextLockedBadge.name}</span>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: topBadges.length > 0 ? 'repeat(3, 1fr)' : '1fr', gap: 8 }}>
+                  {topBadges.length > 0 ? topBadges.map((earned) => (
+                    <div key={earned.id} style={{ minHeight: 86, borderRadius: 8, border: '1px solid rgba(240,160,48,0.18)', background: 'rgba(240,160,48,0.06)', padding: 10, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', gap: 8 }}>
+                      <Award size={16} color="#f0a030" />
+                      <div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 14, fontWeight: 700, color: '#eef4f8', lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {earned.badge?.name || 'Badge'}
+                        </div>
+                        <div style={{ marginTop: 2, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', color: '#7a8e9e' }}>
+                          {earned.tier || earned.badge?.category || 'Earned'}
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#7a8e9e' }}>
+                      This profile has not surfaced badge proof yet.
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* Tabs */}
             <div style={{ display: 'flex', background: '#030508', borderBottom: '1px solid rgba(249,115,22,0.14)' }}>
               {(['fleet', 'spots', 'friends', 'posts'] as const).map(tab => (
