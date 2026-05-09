@@ -262,7 +262,27 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { queueId } = await req.json();
+    const { queueId, imageUrl, textContent } = await req.json();
+
+    if (!queueId && (imageUrl || textContent)) {
+      const imageResult = imageUrl ? await analyzeImage(imageUrl) : undefined;
+      const textResult = textContent ? await analyzeText(textContent) : undefined;
+      const { decision, reason } = determineDecision(imageResult, textResult);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          decision,
+          reason,
+          imageAnalysis: imageResult,
+          textAnalysis: textResult,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     if (!queueId) {
       return new Response(

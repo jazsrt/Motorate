@@ -13,6 +13,7 @@ import { getUserBadges, getUserDriverRating, type Badge } from '../lib/badges';
 import { type OnNavigate } from '../types/navigation';
 import { calculateAndAwardReputation } from '../lib/reputation';
 import { formatTimeAgo } from '../lib/formatting';
+import { moderateTextContent } from '../lib/contentModeration';
 
 interface Comment {
   id: string;
@@ -165,6 +166,12 @@ export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavi
 
     setSubmitting(true);
     try {
+      const moderation = await moderateTextContent(newComment, 'comment');
+      if (!moderation.allowed) {
+        showToast(moderation.reason || 'Comment blocked by moderation.', 'error');
+        return;
+      }
+
       const { error: insertError } = await supabase
         .from('post_comments')
         .insert({

@@ -6,6 +6,8 @@ import { MessageCircle, Send, Search, Plus, Check, CheckCheck, X, Users, Papercl
 import { OnNavigate } from '../types/navigation';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { useToast } from '../contexts/ToastContext';
+import { moderateTextContent } from '../lib/contentModeration';
 
 const inputStyle: React.CSSProperties = { width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '11px 14px', fontFamily: "'Barlow', sans-serif", fontSize: 14, color: '#eef4f8', outline: 'none' };
 
@@ -56,6 +58,7 @@ interface MessagesPageProps {
 
 export default function MessagesPage({ onNavigate, recipientId }: MessagesPageProps) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -421,8 +424,16 @@ export default function MessagesPage({ onNavigate, recipientId }: MessagesPagePr
       }
 
       if (rateLimitCheck === false) {
-        alert('Rate limit exceeded. Please wait before sending more messages.');
+        showToast('Rate limit exceeded. Please wait before sending more messages.', 'error');
         return;
+      }
+
+      if (newMessage.trim()) {
+        const moderation = await moderateTextContent(newMessage, 'message');
+        if (!moderation.allowed) {
+          showToast(moderation.reason || 'Message blocked by moderation.', 'error');
+          return;
+        }
       }
 
       let attachmentData = null;

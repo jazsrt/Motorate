@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useModerationSubscription } from '../hooks/useModerationSubscription';
 import { uploadImage, deleteImage } from '../lib/storage';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
+import { moderateTextContent } from '../lib/contentModeration';
 import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
@@ -639,6 +640,12 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
       if (!post) {
         setError('Cannot reply — no linked post found.');
         setReplySubmitting(false);
+        return;
+      }
+
+      const moderation = await moderateTextContent(replyText, 'comment');
+      if (!moderation.allowed) {
+        showToast(moderation.reason || 'Reply blocked by moderation.', 'error');
         return;
       }
 
