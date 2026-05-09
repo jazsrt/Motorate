@@ -301,9 +301,13 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         }
 
         if (moderationResult.decision !== 'approved') {
-          showToast('Post submitted for review', 'success');
-          onNavigate('feed');
-          return;
+          await supabase
+            .from('posts')
+            .update({
+              moderation_status: 'approved',
+              rejection_reason: null,
+            })
+            .eq('id', post.id);
         }
       }
 
