@@ -3,6 +3,7 @@ import { X, Send, Heart, Trash2, CreditCard as Edit2, MessageCircle, Star } from
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { LoadingSpinner } from './ui/LoadingSpinner';
 import { EmptyState } from './ui/EmptyState';
 import { EditCommentModal } from './EditCommentModal';
@@ -12,6 +13,7 @@ import { getUserBadges, getUserDriverRating, type Badge } from '../lib/badges';
 import { type OnNavigate } from '../types/navigation';
 import { calculateAndAwardReputation } from '../lib/reputation';
 import { formatTimeAgo } from '../lib/formatting';
+import { moderateTextContent } from '../lib/contentModeration';
 
 interface Comment {
   id: string;
@@ -43,6 +45,7 @@ const COMMENTS_PER_PAGE = 20;
 export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavigate }: CommentsModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -163,6 +166,12 @@ export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavi
 
     setSubmitting(true);
     try {
+      const moderation = await moderateTextContent(newComment, 'comment');
+      if (!moderation.allowed) {
+        showToast(moderation.reason || 'Comment blocked by moderation.', 'error');
+        return;
+      }
+
       const { error: insertError } = await supabase
         .from('post_comments')
         .insert({
@@ -255,6 +264,12 @@ export function CommentsModal({ postId, postAuthor: _postAuthor, onClose, onNavi
 
       setNewComment('');
       showToast('Comment added!', 'success');
+      celebrateReward({
+        type: 'rp',
+        title: 'Comment Posted',
+        message: 'You added momentum to the conversation.',
+        points: 3,
+      });
 
       // Send notification to post author
       try {

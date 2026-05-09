@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Shield, Check, Loader2, Upload, Camera, X } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Camera, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { supabase } from '../lib/supabase';
 import { decodeVin, isValidVinFormat, type VinResult } from '../lib/vinDecoder';
 import { uploadImage } from '../lib/storage';
@@ -65,6 +66,29 @@ const secondaryBtn: React.CSSProperties = {
   border: `1px solid ${C.border}`,
 };
 
+async function createClaimFeedPost(userId: string, vehicleId: string, handle: string, vehicleName: string) {
+  const caption = handle
+    ? `Claimed @${handle}`
+    : `Claimed ${vehicleName}`;
+
+  const { error } = await supabase
+    .from('posts')
+    .insert({
+      author_id: userId,
+      vehicle_id: vehicleId,
+      post_type: 'claim',
+      content_type: 'image',
+      caption,
+      privacy_level: 'public',
+      moderation_status: 'approved',
+      published_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    console.error('[ClaimVehiclePage] claim feed post failed:', error);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -72,6 +96,7 @@ const secondaryBtn: React.CSSProperties = {
 export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
 
   const [step, setStep] = useState<Step>('intro');
 
@@ -86,7 +111,6 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
   const [vin, setVin] = useState('');
   const [vinError, setVinError] = useState('');
   const [decoding, setDecoding] = useState(false);
-  const [vinResult, setVinResult] = useState<VinResult | null>(null);
 
   // Proof state
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -97,6 +121,7 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
   // Claiming state
   const [claiming, setClaiming] = useState(false);
   const [confirmedHandle, setConfirmedHandle] = useState('');
+  const [claimOutcome, setClaimOutcome] = useState<'verified' | 'pending'>('verified');
 
   const vehicleName = [claimData.year, claimData.make, claimData.model].filter(Boolean).join(' ') || 'Vehicle';
 
@@ -158,7 +183,6 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
 
     try {
       const result = await decodeVin(cleaned);
-      setVinResult(result);
       // VIN decoded successfully — proceed to claim
       await executeClaim(result);
     } catch (err: unknown) {
@@ -206,6 +230,14 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
       if (updateError) throw updateError;
       if (!updated || updated.length === 0) throw new Error('Vehicle may already be claimed by someone else.');
 
+      await createClaimFeedPost(user.id, claimData.vehicleId, confirmedHandle, vehicleName);
+
+      setClaimOutcome('verified');
+      celebrateReward({
+        type: 'claim',
+        title: 'Ride Verified',
+        message: `@${confirmedHandle} is now owner-controlled.`,
+      });
       setStep('success');
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Claim failed', 'error');
@@ -255,6 +287,13 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
         .update({ vehicle_handle: confirmedHandle })
         .eq('id', claimData.vehicleId);
 
+      setClaimOutcome('pending');
+      celebrateReward({
+        type: 'claim',
+        title: 'Proof Submitted',
+        message: 'Your claim is queued for review.',
+        accent: '#f0a030',
+      });
       setStep('success');
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Upload failed', 'error');
@@ -571,14 +610,14 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
               <span style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: 7, fontWeight: 600,
                 letterSpacing: 2, textTransform: 'uppercase', color: C.green, marginTop: 4,
-              }}>Verified</span>
+              }}>{claimOutcome === 'verified' ? 'Verified' : 'Pending'}</span>
             </div>
 
             <h2 style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 24, fontWeight: 700, color: C.text1, margin: '0 0 6px' }}>
-              You're now the owner of @{confirmedHandle}
+              {claimOutcome === 'verified' ? `You're now the owner of @${confirmedHandle}` : 'Proof submitted for review'}
             </h2>
             <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: C.text2, margin: '0 0 32px' }}>
-              Your vehicle page is live.
+              {claimOutcome === 'verified' ? 'Your vehicle page is live.' : `We'll review your documents and notify you when @${confirmedHandle} is approved.`}
             </p>
 
             <button
@@ -587,6 +626,7 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
             >
               Go to My Vehicle
             </button>
+            {claimOutcome === 'verified' && (
             <button
               onClick={() => {
                 onNavigate('vehicle-detail', { vehicleId: claimData.vehicleId });
@@ -596,6 +636,7 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
             >
               Upload Photos
             </button>
+            )}
           </div>
         )}
       </div>

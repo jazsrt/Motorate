@@ -2,6 +2,7 @@ import { Share2, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { shareToSocial, type ShareCardData } from './ShareCardGenerator';
 
 interface Post {
@@ -32,6 +33,7 @@ export function ShareButton({ url, title, text, post, className = '', showLabel 
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
+  const { celebrateReward } = useRewardEvents();
 
   const sendShareNotification = async () => {
     if (!post || !user) return;
@@ -63,6 +65,12 @@ export function ShareButton({ url, title, text, post, className = '', showLabel 
         setCopied(true);
         if (!navigator.share) showToast('Link copied to clipboard!', 'success');
         setTimeout(() => setCopied(false), 2000);
+        celebrateReward({
+          type: 'rp',
+          title: 'Spot Shared',
+          message: 'You pushed this ride beyond the feed.',
+          points: 2,
+        });
         await sendShareNotification();
       }
       return;

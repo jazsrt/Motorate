@@ -13,13 +13,14 @@ export interface AuthorBadge {
 export interface FeedPost {
   post_id: string;
   author_id: string;
-  post_type: 'photo' | 'badge_given' | 'spot' | 'review';
+  post_type: 'photo' | 'video' | 'badge' | 'badge_given' | 'spot' | 'review' | 'claim';
   image_url: string | null;
   video_url?: string | null;
   content_type?: 'image' | 'video';
   caption: string | null;
   location_label: string | null;
   vehicle_id: string | null;
+  review_id?: string | null;
   badge_id: string | null;
   badge_icon_path: string | null;
   recipient_vehicle_id: string | null;
@@ -58,6 +59,7 @@ export interface FeedPost {
     profile_image_url: string | null;
     reputation_score: number | null;
     spots_count: number | null;
+    owner_id?: string | null;
   } | null;
 }
 
@@ -112,6 +114,7 @@ export async function loadFeedCursor(
       caption,
       location_label,
       vehicle_id,
+      review_id,
       badge_id,
       recipient_vehicle_id,
       created_at,
@@ -132,8 +135,9 @@ export async function loadFeedCursor(
       view_count,
       comment_count,
       author:profiles!posts_author_id_fkey(handle, avatar_url, location, is_admin),
-      vehicles:vehicle_id(id, year, make, model, color, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
+      vehicles:vehicle_id(id, year, make, model, color, owner_id, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
     `)
+    .eq('moderation_status', 'approved')
     .order('created_at', { ascending: false })
     .limit(limit + 20);
 
@@ -224,6 +228,7 @@ export async function loadFeedCursor(
           caption: post.caption,
           location_label: post.location_label,
           vehicle_id: post.vehicle_id,
+          review_id: post.review_id,
           badge_id: post.badge_id,
           badge_icon_path: post.badge_id ? (badgeIconMap[post.badge_id] || null) : null,
           recipient_vehicle_id: post.recipient_vehicle_id,
@@ -267,6 +272,7 @@ export async function loadFeedCursor(
           caption: post.caption,
           location_label: post.location_label,
           vehicle_id: post.vehicle_id,
+          review_id: post.review_id,
           badge_id: post.badge_id,
           badge_icon_path: post.badge_id ? (badgeIconMap[post.badge_id] || null) : null,
           recipient_vehicle_id: post.recipient_vehicle_id,
@@ -380,4 +386,3 @@ function applyRankingMultiplier(posts: any[]): any[] {
     return bScore - aScore;
   });
 }
-

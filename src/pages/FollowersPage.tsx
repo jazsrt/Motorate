@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { type OnNavigate } from '../types/navigation';
 import { Users, User, Star, VolumeX, Ban, Clock, Check, X } from 'lucide-react';
 import { FollowButton } from '../components/FollowButton';
@@ -36,6 +37,7 @@ type TabType = 'friends' | 'pending';
 
 export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps) {
   const { user } = useAuth();
+  const { celebrateReward } = useRewardEvents();
   const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [followers, setFollowers] = useState<UserData[]>([]);
   const [pendingRequests, setPendingRequests] = useState<UserData[]>([]);
@@ -180,10 +182,18 @@ export function FollowersPage({ onNavigate, viewingUserId }: FollowersPageProps)
       .eq('following_id', user.id);
 
     if (!error) {
+      await supabase
+        .from('follows')
+        .upsert({
+          follower_id: user.id,
+          following_id: userId,
+          status: 'accepted',
+        }, { onConflict: 'follower_id,following_id' });
       try {
         const { notifyFriendAccepted } = await import('../lib/notifications');
         await notifyFriendAccepted(userId, user.id);
       } catch { /* intentionally empty */ }
+      celebrateReward({ type: 'follow', title: 'Friend Added', message: 'Your MotoRate network grew.' });
       await loadData();
     }
   };

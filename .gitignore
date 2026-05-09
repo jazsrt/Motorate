@@ -23,6 +23,8 @@ dist-ssr
 .env
 
 .claude/
+.supabase/
+supabase/.temp/
 .netlify
 PROMPT_V12_*.md
 SHARE_MOCKUP.html

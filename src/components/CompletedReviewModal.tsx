@@ -4,6 +4,7 @@ import type { SpotWizardData } from '../types/spot';
 import { floatPoints } from '../utils/floatPoints';
 import { shareToSocial } from './ShareCardGenerator';
 import { supabase } from '../lib/supabase';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 
 interface CompletedReviewModalProps {
   vehicleId: string;
@@ -46,6 +47,7 @@ function StarDisplay({ label, value }: { label: string; value: number }) {
 }
 
 function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: string }) {
+  const { celebrateReward } = useRewardEvents();
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'pending' | 'already'>('idle');
 
   useEffect(() => {
@@ -74,6 +76,12 @@ function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: st
       setStatus('idle');
     } else {
       setStatus(newStatus === 'pending' ? 'pending' : 'done');
+      celebrateReward({
+        type: 'follow',
+        title: newStatus === 'accepted' ? 'Vehicle Followed' : 'Fan Request Sent',
+        message: newStatus === 'accepted' ? 'You will see new activity from this ride.' : 'Owner approval is pending.',
+        accent: newStatus === 'pending' ? '#f0a030' : undefined,
+      });
       try {
         if (newStatus === 'accepted') {
           const { notifyVehicleFollow } = await import('../lib/notifications');
@@ -125,10 +133,10 @@ function BecomeAFanPrompt({ vehicleId, userId }: { vehicleId: string; userId: st
 }
 
 export function CompletedReviewModal({
-  vehicleId, spotType, wizardData, driverRating, drivingRating, vehicleRating,
+  vehicleId, spotType: _spotType, wizardData, driverRating: _driverRating, drivingRating: _drivingRating, vehicleRating,
   looksRating, soundRating, conditionRating, sentiment, comment, selectedTags = [],
   reputationEarned, isFirstSpot, newRank, rankChange, nextBadgeName, nextBadgeRemaining,
-  onDone, onViewVehicle, onUpgradeToFull, userId, userHandle,
+  onDone, onViewVehicle, onUpgradeToFull: _onUpgradeToFull, userId, userHandle,
 }: CompletedReviewModalProps) {
   const vehicleName = [wizardData.year, wizardData.make, wizardData.model].filter(Boolean).join(' ');
   const pointsRef = useRef<HTMLDivElement>(null);

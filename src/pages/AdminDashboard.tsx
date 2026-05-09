@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutDashboard, Users, Shield, FileText, Search, MoreVertical, Ban, UserPlus, Key, TrendingUp, Car, Check, CheckCircle, X, ChevronLeft, ArrowUp, XCircle, UserCheck, Activity, Award, RefreshCw, MessageSquare, Heart, Image, MapPin, CircleUser as UserCircle, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Users, Shield, FileText, Search, MoreVertical, Ban, UserPlus, Key, TrendingUp, Car, Check, CheckCircle, X, ChevronLeft, XCircle, UserCheck, Activity, Award, RefreshCw, MessageSquare, Heart, Image, MapPin, CircleUser as UserCircle, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,11 +42,27 @@ interface DashboardMetrics {
   likes7d: number;
   engagementRate: number;
   avgPostsPerUser: number;
+  activatedUsers: number;
+  activationRate: number;
+  actionsPerActiveUser: number;
+  creatorRatio: number;
 
   // Feature Usage
   totalVehicles: number;
   vehicles7d: number;
+  claimedVehicles: number;
+  verifiedVehicles: number;
+  claimRate: number;
+  pendingClaimCount: number;
+  totalVehicleFollows: number;
+  vehicleFollows7d: number;
+  followerConversionRate: number;
+  totalStickers: number;
+  stickers7d: number;
+  spotsPerVehicle: number;
   totalBadgesEarned: number;
+  badges7d: number;
+  badgeUnlockRate: number;
   totalPhotos: number;
   profileCompletionRate: number;
 
@@ -743,11 +759,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
     const { data: activeUserIds } = await supabase
       .from('posts')
       .select('author_id')
-      .gte('created_at', today);
+      .gte('created_at', sevenDaysAgo);
 
     const uniqueActiveUsers = new Set(activeUserIds?.map(p => p.author_id) || []).size;
     const engagementRate = totalUsers ? Math.round((uniqueActiveUsers / totalUsers) * 100) : 0;
-
+    const activatedUsers = uniqueActiveUsers;
+    const totalActions7d = (posts7d || 0) + (comments7d || 0) + (likes7d || 0);
+    const actionsPerActiveUser = activatedUsers ? parseFloat((totalActions7d / activatedUsers).toFixed(1)) : 0;
+    const creatorRatio = wau ? Math.round((activatedUsers / wau) * 100) : 0;
     const avgPostsPerUser = totalUsers && posts30d ? parseFloat((posts30d / totalUsers).toFixed(2)) : 0;
 
     const { count: totalVehicles } = await supabase
@@ -759,9 +778,47 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       .select('id', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo);
 
+    const { count: claimedVehicles } = await supabase
+      .from('vehicles')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_claimed', true);
+
+    const { count: verifiedVehicles } = await supabase
+      .from('vehicles')
+      .select('id', { count: 'exact', head: true })
+      .eq('verification_tier', 'vin_verified');
+
+    const { count: pendingClaimCount } = await supabase
+      .from('verification_claims')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending');
+
+    const { count: totalVehicleFollows } = await supabase
+      .from('vehicle_follows')
+      .select('id', { count: 'exact', head: true });
+
+    const { count: vehicleFollows7d } = await supabase
+      .from('vehicle_follows')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', sevenDaysAgo);
+
+    const { count: totalStickers } = await supabase
+      .from('vehicle_stickers')
+      .select('id', { count: 'exact', head: true });
+
+    const { count: stickers7d } = await supabase
+      .from('vehicle_stickers')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', sevenDaysAgo);
+
     const { count: totalBadgesEarned } = await supabase
       .from('user_inventory')
       .select('*', { count: 'exact', head: true });
+
+    const { count: badges7d } = await supabase
+      .from('user_inventory')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', sevenDaysAgo);
 
     const { count: totalPhotos } = await supabase
       .from('post_images')
@@ -802,9 +859,25 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
       likes7d: likes7d || 0,
       engagementRate,
       avgPostsPerUser,
+      activatedUsers,
+      activationRate: totalUsers ? Math.round((activatedUsers / totalUsers) * 100) : 0,
+      actionsPerActiveUser,
+      creatorRatio,
       totalVehicles: totalVehicles || 0,
       vehicles7d: vehicles7d || 0,
+      claimedVehicles: claimedVehicles || 0,
+      verifiedVehicles: verifiedVehicles || 0,
+      claimRate: totalVehicles ? Math.round(((claimedVehicles || 0) / totalVehicles) * 100) : 0,
+      pendingClaimCount: pendingClaimCount || 0,
+      totalVehicleFollows: totalVehicleFollows || 0,
+      vehicleFollows7d: vehicleFollows7d || 0,
+      followerConversionRate: totalVehicles ? Math.round(((totalVehicleFollows || 0) / totalVehicles) * 100) : 0,
+      totalStickers: totalStickers || 0,
+      stickers7d: stickers7d || 0,
+      spotsPerVehicle: totalVehicles ? parseFloat(((posts30d || 0) / totalVehicles).toFixed(1)) : 0,
       totalBadgesEarned: totalBadgesEarned || 0,
+      badges7d: badges7d || 0,
+      badgeUnlockRate: totalUsers ? parseFloat(((totalBadgesEarned || 0) / totalUsers).toFixed(1)) : 0,
       totalPhotos: totalPhotos || 0,
       profileCompletionRate,
       day1Retention,
@@ -1173,6 +1246,35 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
           <StatCard label="MAU" value={metrics.mau} icon={UserCheck} color={C.gold} />
         </div>
 
+        {/* Investor Snapshot */}
+        <div style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.12), rgba(10,13,20,0.96) 42%, rgba(32,192,96,0.07))', border: `1px solid rgba(249,115,22,0.20)`, borderRadius: 10, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
+            <div>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 11, fontWeight: 700, color: C.orange, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>Investor Snapshot</p>
+              <h3 style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: C.text }}>Engagement Loops That Prove Motorate Has Pull</h3>
+            </div>
+            <div style={{ padding: '6px 10px', borderRadius: 6, background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.22)', color: C.orange, fontFamily: FONT.mono, fontSize: 12, whiteSpace: 'nowrap' }}>
+              {metrics.actionsPerActiveUser} actions / active
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+            {[
+              { label: 'Activation', value: `${metrics.activationRate}%`, hint: `${metrics.activatedUsers} users posted in 7d` },
+              { label: 'Creator Ratio', value: `${metrics.creatorRatio}%`, hint: '7d posters vs weekly active users' },
+              { label: 'Claim Rate', value: `${metrics.claimRate}%`, hint: `${metrics.claimedVehicles}/${metrics.totalVehicles} vehicles claimed` },
+              { label: 'Verified Rides', value: metrics.verifiedVehicles, hint: `${metrics.pendingClaimCount} pending claims` },
+              { label: 'Vehicle Fans', value: metrics.totalVehicleFollows, hint: `+${metrics.vehicleFollows7d} follows in 7d` },
+              { label: 'Badge Velocity', value: `+${metrics.badges7d}`, hint: `${metrics.badgeUnlockRate} badges per user` },
+            ].map((item) => (
+              <div key={item.label} style={{ background: 'rgba(3,5,8,0.55)', border: `1px solid ${C.borderDim}`, borderRadius: 8, padding: 14 }}>
+                <p style={{ fontFamily: FONT.condensed, fontSize: 11, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{item.label}</p>
+                <p style={{ fontFamily: FONT.mono, fontSize: 24, fontWeight: 700, color: C.text }}>{item.value}</p>
+                <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>{item.hint}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Growth Section */}
         <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 24 }}>
           <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>User Growth (Last 30 Days)</h3>
@@ -1241,10 +1343,11 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
           <h3 style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>Feature Usage</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
             <StatCard label="Vehicles" value={metrics.totalVehicles} icon={Car} color={C.orange} />
+            <StatCard label="Claimed Vehicles" value={metrics.claimedVehicles} icon={Shield} color={C.green} />
             <StatCard label="Badges Earned" value={metrics.totalBadgesEarned} icon={Award} color={C.gold} />
             <StatCard label="Photos" value={metrics.totalPhotos} icon={Image} color={C.green} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
               <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Profile Completion</p>
               <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{metrics.profileCompletionRate}%</p>
@@ -1257,6 +1360,16 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps = {})
               <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Posts Per Day</p>
               <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{Math.round(metrics.posts30d / 30)}</p>
               <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>Average daily posts (30 days)</p>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Vehicle Follow Conversion</p>
+              <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{metrics.followerConversionRate}%</p>
+              <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>Total fans divided by listed vehicles</p>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.borderDim}`, borderRadius: 10, padding: 20 }}>
+              <p style={{ fontFamily: FONT.condensed, fontSize: 12, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Sticker + Spot Loop</p>
+              <p style={{ fontFamily: FONT.mono, fontSize: 32, fontWeight: 700, color: C.text }}>{metrics.spotsPerVehicle}</p>
+              <p style={{ fontFamily: FONT.body, fontSize: 11, color: C.dim, marginTop: 4 }}>{metrics.totalStickers} stickers total, +{metrics.stickers7d} this week</p>
             </div>
           </div>
         </div>

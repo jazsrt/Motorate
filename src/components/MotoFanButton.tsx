@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 
 interface MotoFanButtonProps {
   vehicleId: string;
@@ -10,17 +11,14 @@ interface MotoFanButtonProps {
 
 export function MotoFanButton({ vehicleId, ownerId, onCountChange }: MotoFanButtonProps) {
   const { user } = useAuth();
+  const { celebrateReward } = useRewardEvents();
   const [fanStatus, setFanStatus] = useState<'none' | 'pending' | 'accepted'>('none');
   const [fanCount, setFanCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [vehiclePrivate, setVehiclePrivate] = useState(false);
 
-  useEffect(() => {
-    loadState();
-  }, [vehicleId, user?.id]);
-
-  async function loadState() {
+  const loadState = useCallback(async function loadState() {
     // Get accepted fan count
     const { count } = await supabase
       .from('vehicle_follows')
@@ -50,7 +48,11 @@ export function MotoFanButton({ vehicleId, ownerId, onCountChange }: MotoFanButt
       setFanStatus((data?.status as 'pending' | 'accepted') || 'none');
     }
     setInitialLoaded(true);
-  }
+  }, [vehicleId, user, onCountChange]);
+
+  useEffect(() => {
+    loadState();
+  }, [loadState]);
 
   async function toggle() {
     if (!user || loading) return;
@@ -90,8 +92,19 @@ export function MotoFanButton({ vehicleId, ownerId, onCountChange }: MotoFanButt
         const next = fanCount + 1;
         setFanCount(next);
         onCountChange?.(next);
+        celebrateReward({
+          type: 'follow',
+          title: 'Vehicle Followed',
+          message: 'You will see new activity from this ride.',
+        });
         try { const { notifyVehicleFollow } = await import('../lib/notifications'); await notifyVehicleFollow(vehicleId, user.id); } catch { /* intentionally empty */ }
       } else {
+        celebrateReward({
+          type: 'follow',
+          title: 'Fan Request Sent',
+          message: 'Owner approval is pending.',
+          accent: '#f0a030',
+        });
         try { const { notifyVehicleFollowRequest } = await import('../lib/notifications'); await notifyVehicleFollowRequest(vehicleId, user.id); } catch { /* intentionally empty */ }
       }
     }

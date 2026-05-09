@@ -350,6 +350,11 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
                   <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e', marginLeft: 4 }}>{userProfile.reputation_tier}</span>
                 )}
               </div>
+              {latestBadge && (
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', marginTop: 3 }}>
+                  Latest badge: <span style={{ color: '#F97316' }}>{latestBadge.name}</span>
+                </div>
+              )}
             </div>
           </div>
           {!heroImage && vehicles.length === 0 && (
@@ -368,9 +373,9 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         <div style={{ display: 'flex', background: '#0a0d14', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {[
             { label: 'RP', value: (userProfile?.reputation_score ?? totalRP).toLocaleString(), accent: true },
-            { label: 'Vehicles', value: vehicles.length, accent: false },
-            { label: 'Spots', value: userSpotCount, accent: false },
-            { label: 'Badges', value: badgeCount, accent: false },
+            { label: 'Vehicles', value: fleetStats.vehicleCount, accent: false },
+            { label: 'Spots', value: fleetStats.totalSpots || userSpotCount, accent: false },
+            { label: 'Fans', value: vehicleFollowerTotal || badgeCount, accent: false },
           ].map((stat, i, arr) => (
             <div key={stat.label} style={{
               flex: 1, padding: '12px 0', textAlign: 'center' as const,
@@ -465,49 +470,66 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
         )}
 
         {/* ── 4. LIFETIME RIDES (retired) ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 6px' }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-            Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
-          </span>
-          <span onClick={() => setShowAddRetiredVehicle(true)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-            + Add Past Vehicle
-          </span>
-        </div>
+        <section style={{ margin: '18px 12px 0', border: '1px solid rgba(249,115,22,0.12)', borderRadius: 10, overflow: 'hidden', background: 'linear-gradient(180deg, rgba(13,17,23,0.96), rgba(7,10,15,0.98))' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 2 }}>
+                Legacy Garage
+              </div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
+                Lifetime Rides{retiredVehicles.length > 0 ? ` \u00B7 ${retiredVehicles.length}` : ''}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {retiredVehicles.length > 2 && (
+                <button onClick={() => setShowAllRetiredModal(true)} style={{ minHeight: 34, padding: '0 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#7a8e9e', cursor: 'pointer' }}>
+                  View All
+                </button>
+              )}
+              <button onClick={() => setShowAddRetiredVehicle(true)} style={{ minHeight: 34, padding: '0 11px', borderRadius: 7, border: '1px solid rgba(249,115,22,0.24)', background: 'rgba(249,115,22,0.10)', display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
+                <Plus size={12} /> Add
+              </button>
+            </div>
+          </div>
 
         {retiredVehicles.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
-            {retiredVehicles.map(rv => {
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, padding: 10 }}>
+            {retiredVehicles.slice(0, 2).map(rv => {
               const rvImg = rv.photo_url_1 || retiredStockImages[rv.id];
               return (
-                <div key={rv.id} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 7', overflow: 'hidden', background: '#0a0d14' }}>
+                <div key={rv.id} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 7', overflow: 'hidden', background: '#0a0d14', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
                   {rvImg ? (
-                    <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block', filter: 'saturate(0.4) brightness(0.7)' }} />
+                    <img src={rvImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block', filter: 'saturate(0.72) brightness(0.72)' }} />
                   ) : (
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0d1117, #070a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Car style={{ width: 32, height: 32, color: '#1e2a38', opacity: 0.5 }} strokeWidth={1.2} />
                     </div>
                   )}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(3,5,8,0.85) 0%, rgba(3,5,8,0.3) 60%, transparent 100%)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(3,5,8,0.88) 0%, rgba(3,5,8,0.36) 60%, transparent 100%)' }} />
+                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg, #F97316, rgba(249,115,22,0.20))' }} />
 
                   {/* Retired tag top-right */}
                   <div style={{
                     position: 'absolute', top: 8, right: 8, zIndex: 3,
-                    background: 'rgba(3,5,8,0.8)', border: '1px solid rgba(90,110,126,0.3)', borderRadius: 3,
-                    padding: '2px 7px',
+                    background: 'rgba(3,5,8,0.82)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: 5,
+                    padding: '3px 8px',
                     fontFamily: "'Barlow Condensed', sans-serif", fontSize: 7, fontWeight: 700,
-                    letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#5a6e7e',
+                    letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#F97316',
                   }}>
-                    Retired
+                    Lifetime
                   </div>
 
                   <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 2 }}>
-                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 18, fontWeight: 700, color: '#a8bcc8', lineHeight: 1 }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: '#F97316', marginBottom: 3 }}>
+                      Past Build
+                    </div>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#eef4f8', lineHeight: 1 }}>
                       {rv.year ? `${rv.year} ` : ''}{rv.model || rv.make}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                       <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, color: '#5a6e7e' }}>{rv.make}</span>
                       {rv.ownership_period && (
-                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 600, color: '#3a4e60' }}>{rv.ownership_period}</span>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600, color: '#7a8e9e' }}>{rv.ownership_period}</span>
                       )}
                     </div>
                   </div>
@@ -516,10 +538,20 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
             })}
           </div>
         ) : (
-          <div style={{ padding: '20px 16px', textAlign: 'center' as const }}>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#3a4e60' }}>No past rides added yet</div>
+          <div style={{ padding: '24px 18px 26px', textAlign: 'center' as const }}>
+            <div style={{ width: 44, height: 44, borderRadius: 8, margin: '0 auto 10px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Car size={19} color="#F97316" strokeWidth={1.4} />
+            </div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 17, fontWeight: 700, color: '#eef4f8', marginBottom: 3 }}>No past rides yet</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#5a6e7e', lineHeight: 1.45, maxWidth: 280, margin: '0 auto 14px' }}>
+              Add the cars that shaped your taste and keep your full garage story alive.
+            </div>
+            <button onClick={() => setShowAddRetiredVehicle(true)} style={{ minHeight: 38, padding: '0 14px', borderRadius: 7, border: '1px solid rgba(249,115,22,0.24)', background: '#F97316', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer' }}>
+              Add Past Vehicle
+            </button>
           </div>
         )}
+        </section>
 
         {/* ── 5. RECENT ACTIVITY ── */}
         <div style={{ padding: '16px 0 0' }}>
@@ -528,7 +560,7 @@ export function MyGaragePage({ onNavigate }: MyGaragePageProps = {}) {
           </div>
           {recentSpots.length > 0 ? (
             <div>
-              {recentSpots.slice(0, 8).map((spot, i) => (
+              {recentSpots.slice(0, 8).map((spot) => (
                 <div
                   key={spot.id}
                   onClick={() => handleNavigate('vehicle-detail', { vehicleId: spot.vehicle_id })}

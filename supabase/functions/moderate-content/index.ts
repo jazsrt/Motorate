@@ -1,24 +1,26 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-interface _ModerationQueueItem {
-  id: string;
-  content_type: string;
-  content_id: string;
-  image_url?: string;
-  text_content?: string;
+type ModerationInput = string | Array<
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } }
+>;
+
+interface OpenAIModerationResult {
+  flagged: boolean;
+  categories: Record<string, boolean>;
+  category_scores: Record<string, number>;
 }
 
-interface ImageAnalysisResult {
-  vehicleDetected: boolean;
-  vehicleConfidence: number;
+interface SafetyAnalysisResult {
   appropriate: boolean;
-  nsfwScore: number;
+  score: number;
   issues: string[];
 }
 
-interface TextAnalysisResult {
-  appropriate: boolean;
-  toxicityScore: number;
+interface VehicleAnalysisResult {
+  vehicleDetected: boolean;
+  confidence: number;
+  vehicleType: string | null;
   issues: string[];
 }
 
@@ -28,220 +30,215 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
-async function analyzeImage(imageUrl: string): Promise<ImageAnalysisResult> {
-  const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+async function moderateWithOpenAI(input: ModerationInput): Promise<OpenAIModerationResult> {
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
-  if (!anthropicApiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
+  if (!openaiApiKey) {
+    throw new Error('OPENAI_API_KEY not configured');
   }
 
-  const prompt = `Analyze this image for vehicle content moderation. Respond ONLY with valid JSON:
+  const response = await fetch('https://api.openai.com/v1/moderations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${openaiApiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'omni-moderation-latest',
+      input,
+    }),
+  });
 
-{
-  "vehicleDetected": boolean,
-  "vehicleConfidence": number (0-100),
-  "appropriate": boolean,
-  "nsfwScore": number (0-100, where 100 is most inappropriate),
-  "issues": string[] (array of specific issues found)
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OpenAI moderation error:', response.status, errorText);
+    throw new Error(`OpenAI moderation error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const result = data.results?.[0];
+
+  if (!result) {
+    throw new Error('OpenAI moderation returned no result');
+  }
+
+  return result;
 }
 
-Requirements:
-- vehicleDetected: true if any vehicle (car, truck, motorcycle, etc.) is visible
-- vehicleConfidence: how confident you are a vehicle is present (0-100)
-- appropriate: false if content contains NSFW, violence, gore, or other inappropriate content
-- nsfwScore: severity of any inappropriate content (0 = completely appropriate)
-- issues: specific problems found like "no_vehicle", "nsfw_content", "violence", "gore", "low_quality", etc.
+function extractResponseText(data: any): string {
+  if (typeof data?.output_text === 'string') {
+    return data.output_text;
+  }
 
-Return ONLY the JSON object, no other text.`;
+  const parts = data?.output
+    ?.flatMap((item: any) => item?.content ?? [])
+    ?.map((part: any) => part?.text)
+    ?.filter((text: unknown) => typeof text === 'string');
 
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [{
+  return parts?.join('\n') ?? '';
+}
+
+async function analyzeVehiclePresence(imageUrl: string): Promise<VehicleAnalysisResult> {
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+
+  if (!openaiApiKey) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${openaiApiKey}`,
+    },
+    body: JSON.stringify({
+      model: Deno.env.get('OPENAI_VISION_MODEL') || 'gpt-4.1-mini',
+      input: [
+        {
           role: 'user',
           content: [
             {
-              type: 'image',
-              source: {
-                type: 'url',
-                url: imageUrl
-              }
+              type: 'input_text',
+              text: [
+                'You are checking whether a MotoRate feed photo is vehicle-related.',
+                'Approve only when a real vehicle, vehicle interior, vehicle part, or vehicle-specific scene is visible.',
+                'Reject screenshots, memes, selfies without a visible vehicle, unrelated objects, pets, food, landscapes, and blank images.',
+                'Return JSON only.',
+              ].join(' '),
             },
             {
-              type: 'text',
-              text: prompt
-            }
-          ]
-        }]
-      })
-    });
+              type: 'input_image',
+              image_url: imageUrl,
+            },
+          ],
+        },
+      ],
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'vehicle_presence_check',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              vehicleDetected: { type: 'boolean' },
+              confidence: { type: 'number', minimum: 0, maximum: 1 },
+              vehicleType: { type: ['string', 'null'] },
+              issues: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+            },
+            required: ['vehicleDetected', 'confidence', 'vehicleType', 'issues'],
+          },
+        },
+      },
+      max_output_tokens: 180,
+    }),
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', response.status, errorText);
-      throw new Error(`Anthropic API error: ${response.status}`);
-    }
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OpenAI vehicle analysis error:', response.status, errorText);
+    throw new Error(`OpenAI vehicle analysis error: ${response.status}`);
+  }
 
-    const data = await response.json();
-    const content = data.content[0].text;
+  const data = await response.json();
+  const outputText = extractResponseText(data);
+  const parsed = JSON.parse(outputText);
 
-    try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('No JSON in AI response:', content);
-        return {
-          appropriate: false,
-          vehicleDetected: false,
-          vehicleConfidence: 0,
-          nsfwScore: 100,
-          issues: ['ai_parse_error']
-        };
-      }
-      return JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'Content:', content);
-      return {
-        appropriate: false,
-        vehicleDetected: false,
-        vehicleConfidence: 0,
-        nsfwScore: 100,
-        issues: ['ai_error']
-      };
-    }
+  return {
+    vehicleDetected: Boolean(parsed.vehicleDetected),
+    confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0)),
+    vehicleType: typeof parsed.vehicleType === 'string' ? parsed.vehicleType : null,
+    issues: Array.isArray(parsed.issues)
+      ? parsed.issues.filter((issue: unknown) => typeof issue === 'string')
+      : [],
+  };
+}
+
+async function safeAnalyzeVehiclePresence(imageUrl: string): Promise<VehicleAnalysisResult> {
+  try {
+    return await analyzeVehiclePresence(imageUrl);
   } catch (error) {
-    console.error('Image analysis error:', error);
+    console.error('Vehicle presence analysis error:', error);
     return {
-      appropriate: false,
-      vehicleDetected: false,
-      vehicleConfidence: 0,
-      nsfwScore: 100,
-      issues: ['api_error']
+      vehicleDetected: true,
+      confidence: 0,
+      vehicleType: null,
+      issues: ['vehicle_check_unavailable'],
     };
   }
 }
 
-async function analyzeText(text: string): Promise<TextAnalysisResult> {
-  const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+function summarizeModeration(result: OpenAIModerationResult): SafetyAnalysisResult {
+  const issues = Object.entries(result.categories)
+    .filter(([, flagged]) => flagged)
+    .map(([category]) => category);
 
-  if (!anthropicApiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
-  }
+  const score = Object.values(result.category_scores || {})
+    .reduce((max, value) => Math.max(max, Number(value) || 0), 0);
 
-  const prompt = `Analyze this text for content moderation. Respond ONLY with valid JSON:
-
-Text: "${text}"
-
-{
-  "appropriate": boolean,
-  "toxicityScore": number (0-100, where 100 is most toxic),
-  "issues": string[] (array of specific issues found)
+  return {
+    appropriate: !result.flagged,
+    score,
+    issues,
+  };
 }
 
-Check for:
-- Harassment or bullying
-- Hate speech or discriminatory language
-- Spam or promotional content
-- Personal identifiable information (PII) like phone numbers, addresses, SSNs
-- Threats or violent language
-- Sexual content
-
-Return ONLY the JSON object, no other text.`;
-
+async function analyzeText(text: string): Promise<SafetyAnalysisResult> {
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', response.status, errorText);
-      throw new Error(`Anthropic API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.content[0].text;
-
-    try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('No JSON in AI response:', content);
-        return {
-          appropriate: false,
-          toxicityScore: 100,
-          issues: ['ai_parse_error']
-        };
-      }
-      return JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'Content:', content);
-      return {
-        appropriate: false,
-        toxicityScore: 100,
-        issues: ['ai_error']
-      };
-    }
+    return summarizeModeration(await moderateWithOpenAI(text));
   } catch (error) {
-    console.error('Text analysis error:', error);
+    console.error('Text moderation error:', error);
     return {
-      appropriate: false,
-      toxicityScore: 100,
-      issues: ['api_error']
+      appropriate: true,
+      score: 0,
+      issues: ['moderation_unavailable'],
+    };
+  }
+}
+
+async function analyzeImage(imageUrl: string, text?: string): Promise<SafetyAnalysisResult> {
+  try {
+    const input: ModerationInput = [
+      ...(text ? [{ type: 'text' as const, text }] : []),
+      { type: 'image_url', image_url: { url: imageUrl } },
+    ];
+
+    return summarizeModeration(await moderateWithOpenAI(input));
+  } catch (error) {
+    console.error('Image moderation error:', error);
+    return {
+      appropriate: true,
+      score: 0,
+      issues: ['moderation_unavailable'],
     };
   }
 }
 
 function determineDecision(
-  imageResult?: ImageAnalysisResult,
-  textResult?: TextAnalysisResult
+  imageResult?: SafetyAnalysisResult,
+  textResult?: SafetyAnalysisResult,
+  vehicleResult?: VehicleAnalysisResult
 ): { decision: string; reason?: string } {
-  const issues: string[] = [];
+  const issues = [...(imageResult?.issues ?? []), ...(textResult?.issues ?? [])];
 
-  if (imageResult) {
-    if (!imageResult.vehicleDetected || imageResult.vehicleConfidence < 60) {
-      return { decision: 'rejected', reason: 'no_vehicle' };
-    }
-
-    if (!imageResult.appropriate || imageResult.nsfwScore > 30) {
-      return { decision: 'rejected', reason: 'inappropriate' };
-    }
-
-    if (imageResult.vehicleConfidence < 80) {
-      issues.push('low_confidence');
-    }
+  if (imageResult && !imageResult.appropriate) {
+    return { decision: 'rejected', reason: 'inappropriate' };
   }
 
-  if (textResult) {
-    if (!textResult.appropriate || textResult.toxicityScore > 30) {
-      return { decision: 'rejected', reason: 'inappropriate' };
-    }
-
-    if (textResult.toxicityScore > 15) {
-      issues.push('borderline_content');
-    }
+  if (textResult && !textResult.appropriate) {
+    return { decision: 'rejected', reason: 'inappropriate' };
   }
 
-  if (issues.length > 0) {
+  if (vehicleResult && !vehicleResult.vehicleDetected && vehicleResult.confidence >= 0.65) {
+    return { decision: 'rejected', reason: 'no_vehicle' };
+  }
+
+  const borderline = Math.max(imageResult?.score ?? 0, textResult?.score ?? 0) > 0.35;
+  if (borderline && issues.length > 0) {
     return { decision: 'needs_review', reason: issues.join(', ') };
   }
 
@@ -262,7 +259,31 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { queueId } = await req.json();
+    const { queueId, imageUrl, textContent, requireVehicle } = await req.json();
+
+    if (!queueId && (imageUrl || textContent)) {
+      const imageResult = imageUrl ? await analyzeImage(imageUrl, textContent) : undefined;
+      const textResult = !imageUrl && textContent ? await analyzeText(textContent) : undefined;
+      const vehicleResult = imageUrl && requireVehicle
+        ? await safeAnalyzeVehiclePresence(imageUrl)
+        : undefined;
+      const { decision, reason } = determineDecision(imageResult, textResult, vehicleResult);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          decision,
+          reason,
+          imageAnalysis: imageResult,
+          textAnalysis: textResult,
+          vehicleAnalysis: vehicleResult,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     if (!queueId) {
       return new Response(
@@ -290,33 +311,36 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    let imageResult: ImageAnalysisResult | undefined;
-    let textResult: TextAnalysisResult | undefined;
+    const imageResult = queueItem.image_url
+      ? await analyzeImage(queueItem.image_url, queueItem.text_content)
+      : undefined;
+    const textResult = !queueItem.image_url && queueItem.text_content
+      ? await analyzeText(queueItem.text_content)
+      : undefined;
+    const vehicleResult = queueItem.content_type === 'post' && queueItem.image_url
+      ? await safeAnalyzeVehiclePresence(queueItem.image_url)
+      : undefined;
 
-    if (queueItem.image_url) {
-      imageResult = await analyzeImage(queueItem.image_url);
-    }
+    const { decision, reason } = determineDecision(imageResult, textResult, vehicleResult);
 
-    if (queueItem.text_content) {
-      textResult = await analyzeText(queueItem.text_content);
-    }
-
-    const { decision, reason } = determineDecision(imageResult, textResult);
-
-    const updateData = {
-      ai_vehicle_detected: imageResult?.vehicleDetected ?? null,
-      ai_vehicle_confidence: imageResult?.vehicleConfidence ?? null,
-      ai_nsfw_score: imageResult?.nsfwScore ?? null,
-      ai_issues: [...(imageResult?.issues ?? []), ...(textResult?.issues ?? [])],
-      auto_decision: decision,
-      final_decision: decision === 'needs_review' ? null : decision,
-      rejection_reason: reason,
-      decided_at: decision === 'needs_review' ? null : new Date().toISOString(),
-    };
+    const issues = [
+      ...(imageResult?.issues ?? []),
+      ...(textResult?.issues ?? []),
+      ...(vehicleResult?.issues ?? []),
+    ];
 
     await supabase
       .from('moderation_queue')
-      .update(updateData)
+      .update({
+        ai_vehicle_detected: vehicleResult?.vehicleDetected ?? null,
+        ai_vehicle_confidence: vehicleResult ? vehicleResult.confidence * 100 : null,
+        ai_nsfw_score: Math.max(imageResult?.score ?? 0, textResult?.score ?? 0) * 100,
+        ai_issues: issues,
+        auto_decision: decision,
+        final_decision: decision === 'needs_review' ? null : decision,
+        rejection_reason: reason,
+        decided_at: decision === 'needs_review' ? null : new Date().toISOString(),
+      })
       .eq('id', queueId);
 
     if (decision !== 'needs_review') {
@@ -325,7 +349,7 @@ Deno.serve(async (req: Request) => {
         .from(contentTable)
         .update({
           moderation_status: decision,
-          rejection_reason: reason || null
+          rejection_reason: reason || null,
         })
         .eq('id', queueItem.content_id);
     }
@@ -337,6 +361,7 @@ Deno.serve(async (req: Request) => {
         reason,
         imageAnalysis: imageResult,
         textAnalysis: textResult,
+        vehicleAnalysis: vehicleResult,
       }),
       {
         status: 200,
@@ -346,7 +371,10 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Error in moderate-content:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error),
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

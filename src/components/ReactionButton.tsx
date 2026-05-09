@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, Flame, Skull, HandMetal, Smile, AlertCircle, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { addReaction, getReactionCounts, getUserReaction, ReactionType, ReactionCounts } from '../lib/reactions';
 import { sounds } from '../lib/sounds';
 import { floatPoints, haptic } from '../utils/floatPoints';
@@ -35,6 +36,7 @@ interface ReactionButtonProps {
 export function ReactionButton({ postId, onCountChange, onNavigate }: ReactionButtonProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
   const [counts, setCounts] = useState<ReactionCounts>({ fire: 0, heart: 0, dead: 0, applause: 0, laugh: 0, shock: 0, angry: 0 });
   const [userReaction, setUserReaction] = useState<ReactionType | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -126,6 +128,12 @@ export function ReactionButton({ postId, onCountChange, onNavigate }: ReactionBu
         sounds.points();
         haptic(25);
         floatPoints(buttonRef.current, '+2');
+        celebrateReward({
+          type: 'rp',
+          title: 'Reaction Sent',
+          message: 'You added signal to the feed.',
+          points: 2,
+        });
         buttonRef.current?.classList.add('like-pop');
         setTimeout(() => buttonRef.current?.classList.remove('like-pop'), 350);
       }

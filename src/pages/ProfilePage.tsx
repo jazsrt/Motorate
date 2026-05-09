@@ -4,18 +4,13 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_OWNER_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
-import { LogOut, Car, Upload, Award, Shield, MessageCircle, CheckCircle, Plus, MapPin, Zap, Target, Users, Crosshair, Share2 } from 'lucide-react';
+import { Award, BadgeCheck, Crosshair, Edit, LogOut, Shield, Share2, Target, Users, Wrench, Zap } from 'lucide-react';
 import { shareToSocial } from '../components/ShareCardGenerator';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { uploadImage } from '../lib/storage';
-import { ReactionButton } from '../components/ReactionButton';
 import { getUserBadges, type UserBadge } from '../lib/badges';
-import { CreditCard as Edit } from 'lucide-react';
-import { BadgeCoin } from '../components/BadgeCoin';
 import { getTierFromScore } from '../lib/tierConfig';
-import { getBadgeImagePath } from '../lib/badgeUtils';
-import { TIER_COLORS } from '../config/badgeConfig';
 import { MotoFansSection } from '../components/MotoFansSection';
 import { AlbumsModal } from '../components/AlbumsModal';
 
@@ -25,7 +20,7 @@ interface ProfilePageProps {
   onSendMessage?: (recipientId: string) => void;
 }
 
-function ChangeArrow({ value }: { value: number }) {
+function _ChangeArrow({ value }: { value: number }) {
   if (value === 0) return <span className="mono" style={{ fontSize: 9, color: '#586878' }}>—</span>;
   const up = value > 0;
   return (
@@ -54,34 +49,34 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [_uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAlbumsModal, setShowAlbumsModal] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [_loadingPosts, setLoadingPosts] = useState(false);
   const [, setTagBreakdown] = useState<{ tag: string; count: number }[]>([]);
-  const [, setActiveQuests] = useState<any[]>([]);
+  const [activeQuests, setActiveQuests] = useState<any[]>([]);
   const [userStickers, setUserStickers] = useState<any[]>([]);
   const [pinnedBadges, setPinnedBadges] = useState<any[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showSpotsGivenModal, setShowSpotsGivenModal] = useState(false);
+  const _fileInputRef = useRef<HTMLInputElement>(null);
+  const [_showSpotsGivenModal, _setShowSpotsGivenModal] = useState(false);
   const [allPhotos, setAllPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [showSpotsReceivedModal, setShowSpotsReceivedModal] = useState(false);
-  const [showBadgesModal, setShowBadgesModal] = useState(false);
-  const [showFollowersModal, setShowFollowersModal] = useState(false);
-  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [lightboxIndex, _setLightboxIndex] = useState(0);
+  const [_showSpotsReceivedModal, _setShowSpotsReceivedModal] = useState(false);
+  const [_showBadgesModal, _setShowBadgesModal] = useState(false);
+  const [_showFollowersModal, _setShowFollowersModal] = useState(false);
+  const [_showFollowingModal, _setShowFollowingModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'fleet' | 'spots' | 'friends' | 'posts'>('fleet');
-  const [spotsLoaded, setSpotsLoaded] = useState(false);
-  const [spotsGiven, setSpotsGiven] = useState<any[]>([]);
-  const [spotsReceived, setSpotsReceived] = useState<any[]>([]);
-  const [followers, setFollowers] = useState<any[]>([]);
-  const [following, setFollowing] = useState<any[]>([]);
+  const [_spotsLoaded, _setSpotsLoaded] = useState(false);
+  const [_spotsGiven, setSpotsGiven] = useState<any[]>([]);
+  const [_spotsReceived, setSpotsReceived] = useState<any[]>([]);
+  const [_followers, setFollowers] = useState<any[]>([]);
+  const [_following, setFollowing] = useState<any[]>([]);
   const [cityRank, setCityRank] = useState<number | null>(null);
   const [weeklySpots, setWeeklySpots] = useState(0);
-  const [, setWeeklyReviews] = useState(0);
-  const [, setWeeklyStickers] = useState(0);
+  const [weeklyReviews, setWeeklyReviews] = useState(0);
+  const [weeklyStickers, setWeeklyStickers] = useState(0);
   const [fleetBadges, setFleetBadges] = useState<any[]>([]);
 
   const loadProfile = useCallback(async () => {
@@ -293,7 +288,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     }
   }, [user]);
 
-  const loadSpotsGiven = async () => {
+  const _loadSpotsGiven = async () => {
     if (!user) return;
     const { data } = await supabase
       .from('spot_history')
@@ -332,7 +327,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     if (data) setSpotsReceived(data.filter(s => s.vehicle));
   };
 
-  const loadFollowersList = async () => {
+  const _loadFollowersList = async () => {
     if (!user) return;
     const { data } = await supabase
       .from('follows')
@@ -404,7 +399,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     } catch { /* intentionally empty */ }
   }, [user]);
 
-  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -496,7 +491,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
     }
   }, [user, loadProfile, loadVehicles, loadUserBadges, loadFollowCounts, loadUserPosts, loadTagBreakdown, loadActiveQuests, loadUserStickers, loadPinnedBadges, loadAllPhotos, loadWeeklyPulse]);
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
@@ -560,6 +555,56 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
   const tierInfo = getTierFromScore(repScore);
   const tierColor = getTierColor(repScore);
   const spotCount = userPosts.filter(p => p.post_type === 'spot').length;
+  const nextTierTarget = repScore >= 3500 ? null : repScore >= 1000 ? 3500 : 1000;
+  const nextTierProgress = nextTierTarget ? Math.min(100, Math.round((repScore / nextTierTarget) * 100)) : 100;
+  const latestPinnedBadge = pinnedBadges[0] || userBadges[0] || null;
+  const profileMomentum = [
+    { label: 'Weekly Spots', value: weeklySpots, icon: Crosshair, color: '#F97316' },
+    { label: 'Garage Stickers', value: userStickers.length, icon: Zap, color: '#f0a030' },
+    { label: 'Fleet Badges', value: fleetBadges.length, icon: Shield, color: '#20c060' },
+    { label: 'Following', value: followingCount, icon: Users, color: '#60a5fa' },
+  ];
+
+  const nextActions = [
+    activeQuests[0] ? {
+      label: 'Active Quest',
+      title: activeQuests[0].title || activeQuests[0].name || 'Quest available',
+      detail: 'Complete it before it disappears',
+      icon: Target,
+      color: '#f0a030',
+      action: () => onNavigate('challenges'),
+    } : null,
+    {
+      label: 'Fastest RP',
+      title: weeklySpots > 0 ? 'Keep the week alive' : 'Log a spot',
+      detail: weeklySpots > 0 ? `${weeklySpots} spot${weeklySpots === 1 ? '' : 's'} this week` : 'Spot a car to start momentum',
+      icon: Crosshair,
+      color: '#F97316',
+      action: () => onNavigate('scan'),
+    },
+    vehicles.length > 0 ? {
+      label: 'Garage Move',
+      title: fleetBadges.length > 0 ? 'Upgrade the fleet story' : 'Add build proof',
+      detail: weeklyStickers > 0 ? `${weeklyStickers} sticker${weeklyStickers === 1 ? '' : 's'} earned this week` : 'Photos, mods, and stickers raise credibility',
+      icon: Wrench,
+      color: '#20c060',
+      action: () => onViewVehicle(vehicles[0].id),
+    } : {
+      label: 'Garage Move',
+      title: 'Claim your first vehicle',
+      detail: 'Your profile gets stronger once a car is attached',
+      icon: BadgeCheck,
+      color: '#20c060',
+      action: () => onNavigate('claim-vehicle'),
+    },
+  ].filter(Boolean) as Array<{
+    label: string;
+    title: string;
+    detail: string;
+    icon: typeof Crosshair;
+    color: string;
+    action: () => void;
+  }>;
 
 
   // Featured vehicle = first owned vehicle
@@ -618,9 +663,10 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               padding: '5px 13px',
               border: '1px solid rgba(255,255,255,0.2)', borderRadius: 20,
               color: 'rgba(255,255,255,0.85)', background: 'rgba(3,5,8,0.5)',
-              cursor: 'pointer',
+              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
             }}
           >
+            <Edit size={11} />
             Edit Profile
           </button>
 
@@ -633,8 +679,8 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
               <span style={{
                 fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700,
                 letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 8px',
-                border: '1px solid rgba(96,165,250,0.4)', borderRadius: 2,
-                color: '#60a5fa', background: 'rgba(96,165,250,0.08)',
+                border: `1px solid ${tierColor.border}`, borderRadius: 2,
+                color: tierColor.border, background: tierColor.glow,
               }}>
                 {tierInfo.name}
               </span>
@@ -651,8 +697,9 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <button
                 onClick={() => shareToSocial({ type: 'profile', title: `@${profile?.handle || 'user'}`, userHandle: profile?.handle || 'user', userRep: repScore, deepLinkUrl: `${window.location.origin}/#/user-profile/${user!.id}` }, user!.id)}
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 2, color: 'rgba(255,255,255,0.4)', background: 'transparent', cursor: 'pointer' }}
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 2, color: 'rgba(255,255,255,0.4)', background: 'transparent', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
               >
+                <Share2 size={11} />
                 Share
               </button>
               {profile?.role === 'admin' && (
@@ -664,6 +711,7 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
                 onClick={signOut}
                 style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 2, color: 'rgba(255,255,255,0.25)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
               >
+                <LogOut size={11} />
                 Sign Out
               </button>
             </div>
@@ -686,6 +734,95 @@ export function ProfilePage({ onNavigate, onViewVehicle }: ProfilePageProps) {
         </div>
 
         {/* ── Tabs ── */}
+        <section style={{ margin: '14px 12px 16px', border: '1px solid rgba(249,115,22,0.16)', borderRadius: 10, background: 'linear-gradient(135deg, rgba(249,115,22,0.08), rgba(10,13,20,0.96) 42%, rgba(96,165,250,0.06))', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 14px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.4px', textTransform: 'uppercase', color: '#F97316', marginBottom: 3 }}>
+                Driver Momentum
+              </div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.05 }}>
+                {nextTierTarget ? `${(nextTierTarget - repScore).toLocaleString()} RP to next tier` : 'Top tier status active'}
+              </div>
+              {latestPinnedBadge && (
+                <div style={{ marginTop: 4, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: 'rgba(238,244,248,0.58)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Award size={13} color="#f0a030" />
+                  Latest badge: {latestPinnedBadge.name || latestPinnedBadge.badge_id || 'Unlocked'}
+                </div>
+              )}
+            </div>
+            <div style={{ width: 56, height: 56, borderRadius: 8, border: '1px solid rgba(249,115,22,0.22)', background: 'rgba(3,5,8,0.65)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Target size={16} color="#F97316" />
+              <span style={{ marginTop: 3, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>#{cityRank || '-'}</span>
+            </div>
+          </div>
+          <div style={{ padding: '0 14px 12px' }}>
+            <div style={{ height: 5, borderRadius: 5, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${nextTierProgress}%`, background: 'linear-gradient(90deg, #F97316, #f0a030)' }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {profileMomentum.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.label} style={{ padding: '10px 6px', textAlign: 'center', borderRight: i < profileMomentum.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <Icon size={14} color={item.color} />
+                  <div style={{ marginTop: 4, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: '#eef4f8' }}>{item.value}</div>
+                  <div style={{ marginTop: 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.6px', textTransform: 'uppercase', color: '#5a6e7e', whiteSpace: 'nowrap' }}>{item.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section style={{ margin: '0 12px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {nextActions.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={`${item.label}-${item.title}`}
+                onClick={item.action}
+                style={{
+                  minWidth: 0,
+                  minHeight: 126,
+                  padding: '12px 10px',
+                  textAlign: 'left',
+                  background: '#0a0d14',
+                  border: `1px solid ${item.color}33`,
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  boxShadow: `0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.03)`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: item.color }}>
+                    {item.label}
+                  </span>
+                  <Icon size={15} color={item.color} strokeWidth={1.7} />
+                </div>
+                <div>
+                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 17, fontWeight: 700, color: '#eef4f8', lineHeight: 1.02 }}>
+                    {item.title}
+                  </div>
+                  <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#7a8e9e', lineHeight: 1.3 }}>
+                    {item.detail}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </section>
+
+        {(weeklyReviews > 0 || weeklyStickers > 0) && (
+          <div style={{ margin: '0 12px 16px', padding: '10px 12px', borderRadius: 8, background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.18)', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#9aaebc', lineHeight: 1.35 }}>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#F97316', marginRight: 6 }}>Weekly Pulse</span>
+            {weeklyReviews} review{weeklyReviews === 1 ? '' : 's'} and {weeklyStickers} garage sticker{weeklyStickers === 1 ? '' : 's'} are already feeding your reputation loop.
+          </div>
+        )}
+
         <div style={{ display: 'flex', background: '#030508', borderBottom: '1px solid rgba(249,115,22,0.14)' }}>
           {(['fleet', 'spots', 'friends', 'posts'] as const).map(tab => (
             <button

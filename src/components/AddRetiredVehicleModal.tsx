@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { uploadImage } from '../lib/storage';
 import { ModalShell, modalButtonPrimary, modalButtonGhost, modalInput, modalLabel } from './ui/ModalShell';
 
@@ -13,6 +14,7 @@ interface AddRetiredVehicleModalProps {
 
 export function AddRetiredVehicleModal({ userId, onClose, onSuccess }: AddRetiredVehicleModalProps) {
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
   const [loading, setLoading] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -54,6 +56,11 @@ export function AddRetiredVehicleModal({ userId, onClose, onSuccess }: AddRetire
       });
       if (error) throw error;
       showToast('Lifetime ride added!', 'success');
+      celebrateReward({
+        type: 'garage',
+        title: 'Lifetime Ride Added',
+        message: `${formData.year} ${formData.make} ${formData.model}`.trim(),
+      });
       onSuccess(); onClose();
     } catch { showToast('Failed to add retired vehicle', 'error'); }
     finally { setLoading(false); }

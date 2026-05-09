@@ -108,11 +108,13 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
       .select(`
         id, author_id, post_type, spot_type, sentiment, caption, image_url, video_url, content_type,
         location_label, vehicle_id, created_at, view_count, comment_count,
+        review_id,
         rating_driver, rating_driving, rating_vehicle, looks_rating, sound_rating, condition_rating,
         author:profiles!posts_author_id_fkey(handle, avatar_url, is_admin),
-        vehicles:vehicle_id(id, year, make, model, color, stock_image_url, profile_image_url, reputation_score, spots_count)
+        vehicles:vehicle_id(id, year, make, model, color, owner_id, stock_image_url, profile_image_url, reputation_score, spots_count)
       `)
       .eq('id', focusPostId)
+      .eq('moderation_status', 'approved')
       .maybeSingle()
       .then(async ({ data }) => {
         if (!data) { setFocusLoading(false); return; }
@@ -128,7 +130,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
           video_url: data.video_url || null, content_type: data.content_type || (data.video_url ? 'video' : 'image'),
           location: data.location_label, created_at: data.created_at,
           like_count: reactions?.length || 0, comment_count: data.comment_count || 0,
-          view_count: data.view_count || 0, vehicle_id: data.vehicle_id,
+          view_count: data.view_count || 0, vehicle_id: data.vehicle_id, review_id: data.review_id,
           rating_driver: data.rating_driver, rating_driving: data.rating_driving, rating_vehicle: data.rating_vehicle,
           looks_rating: data.looks_rating, sound_rating: data.sound_rating, condition_rating: data.condition_rating,
           vehicles: vehicles || null,
@@ -149,7 +151,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
     });
   }, [posts, filterType]);
 
-  const hasActiveFilters = filterType !== 'all';
+  const _hasActiveFilters = filterType !== 'all';
 
   // Auth loading skeleton
   if (authLoading) {

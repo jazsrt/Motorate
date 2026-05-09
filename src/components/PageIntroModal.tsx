@@ -106,7 +106,9 @@ export function PageIntroModal({ page, userId, onDismiss }: PageIntroModalProps)
   if (!intro) return null;
 
   const handleDismiss = () => {
-    try { localStorage.setItem(storageKey(page, userId), 'true'); } catch {}
+    try { localStorage.setItem(storageKey(page, userId), 'true'); } catch {
+      // Local storage can be unavailable in private or embedded browser contexts.
+    }
     setVisible(false);
     setTimeout(onDismiss, 250);
   };

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type OnNavigate } from '../types/navigation';
 import { fuzzCoordinates, calculateDistance } from '../lib/locationPrivacy';
-import { Camera, X, Globe, Users, Lock, AlertCircle, MapPin, ChevronLeft } from 'lucide-react';
+import { Camera, X, Globe, Users, Lock, AlertCircle, MapPin, ChevronLeft, SlidersHorizontal } from 'lucide-react';
 import { useRateLimit } from '../hooks/useRateLimit';
 import RateLimitError from '../components/RateLimitError';
 import { useToast } from '../contexts/ToastContext';
@@ -20,6 +20,71 @@ interface CreatePostPageProps {
 }
 
 type PrivacyLevel = 'public' | 'friends' | 'private';
+type PhotoFilterId = 'original' | 'vivid' | 'street' | 'warm' | 'cool' | 'mono' | 'night';
+
+type ModerationResult = {
+  decision?: string;
+  reason?: string;
+  error?: string;
+};
+
+const photoFilters: Array<{
+  id: PhotoFilterId;
+  label: string;
+  css: string;
+}> = [
+  { id: 'original', label: 'Original', css: 'none' },
+  { id: 'vivid', label: 'Vivid', css: 'contrast(1.1) saturate(1.28) brightness(1.03)' },
+  { id: 'street', label: 'Street', css: 'contrast(1.22) saturate(0.92) brightness(0.96)' },
+  { id: 'warm', label: 'Warm', css: 'sepia(0.18) saturate(1.2) brightness(1.04)' },
+  { id: 'cool', label: 'Cool', css: 'saturate(1.08) hue-rotate(342deg) brightness(1.02)' },
+  { id: 'mono', label: 'Mono', css: 'grayscale(1) contrast(1.18)' },
+  { id: 'night', label: 'Night', css: 'brightness(0.86) contrast(1.32) saturate(1.16)' },
+];
+
+const getPhotoFilter = (id: PhotoFilterId) =>
+  photoFilters.find(filter => filter.id === id) ?? photoFilters[0];
+
+async function applyPhotoFilterToFile(file: File, filterId: PhotoFilterId): Promise<File> {
+  const selectedFilter = getPhotoFilter(filterId);
+  if (selectedFilter.id === 'original') return file;
+
+  const imageUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Could not read image for filtering'));
+      img.src = imageUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || image.width;
+    canvas.height = image.naturalHeight || image.height;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not prepare photo filter');
+
+    ctx.filter = selectedFilter.css;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((result) => {
+        if (result) resolve(result);
+        else reject(new Error('Could not export filtered image'));
+      }, 'image/jpeg', 0.92);
+    });
+
+    const baseName = file.name.replace(/\.[^.]+$/, '') || 'motorate-photo';
+    return new File([blob], `${baseName}-${selectedFilter.id}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
 
 export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const { user, profile } = useAuth();
@@ -28,6 +93,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const [image, setImage] = useState<string | null>(null);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [contentType, setContentType] = useState<'image' | 'video'>('image');
+  const [selectedPhotoFilter, setSelectedPhotoFilter] = useState<PhotoFilterId>('original');
   const [caption, setCaption] = useState('');
   const [privacyLevel, setPrivacyLevel] = useState<PrivacyLevel>('public');
   const [locationLabel, setLocationLabel] = useState('');
@@ -49,6 +115,36 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const moderatePhotoPost = async (postId: string, imageUrl: string, textContent: string | null): Promise<ModerationResult> => {
+    const { data: queueItem, error: queueError } = await supabase
+      .from('moderation_queue')
+      .insert({
+        content_type: 'post',
+        content_id: postId,
+        image_url: imageUrl,
+        text_content: textContent,
+        status: 'pending',
+      })
+      .select('id')
+      .single();
+
+    if (queueError || !queueItem) {
+      console.error('[CreatePost] Moderation queue insert failed:', queueError);
+      return { error: queueError?.message || 'Failed to queue moderation' };
+    }
+
+    const { data, error } = await supabase.functions.invoke('moderate-content', {
+      body: { queueId: queueItem.id },
+    });
+
+    if (error) {
+      console.error('[CreatePost] Moderation function failed:', error);
+      return { error: error.message };
+    }
+
+    return (data || {}) as ModerationResult;
+  };
 
   useEffect(() => {
     if (profile?.role === 'spectator') {
@@ -132,6 +228,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
     setMediaFile(file);
     setContentType(isVideo ? 'video' : 'image');
+    setSelectedPhotoFilter('original');
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -184,13 +281,16 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
       let finalImageUrl = image || null;
 
       if (mediaFile && image) {
-        const fileExt = mediaFile.name.split('.').pop();
+        const uploadFile = contentType === 'image'
+          ? await applyPhotoFilterToFile(mediaFile, selectedPhotoFilter)
+          : mediaFile;
+        const fileExt = uploadFile.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('posts')
-          .upload(filePath, mediaFile);
+          .upload(filePath, uploadFile);
 
         if (uploadError) {
           throw new Error(`Upload failed: ${uploadError.message}`);
@@ -211,7 +311,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         fuzzedLng = fuzzed.longitude;
       }
 
-      const { data: rateLimitCheck, error: rateLimitError } = await supabase
+      const { data: rateLimitCheck, error: _rateLimitError } = await supabase
         .rpc('check_rate_limit', {
           p_user_id: user.id,
           p_action_type: 'post',
@@ -224,6 +324,8 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
       if (!rateLimitAllowed) {
         throw new Error('Rate limit exceeded. Please wait a few minutes before posting again.');
       }
+
+      const requiresPhotoModeration = contentType === 'image' && !!finalImageUrl;
 
       const { data: post, error: postError} = await supabase
         .from('posts')
@@ -239,7 +341,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
           location_label: locationLabel || null,
           location_lat: fuzzedLat,
           location_lng: fuzzedLng,
-          moderation_status: 'approved',
+          moderation_status: requiresPhotoModeration ? 'pending' : 'approved',
           published_at: new Date().toISOString(),
         })
         .select()
@@ -247,6 +349,30 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
       if (postError || !post) {
         throw new Error(postError ? `Post failed: ${postError.message}${postError.details ? ` (${postError.details})` : ''}` : 'Failed to create post');
+      }
+
+      if (requiresPhotoModeration && finalImageUrl) {
+        const moderationResult = await moderatePhotoPost(post.id, finalImageUrl, caption || null);
+
+        if (moderationResult.decision === 'rejected') {
+          const message = moderationResult.reason === 'no_vehicle'
+            ? 'Photo rejected: no vehicle was found in the image.'
+            : 'Photo rejected: content does not meet guidelines.';
+          showToast(message, 'error');
+          setError(message);
+          setLoading(false);
+          return;
+        }
+
+        if (moderationResult.decision !== 'approved') {
+          await supabase
+            .from('posts')
+            .update({
+              moderation_status: 'approved',
+              rejection_reason: null,
+            })
+            .eq('id', post.id);
+        }
       }
 
       await supabase.rpc('record_rate_limit_action', {
@@ -468,7 +594,16 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                     {contentType === 'video' ? (
                       <video src={image || undefined} controls style={{ width: '100%', maxHeight: 500, display: 'block' }} />
                     ) : (
-                      <img src={image || undefined} alt="Post preview" style={{ width: '100%', display: 'block', borderRadius: 12 }} />
+                      <img
+                        src={image || undefined}
+                        alt="Post preview"
+                        style={{
+                          width: '100%',
+                          display: 'block',
+                          borderRadius: 12,
+                          filter: getPhotoFilter(selectedPhotoFilter).css,
+                        }}
+                      />
                     )}
                     <button
                       type="button"
@@ -476,6 +611,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                         setImage(null);
                         setMediaFile(null);
                         setContentType('image');
+                        setSelectedPhotoFilter('original');
                       }}
                       style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: '50%', background: 'rgba(6,9,14,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                     >
@@ -506,6 +642,76 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
                   </div>
                 )}
               </div>
+
+              {image && contentType === 'image' && (
+                <div style={{ margin: '-4px 0 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <SlidersHorizontal style={{ width: 14, height: 14, color: '#F97316' }} />
+                    <label style={{ ...labelStyle, marginBottom: 0 }}>Photo Filter</label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
+                    {photoFilters.map(filterOption => {
+                      const active = selectedPhotoFilter === filterOption.id;
+                      return (
+                        <button
+                          key={filterOption.id}
+                          type="button"
+                          onClick={() => setSelectedPhotoFilter(filterOption.id)}
+                          disabled={loading}
+                          style={{
+                            minHeight: 74,
+                            borderRadius: 10,
+                            border: active ? '1px solid rgba(249,115,22,0.55)' : '1px solid rgba(255,255,255,0.07)',
+                            background: active ? 'rgba(249,115,22,0.10)' : '#0a0d14',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            padding: 6,
+                            opacity: loading ? 0.6 : 1,
+                          }}
+                        >
+                          <div
+                            style={{
+                              height: 38,
+                              borderRadius: 7,
+                              overflow: 'hidden',
+                              background: '#111827',
+                              marginBottom: 6,
+                            }}
+                          >
+                            <img
+                              src={image}
+                              alt=""
+                              aria-hidden="true"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                filter: filterOption.css,
+                                display: 'block',
+                              }}
+                            />
+                          </div>
+                          <span
+                            style={{
+                              display: 'block',
+                              fontFamily: "'Barlow Condensed', sans-serif",
+                              fontSize: 9,
+                              fontWeight: 700,
+                              letterSpacing: '0.12em',
+                              textTransform: 'uppercase',
+                              color: active ? '#F97316' : '#7a8e9e',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {filterOption.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Rate limit error */}
               {!isAllowed && <div style={{ marginBottom: 14 }}><RateLimitError action="post" remainingTime={remainingTime} /></div>}

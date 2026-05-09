@@ -16,8 +16,8 @@ interface Modification {
   category: string | null;
   part_name: string;
   brand: string | null;
-  cost_usd: number | null;
-  image_urls: string[] | null;
+  price_paid: number | null;
+  after_photo_url: string | null;
   notes: string | null;
   is_verified: boolean;
 }
@@ -89,28 +89,30 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
     setSubmitting(true);
 
     try {
-      let imageUrls: string[] = [];
+      let imageUrl: string | null = null;
 
       if (newImage) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const uploadedUrl = await uploadImage(newImage, 'vehicles');
           if (uploadedUrl) {
-            imageUrls = [uploadedUrl];
+            imageUrl = uploadedUrl;
           }
         }
       }
+      const { data: { user } } = await supabase.auth.getUser();
 
       const { error: insertError } = await supabase
         .from('vehicle_modifications')
         .insert({
           vehicle_id: vehicleId,
+          user_id: user?.id,
           category: newCategory.toLowerCase() || null,
           part_name: newPartName,
           brand: newBrand || null,
-          cost_usd: newCost ? parseFloat(newCost) : null,
+          price_paid: newCost ? parseFloat(newCost) : null,
           notes: newNotes || null,
-          image_urls: imageUrls.length > 0 ? imageUrls : null,
+          after_photo_url: imageUrl,
         });
 
       if (insertError) {
@@ -147,7 +149,7 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
     }
   };
 
-  const totalInvested = modifications.reduce((sum, mod) => sum + (mod.cost_usd || 0), 0);
+  const totalInvested = modifications.reduce((sum, mod) => sum + (mod.price_paid || 0), 0);
   const modCount = modifications.length;
 
   const renderModRow = (mod: Modification) => (
@@ -156,9 +158,9 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-        {mod.image_urls && mod.image_urls.length > 0 && (
+        {mod.after_photo_url && (
           <img
-            src={mod.image_urls[0]}
+            src={mod.after_photo_url}
             alt={mod.part_name}
             style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
           />
@@ -174,9 +176,9 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
             {mod.category && (
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, color: '#5a6e7e', letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>{CATEGORY_LABELS[mod.category] || mod.category}</span>
             )}
-            {mod.cost_usd !== null && (
+            {mod.price_paid !== null && (
               <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#4ade80', fontWeight: 600 }}>
-                ${mod.cost_usd.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                ${mod.price_paid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             )}
           </div>
@@ -414,7 +416,7 @@ export function BuildSheetPage({ vehicleId, onNavigate, onBack }: BuildSheetPage
                 const categoryMods = modifications.filter((m) => m.category === category);
                 if (categoryMods.length === 0) return null;
 
-                const categoryTotal = categoryMods.reduce((sum, mod) => sum + (mod.cost_usd || 0), 0);
+                const categoryTotal = categoryMods.reduce((sum, mod) => sum + (mod.price_paid || 0), 0);
 
                 return (
                   <div key={category}>

@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (userId: string, userEmail?: string) => {
+  const loadProfile = async (userId: string, _userEmail?: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')

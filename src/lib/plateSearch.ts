@@ -22,7 +22,6 @@ export interface VehicleResult {
   spots_count?: number;
   vehicle_handle?: string | null;
   // API spec data (only present for API-sourced vehicles)
-  vin?: string | null;
   engine?: string | null;
   cylinders?: string | null;
   fuel?: string | null;
@@ -78,7 +77,6 @@ export async function searchPlate(
     }
 
     const credits = await getLookupCredits(userId);
-    console.log('[plateSearch] Lookup credits for user:', credits);
 
     if (credits <= 0) {
       console.warn('[plateSearch] No credits — skipping API call');
@@ -87,7 +85,6 @@ export async function searchPlate(
 
     // Step 3: Call API lookup
     const result = await executeLookup(normalized, stateCode, userId);
-    console.log('[plateSearch] RapidAPI parsed result:', result);
 
     if (result && result.make && result.model) {
       // Consume credit ONLY after successful response
@@ -116,7 +113,6 @@ export async function searchPlate(
           owner_id: null,
           plate_state: stateCode,
           plate_number: normalized,
-          vin: result.vin || null,
           engine: result.engine || null,
           cylinders: result.cylinders || null,
           fuel: result.fuel || null,

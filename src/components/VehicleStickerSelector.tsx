@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { giveSticker } from '../lib/stickerService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 import { X } from 'lucide-react';
 import { sounds } from '../lib/sounds';
 import { floatPoints, haptic } from '../utils/floatPoints';
@@ -18,6 +19,7 @@ const MAX_NEGATIVE_STICKERS = 3;
 export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleStickerSelectorProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { celebrateReward } = useRewardEvents();
   const stickerContainerRef = useRef<HTMLDivElement>(null);
 
   const [stickers, setStickers] = useState<any[]>([]);
@@ -94,6 +96,13 @@ export function VehicleStickerSelector({ vehicleId, onStickerGiven }: VehicleSti
       stickerContainerRef.current?.classList.add('sticker-flying');
       setTimeout(() => stickerContainerRef.current?.classList.remove('sticker-flying'), 500);
       showToast(`${sticker.name} sticker given! ${isPositive ? '+2 rep' : '-3 rep'} to owner`, 'success');
+      celebrateReward({
+        type: 'sticker',
+        title: `${sticker.name} Sticker Given`,
+        message: isPositive ? 'Positive garage feedback sent.' : 'Feedback logged on this ride.',
+        points: isPositive ? 2 : undefined,
+        accent: isPositive ? '#f0a030' : '#ef4444',
+      });
       if (isPositive) setPositiveCount(prev => prev + 1);
       else setNegativeCount(prev => prev + 1);
       setSelected(null);

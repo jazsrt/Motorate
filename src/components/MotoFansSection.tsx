@@ -42,7 +42,7 @@ export function MotoFansSection({ userId, onNavigate }: MotoFansSectionProps) {
         .in('id', ids)
         .eq('is_private', false);
 
-      setVehicles((data as FannedVehicle[]) || []);
+      setVehicles((data as unknown as FannedVehicle[]) || []);
       setLoading(false);
     }
     load();

@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useRef, useC
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { Badge, UserBadge } from '../lib/badges';
+import { useRewardEvents } from './RewardEventContext';
 
 interface BadgeContextType {
   unlockedBadge: Badge | null;
@@ -39,6 +40,7 @@ function persistSeen(userId: string, ids: Set<string>) {
 
 export function BadgeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { celebrateReward } = useRewardEvents();
   const [unlockedBadge, setUnlockedBadge] = useState<Badge | null>(null);
   const [badgeQueue, setBadgeQueue] = useState<Badge[]>([]);
   const seenBadgeIdsRef = useRef<Set<string>>(new Set());
@@ -176,6 +178,15 @@ export function BadgeProvider({ children }: { children: ReactNode }) {
       setBadgeQueue(prev => prev.slice(1));
     }
   }, [badgeQueue, unlockedBadge]);
+
+  useEffect(() => {
+    if (!unlockedBadge) return;
+    celebrateReward({
+      type: 'badge',
+      title: unlockedBadge.name,
+      message: unlockedBadge.description || 'Badge added to your collection.',
+    });
+  }, [unlockedBadge, celebrateReward]);
 
   const dismissBadge = useCallback(async () => {
     if (unlockedBadge && userIdRef.current) {

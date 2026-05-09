@@ -15,7 +15,7 @@ interface BadgeCoinProps {
 // Sizes are 60% larger than before — image fills the space directly, no circle
 const SIZE_PX = { sm: 56, md: 80, lg: 96 };
 
-export function BadgeCoin({ tier, name, icon, icon_path, locked = false, size = 'md', onClick }: BadgeCoinProps) {
+export function BadgeCoin({ tier: _tier, name, icon, icon_path, locked = false, size = 'md', onClick }: BadgeCoinProps) {
   const imgSize = SIZE_PX[size];
 
   return (

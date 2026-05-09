@@ -4,16 +4,15 @@ import { supabase } from '../lib/supabase';
 import { VEHICLE_PLATE_VISIBLE_COLUMNS } from '../lib/vehicles';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { ModerationStatus } from '../components/ModerationStatus';
 import { useModerationSubscription } from '../hooks/useModerationSubscription';
 import { uploadImage, deleteImage } from '../lib/storage';
 import { getVehicleImageUrl } from '../lib/carImageryApi';
+import { moderateTextContent } from '../lib/contentModeration';
 import { VerifyOwnershipModal } from '../components/VerifyOwnershipModal';
 import { VinClaimModal } from '../components/VinClaimModal';
 import { GuestJoinModal } from '../components/GuestJoinModal';
 import { type VerificationTier } from '../components/TierBadge';
-import { parseVehicleSpecs } from '../lib/vehicleSpecs';
-import { ArrowLeft, Trash2, AlertCircle, Upload, X, Star, Shield, Info, Share2, User, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, MapPin, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, AlertCircle, X, Star, Shield, Share2, Wrench, Disc3, Palette, Armchair, Droplet, Download, Car, Camera, BookOpen, ChevronRight, Heart, Settings, Image, BarChart3, MessageCircle, Send, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { OnNavigate } from '../types/navigation';
 import { ShareBuildCard } from '../components/ShareBuildCard';
 import { GuestBottomNav } from '../components/GuestBottomNav';
@@ -21,12 +20,12 @@ import { GarageSection } from '../components/GarageSection';
 import { ModList } from '../components/ModList';
 import { StickerSlab } from '../components/StickerSlab';
 import { VehicleStickerSelector } from '../components/VehicleStickerSelector';
-import { BADGE_TIER_THRESHOLDS, TIER_COLORS } from '../config/badgeConfig';
-import { UserAvatar } from '../components/UserAvatar';
+import { BADGE_TIER_THRESHOLDS } from '../config/badgeConfig';
 import { MotoFanButton } from '../components/MotoFanButton';
 import { MotoFansModal } from '../components/MotoFansModal';
 import { AlbumsModal } from '../components/AlbumsModal';
 import { FollowButton } from '../components/FollowButton';
+import { useRewardEvents } from '../contexts/RewardEventContext';
 
 interface VehicleDetailPageProps {
   vehicleId: string;
@@ -80,7 +79,6 @@ interface Vehicle {
   is_private?: boolean;
   trim?: string | null;
   vehicle_handle?: string | null;
-  vin_raw_data?: Record<string, unknown> | null;
   owner?: {
     id: string;
     handle: string | null;
@@ -103,7 +101,44 @@ interface VehicleImage {
   created_at: string;
 }
 
+const MOD_CATEGORIES = [
+  'Powertrain',
+  'Suspension & Brakes',
+  'Wheels & Tires',
+  'Exterior',
+  'Interior',
+  'Fluids & Consumables',
+] as const;
+
+function normalizeModCategory(category: string | null | undefined): typeof MOD_CATEGORIES[number] {
+  switch ((category || '').toLowerCase()) {
+    case 'engine':
+    case 'exhaust':
+    case 'electronics':
+    case 'powertrain':
+      return 'Powertrain';
+    case 'suspension':
+    case 'brakes':
+    case 'suspension & brakes':
+      return 'Suspension & Brakes';
+    case 'wheels':
+    case 'tires':
+    case 'wheels & tires':
+      return 'Wheels & Tires';
+    case 'interior':
+      return 'Interior';
+    case 'fluids':
+    case 'fluids & consumables':
+      return 'Fluids & Consumables';
+    case 'exterior':
+    case 'other':
+    default:
+      return 'Exterior';
+  }
+}
+
 function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: string; onFollowerUpdated: () => void }) {
+  const { celebrateReward } = useRewardEvents();
   const [follows, setFollows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -127,6 +162,7 @@ function MotoFansPendingPanel({ vehicleId, onFollowerUpdated }: { vehicleId: str
   const handleApprove = async (followId: string, followerId: string) => {
     await supabase.from('vehicle_follows').update({ status: 'accepted' }).eq('id', followId);
     try { const { notifyVehicleFollowApproved } = await import('../lib/notifications'); await notifyVehicleFollowApproved(followerId, vehicleId); } catch { /* intentionally empty */ }
+    celebrateReward({ type: 'follow', title: 'Fan Approved', message: 'They can now follow this ride.' });
     loadFollows(); onFollowerUpdated();
   };
 
@@ -193,7 +229,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
 
   useModerationSubscription(() => !guestMode && loadVehicleData());
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [_uploading, setUploading] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [showGuestJoinModal, setShowGuestJoinModal] = useState(false);
@@ -205,7 +241,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   const [, setUploadingManual] = useState(false);
   const [heroImgError, setHeroImgError] = useState(false);
   const [carImageryUrl, setCarImageryUrl] = useState<string | null>(null);
-  const [vehicleBadges, setVehicleBadges] = useState<any[]>([]);
+  const [_vehicleBadges, setVehicleBadges] = useState<any[]>([]);
   const [vBadges, setVBadges] = useState<any[]>([]);
   const [fanAvatars, setFanAvatars] = useState<{ id: string; handle: string | null; avatar_url: string | null }[]>([]);
   const isOwner = user && vehicle?.owner_id === user.id;
@@ -249,7 +285,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     const { data: vehicleData } = await supabase
       .from('vehicles')
       // PLATE: visible — vehicle detail page (plate needed for spot flow handoff)
-      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', vehicle_handle, owners_manual_url, claimed_at, vin_raw_data, profiles!owner_id(id, handle, avatar_url)')
+      .select(VEHICLE_PLATE_VISIBLE_COLUMNS + ', vehicle_handle, owners_manual_url, claimed_at, profiles!owner_id(id, handle, avatar_url)')
       .eq('id', vehicleId)
       .maybeSingle();
 
@@ -370,20 +406,15 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     if (modsData) {
       setModifications(modsData);
 
-      const categories: Record<string, any[]> = {
-        'Powertrain': [],
-        'Suspension & Brakes': [],
-        'Wheels & Tires': [],
-        'Exterior': [],
-        'Interior': [],
-        'Fluids & Consumables': []
-      };
+      const categories: Record<string, any[]> = Object.fromEntries(
+        MOD_CATEGORIES.map(category => [category, []])
+      );
 
       modsData.forEach((mod: any) => {
-        const category = mod.category || 'Exterior';
-        if (categories[category]) {
-          categories[category].push(mod);
-        }
+        categories[normalizeModCategory(mod.category)].push({
+          ...mod,
+          category: normalizeModCategory(mod.category),
+        });
       });
 
       setModsByCategory(categories);
@@ -480,7 +511,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     };
   }, [vehicleId]);
 
-  const handleDeleteReview = async (reviewId: string) => {
+  const _handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;
 
     const { error: deleteError } = await supabase
@@ -496,15 +527,24 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
   };
 
   const handleToggleHidden = async (review: Review) => {
+    if (!isOwner) return;
+
+    const nextHiddenState = !review.is_hidden_by_owner;
+    if (nextHiddenState && !confirm('Hide this review from public view? You can restore it later.')) return;
+
     const { error: updateError } = await supabase
       .from('reviews')
-      .update({ is_hidden_by_owner: !review.is_hidden_by_owner })
+      .update({ is_hidden_by_owner: nextHiddenState })
       .eq('id', review.id);
 
     if (updateError) {
       setError(updateError.message);
     } else {
-      loadVehicleData();
+      setReviews(prev => prev.map(r => (
+        r.id === review.id ? { ...r, is_hidden_by_owner: nextHiddenState } : r
+      )));
+      setError('');
+      showToast(nextHiddenState ? 'Review hidden from public view' : 'Review restored', 'success');
     }
   };
 
@@ -603,6 +643,12 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         return;
       }
 
+      const moderation = await moderateTextContent(replyText, 'comment');
+      if (!moderation.allowed) {
+        showToast(moderation.reason || 'Reply blocked by moderation.', 'error');
+        return;
+      }
+
       const { error: insertError } = await supabase
         .from('post_comments')
         .insert({
@@ -691,7 +737,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
-  const canModerateReview = (review: Review) => {
+  const _canModerateReview = (review: Review) => {
     if (!isOwner || !vehicle?.claimed_at) return false;
     const reviewDate = new Date(review.created_at);
     const claimDate = new Date(vehicle.claimed_at);
@@ -779,20 +825,24 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     }
   };
 
-  const avgDriverScore = reviews.length > 0
-    ? Math.round(reviews.reduce((acc, r) => acc + (r.rating_driver ?? 0), 0) / reviews.length)
+  const publicReviews = reviews.filter(review => !review.is_hidden_by_owner);
+  const visibleReviews = isOwner ? reviews : publicReviews;
+  const hiddenReviewCount = reviews.filter(review => review.is_hidden_by_owner).length;
+
+  const avgDriverScore = publicReviews.length > 0
+    ? Math.round(publicReviews.reduce((acc, r) => acc + (r.rating_driver ?? 0), 0) / publicReviews.length)
     : 0;
 
-  const avgCoolScore = reviews.length > 0
-    ? Math.round(reviews.reduce((acc, r) => acc + (r.rating_vehicle ?? 0), 0) / reviews.length)
+  const avgCoolScore = publicReviews.length > 0
+    ? Math.round(publicReviews.reduce((acc, r) => acc + (r.rating_vehicle ?? 0), 0) / publicReviews.length)
     : 0;
 
   // Compute averages for all 6 rating categories
   const ratingCategories = (() => {
-    if (reviews.length === 0) return [];
+    if (publicReviews.length === 0) return [];
     const cats: { label: string; avg: number; count: number }[] = [];
     const calc = (fn: (r: Review) => number | null | undefined, label: string) => {
-      const vals = reviews.map(fn).filter((v): v is number => v != null && v > 0);
+      const vals = publicReviews.map(fn).filter((v): v is number => v != null && v > 0);
       if (vals.length > 0) cats.push({ label, avg: vals.reduce((s, v) => s + v, 0) / vals.length, count: vals.length });
     };
     calc(r => r.rating_vehicle, 'Vehicle');
@@ -802,30 +852,37 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
     return cats;
   })();
 
-  const loveCount = reviews.filter(r => r.sentiment === 'love').length;
-  const hateCount = reviews.filter(r => r.sentiment === 'hate').length;
+  const loveCount = publicReviews.filter(r => r.sentiment === 'love').length;
+  const hateCount = publicReviews.filter(r => r.sentiment === 'hate').length;
 
   // Derive hero image
   const _vehicleImageUrl = vehicle?.profile_image_url || vehicle?.stock_image_url || carImageryUrl;
 
   // Derive encounter count from reviews
-  const encounterCount = reviews.length;
+  const _encounterCount = publicReviews.length;
 
   // Derive RP score (sum of all avg ratings)
   const rpScore = ratingCategories.length > 0
     ? Math.round(ratingCategories.reduce((s, c) => s + c.avg, 0) * 10)
     : 0;
 
-  // Specs grid — no VIN data, use basic fields only
-  const vinSpecs = vehicle ? [
-    { label: 'Color', value: vehicle.color },
-  ].filter(s => s.value) : [];
+  const vehicleName = [vehicle?.year, vehicle?.make, vehicle?.model].filter(Boolean).join(' ') || 'This vehicle';
+  const showroomStats = [
+    { label: 'Reputation', value: rpScore || '—', accent: true },
+    { label: 'Fans', value: followerCount },
+    { label: 'Badges', value: vBadges.length },
+    { label: 'Photos', value: vehicleImages.length },
+  ];
+  const specHighlights = [
+    vehicle?.trim ? { label: 'Trim', value: vehicle.trim } : null,
+    vehicle?.color ? { label: 'Color', value: vehicle.color } : null,
+    vehicle?.year ? { label: 'Year', value: vehicle.year } : null,
+    { label: 'Owner', value: vehicle?.verification_tier === 'vin_verified' ? 'Verified' : vehicle?.is_claimed ? 'Claimed' : 'Unclaimed' },
+  ].filter(Boolean) as { label: string; value: string | number }[];
+  const topVehicleBadges = vBadges.slice(0, 3);
 
   // Powertrain string — no VIN data
   const _powertrain = '';
-
-  // Verification badge color
-  const verBadgeColor = vehicle?.verification_tier === 'vin_verified' ? C.green : vehicle?.is_claimed ? C.green : C.dim;
 
   if (loading) {
     return (
@@ -991,6 +1048,93 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
         <input ref={manualInputRef} type="file" accept="application/pdf" onChange={handleManualUpload} style={{ display: 'none' }} />
 
+        {isOwner && vehicle.is_claimed && (
+          <section style={{ margin: '12px 14px 14px', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 10, background: 'linear-gradient(135deg, rgba(249,115,22,0.10), rgba(10,13,20,0.98) 46%, rgba(240,160,48,0.06))', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 14px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.6px', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 4 }}>
+                  Owner Garage
+                </div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 21, fontWeight: 700, color: C.white, lineHeight: 1.05 }}>
+                  Your hub for {vehicleName}.
+                </div>
+                <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.light, lineHeight: 1.35 }}>
+                  Photos, lifestyle albums, manual access, parts ideas, and useful ownership info in one place.
+                </div>
+              </div>
+              <button
+                onClick={() => setShowManageSheet(true)}
+                style={{ width: 42, height: 42, borderRadius: 8, border: '1px solid rgba(249,115,22,0.24)', background: 'rgba(3,5,8,0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+                title="Manage vehicle"
+              >
+                <Settings size={17} color={C.accent} />
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {[
+                { label: 'Photos', value: vehicleImages.length, icon: Image, action: () => fileInputRef.current?.click(), color: C.accent },
+                { label: 'Albums', value: 'Open', icon: Camera, action: () => setShowAlbumsModal(true), color: C.gold },
+                { label: 'Manual', value: vehicle.owners_manual_url ? 'View' : 'Upload', icon: BookOpen, action: () => vehicle.owners_manual_url ? window.open(vehicle.owners_manual_url, '_blank') : manualInputRef.current?.click(), color: C.green },
+                { label: 'Parts', value: 'Soon', icon: Sparkles, action: () => showToast('Parts recommendations coming soon', 'success'), color: '#60a5fa' },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    style={{ minWidth: 0, padding: '11px 6px', textAlign: 'center' as const, border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none', background: 'rgba(3,5,8,0.18)', cursor: 'pointer' }}
+                  >
+                    <Icon size={15} color={item.color} />
+                    <div style={{ marginTop: 4, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: C.white, fontVariantNumeric: 'tabular-nums' }}>{item.value}</div>
+                    <div style={{ marginTop: 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '.9px', textTransform: 'uppercase' as const, color: C.dim, whiteSpace: 'nowrap' }}>{item.label}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {!isOwner && vehicle.is_claimed && (
+          <section style={{ margin: '12px 14px 14px', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, background: '#0a0d14', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 14px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.6px', textTransform: 'uppercase' as const, color: C.accent, marginBottom: 4 }}>
+                  Showroom Snapshot
+                </div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 21, fontWeight: 700, color: C.white, lineHeight: 1.05 }}>
+                  {vehicleName}
+                </div>
+                <div style={{ marginTop: 5, fontFamily: "'Barlow', sans-serif", fontSize: 12, color: C.light, lineHeight: 1.35 }}>
+                  Owner-posted photos, public reputation, badges, fans, and clean specs without exposing private VIN data.
+                </div>
+              </div>
+              <Shield size={20} color={vehicle.verification_tier === 'vin_verified' ? C.green : C.accent} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {showroomStats.map((stat, i) => (
+                <div key={stat.label} style={{ padding: '11px 6px', textAlign: 'center' as const, borderRight: i < showroomStats.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: stat.accent ? C.accent : C.white, fontVariantNumeric: 'tabular-nums' }}>{stat.value}</div>
+                  <div style={{ marginTop: 2, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '.9px', textTransform: 'uppercase' as const, color: C.dim }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+            {(specHighlights.length > 0 || topVehicleBadges.length > 0) && (
+              <div style={{ padding: '10px 12px', display: 'flex', gap: 7, flexWrap: 'wrap' as const, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                {specHighlights.slice(0, 4).map(item => (
+                  <span key={item.label} style={{ padding: '5px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: C.light }}>
+                    {item.label}: <span style={{ color: C.white }}>{item.value}</span>
+                  </span>
+                ))}
+                {topVehicleBadges.map(badge => (
+                  <span key={badge.badge_id} style={{ padding: '5px 8px', borderRadius: 4, background: 'rgba(240,160,48,0.08)', border: '1px solid rgba(240,160,48,0.18)', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: C.gold }}>
+                    {badge.tier || 'Badge'} · {badge.sticker_count || 0}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* ── 2. PHOTOS ── */}
         {vehicleImages.length > 0 && (
           <div>
@@ -1043,16 +1187,15 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 4. SPECS STRIP (claimed vehicles with vin_raw_data) ── */}
+        {/* ── 4. SAFE SPECS STRIP (never sends VIN/raw VIN payloads to the browser) ── */}
         {vehicle.is_claimed && (() => {
-          const specs = parseVehicleSpecs(vehicle.vin_raw_data);
-          if (!specs) return null;
           const items: { value: string; label: string }[] = [];
-          if (specs.horsepower) items.push({ value: `${specs.horsepower}`, label: 'HP' });
-          if (specs.engine) items.push({ value: specs.engine, label: 'Engine' });
-          if (specs.displacement) items.push({ value: specs.displacement, label: 'Config' });
-          if (specs.drivetrain) items.push({ value: specs.drivetrain, label: 'Drive' });
-          if (specs.transmission) items.push({ value: specs.transmission, label: 'Trans' });
+          if (vehicle.year) items.push({ value: `${vehicle.year}`, label: 'Year' });
+          if (vehicle.trim) items.push({ value: vehicle.trim, label: 'Trim' });
+          if (vehicle.color) items.push({ value: vehicle.color, label: 'Color' });
+          if (vehicle.verification_tier) {
+            items.push({ value: vehicle.verification_tier === 'vin_verified' ? 'Verified' : 'Claimed', label: 'Owner' });
+          }
           if (items.length < 2) return null;
           return (
             <div style={{
@@ -1279,27 +1422,33 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 8px' }}>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-              Encounter Log{reviews.length > 0 ? ` · ${reviews.length}` : ''}
+              Encounter Log{visibleReviews.length > 0 ? ` · ${visibleReviews.length}` : ''}{isOwner && hiddenReviewCount > 0 ? ` · ${hiddenReviewCount} hidden` : ''}
             </span>
-            {reviews.length > 1 && (
+            {visibleReviews.length > 1 && (
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
                 See All
               </span>
             )}
           </div>
           <div style={{ padding: '0 16px 12px' }}>
-            {reviews.length === 0 ? (
+            {visibleReviews.length === 0 ? (
               <div style={{ textAlign: 'center' as const, padding: '24px 0', color: '#5a6e7e', fontFamily: "'Barlow', sans-serif", fontSize: 12 }}>
                 No reviews yet. Spot this plate to leave the first one.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-                {reviews.slice(0, 3).map((review) => {
+                {visibleReviews.slice(0, 3).map((review) => {
                   const avgRating = [review.rating_vehicle, review.rating_driver, review.rating_driving].filter(r => r != null).reduce((s, r) => s + r!, 0) / [review.rating_vehicle, review.rating_driver, review.rating_driving].filter(r => r != null).length || 0;
                   const replies = ownerReplies[review.id] || [];
                   return (
                     <div key={review.id}>
-                      <div style={{ background: '#0d1117', borderRadius: 8, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{
+                        background: '#0d1117',
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: review.is_hidden_by_owner ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.04)',
+                        opacity: review.is_hidden_by_owner ? 0.68 : 1,
+                      }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                           <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1e2a38', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {review.author.avatar_url ? (
@@ -1309,6 +1458,22 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                             )}
                           </div>
                           <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 13, fontWeight: 700, color: '#eef4f8' }}>@{review.author.handle || 'Anonymous'}</span>
+                          {review.is_hidden_by_owner && (
+                            <span style={{
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: 'rgba(249,115,22,0.12)',
+                              border: '1px solid rgba(249,115,22,0.25)',
+                              fontFamily: "'Barlow Condensed', sans-serif",
+                              fontSize: 8,
+                              fontWeight: 700,
+                              letterSpacing: '0.1em',
+                              textTransform: 'uppercase' as const,
+                              color: C.accent,
+                            }}>
+                              Hidden
+                            </span>
+                          )}
                           <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
                             {[1, 2, 3, 4, 5].map(star => (
                               <svg key={star} width="14" height="14" viewBox="0 0 24 24" fill={star <= Math.round(avgRating) ? '#f0a030' : 'none'} stroke={star <= Math.round(avgRating) ? '#f0a030' : '#3a4e60'} strokeWidth="1.5">
@@ -1319,19 +1484,35 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         </div>
                         {review.comment && <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: '#5a6e7e', lineHeight: 1.4, margin: 0 }}>{review.comment}</p>}
 
-                        {/* Owner reply button */}
+                        {/* Owner review controls */}
                         {isOwner && review.author_id !== user?.id && (
-                          <button
-                            onClick={() => setReplyingToReviewId(replyingToReviewId === review.id ? null : review.id)}
-                            style={{
-                              marginTop: 8, display: 'flex', alignItems: 'center', gap: 4,
-                              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                              fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
-                              letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.accent,
-                            }}
-                          >
-                            <MessageCircle size={11} /> Reply
-                          </button>
+                          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' as const }}>
+                            <button
+                              onClick={() => setReplyingToReviewId(replyingToReviewId === review.id ? null : review.id)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                                letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.accent,
+                              }}
+                            >
+                              <MessageCircle size={11} /> Reply
+                            </button>
+                            <button
+                              onClick={() => handleToggleHidden(review)}
+                              title={review.is_hidden_by_owner ? 'Restore this review' : 'Hide this review from public view'}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700,
+                                letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                                color: review.is_hidden_by_owner ? '#20c060' : '#f0a030',
+                              }}
+                            >
+                              {review.is_hidden_by_owner ? <Eye size={11} /> : <EyeOff size={11} />}
+                              {review.is_hidden_by_owner ? 'Restore' : 'Hide'}
+                            </button>
+                          </div>
                         )}
                       </div>
 
@@ -1469,16 +1650,16 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
           </div>
         )}
 
-        {/* ── 13. BUILD SHEET (owner only) ── */}
+        {/* ── 13. PARTS & NOTES (owner only) ── */}
         {isOwner && vehicle.is_claimed && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: '#5a6e7e' }}>
-                Build Sheet{modifications.length > 0 ? ` · ${modifications.length}` : ''}
+                Parts & Notes{modifications.length > 0 ? ` · ${modifications.length}` : ''}
               </span>
               {isOwner && (
                 <span onClick={() => setShowAddModForm(!showAddModForm)} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#F97316', cursor: 'pointer' }}>
-                  {showAddModForm ? 'Cancel' : '+ Add Mod'}
+                  {showAddModForm ? 'Cancel' : '+ Add Part'}
                 </span>
               )}
             </div>
@@ -1490,7 +1671,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                   <input value={newModName} onChange={e => setNewModName(e.target.value)} placeholder="Part name" style={{ width: '100%', background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                   <div style={{ display: 'flex', gap: 6 }}>
                     <select value={newModCategory} onChange={e => setNewModCategory(e.target.value)} style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }}>
-                      {['Exterior', 'Interior', 'Engine', 'Suspension', 'Wheels', 'Exhaust', 'Electronics', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
+                        {MOD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <input value={newModBrand} onChange={e => setNewModBrand(e.target.value)} placeholder="Brand" style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                   </div>
@@ -1498,19 +1679,26 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                     <input value={newModCost} onChange={e => setNewModCost(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="Cost (optional)" style={{ flex: 1, background: '#070a0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#eef4f8', outline: 'none' }} />
                     <button
                       disabled={!newModName.trim()}
-                      onClick={async () => {
-                        if (!newModName.trim()) return;
-                        await supabase.from('vehicle_modifications').insert({
-                          vehicle_id: vehicleId,
-                          part_name: newModName.trim(),
-                          category: newModCategory,
-                          brand: newModBrand.trim() || null,
-                          cost_usd: newModCost ? parseFloat(newModCost) : null,
-                        });
-                        setNewModName(''); setNewModBrand(''); setNewModCost('');
-                        setShowAddModForm(false);
-                        loadVehicleData();
-                      }}
+                        onClick={async () => {
+                          if (!newModName.trim() || !user) return;
+                          const { error: insertError } = await supabase.from('vehicle_modifications').insert({
+                            vehicle_id: vehicleId,
+                            user_id: user.id,
+                            part_name: newModName.trim(),
+                            category: newModCategory,
+                            brand: newModBrand.trim() || null,
+                            price_paid: newModCost ? parseFloat(newModCost) : null,
+                          });
+                          if (insertError) {
+                            showToast('Failed to add modification', 'error');
+                            setError(insertError.message);
+                            return;
+                          }
+                          setNewModName(''); setNewModBrand(''); setNewModCost('');
+                          setShowAddModForm(false);
+                          showToast('Modification added', 'success');
+                          loadVehicleData();
+                        }}
                       style={{ padding: '8px 16px', background: '#F97316', border: 'none', borderRadius: 6, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#030508', cursor: 'pointer', opacity: !newModName.trim() ? 0.4 : 1 }}
                     >
                       Save
@@ -1524,7 +1712,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             {modifications.length === 0 && !showAddModForm ? (
               <div style={{ padding: '0 16px 12px' }}>
                 <div style={{ textAlign: 'center' as const, padding: '16px', color: '#3a4e60', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
-                  {isOwner ? 'No modifications logged yet' : 'Stock'}
+                  {isOwner ? 'No parts or ownership notes logged yet' : 'Stock'}
                 </div>
               </div>
             ) : (
@@ -1540,9 +1728,9 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 700, color: '#eef4f8' }}>{mod.part_name}</div>
                         {mod.brand && <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: '#5a6e7e', marginTop: 2 }}>{mod.brand}</div>}
                       </div>
-                      {mod.cost != null && mod.cost > 0 && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${mod.cost}</span>
-                      )}
+                        {mod.price_paid != null && Number(mod.price_paid) > 0 && (
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600, color: '#20c060', fontVariantNumeric: 'tabular-nums' }}>${Number(mod.price_paid).toFixed(2)}</span>
+                        )}
                     </div>
                   ))}
                 </div>
@@ -1639,7 +1827,7 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
             {vehicle.is_claimed && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: C.steel, marginBottom: 8 }}>
-                  Modifications
+                  Parts Timeline
                 </div>
                 {modifications.length > 0 ? modifications.map((mod, i) => (
                   <div key={mod.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0' }}>
@@ -1663,11 +1851,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
               </div>
             )}
 
-            {/* Modifications */}
+            {/* Parts and ownership notes */}
             <div style={{ background: C.carbon1, borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Wrench size={14} strokeWidth={1.5} color={C.dim} />
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Modifications</span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase' as const, color: C.dim }}>Parts & Ownership Notes</span>
               </div>
 
               {/* Modification status progress */}
@@ -1678,11 +1866,11 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                       {(() => {
                         const totalMods = modifications.length;
                         const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
-                        if (totalMods >= thresholds.Platinum) return 'Platinum Mods';
-                        if (totalMods >= thresholds.Gold) return 'Gold Mods';
-                        if (totalMods >= thresholds.Silver) return 'Silver Mods';
-                        if (totalMods >= thresholds.Bronze) return 'Bronze Mods';
-                        return 'No Modifications';
+                        if (totalMods >= thresholds.Platinum) return 'Platinum Parts';
+                        if (totalMods >= thresholds.Gold) return 'Gold Parts';
+                        if (totalMods >= thresholds.Silver) return 'Silver Parts';
+                        if (totalMods >= thresholds.Bronze) return 'Bronze Parts';
+                        return 'No Parts Logged';
                       })()}
                     </span>
                     <p style={{ fontSize: 10, color: C.steel, fontFamily: "'Barlow', sans-serif" }}>
@@ -1690,10 +1878,10 @@ export function VehicleDetailPage({ vehicleId, onNavigate, onBack, onEditBuildSh
                         const totalMods = modifications.length;
                         const thresholds = BADGE_TIER_THRESHOLDS.Modification ?? { Bronze: 1, Silver: 5, Gold: 20, Platinum: 50 };
                         if (totalMods >= thresholds.Platinum) return 'Max level reached!';
-                        if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} mods to Platinum`;
-                        if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} mods to Gold`;
-                        if (totalMods >= thresholds.Bronze) return `${totalMods}/${thresholds.Silver} mods to Silver`;
-                        return `${totalMods}/${thresholds.Bronze} mods to Bronze`;
+                        if (totalMods >= thresholds.Gold) return `${totalMods}/${thresholds.Platinum} parts to Platinum`;
+                        if (totalMods >= thresholds.Silver) return `${totalMods}/${thresholds.Gold} parts to Gold`;
+                        if (totalMods >= thresholds.Bronze) return `${totalMods}/${thresholds.Silver} parts to Silver`;
+                        return `${totalMods}/${thresholds.Bronze} parts to Bronze`;
                       })()}
                     </p>
                   </div>
