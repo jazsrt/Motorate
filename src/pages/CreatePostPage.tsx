@@ -21,6 +21,12 @@ interface CreatePostPageProps {
 
 type PrivacyLevel = 'public' | 'friends' | 'private';
 
+type ModerationResult = {
+  decision?: string;
+  reason?: string;
+  error?: string;
+};
+
 export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const { user, profile } = useAuth();
   const { isAllowed, remainingTime } = useRateLimit('post');
@@ -49,6 +55,36 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const moderatePhotoPost = async (postId: string, imageUrl: string, textContent: string | null): Promise<ModerationResult> => {
+    const { data: queueItem, error: queueError } = await supabase
+      .from('moderation_queue')
+      .insert({
+        content_type: 'post',
+        content_id: postId,
+        image_url: imageUrl,
+        text_content: textContent,
+        status: 'pending',
+      })
+      .select('id')
+      .single();
+
+    if (queueError || !queueItem) {
+      console.error('[CreatePost] Moderation queue insert failed:', queueError);
+      return { error: queueError?.message || 'Failed to queue moderation' };
+    }
+
+    const { data, error } = await supabase.functions.invoke('moderate-content', {
+      body: { queueId: queueItem.id },
+    });
+
+    if (error) {
+      console.error('[CreatePost] Moderation function failed:', error);
+      return { error: error.message };
+    }
+
+    return (data || {}) as ModerationResult;
+  };
 
   useEffect(() => {
     if (profile?.role === 'spectator') {
@@ -225,6 +261,8 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
         throw new Error('Rate limit exceeded. Please wait a few minutes before posting again.');
       }
 
+      const requiresPhotoModeration = contentType === 'image' && !!finalImageUrl;
+
       const { data: post, error: postError} = await supabase
         .from('posts')
         .insert({
@@ -239,7 +277,7 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
           location_label: locationLabel || null,
           location_lat: fuzzedLat,
           location_lng: fuzzedLng,
-          moderation_status: 'approved',
+          moderation_status: requiresPhotoModeration ? 'pending' : 'approved',
           published_at: new Date().toISOString(),
         })
         .select()
@@ -247,6 +285,26 @@ export function CreatePostPage({ onNavigate }: CreatePostPageProps) {
 
       if (postError || !post) {
         throw new Error(postError ? `Post failed: ${postError.message}${postError.details ? ` (${postError.details})` : ''}` : 'Failed to create post');
+      }
+
+      if (requiresPhotoModeration && finalImageUrl) {
+        const moderationResult = await moderatePhotoPost(post.id, finalImageUrl, caption || null);
+
+        if (moderationResult.decision === 'rejected') {
+          const message = moderationResult.reason === 'no_vehicle'
+            ? 'Photo rejected: no vehicle was found in the image.'
+            : 'Photo rejected: content does not meet guidelines.';
+          showToast(message, 'error');
+          setError(message);
+          setLoading(false);
+          return;
+        }
+
+        if (moderationResult.decision !== 'approved') {
+          showToast('Post submitted for review', 'success');
+          onNavigate('feed');
+          return;
+        }
       }
 
       await supabase.rpc('record_rate_limit_action', {

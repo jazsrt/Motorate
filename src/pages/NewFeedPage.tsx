@@ -114,6 +114,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
         vehicles:vehicle_id(id, year, make, model, color, owner_id, stock_image_url, profile_image_url, reputation_score, spots_count)
       `)
       .eq('id', focusPostId)
+      .eq('moderation_status', 'approved')
       .maybeSingle()
       .then(async ({ data }) => {
         if (!data) { setFocusLoading(false); return; }

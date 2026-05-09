@@ -113,7 +113,7 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
     || vehicles?.stock_image_url
     || null;
 
-  const isVideo = post.video_url && (post.content_type === 'video' || post.post_type === 'video');
+  const isVideo = Boolean(post.video_url && (post.content_type === 'video' || post.post_type === 'video'));
   const isBadgePost = post.post_type === 'badge' || post.post_type === 'badge_given';
   const badgeImageUrl = post.badge_icon_path ? `/badges/${post.badge_icon_path}` : null;
   const tierColors = isBadgePost ? getBadgeTierColors(post.caption) : { color: '#C4921A', glow: 'rgba(196,146,26,0.9)', atmo: 'rgba(185,138,22,0.14)' };
@@ -186,7 +186,7 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
     }
   };
 
-  const aspectPadding = isVideo ? '177%' : isBadgePost ? undefined : `${imageAspect}%`;
+  const aspectPadding = isVideo ? 'calc(56.25% + 54px)' : isBadgePost ? undefined : `${imageAspect}%`;
 
   return (
     <>
@@ -210,7 +210,7 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
               playsInline
               preload="metadata"
               onClick={e => e.stopPropagation()}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#000' }}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 54, width: '100%', height: 'calc(100% - 54px)', objectFit: 'contain', display: 'block', background: '#000' }}
             />
           ) : isBadgePost && !imageUrl ? (
             <div style={{ position: 'absolute', inset: 0, background: '#000', overflow: 'hidden' }}>
@@ -367,7 +367,7 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
           )}
 
           {/* Layer 6: Bottom content overlay */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 12px', zIndex: 2 }}>
+          {!isVideo && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 12px', zIndex: 2 }}>
             {/* Row A: Vehicle identity */}
             {makeLabel && (
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#F97316', lineHeight: 1 }}>
@@ -457,7 +457,40 @@ export function FeedPostCard({ post, currentUserId, onNavigate }: FeedPostCardPr
                 by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
               </span>
             </div>
-          </div>
+          </div>}
+
+          {isVideo && (
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 54, zIndex: 2, display: 'flex', alignItems: 'center', padding: '8px 12px', background: '#030508', borderTop: '1px solid rgba(255,255,255,0.08)' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}>
+                <ReactionButton postId={post.id} initialCount={post.like_count} onNavigate={onNavigate} />
+              </div>
+              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+              <button
+                onClick={e => { e.stopPropagation(); setShowComments(true); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#5a6e7e' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                {(post.comment_count ?? 0) > 0 && <span>{formatCount(post.comment_count)}</span>}
+              </button>
+              {canRemovePost && (
+                <>
+                  <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                  <button
+                    onClick={handleDeletePost}
+                    disabled={deleting}
+                    title={isPostAuthor ? 'Delete post' : 'Remove spot review'}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.45 : 1, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, fontWeight: 700, color: '#f87171' }}
+                  >
+                    <Trash2 size={12} strokeWidth={2} />
+                    {isPostAuthor ? 'Delete' : 'Remove'}
+                  </button>
+                </>
+              )}
+              <span style={{ marginLeft: 'auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 8, color: '#3a4e60' }}>
+                by <b style={{ color: '#7a8e9e' }}>@{ownerHandle}</b>
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

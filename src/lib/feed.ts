@@ -13,7 +13,7 @@ export interface AuthorBadge {
 export interface FeedPost {
   post_id: string;
   author_id: string;
-  post_type: 'photo' | 'badge_given' | 'spot' | 'review';
+  post_type: 'photo' | 'video' | 'badge' | 'badge_given' | 'spot' | 'review';
   image_url: string | null;
   video_url?: string | null;
   content_type?: 'image' | 'video';
@@ -137,6 +137,7 @@ export async function loadFeedCursor(
       author:profiles!posts_author_id_fkey(handle, avatar_url, location, is_admin),
       vehicles:vehicle_id(id, year, make, model, color, owner_id, stock_image_url, profile_image_url, reputation_score, spots_count, ranking_multiplier)
     `)
+    .eq('moderation_status', 'approved')
     .order('created_at', { ascending: false })
     .limit(limit + 20);
 
