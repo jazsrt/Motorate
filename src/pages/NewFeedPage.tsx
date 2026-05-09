@@ -49,6 +49,7 @@ export function NewFeedPage({ onNavigate, focusPostId }: NewFeedPageProps) {
           .from('posts')
           .select('post_type, created_at, author:profiles!posts_author_id_fkey(handle), vehicles:vehicle_id(make, model)')
           .eq('post_type', 'spot')
+          .eq('moderation_status', 'approved')
           .not('vehicle_id', 'is', null)
           .order('created_at', { ascending: false })
           .limit(10);
