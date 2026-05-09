@@ -17,6 +17,13 @@ interface SafetyAnalysisResult {
   issues: string[];
 }
 
+interface VehicleAnalysisResult {
+  vehicleDetected: boolean;
+  confidence: number;
+  vehicleType: string | null;
+  issues: string[];
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -56,6 +63,113 @@ async function moderateWithOpenAI(input: ModerationInput): Promise<OpenAIModerat
   }
 
   return result;
+}
+
+function extractResponseText(data: any): string {
+  if (typeof data?.output_text === 'string') {
+    return data.output_text;
+  }
+
+  const parts = data?.output
+    ?.flatMap((item: any) => item?.content ?? [])
+    ?.map((part: any) => part?.text)
+    ?.filter((text: unknown) => typeof text === 'string');
+
+  return parts?.join('\n') ?? '';
+}
+
+async function analyzeVehiclePresence(imageUrl: string): Promise<VehicleAnalysisResult> {
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+
+  if (!openaiApiKey) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${openaiApiKey}`,
+    },
+    body: JSON.stringify({
+      model: Deno.env.get('OPENAI_VISION_MODEL') || 'gpt-4.1-mini',
+      input: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'input_text',
+              text: [
+                'You are checking whether a MotoRate feed photo is vehicle-related.',
+                'Approve only when a real vehicle, vehicle interior, vehicle part, or vehicle-specific scene is visible.',
+                'Reject screenshots, memes, selfies without a visible vehicle, unrelated objects, pets, food, landscapes, and blank images.',
+                'Return JSON only.',
+              ].join(' '),
+            },
+            {
+              type: 'input_image',
+              image_url: imageUrl,
+            },
+          ],
+        },
+      ],
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'vehicle_presence_check',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              vehicleDetected: { type: 'boolean' },
+              confidence: { type: 'number', minimum: 0, maximum: 1 },
+              vehicleType: { type: ['string', 'null'] },
+              issues: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+            },
+            required: ['vehicleDetected', 'confidence', 'vehicleType', 'issues'],
+          },
+        },
+      },
+      max_output_tokens: 180,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OpenAI vehicle analysis error:', response.status, errorText);
+    throw new Error(`OpenAI vehicle analysis error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const outputText = extractResponseText(data);
+  const parsed = JSON.parse(outputText);
+
+  return {
+    vehicleDetected: Boolean(parsed.vehicleDetected),
+    confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0)),
+    vehicleType: typeof parsed.vehicleType === 'string' ? parsed.vehicleType : null,
+    issues: Array.isArray(parsed.issues)
+      ? parsed.issues.filter((issue: unknown) => typeof issue === 'string')
+      : [],
+  };
+}
+
+async function safeAnalyzeVehiclePresence(imageUrl: string): Promise<VehicleAnalysisResult> {
+  try {
+    return await analyzeVehiclePresence(imageUrl);
+  } catch (error) {
+    console.error('Vehicle presence analysis error:', error);
+    return {
+      vehicleDetected: true,
+      confidence: 0,
+      vehicleType: null,
+      issues: ['vehicle_check_unavailable'],
+    };
+  }
 }
 
 function summarizeModeration(result: OpenAIModerationResult): SafetyAnalysisResult {
@@ -106,7 +220,8 @@ async function analyzeImage(imageUrl: string, text?: string): Promise<SafetyAnal
 
 function determineDecision(
   imageResult?: SafetyAnalysisResult,
-  textResult?: SafetyAnalysisResult
+  textResult?: SafetyAnalysisResult,
+  vehicleResult?: VehicleAnalysisResult
 ): { decision: string; reason?: string } {
   const issues = [...(imageResult?.issues ?? []), ...(textResult?.issues ?? [])];
 
@@ -116,6 +231,10 @@ function determineDecision(
 
   if (textResult && !textResult.appropriate) {
     return { decision: 'rejected', reason: 'inappropriate' };
+  }
+
+  if (vehicleResult && !vehicleResult.vehicleDetected && vehicleResult.confidence >= 0.65) {
+    return { decision: 'rejected', reason: 'no_vehicle' };
   }
 
   const borderline = Math.max(imageResult?.score ?? 0, textResult?.score ?? 0) > 0.35;
@@ -140,12 +259,15 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { queueId, imageUrl, textContent } = await req.json();
+    const { queueId, imageUrl, textContent, requireVehicle } = await req.json();
 
     if (!queueId && (imageUrl || textContent)) {
       const imageResult = imageUrl ? await analyzeImage(imageUrl, textContent) : undefined;
       const textResult = !imageUrl && textContent ? await analyzeText(textContent) : undefined;
-      const { decision, reason } = determineDecision(imageResult, textResult);
+      const vehicleResult = imageUrl && requireVehicle
+        ? await safeAnalyzeVehiclePresence(imageUrl)
+        : undefined;
+      const { decision, reason } = determineDecision(imageResult, textResult, vehicleResult);
 
       return new Response(
         JSON.stringify({
@@ -154,6 +276,7 @@ Deno.serve(async (req: Request) => {
           reason,
           imageAnalysis: imageResult,
           textAnalysis: textResult,
+          vehicleAnalysis: vehicleResult,
         }),
         {
           status: 200,
@@ -194,16 +317,23 @@ Deno.serve(async (req: Request) => {
     const textResult = !queueItem.image_url && queueItem.text_content
       ? await analyzeText(queueItem.text_content)
       : undefined;
+    const vehicleResult = queueItem.content_type === 'post' && queueItem.image_url
+      ? await safeAnalyzeVehiclePresence(queueItem.image_url)
+      : undefined;
 
-    const { decision, reason } = determineDecision(imageResult, textResult);
+    const { decision, reason } = determineDecision(imageResult, textResult, vehicleResult);
 
-    const issues = [...(imageResult?.issues ?? []), ...(textResult?.issues ?? [])];
+    const issues = [
+      ...(imageResult?.issues ?? []),
+      ...(textResult?.issues ?? []),
+      ...(vehicleResult?.issues ?? []),
+    ];
 
     await supabase
       .from('moderation_queue')
       .update({
-        ai_vehicle_detected: null,
-        ai_vehicle_confidence: null,
+        ai_vehicle_detected: vehicleResult?.vehicleDetected ?? null,
+        ai_vehicle_confidence: vehicleResult ? vehicleResult.confidence * 100 : null,
         ai_nsfw_score: Math.max(imageResult?.score ?? 0, textResult?.score ?? 0) * 100,
         ai_issues: issues,
         auto_decision: decision,
@@ -231,6 +361,7 @@ Deno.serve(async (req: Request) => {
         reason,
         imageAnalysis: imageResult,
         textAnalysis: textResult,
+        vehicleAnalysis: vehicleResult,
       }),
       {
         status: 200,
