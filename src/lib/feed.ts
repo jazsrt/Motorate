@@ -13,7 +13,7 @@ export interface AuthorBadge {
 export interface FeedPost {
   post_id: string;
   author_id: string;
-  post_type: 'photo' | 'video' | 'badge' | 'badge_given' | 'spot' | 'review';
+  post_type: 'photo' | 'video' | 'badge' | 'badge_given' | 'spot' | 'review' | 'claim';
   image_url: string | null;
   video_url?: string | null;
   content_type?: 'image' | 'video';

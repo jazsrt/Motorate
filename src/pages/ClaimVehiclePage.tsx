@@ -66,6 +66,29 @@ const secondaryBtn: React.CSSProperties = {
   border: `1px solid ${C.border}`,
 };
 
+async function createClaimFeedPost(userId: string, vehicleId: string, handle: string, vehicleName: string) {
+  const caption = handle
+    ? `Claimed @${handle}`
+    : `Claimed ${vehicleName}`;
+
+  const { error } = await supabase
+    .from('posts')
+    .insert({
+      author_id: userId,
+      vehicle_id: vehicleId,
+      post_type: 'claim',
+      content_type: 'image',
+      caption,
+      privacy_level: 'public',
+      moderation_status: 'approved',
+      published_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    console.error('[ClaimVehiclePage] claim feed post failed:', error);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -206,6 +229,8 @@ export function ClaimVehiclePage({ onNavigate, claimData }: ClaimVehiclePageProp
 
       if (updateError) throw updateError;
       if (!updated || updated.length === 0) throw new Error('Vehicle may already be claimed by someone else.');
+
+      await createClaimFeedPost(user.id, claimData.vehicleId, confirmedHandle, vehicleName);
 
       setClaimOutcome('verified');
       celebrateReward({

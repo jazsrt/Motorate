@@ -73,6 +73,7 @@ function getBadgeTierColors(caption: string | null | undefined): { color: string
 function getPostTypeConfig(postType: string | null | undefined) {
   switch (postType) {
     case 'spot': return { bar: 'linear-gradient(90deg, rgba(249,115,22,0.8), transparent)', chip: { bg: 'rgba(249,115,22,0.15)', border: 'rgba(249,115,22,0.3)', color: '#F97316', label: 'SPOTTED' } };
+    case 'claim': return { bar: 'linear-gradient(90deg, rgba(32,192,96,0.8), transparent)', chip: { bg: 'rgba(32,192,96,0.15)', border: 'rgba(32,192,96,0.3)', color: '#20c060', label: 'CLAIMED' } };
     case 'owner_post': case 'post': return { bar: 'linear-gradient(90deg, rgba(32,192,96,0.8), transparent)', chip: { bg: 'rgba(32,192,96,0.15)', border: 'rgba(32,192,96,0.3)', color: '#20c060', label: 'OWNER' } };
     case 'badge': case 'badge_given': return { bar: 'linear-gradient(90deg, rgba(240,160,48,0.8), transparent)', chip: { bg: 'rgba(240,160,48,0.15)', border: 'rgba(240,160,48,0.3)', color: '#f0a030', label: 'BADGE' } };
     default: return null;

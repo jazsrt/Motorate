@@ -23,6 +23,25 @@ interface VinClaimModalProps {
 
 type Step = 'enter' | 'review' | 'handle' | 'done';
 
+async function createClaimFeedPost(userId: string, vehicleId: string, handle: string) {
+  const { error } = await supabase
+    .from('posts')
+    .insert({
+      author_id: userId,
+      vehicle_id: vehicleId,
+      post_type: 'claim',
+      content_type: 'image',
+      caption: `Claimed @${handle}`,
+      privacy_level: 'public',
+      moderation_status: 'approved',
+      published_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    console.error('[VinClaimModal] claim feed post failed:', error);
+  }
+}
+
 export function VinClaimModal({
   vehicleId,
   vehicleInfo,
@@ -100,6 +119,8 @@ export function VinClaimModal({
 
       if (updateError) throw updateError;
       if (!updated || updated.length === 0) throw new Error('Could not claim vehicle. It may already be claimed by someone else.');
+
+      await createClaimFeedPost(user.id, vehicleId, confirmedHandle);
 
       showToast('Your ride is now verified!', 'success');
       celebrateReward({
